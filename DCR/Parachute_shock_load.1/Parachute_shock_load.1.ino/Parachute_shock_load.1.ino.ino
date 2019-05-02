@@ -19,20 +19,6 @@
  GND -> GND
 
  The HX711 board can be powered from 2.7V to 5V so the Arduino 5V power should be fine.
-
-*/
-
-// include the HX711 library:
-  #include "HX711.h"
-
-// define variables for the force sensor
-  #define calibration_factor 31300 //This value is obtained using the SparkFun_HX711_Calibration sketch
-  #define DOUT  3
-  #define CLK  2
-
-  HX711 scale;
- 
- /*
   SD card read/write
 
  This example shows how to read and write data to and from an SD card file
@@ -50,10 +36,21 @@
 
  This example code is in the public domain.
 
- */
+*/
 
-#include <SPI.h>
-#include <SD.h>
+//////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+// include necessary libraries:
+  #include "HX711.h" //force sensor
+  #include <SPI.h> //SD card
+  #include <SD.h> //SD card
+
+// define variables for the force sensor
+  #define calibration_factor 31300 //This value is obtained using the SparkFun_HX711_Calibration sketch
+  #define DOUT  3
+  #define CLK  2
+  HX711 scale;
 
 // set up variables using the SD utility library functions:
   Sd2Card card;
@@ -70,6 +67,9 @@ File myFile;
 
 int dataset = 0; // this way when the user triggers data collection in the serial monitor is begins writing at 1
 boolean pause = false;
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
 
 void setup() {
   // Open serial communications and wait for port to open:
@@ -88,26 +88,11 @@ void setup() {
   scale.set_scale(calibration_factor); //This value is obtained by using the SparkFun_HX711_Calibration sketch
   scale.tare(); //Assuming there is no weight on the scale at start up, reset the scale to 0
 
-////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////
 // SD CARD SET UP //
-////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
- /*
- The circuit:
-  * SD card attached to SPI bus as follows:
- ** MOSI - pin 11 on Arduino Uno/Duemilanove/Diecimila
- ** MISO - pin 12 on Arduino Uno/Duemilanove/Diecimila
- ** CLK - pin 13 on Arduino Uno/Duemilanove/Diecimila
- ** CS - pin 10; depends on your SD card shield or module.
-
-
- created  28 Mar 2011
- by Limor Fried
- modified 9 Apr 2012
- by Tom Igoe
- */
-
-Serial.print("\nInitializing SD card...");
+  Serial.print("\nInitializing SD card...");
 
 // initialization code from the utility libraries since we're just testing if the card is working
   if (!card.init(SPI_HALF_SPEED, chipSelect)) {
@@ -140,8 +125,7 @@ Serial.print("\nInitializing SD card...");
   if (!volume.init(card)) {
     Serial.println("Could not find FAT16/FAT32 partition.\nMake sure you've formatted the card");
     return;
-  }
-  
+  } 
 
 // print the type and size of the first FAT-type volume
   uint32_t volumesize;
@@ -167,10 +151,14 @@ Serial.print("\nInitializing SD card...");
 
   Serial.println("\nFiles found on the card (name, date and size in bytes): ");
   root.openRoot(volume);
+  
 // list all files in the card with date and size
   root.ls(LS_R | LS_DATE | LS_SIZE);
 
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
 
 void loop() {
   myFile.close();
@@ -180,11 +168,10 @@ void loop() {
 
   // if the file opened okay, write to it:
   if (myFile) {
-    Serial.print("Writing to testing.txt...");//leting you know its started
-    myFile.println("testing 1, 2, 3.");//logging to the SD card
-    // close the file:
-    myFile.close();
-    Serial.println("done.");//letting you know that it's logged b/c you can't see it logging
+    Serial.print("Writing to testing.txt..."); // letting you know its started
+    myFile.println("testing 1, 2, 3."); // logging to the SD card
+    myFile.close(); // close the file
+    Serial.println("done."); // letting you know that it's logged b/c you can't see it logging
     myFile = SD.open("dev2.txt");
     Serial.println("dev2.txt:");//printing what is on the SD card
     // read from the file until there's nothing else in it:
