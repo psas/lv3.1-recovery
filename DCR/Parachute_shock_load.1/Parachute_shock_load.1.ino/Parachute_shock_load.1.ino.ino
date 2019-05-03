@@ -145,15 +145,15 @@ void setup() {
   volumesize /= 1024;
   Serial.println(volumesize);
   
-  myFile = SD.open("dev2.txt", FILE_WRITE);
-  myFile.println("Starting testing");
-  myFile.close();
-
   Serial.println("\nFiles found on the card (name, date and size in bytes): ");
   root.openRoot(volume);
   
 // list all files in the card with date and size
   root.ls(LS_R | LS_DATE | LS_SIZE);
+
+  myFile = SD.open("dev2.txt", FILE_WRITE);
+  myFile.println("Starting testing");
+  //myFile.close();
 
 }
 
@@ -161,10 +161,10 @@ void setup() {
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 void loop() {
-  myFile.close();
+  //myFile.close();
   // open the file. note that only one file can be open at a time,
   // so you have to close this one before opening another.
-  myFile = SD.open("dev2.txt", FILE_WRITE);
+  //myFile = SD.open("dev2.txt", FILE_WRITE);
 
   // if the file opened okay, write to it:
   if (myFile) {
@@ -254,4 +254,3 @@ void loop() {
   }
 }
 */
-
