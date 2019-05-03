@@ -66,6 +66,7 @@ myFile = SD.open("Shamalam.txt", FILE_WRITE);
     Serial.println("error opening test.txt");
   }
 
-  delay(1000);
+//If you want to read at slower rates, you can put a delay in with this line
+//  delay(1000);
   
 }
