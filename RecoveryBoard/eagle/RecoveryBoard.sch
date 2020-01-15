@@ -10712,7 +10712,7 @@ From Telemetrum</text>
 <wire x1="327.66" y1="118.11" x2="327.66" y2="185.42" width="0.1524" layer="91"/>
 <pinref part="U1" gate="G$1" pin="PA8"/>
 <wire x1="294.64" y1="185.42" x2="327.66" y2="185.42" width="0.1524" layer="91"/>
-<label x="312.42" y="185.42" size="1.27" layer="95"/>
+<label x="299.72" y="185.42" size="1.27" layer="95"/>
 <pinref part="R32" gate="R" pin="1"/>
 <junction x="386.08" y="118.11"/>
 </segment>
@@ -10721,7 +10721,7 @@ From Telemetrum</text>
 <segment>
 <pinref part="U1" gate="G$1" pin="PA9"/>
 <wire x1="294.64" y1="182.88" x2="325.12" y2="182.88" width="0.1524" layer="91"/>
-<label x="312.42" y="182.88" size="1.27" layer="95"/>
+<label x="299.72" y="182.88" size="1.27" layer="95"/>
 <wire x1="325.12" y1="182.88" x2="325.12" y2="134.62" width="0.1524" layer="91"/>
 <wire x1="325.12" y1="134.62" x2="386.08" y2="134.62" width="0.1524" layer="91"/>
 <wire x1="386.08" y1="134.62" x2="486.41" y2="134.62" width="0.1524" layer="91"/>
@@ -10745,13 +10745,14 @@ From Telemetrum</text>
 <pinref part="U1" gate="G$1" pin="PB5"/>
 <wire x1="219.71" y1="172.72" x2="219.71" y2="152.4" width="0.1524" layer="91"/>
 <wire x1="219.71" y1="172.72" x2="254" y2="172.72" width="0.1524" layer="91"/>
+<label x="231.14" y="172.72" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="NRST" class="0">
 <segment>
 <pinref part="U1" gate="G$1" pin="NRST"/>
 <wire x1="254" y1="203.2" x2="223.52" y2="203.2" width="0.1524" layer="91"/>
-<label x="223.52" y="203.2" size="1.6764" layer="95" rot="R180"/>
+<label x="251.46" y="205.74" size="1.6764" layer="95" rot="R180"/>
 <pinref part="CM1" gate="A" pin="!RESET"/>
 <label x="251.46" y="48.26" size="1.6764" layer="95" rot="R180"/>
 <wire x1="223.52" y1="203.2" x2="223.52" y2="45.72" width="0.1524" layer="91"/>
@@ -10796,6 +10797,7 @@ From Telemetrum</text>
 <wire x1="341.63" y1="190.5" x2="341.63" y2="266.7" width="0.1524" layer="91"/>
 <pinref part="U1" gate="G$1" pin="PA6"/>
 <wire x1="294.64" y1="190.5" x2="341.63" y2="190.5" width="0.1524" layer="91"/>
+<label x="299.72" y="190.5" size="1.4224" layer="95"/>
 </segment>
 </net>
 <net name="SENSOR_ON" class="0">
@@ -10808,10 +10810,10 @@ From Telemetrum</text>
 <pinref part="U$2" gate="G$1" pin="G"/>
 <wire x1="88.9" y1="95.25" x2="91.44" y2="95.25" width="0.1524" layer="91"/>
 <junction x="88.9" y="95.25"/>
-<label x="217.17" y="153.67" size="1.778" layer="95" rot="R90"/>
 <label x="130.81" y="76.2" size="1.778" layer="95"/>
 <pinref part="U1" gate="G$1" pin="PB3"/>
 <wire x1="213.36" y1="177.8" x2="254" y2="177.8" width="0.1524" layer="91"/>
+<label x="213.36" y="154.94" size="1.778" layer="95" rot="R90"/>
 </segment>
 </net>
 <net name="SWDIO" class="0">
@@ -10947,6 +10949,7 @@ From Telemetrum</text>
 <junction x="123.19" y="114.3"/>
 <pinref part="U1" gate="G$1" pin="PB4"/>
 <wire x1="254" y1="175.26" x2="217.17" y2="175.26" width="0.1524" layer="91"/>
+<label x="231.14" y="175.26" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="N$2" class="0">
@@ -10999,6 +11002,7 @@ From Telemetrum</text>
 <pinref part="U1" gate="G$1" pin="PA5"/>
 <wire x1="339.09" y1="193.04" x2="339.09" y2="269.24" width="0.1524" layer="91"/>
 <wire x1="339.09" y1="193.04" x2="294.64" y2="193.04" width="0.1524" layer="91"/>
+<label x="299.72" y="193.04" size="1.4224" layer="95"/>
 </segment>
 </net>
 <net name="POT_OUT_AN" class="0">
@@ -11042,10 +11046,10 @@ From Telemetrum</text>
 <wire x1="387.35" y1="312.42" x2="387.35" y2="261.62" width="0.1524" layer="91"/>
 <wire x1="387.35" y1="261.62" x2="344.17" y2="261.62" width="0.1524" layer="91"/>
 <junction x="393.7" y="312.42"/>
-<label x="341.63" y="208.28" size="1.778" layer="95" rot="R90"/>
+<label x="344.17" y="204.47" size="1.778" layer="95" rot="R90"/>
 <wire x1="344.17" y1="261.62" x2="344.17" y2="187.96" width="0.1524" layer="91"/>
 <pinref part="U1" gate="G$1" pin="PA7"/>
-<label x="299.72" y="187.96" size="1.778" layer="95"/>
+<label x="299.72" y="187.96" size="1.4224" layer="95"/>
 <wire x1="294.64" y1="187.96" x2="344.17" y2="187.96" width="0.1524" layer="91"/>
 </segment>
 </net>
@@ -11096,11 +11100,9 @@ From Telemetrum</text>
 <wire x1="441.96" y1="275.59" x2="459.74" y2="275.59" width="0.1524" layer="91"/>
 <junction x="459.74" y="275.59"/>
 <pinref part="U1" gate="G$1" pin="PA0"/>
-<wire x1="298.45" y1="205.74" x2="297.18" y2="205.74" width="0.1524" layer="91"/>
-<label x="298.45" y="220.98" size="1.778" layer="95" rot="R90"/>
-<wire x1="297.18" y1="205.74" x2="294.64" y2="205.74" width="0.1524" layer="91"/>
+<label x="303.53" y="207.01" size="1.778" layer="95" rot="R90"/>
 <wire x1="304.8" y1="264.16" x2="304.8" y2="205.74" width="0.1524" layer="91"/>
-<wire x1="304.8" y1="205.74" x2="298.45" y2="205.74" width="0.1524" layer="91"/>
+<wire x1="304.8" y1="205.74" x2="294.64" y2="205.74" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="CAN_RX" class="0">
@@ -11164,7 +11166,7 @@ From Telemetrum</text>
 </net>
 <net name="ISO-DROGUE" class="0">
 <segment>
-<label x="299.72" y="195.58" size="1.27" layer="95"/>
+<label x="299.72" y="195.58" size="1.4224" layer="95"/>
 <wire x1="332.74" y1="195.58" x2="332.74" y2="311.15" width="0.1524" layer="91"/>
 <wire x1="270.51" y1="311.15" x2="332.74" y2="311.15" width="0.1524" layer="91"/>
 <label x="293.37" y="311.15" size="1.778" layer="95"/>
