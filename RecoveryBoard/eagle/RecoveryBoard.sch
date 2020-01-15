@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="9.5.1">
+<eagle version="9.4.2">
 <drawing>
 <settings>
 <setting alwaysvectorfont="no"/>
@@ -10963,16 +10963,17 @@ From Telemetrum</text>
 <wire x1="96.52" y1="115.57" x2="96.52" y2="120.65" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="N$3" class="0">
+<net name="OSC_IN" class="0">
 <segment>
-<pinref part="U1" gate="G$1" pin="PF0-OSC_IN"/>
-<wire x1="254" y1="195.58" x2="193.04" y2="195.58" width="0.1524" layer="91"/>
 <pinref part="Y1" gate="G$1" pin="IN/OUT"/>
 <pinref part="C3" gate="CE" pin="1"/>
 <wire x1="195.58" y1="190.5" x2="193.04" y2="190.5" width="0.1524" layer="91"/>
 <wire x1="193.04" y1="190.5" x2="193.04" y2="180.34" width="0.1524" layer="91"/>
 <wire x1="193.04" y1="195.58" x2="193.04" y2="190.5" width="0.1524" layer="91"/>
 <junction x="193.04" y="190.5"/>
+<pinref part="U1" gate="G$1" pin="PF0-OSC_IN"/>
+<wire x1="193.04" y1="195.58" x2="254" y2="195.58" width="0.1524" layer="91"/>
+<label x="237.49" y="195.58" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="LAMOTOR-" class="0">
