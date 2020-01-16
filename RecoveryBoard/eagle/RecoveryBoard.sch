@@ -6,7 +6,7 @@
 <setting alwaysvectorfont="no"/>
 <setting verticaltext="up"/>
 </settings>
-<grid distance="0.05" unitdist="inch" unit="inch" style="lines" multiple="2" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>
+<grid distance="0.025" unitdist="inch" unit="inch" style="lines" multiple="2" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>
 <layers>
 <layer number="1" name="Top" color="4" fill="1" visible="no" active="no"/>
 <layer number="2" name="Route2" color="16" fill="1" visible="no" active="no"/>
@@ -8597,14 +8597,14 @@ Pad definition corrected 2006.05.15, librarian@cadsoft.de
 <smd name="EP" x="0" y="0" dx="2.3" dy="2.3" layer="1"/>
 <smd name="VCC" x="-1.9" y="1" dx="1" dy="0.35" layer="1"/>
 <smd name="NTC" x="-1.9" y="0.35" dx="1" dy="0.35" layer="1"/>
-<smd name="~ACOK" x="-1.9" y="-0.3" dx="1" dy="0.35" layer="1"/>
-<smd name="~CHGOK" x="-1.9" y="-0.95" dx="1" dy="0.35" layer="1"/>
+<smd name="!ACOK" x="-1.9" y="-0.3" dx="1" dy="0.35" layer="1"/>
+<smd name="!CHGOK" x="-1.9" y="-0.95" dx="1" dy="0.35" layer="1"/>
 <smd name="GND" x="1.9" y="1" dx="1" dy="0.35" layer="1"/>
 <smd name="CSP" x="1.9" y="0.35" dx="1" dy="0.35" layer="1"/>
 <smd name="BATT" x="1.9" y="-0.3" dx="1" dy="0.35" layer="1"/>
 <smd name="COMPI" x="1.9" y="-0.95" dx="1" dy="0.35" layer="1"/>
 <smd name="VREF33" x="-1" y="-1.9" dx="0.35" dy="1" layer="1"/>
-<smd name="~EN" x="-0.35" y="-1.9" dx="0.35" dy="1" layer="1"/>
+<smd name="!EN" x="-0.35" y="-1.9" dx="0.35" dy="1" layer="1"/>
 <smd name="CELLS" x="0.3" y="-1.9" dx="0.35" dy="1" layer="1"/>
 <smd name="COMPV" x="0.95" y="-1.9" dx="0.35" dy="1" layer="1"/>
 <smd name="VIN" x="-1" y="1.9" dx="0.35" dy="1" layer="1"/>
@@ -8624,10 +8624,10 @@ Pad definition corrected 2006.05.15, librarian@cadsoft.de
 <symbol name="MP26123DR-LF-Z">
 <pin name="VCC" x="-19.05" y="8.89" length="middle"/>
 <pin name="NTC" x="-19.05" y="-11.43" length="middle"/>
-<pin name="~ACOK" x="-19.05" y="-1.27" length="middle"/>
-<pin name="~CHGOK" x="-19.05" y="3.81" length="middle"/>
+<pin name="!ACOK" x="-19.05" y="-1.27" length="middle"/>
+<pin name="!CHGOK" x="-19.05" y="3.81" length="middle"/>
 <pin name="VREF33" x="-19.05" y="13.97" length="middle"/>
-<pin name="~EN" x="-19.05" y="-16.51" length="middle"/>
+<pin name="!EN" x="-19.05" y="-16.51" length="middle"/>
 <pin name="CELLS" x="-19.05" y="-6.35" length="middle"/>
 <pin name="COMPV" x="19.05" y="-11.43" length="middle" rot="R180"/>
 <pin name="COMPI" x="19.05" y="-6.35" length="middle" rot="R180"/>
@@ -8655,6 +8655,9 @@ Pad definition corrected 2006.05.15, librarian@cadsoft.de
 <devices>
 <device name="" package="MP26123DR-LF-Z">
 <connects>
+<connect gate="G$1" pin="!ACOK" pad="!ACOK"/>
+<connect gate="G$1" pin="!CHGOK" pad="!CHGOK"/>
+<connect gate="G$1" pin="!EN" pad="!EN"/>
 <connect gate="G$1" pin="BATT" pad="BATT"/>
 <connect gate="G$1" pin="BST" pad="BST"/>
 <connect gate="G$1" pin="CELLS" pad="CELLS"/>
@@ -8669,9 +8672,6 @@ Pad definition corrected 2006.05.15, librarian@cadsoft.de
 <connect gate="G$1" pin="VCC" pad="VCC"/>
 <connect gate="G$1" pin="VIN" pad="VIN"/>
 <connect gate="G$1" pin="VREF33" pad="VREF33"/>
-<connect gate="G$1" pin="~ACOK" pad="~ACOK"/>
-<connect gate="G$1" pin="~CHGOK" pad="~CHGOK"/>
-<connect gate="G$1" pin="~EN" pad="~EN"/>
 </connects>
 <technologies>
 <technology name=""/>
@@ -8838,87 +8838,6 @@ Pad definition corrected 2006.05.15, librarian@cadsoft.de
 </connects>
 <technologies>
 <technology name=""/>
-</technologies>
-</device>
-</devices>
-</deviceset>
-</devicesets>
-</library>
-<library name="Q--AO6405--P-CH MOSFET for Arm Switch">
-<packages>
-<package name="AO6405">
-<smd name="D1" x="0" y="0" dx="0.63" dy="0.8" layer="1"/>
-<smd name="D2" x="0.95" y="0" dx="0.63" dy="0.8" layer="1"/>
-<smd name="G" x="1.9" y="0" dx="0.63" dy="0.8" layer="1"/>
-<smd name="S" x="1.9" y="2.4" dx="0.63" dy="0.8" layer="1"/>
-<smd name="D4" x="0.95" y="2.4" dx="0.63" dy="0.8" layer="1"/>
-<smd name="D3" x="0" y="2.4" dx="0.63" dy="0.8" layer="1"/>
-<wire x1="-1" y1="-1" x2="-1" y2="3.4" width="0.1524" layer="51"/>
-<wire x1="-1" y1="3.4" x2="3" y2="3.4" width="0.1524" layer="51"/>
-<wire x1="3" y1="3.4" x2="3" y2="-1" width="0.1524" layer="51"/>
-<wire x1="3" y1="-1" x2="-1" y2="-1" width="0.1524" layer="51"/>
-<text x="-0.111" y="1.778" size="0.254" layer="51" rot="R90">
-AO6405
-</text>
-<text x="-0.127" y="0.508" size="0.254" layer="51">P1</text>
-</package>
-</packages>
-<symbols>
-<symbol name="AO6405">
-<wire x1="-7.62" y1="0" x2="0" y2="0" width="0.1524" layer="94"/>
-<wire x1="0" y1="0" x2="0" y2="10.16" width="0.1524" layer="94"/>
-<wire x1="1.27" y1="10.16" x2="1.27" y2="8.89" width="0.1524" layer="94"/>
-<wire x1="1.27" y1="8.89" x2="1.27" y2="7.62" width="0.1524" layer="94"/>
-<wire x1="1.27" y1="6.35" x2="1.27" y2="5.08" width="0.1524" layer="94"/>
-<wire x1="1.27" y1="5.08" x2="1.27" y2="3.81" width="0.1524" layer="94"/>
-<wire x1="1.27" y1="2.54" x2="1.27" y2="1.27" width="0.1524" layer="94"/>
-<wire x1="1.27" y1="1.27" x2="1.27" y2="0" width="0.1524" layer="94"/>
-<wire x1="1.27" y1="5.08" x2="5.08" y2="5.08" width="0.1524" layer="94"/>
-<polygon width="0.1524" layer="94">
-<vertex x="5.08" y="5.08"/>
-<vertex x="4.445" y="4.445"/>
-<vertex x="4.445" y="5.715"/>
-</polygon>
-<wire x1="1.27" y1="8.89" x2="5.08" y2="8.89" width="0.1524" layer="94"/>
-<wire x1="5.08" y1="8.89" x2="5.08" y2="10.795" width="0.1524" layer="94"/>
-<wire x1="5.08" y1="10.795" x2="5.08" y2="14.605" width="0.1524" layer="94"/>
-<wire x1="1.27" y1="1.27" x2="5.08" y2="1.27" width="0.1524" layer="94"/>
-<wire x1="5.08" y1="1.27" x2="5.08" y2="0.635" width="0.1524" layer="94"/>
-<wire x1="5.08" y1="0.635" x2="5.08" y2="-0.635" width="0.1524" layer="94"/>
-<wire x1="5.08" y1="-0.635" x2="5.08" y2="-4.445" width="0.1524" layer="94"/>
-<wire x1="5.08" y1="10.795" x2="8.255" y2="10.795" width="0.1524" layer="94"/>
-<wire x1="8.255" y1="10.795" x2="8.255" y2="-0.635" width="0.1524" layer="94"/>
-<wire x1="8.255" y1="-0.635" x2="5.08" y2="-0.635" width="0.1524" layer="94"/>
-<polygon width="0.1524" layer="94">
-<vertex x="6.985" y="6.35"/>
-<vertex x="9.525" y="6.35"/>
-<vertex x="8.255" y="5.08"/>
-</polygon>
-<wire x1="6.985" y1="5.08" x2="9.525" y2="5.08" width="0.1524" layer="94"/>
-<pin name="G" x="-7.62" y="0" visible="pad" length="middle"/>
-<pin name="D" x="5.08" y="14.605" visible="pad" length="middle" rot="R270"/>
-<pin name="S" x="5.08" y="-4.445" visible="pad" length="middle" rot="R90"/>
-<wire x1="5.08" y1="5.08" x2="5.08" y2="1.27" width="0.1524" layer="94"/>
-</symbol>
-</symbols>
-<devicesets>
-<deviceset name="AO6405">
-<gates>
-<gate name="G$1" symbol="AO6405" x="0" y="0"/>
-</gates>
-<devices>
-<device name="" package="AO6405">
-<connects>
-<connect gate="G$1" pin="D" pad="D1 D2 D3 D4"/>
-<connect gate="G$1" pin="G" pad="G"/>
-<connect gate="G$1" pin="S" pad="S"/>
-</connects>
-<technologies>
-<technology name="">
-<attribute name="DIS" value="DigiKey" constant="no"/>
-<attribute name="DPN" value="785-1072-1-ND" constant="no"/>
-<attribute name="MPN" value="AO6405" constant="no"/>
-</technology>
 </technologies>
 </device>
 </devices>
@@ -11086,6 +11005,81 @@ www.irf.com&lt;p&gt;
 </deviceset>
 </devicesets>
 </library>
+<library name="Q--Si7465DP--Vishay Power MOSFET with multple S+D leads">
+<packages>
+<package name="SI7465DP">
+<smd name="G" x="0" y="0" dx="1.27" dy="0.61" layer="1"/>
+<smd name="S1" x="0" y="-1.27" dx="1.27" dy="0.61" layer="1"/>
+<smd name="S2" x="0" y="-2.54" dx="1.27" dy="0.61" layer="1"/>
+<smd name="S3" x="0" y="-3.81" dx="1.27" dy="0.61" layer="1"/>
+<smd name="D1" x="5.465" y="0" dx="1.02" dy="0.61" layer="1"/>
+<smd name="D2" x="5.465" y="-1.27" dx="1.02" dy="0.61" layer="1"/>
+<smd name="D3" x="5.465" y="-2.54" dx="1.02" dy="0.61" layer="1"/>
+<smd name="D4" x="5.465" y="-3.81" dx="1.02" dy="0.61" layer="1"/>
+<smd name="D" x="3.36" y="-1.955" dx="3.81" dy="3.91" layer="1"/>
+<wire x1="-1.27" y1="1.27" x2="-1.27" y2="-5.08" width="0.1524" layer="21"/>
+<wire x1="-1.27" y1="-5.08" x2="6.35" y2="-5.08" width="0.1524" layer="21"/>
+<wire x1="6.35" y1="-5.08" x2="6.35" y2="1.27" width="0.1524" layer="21"/>
+<wire x1="6.35" y1="1.27" x2="-1.27" y2="1.27" width="0.1524" layer="21"/>
+<text x="0" y="1.54" size="1.27" layer="25">&gt;NAME</text>
+<text x="0" y="-7" size="1.27" layer="27">&gt;VALUE</text>
+</package>
+</packages>
+<symbols>
+<symbol name="SI7465DP">
+<wire x1="-5.08" y1="0" x2="0" y2="0" width="0.1524" layer="94"/>
+<wire x1="0" y1="0" x2="0" y2="7.62" width="0.1524" layer="94"/>
+<wire x1="0.635" y1="7.62" x2="0.635" y2="6.985" width="0.1524" layer="94"/>
+<wire x1="0.635" y1="6.985" x2="0.635" y2="6.35" width="0.1524" layer="94"/>
+<wire x1="0.635" y1="4.445" x2="0.635" y2="3.81" width="0.1524" layer="94"/>
+<wire x1="0.635" y1="3.81" x2="0.635" y2="3.175" width="0.1524" layer="94"/>
+<wire x1="0.635" y1="0" x2="0.635" y2="0.635" width="0.1524" layer="94"/>
+<wire x1="0.635" y1="0.635" x2="0.635" y2="1.27" width="0.1524" layer="94"/>
+<wire x1="0.635" y1="3.81" x2="3.175" y2="3.81" width="0.1524" layer="94"/>
+<wire x1="3.175" y1="3.81" x2="3.175" y2="6.985" width="0.1524" layer="94"/>
+<wire x1="3.175" y1="6.985" x2="0.635" y2="6.985" width="0.1524" layer="94"/>
+<wire x1="0.635" y1="0.635" x2="3.175" y2="0.635" width="0.1524" layer="94"/>
+<wire x1="3.175" y1="0.635" x2="3.175" y2="-0.635" width="0.1524" layer="94"/>
+<wire x1="3.175" y1="-0.635" x2="5.08" y2="-0.635" width="0.1524" layer="94"/>
+<wire x1="5.08" y1="-0.635" x2="5.08" y2="8.255" width="0.1524" layer="94"/>
+<wire x1="5.08" y1="8.255" x2="3.175" y2="8.255" width="0.1524" layer="94"/>
+<wire x1="3.175" y1="8.255" x2="3.175" y2="6.985" width="0.1524" layer="94"/>
+<wire x1="4.445" y1="4.445" x2="5.715" y2="4.445" width="0.1524" layer="94"/>
+<polygon width="0.1524" layer="94">
+<vertex x="4.445" y="3.175"/>
+<vertex x="5.08" y="4.445"/>
+<vertex x="5.715" y="3.175"/>
+</polygon>
+<polygon width="0.1524" layer="94">
+<vertex x="1.905" y="3.175"/>
+<vertex x="1.905" y="4.445"/>
+<vertex x="3.175" y="3.81"/>
+</polygon>
+<pin name="G" x="-5.08" y="0" visible="pad" length="middle"/>
+<pin name="D" x="3.175" y="-5.715" visible="pad" length="middle" rot="R90"/>
+<pin name="S" x="3.175" y="13.335" visible="pad" length="middle" rot="R270"/>
+</symbol>
+</symbols>
+<devicesets>
+<deviceset name="SI7465DP">
+<gates>
+<gate name="G$1" symbol="SI7465DP" x="0" y="0"/>
+</gates>
+<devices>
+<device name="" package="SI7465DP">
+<connects>
+<connect gate="G$1" pin="D" pad="D D1 D2 D3 D4"/>
+<connect gate="G$1" pin="G" pad="G"/>
+<connect gate="G$1" pin="S" pad="S1 S2 S3"/>
+</connects>
+<technologies>
+<technology name=""/>
+</technologies>
+</device>
+</devices>
+</deviceset>
+</devicesets>
+</library>
 </libraries>
 <attributes>
 </attributes>
@@ -11260,7 +11254,6 @@ www.irf.com&lt;p&gt;
 <part name="U$6" library="R--NHQ103B375T10--Thermistor" deviceset="NHQ103B375T10" device=""/>
 <part name="R17" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK"/>
 <part name="R18" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="1k"/>
-<part name="D4" library="led" library_urn="urn:adsk.eagle:library:259" deviceset="LED" device="CHIPLED_0603" package3d_urn="urn:adsk.eagle:package:15822/2"/>
 <part name="SUPPLY13" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="SUPPLY14" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="SUPPLY16" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
@@ -11282,9 +11275,9 @@ www.irf.com&lt;p&gt;
 <part name="R25" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="1k"/>
 <part name="SUPPLY23" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="SUPPLY5" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="3.3V" device=""/>
-<part name="R26" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="TBD"/>
+<part name="R26" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="50"/>
 <part name="R27" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="TBD"/>
-<part name="R28" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10k"/>
+<part name="R28" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="50"/>
 <part name="R29" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10k"/>
 <part name="SUPPLY34" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="C18" library="oresat-rcl" deviceset="C-EU" device="0603-C-NOSILK" value="100n"/>
@@ -11293,13 +11286,12 @@ www.irf.com&lt;p&gt;
 <part name="SUPPLY46" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="C20" library="oresat-rcl" deviceset="C-EU" device="0603-C-NOSILK" value="100n"/>
 <part name="SUPPLY47" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
-<part name="U$8" library="Q--AO6405--P-CH MOSFET for Arm Switch" deviceset="AO6405" device=""/>
+<part name="U$8" library="Q--Si7465DP--Vishay Power MOSFET with multple S+D leads" deviceset="SI7465DP" device=""/>
 <part name="C15" library="oresat-rcl" deviceset="C-EU" device="0603-C-NOSILK" value="0.1uF"/>
 <part name="C14" library="oresat-rcl" deviceset="C-EU" device="0603-C-NOSILK" value="0.1uF"/>
 <part name="R20" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK"/>
 <part name="SUPPLY15" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="SUPPLY17" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
-<part name="D3" library="led" library_urn="urn:adsk.eagle:library:259" deviceset="LED" device="CHIPLED_0603" package3d_urn="urn:adsk.eagle:package:15822/2"/>
 <part name="C12" library="oresat-rcl" deviceset="C-EU" device="0805-C-NOSILK" value="10uF"/>
 <part name="SUPPLY11" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="R30" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="1k"/>
@@ -11308,7 +11300,11 @@ www.irf.com&lt;p&gt;
 <part name="U$3" library="Q--H11F1SR2M--OptoIsolator" deviceset="H11F1SR2M" device=""/>
 <part name="U$4" library="Q--H11F1SR2M--OptoIsolator" deviceset="H11F1SR2M" device=""/>
 <part name="C22" library="oresat-rcl" deviceset="C-EU" device="C1206" value="100uF"/>
-<part name="D5" library="led" library_urn="urn:adsk.eagle:library:259" deviceset="LED" device="CHIPLED_0603" package3d_urn="urn:adsk.eagle:package:15822/2"/>
+<part name="D5" library="led" library_urn="urn:adsk.eagle:library:259" deviceset="LED" device="CHIPLED_0603" package3d_urn="urn:adsk.eagle:package:15822/2" value="SML-D12U1WT86">
+<attribute name="DIS" value="Digikey"/>
+<attribute name="DPN" value="SML-D12U1WT86CT-ND"/>
+<attribute name="MPN" value="SML-D12U1WT86"/>
+</part>
 <part name="R31" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="1k"/>
 <part name="SUPPLY48" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="Q1" library="transistor-small-signal" library_urn="urn:adsk.eagle:library:401" deviceset="BSS123" device="" package3d_urn="urn:adsk.eagle:package:28738/2"/>
@@ -11318,6 +11314,16 @@ www.irf.com&lt;p&gt;
 <part name="SUPPLY50" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="Q2" library="transistor-small-signal" library_urn="urn:adsk.eagle:library:401" deviceset="BSS123" device="" package3d_urn="urn:adsk.eagle:package:28738/2"/>
 <part name="Q3" library="transistor-small-signal" library_urn="urn:adsk.eagle:library:401" deviceset="BSS123" device="" package3d_urn="urn:adsk.eagle:package:28738/2"/>
+<part name="D6" library="led" library_urn="urn:adsk.eagle:library:259" deviceset="LED" device="CHIPLED_0603" package3d_urn="urn:adsk.eagle:package:15822/2" value="SML-D12U1WT86">
+<attribute name="DIS" value="Digikey"/>
+<attribute name="DPN" value=" SML-D12U1WT86CT-ND"/>
+<attribute name="MPN" value="SML-D12U1WT86"/>
+</part>
+<part name="D3" library="led" library_urn="urn:adsk.eagle:library:259" deviceset="LED" device="CHIPLED_0603" package3d_urn="urn:adsk.eagle:package:15822/2" value="SML-D12U1WT86">
+<attribute name="DIS" value="Digikey"/>
+<attribute name="DPN" value=" SML-D12U1WT86CT-ND"/>
+<attribute name="MPN" value="SML-D12U1WT86"/>
+</part>
 </parts>
 <sheets>
 <sheet>
@@ -11510,8 +11516,8 @@ www.irf.com&lt;p&gt;
 <instance part="GND1" gate="1" x="86.36" y="148.59" smashed="yes">
 <attribute name="VALUE" x="83.82" y="146.05" size="1.778" layer="96"/>
 </instance>
-<instance part="P+4" gate="1" x="302.26" y="245.11" smashed="yes">
-<attribute name="VALUE" x="302.26" y="248.92" size="1.778" layer="96" rot="R180"/>
+<instance part="P+4" gate="1" x="302.26" y="247.65" smashed="yes">
+<attribute name="VALUE" x="302.26" y="251.46" size="1.778" layer="96" rot="R180"/>
 </instance>
 <instance part="R15" gate="R" x="302.26" y="161.29" smashed="yes" rot="R90">
 <attribute name="DIS" x="302.26" y="161.29" size="1.778" layer="96" rot="R90" display="off"/>
@@ -11565,10 +11571,6 @@ www.irf.com&lt;p&gt;
 <instance part="R18" gate="R" x="142.24" y="173.99" smashed="yes" rot="R90">
 <attribute name="NAME" x="140.7414" y="170.18" size="1.016" layer="95" rot="R90"/>
 <attribute name="VALUE" x="145.542" y="170.18" size="1.778" layer="96" rot="R90"/>
-</instance>
-<instance part="D4" gate="G$1" x="148.59" y="168.91" smashed="yes" rot="R90">
-<attribute name="NAME" x="145.9484" y="166.5986" size="1.016" layer="95" rot="R90"/>
-<attribute name="VALUE" x="153.0858" y="166.3446" size="1.016" layer="96" rot="R90"/>
 </instance>
 <instance part="SUPPLY13" gate="GND" x="130.81" y="128.27" smashed="yes"/>
 <instance part="SUPPLY14" gate="GND" x="182.88" y="133.35" smashed="yes"/>
@@ -11625,7 +11627,7 @@ www.irf.com&lt;p&gt;
 <attribute name="NAME" x="265.6586" y="212.09" size="1.016" layer="95" rot="R270"/>
 <attribute name="VALUE" x="260.858" y="212.09" size="1.016" layer="96" rot="R270"/>
 </instance>
-<instance part="U$8" gate="G$1" x="297.18" y="226.06" smashed="yes"/>
+<instance part="U$8" gate="G$1" x="299.085" y="226.06" smashed="yes" rot="MR180"/>
 <instance part="C15" gate="CE" x="205.74" y="140.97" smashed="yes">
 <attribute name="NAME" x="206.756" y="141.605" size="1.016" layer="95"/>
 <attribute name="VALUE" x="206.756" y="136.779" size="1.016" layer="96"/>
@@ -11640,10 +11642,6 @@ www.irf.com&lt;p&gt;
 </instance>
 <instance part="SUPPLY15" gate="GND" x="213.36" y="129.54" smashed="yes"/>
 <instance part="SUPPLY17" gate="GND" x="220.98" y="129.54" smashed="yes"/>
-<instance part="D3" gate="G$1" x="144.78" y="163.83" smashed="yes" rot="R90">
-<attribute name="NAME" x="142.1384" y="161.5186" size="1.016" layer="95" rot="R90"/>
-<attribute name="VALUE" x="149.2758" y="161.2646" size="1.016" layer="96" rot="R90"/>
-</instance>
 <instance part="C12" gate="CE" x="191.77" y="195.58" smashed="yes">
 <attribute name="NAME" x="192.786" y="196.215" size="1.016" layer="95"/>
 <attribute name="VALUE" x="192.786" y="191.389" size="1.016" layer="96"/>
@@ -11658,6 +11656,20 @@ www.irf.com&lt;p&gt;
 <attribute name="VALUE" x="126.746" y="165.989" size="1.016" layer="96"/>
 </instance>
 <instance part="SUPPLY20" gate="GND" x="125.73" y="162.56" smashed="yes"/>
+<instance part="D6" gate="G$1" x="148.59" y="168.91" smashed="yes" rot="R90">
+<attribute name="NAME" x="147.2184" y="166.5986" size="1.016" layer="95" rot="R90"/>
+<attribute name="VALUE" x="158.7754" y="172.1358" size="1.016" layer="96" rot="R180"/>
+<attribute name="DIS" x="148.59" y="168.91" size="1.778" layer="96" rot="R90" display="off"/>
+<attribute name="DPN" x="148.59" y="168.91" size="1.778" layer="96" rot="R90" display="off"/>
+<attribute name="MPN" x="148.59" y="168.91" size="1.778" layer="96" rot="R90" display="off"/>
+</instance>
+<instance part="D3" gate="G$1" x="144.78" y="163.83" smashed="yes" rot="R90">
+<attribute name="NAME" x="143.4084" y="161.5186" size="1.016" layer="95" rot="R90"/>
+<attribute name="VALUE" x="154.9654" y="159.4358" size="1.016" layer="96" rot="R180"/>
+<attribute name="DIS" x="144.78" y="163.83" size="1.778" layer="96" rot="R90" display="off"/>
+<attribute name="DPN" x="144.78" y="163.83" size="1.778" layer="96" rot="R90" display="off"/>
+<attribute name="MPN" x="144.78" y="163.83" size="1.778" layer="96" rot="R90" display="off"/>
+</instance>
 </instances>
 <busses>
 </busses>
@@ -11750,7 +11762,7 @@ www.irf.com&lt;p&gt;
 <pinref part="U$5" gate="G$1" pin="GND"/>
 <pinref part="SUPPLY14" gate="GND" pin="GND"/>
 <wire x1="182.88" y1="140.97" x2="182.88" y2="135.89" width="0.1524" layer="91"/>
-<pinref part="U$5" gate="G$1" pin="~EN"/>
+<pinref part="U$5" gate="G$1" pin="!EN"/>
 <wire x1="165.1" y1="148.59" x2="165.1" y2="135.89" width="0.1524" layer="91"/>
 <wire x1="165.1" y1="135.89" x2="182.88" y2="135.89" width="0.1524" layer="91"/>
 <junction x="182.88" y="135.89"/>
@@ -11945,9 +11957,9 @@ www.irf.com&lt;p&gt;
 <pinref part="P+3" gate="1" pin="+12V"/>
 </segment>
 <segment>
-<pinref part="U$8" gate="G$1" pin="D"/>
 <pinref part="P+4" gate="1" pin="+12V"/>
-<wire x1="302.26" y1="240.665" x2="302.26" y2="242.57" width="0.1524" layer="91"/>
+<pinref part="U$8" gate="G$1" pin="D"/>
+<wire x1="302.26" y1="245.11" x2="302.26" y2="231.775" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="CHUTE" class="0">
@@ -12004,7 +12016,7 @@ www.irf.com&lt;p&gt;
 </net>
 <net name="ACOK" class="0">
 <segment>
-<pinref part="U$5" gate="G$1" pin="~ACOK"/>
+<pinref part="U$5" gate="G$1" pin="!ACOK"/>
 <wire x1="157.48" y1="163.83" x2="165.1" y2="163.83" width="0.1524" layer="91"/>
 <wire x1="157.48" y1="163.83" x2="157.48" y2="114.3" width="0.1524" layer="91"/>
 <wire x1="157.48" y1="114.3" x2="165.1" y2="114.3" width="0.1524" layer="91"/>
@@ -12013,16 +12025,16 @@ www.irf.com&lt;p&gt;
 <wire x1="165.1" y1="114.3" x2="176.53" y2="114.3" width="0.1524" layer="91"/>
 <wire x1="165.1" y1="115.57" x2="165.1" y2="114.3" width="0.1524" layer="91"/>
 <junction x="165.1" y="114.3"/>
-<pinref part="D3" gate="G$1" pin="C"/>
 <wire x1="149.86" y1="163.83" x2="157.48" y2="163.83" width="0.1524" layer="91"/>
 <junction x="157.48" y="163.83"/>
+<pinref part="D3" gate="G$1" pin="C"/>
 </segment>
 </net>
 <net name="N$17" class="0">
 <segment>
 <pinref part="R18" gate="R" pin="1"/>
-<pinref part="D4" gate="G$1" pin="A"/>
 <wire x1="142.24" y1="168.91" x2="146.05" y2="168.91" width="0.1524" layer="91"/>
+<pinref part="D6" gate="G$1" pin="A"/>
 </segment>
 </net>
 <net name="N$21" class="0">
@@ -12081,7 +12093,7 @@ www.irf.com&lt;p&gt;
 <wire x1="274.32" y1="226.06" x2="279.4" y2="226.06" width="0.1524" layer="91"/>
 <pinref part="R24" gate="R" pin="2"/>
 <wire x1="279.4" y1="226.06" x2="279.4" y2="217.17" width="0.1524" layer="91"/>
-<wire x1="279.4" y1="226.06" x2="289.56" y2="226.06" width="0.1524" layer="91"/>
+<wire x1="279.4" y1="226.06" x2="294.005" y2="226.06" width="0.1524" layer="91"/>
 <junction x="279.4" y="226.06"/>
 <pinref part="U$8" gate="G$1" pin="G"/>
 </segment>
@@ -12130,11 +12142,11 @@ www.irf.com&lt;p&gt;
 <wire x1="322.58" y1="181.61" x2="302.26" y2="181.61" width="0.1524" layer="91"/>
 <wire x1="302.26" y1="181.61" x2="302.26" y2="179.07" width="0.1524" layer="91"/>
 <junction x="302.26" y="181.61"/>
-<wire x1="302.26" y1="181.61" x2="302.26" y2="221.615" width="0.1524" layer="91"/>
-<pinref part="U$8" gate="G$1" pin="S"/>
 <pinref part="R25" gate="R" pin="2"/>
 <wire x1="264.16" y1="181.61" x2="264.16" y2="205.74" width="0.1524" layer="91"/>
 <label x="275.59" y="181.61" size="1.778" layer="95"/>
+<pinref part="U$8" gate="G$1" pin="S"/>
+<wire x1="302.26" y1="181.61" x2="302.26" y2="212.725" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$22" class="0">
@@ -12185,17 +12197,17 @@ www.irf.com&lt;p&gt;
 </net>
 <net name="N$13" class="0">
 <segment>
-<pinref part="D4" gate="G$1" pin="C"/>
-<pinref part="U$5" gate="G$1" pin="~CHGOK"/>
+<pinref part="U$5" gate="G$1" pin="!CHGOK"/>
 <wire x1="153.67" y1="168.91" x2="165.1" y2="168.91" width="0.1524" layer="91"/>
+<pinref part="D6" gate="G$1" pin="C"/>
 </segment>
 </net>
 <net name="N$14" class="0">
 <segment>
 <pinref part="R30" gate="R" pin="1"/>
 <wire x1="135.89" y1="168.91" x2="135.89" y2="163.83" width="0.1524" layer="91"/>
-<pinref part="D3" gate="G$1" pin="A"/>
 <wire x1="135.89" y1="163.83" x2="142.24" y2="163.83" width="0.1524" layer="91"/>
+<pinref part="D3" gate="G$1" pin="A"/>
 </segment>
 </net>
 <net name="N$20" class="0">
@@ -12460,8 +12472,11 @@ From Telemetrum</text>
 <attribute name="VALUE" x="419.354" y="145.161" size="1.778" layer="96"/>
 </instance>
 <instance part="D5" gate="G$1" x="246.38" y="182.88" smashed="yes" rot="R270">
-<attribute name="NAME" x="249.0216" y="185.1914" size="1.016" layer="95" rot="R270"/>
-<attribute name="VALUE" x="241.8842" y="185.4454" size="1.016" layer="96" rot="R270"/>
+<attribute name="NAME" x="247.1166" y="184.5564" size="1.016" layer="95" rot="R270"/>
+<attribute name="VALUE" x="241.2746" y="187.2742" size="1.016" layer="96"/>
+<attribute name="DIS" x="246.38" y="182.88" size="1.778" layer="96" rot="R270" display="off"/>
+<attribute name="DPN" x="246.38" y="182.88" size="1.778" layer="96" rot="R270" display="off"/>
+<attribute name="MPN" x="246.38" y="182.88" size="1.778" layer="96" rot="R270" display="off"/>
 </instance>
 <instance part="R31" gate="R" x="232.41" y="182.88" smashed="yes" rot="R180">
 <attribute name="NAME" x="232.41" y="181.3814" size="1.778" layer="95" rot="R180"/>
@@ -13163,7 +13178,7 @@ From Telemetrum</text>
 <pinref part="R31" gate="R" pin="1"/>
 </segment>
 </net>
-<net name="N$8" class="0">
+<net name="SPKR" class="0">
 <segment>
 <pinref part="U1" gate="G$1" pin="PB1"/>
 <wire x1="250.19" y1="180.34" x2="254" y2="180.34" width="0.1524" layer="91"/>
@@ -13173,13 +13188,15 @@ From Telemetrum</text>
 <pinref part="R37" gate="R" pin="1"/>
 <wire x1="250.19" y1="120.65" x2="250.19" y2="121.92" width="0.1524" layer="91"/>
 <junction x="250.19" y="121.92"/>
+<label x="252.095" y="159.385" size="1.778" layer="95" rot="R90"/>
 </segment>
 </net>
-<net name="N$15" class="0">
+<net name="LED" class="0">
 <segment>
 <pinref part="U1" gate="G$1" pin="PB0"/>
 <pinref part="D5" gate="G$1" pin="A"/>
 <wire x1="254" y1="182.88" x2="248.92" y2="182.88" width="0.1524" layer="91"/>
+<label x="249.555" y="183.515" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="BATT_READ" class="0">
@@ -13211,10 +13228,6 @@ From Telemetrum</text>
 <approved hash="113,2,279.296,215.796,FRAME3,,,,,"/>
 <approved hash="113,2,460.773,212.316,J2,,,,,"/>
 <approved hash="113,2,468.867,293.596,J1,,,,,"/>
-<approved hash="113,1,113.759,179.07,R17,,,,,"/>
-<approved hash="113,1,306.307,199.616,JP1,,,,,"/>
-<approved hash="113,1,63.2629,197.076,JP2,,,,,"/>
-<approved hash="113,1,196.309,167.64,R20,,,,,"/>
 </errors>
 </schematic>
 </drawing>
