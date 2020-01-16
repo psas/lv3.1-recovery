@@ -1,4 +1,4 @@
-# Ben's "Good keys" Script for Schematics
+# Ben's "Good keys" Script for Board Design
 # Assigns Key Bindings for EAGLE CAD
 # Thanks to TAB for contributing.
 
@@ -36,7 +36,8 @@ ASSIGN     C+E 'ERC';
 ASSIGN   C+S+I 'Invoke';
 ASSIGN     C+B 'Label';
 ASSIGN     A+B 'Attribute';
-ASSIGN     C+R 'Net';
+ASSIGN     C+R 'Route';
+ASSIGN     A+R 'Ratsnest';
 ASSIGN     A+V 'Value';
 ASSIGN     A+G 'NEWGROUP';
 
