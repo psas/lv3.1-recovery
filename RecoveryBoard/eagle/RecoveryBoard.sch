@@ -11087,7 +11087,6 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 </classes>
 <parts>
 <part name="U1" library="U-ST-STM32F042K-uC" deviceset="STM32F042K6" device=""/>
-<part name="SUPPLY2" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="C1" library="oresat-rcl" deviceset="C-EU" device="0603-C-NOSILK" value="0.1uF"/>
 <part name="SUPPLY3" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="SUPPLY4" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
@@ -11225,13 +11224,13 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <part name="R13" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="1.7K"/>
 <part name="R14" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="3.3K"/>
 <part name="P+4" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="+12V" device=""/>
-<part name="R15" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="2636">
+<part name="R15" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="26.36K">
 <attribute name="DIS" value="Digi-Key"/>
 <attribute name="DPN" value="1276-4275-1-ND"/>
 <attribute name="MFR" value="Samsung"/>
 <attribute name="MPN" value="RC1005F6653CS"/>
 </part>
-<part name="R16" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="1000">
+<part name="R16" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10K">
 <attribute name="DIS" value="Digi-Key"/>
 <attribute name="DPN" value="1276-4275-1-ND"/>
 <attribute name="MFR" value="Samsung"/>
@@ -11281,7 +11280,7 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <part name="C20" library="oresat-rcl" deviceset="C-EU" device="0603-C-NOSILK" value="100n"/>
 <part name="SUPPLY47" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="U$8" library="Q--Si7465DP--Vishay Power MOSFET with multple S+D leads" deviceset="SI7465DP" device=""/>
-<part name="C15" library="oresat-rcl" deviceset="C-EU" device="0603-C-NOSILK" value="0.1uF"/>
+<part name="C15" library="oresat-rcl" deviceset="C-EU" device="0603-C-NOSILK" value="100nF"/>
 <part name="C14" library="oresat-rcl" deviceset="C-EU" device="0603-C-NOSILK" value="0.1uF"/>
 <part name="R20" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK"/>
 <part name="SUPPLY15" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
@@ -11319,6 +11318,7 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <attribute name="MPN" value="SML-D12U1WT86"/>
 </part>
 <part name="IC1" library="SamacSys_Parts" deviceset="BD62120AEFJ-E2" device=""/>
+<part name="SUPPLY1" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 </parts>
 <sheets>
 <sheet>
@@ -12273,7 +12273,6 @@ From Telemetrum</text>
 <attribute name="NAME" x="287.02" y="157.48" size="1.778" layer="95"/>
 <attribute name="VALUE" x="287.02" y="154.94" size="1.778" layer="96"/>
 </instance>
-<instance part="SUPPLY2" gate="GND" x="499.11" y="143.51" smashed="yes"/>
 <instance part="C1" gate="CE" x="451.485" y="170.815" smashed="yes">
 <attribute name="NAME" x="453.009" y="171.196" size="1.778" layer="95"/>
 <attribute name="VALUE" x="453.009" y="166.116" size="1.778" layer="96"/>
@@ -12498,6 +12497,7 @@ From Telemetrum</text>
 <attribute name="NAME" x="480.06" y="168.91" size="1.778" layer="95" align="center-left"/>
 <attribute name="VALUE" x="480.06" y="166.37" size="1.778" layer="96" align="center-left"/>
 </instance>
+<instance part="SUPPLY1" gate="GND" x="443.865" y="140.335" smashed="yes"/>
 </instances>
 <busses>
 </busses>
@@ -12652,6 +12652,12 @@ From Telemetrum</text>
 <segment>
 <pinref part="SUPPLY42" gate="GND" pin="GND"/>
 <pinref part="Q3" gate="G$1" pin="S"/>
+</segment>
+<segment>
+<pinref part="IC1" gate="G$1" pin="TEST"/>
+<wire x1="453.39" y1="158.75" x2="443.865" y2="158.75" width="0.1524" layer="91"/>
+<wire x1="443.865" y1="158.75" x2="443.865" y2="142.875" width="0.1524" layer="91"/>
+<pinref part="SUPPLY1" gate="GND" pin="GND"/>
 </segment>
 </net>
 <net name="IN1" class="0">
@@ -12935,7 +12941,7 @@ From Telemetrum</text>
 <label x="237.49" y="195.58" size="1.778" layer="95"/>
 </segment>
 </net>
-<net name="LAMOTOR-" class="0">
+<net name="LAMOTOR+" class="0">
 <segment>
 <wire x1="497.84" y1="158.75" x2="497.84" y2="215.9" width="0.1524" layer="91"/>
 <label x="497.205" y="178.435" size="1.6764" layer="95" rot="R90"/>
@@ -13181,13 +13187,14 @@ From Telemetrum</text>
 <wire x1="259.08" y1="132.08" x2="259.08" y2="129.54" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="N$8" class="0">
+<net name="LAMOTOR-" class="0">
 <segment>
 <pinref part="J2" gate="A" pin="2"/>
 <wire x1="461.01" y1="213.36" x2="501.015" y2="213.36" width="0.1524" layer="91"/>
 <pinref part="IC1" gate="G$1" pin="OUT2"/>
 <wire x1="501.015" y1="156.21" x2="483.87" y2="156.21" width="0.1524" layer="91"/>
 <wire x1="501.015" y1="213.36" x2="501.015" y2="156.21" width="0.1524" layer="91"/>
+<label x="502.92" y="179.07" size="1.778" layer="95" rot="R90"/>
 </segment>
 </net>
 </nets>
