@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="9.5.1">
+<eagle version="9.4.2">
 <drawing>
 <settings>
 <setting alwaysvectorfont="no"/>
@@ -338,90 +338,6 @@
 </connects>
 <technologies>
 <technology name=""/>
-</technologies>
-</device>
-</devices>
-</deviceset>
-</devicesets>
-</library>
-<library name="SamacSys_Parts">
-<description>&lt;b&gt;https://componentsearchengine.com&lt;/b&gt;&lt;p&gt;
-&lt;author&gt;Created by SamacSys&lt;/author&gt;</description>
-<packages>
-<package name="SOIC127P600X100-9N">
-<description>&lt;b&gt;HTSOP-J8-12&lt;/b&gt;&lt;br&gt;
-</description>
-<smd name="1" x="-2.712" y="1.905" dx="1.525" dy="0.7" layer="1"/>
-<smd name="2" x="-2.712" y="0.635" dx="1.525" dy="0.7" layer="1"/>
-<smd name="3" x="-2.712" y="-0.635" dx="1.525" dy="0.7" layer="1"/>
-<smd name="4" x="-2.712" y="-1.905" dx="1.525" dy="0.7" layer="1"/>
-<smd name="5" x="2.712" y="-1.905" dx="1.525" dy="0.7" layer="1"/>
-<smd name="6" x="2.712" y="-0.635" dx="1.525" dy="0.7" layer="1"/>
-<smd name="7" x="2.712" y="0.635" dx="1.525" dy="0.7" layer="1"/>
-<smd name="8" x="2.712" y="1.905" dx="1.525" dy="0.7" layer="1"/>
-<smd name="9" x="0" y="0" dx="3.2" dy="2.4" layer="1" rot="R90"/>
-<text x="0" y="0" size="1.27" layer="25" align="center">&gt;NAME</text>
-<text x="0" y="0" size="1.27" layer="27" align="center">&gt;VALUE</text>
-<wire x1="-3.725" y1="2.75" x2="3.725" y2="2.75" width="0.05" layer="51"/>
-<wire x1="3.725" y1="2.75" x2="3.725" y2="-2.75" width="0.05" layer="51"/>
-<wire x1="3.725" y1="-2.75" x2="-3.725" y2="-2.75" width="0.05" layer="51"/>
-<wire x1="-3.725" y1="-2.75" x2="-3.725" y2="2.75" width="0.05" layer="51"/>
-<wire x1="-1.95" y1="2.45" x2="1.95" y2="2.45" width="0.1" layer="51"/>
-<wire x1="1.95" y1="2.45" x2="1.95" y2="-2.45" width="0.1" layer="51"/>
-<wire x1="1.95" y1="-2.45" x2="-1.95" y2="-2.45" width="0.1" layer="51"/>
-<wire x1="-1.95" y1="-2.45" x2="-1.95" y2="2.45" width="0.1" layer="51"/>
-<wire x1="-1.95" y1="1.18" x2="-0.68" y2="2.45" width="0.1" layer="51"/>
-<wire x1="-3.475" y1="2.605" x2="-1.95" y2="2.605" width="0.2" layer="21"/>
-</package>
-</packages>
-<symbols>
-<symbol name="BD62120AEFJ-E2">
-<wire x1="5.08" y1="2.54" x2="25.4" y2="2.54" width="0.254" layer="94"/>
-<wire x1="25.4" y1="-15.24" x2="25.4" y2="2.54" width="0.254" layer="94"/>
-<wire x1="25.4" y1="-15.24" x2="5.08" y2="-15.24" width="0.254" layer="94"/>
-<wire x1="5.08" y1="2.54" x2="5.08" y2="-15.24" width="0.254" layer="94"/>
-<text x="26.67" y="7.62" size="1.778" layer="95" align="center-left">&gt;NAME</text>
-<text x="26.67" y="5.08" size="1.778" layer="96" align="center-left">&gt;VALUE</text>
-<pin name="GND_1" x="0" y="0" length="middle"/>
-<pin name="OUT1" x="0" y="-2.54" length="middle"/>
-<pin name="VCC" x="0" y="-5.08" length="middle"/>
-<pin name="GND_2" x="0" y="-7.62" length="middle"/>
-<pin name="EP" x="15.24" y="-20.32" length="middle" rot="R90"/>
-<pin name="OUT2" x="30.48" y="0" length="middle" rot="R180"/>
-<pin name="TEST" x="30.48" y="-2.54" length="middle" rot="R180"/>
-<pin name="IN2" x="30.48" y="-5.08" length="middle" rot="R180"/>
-<pin name="IN1" x="30.48" y="-7.62" length="middle" rot="R180"/>
-</symbol>
-</symbols>
-<devicesets>
-<deviceset name="BD62120AEFJ-E2" prefix="IC">
-<description>&lt;b&gt;ROHM BD62120AEFJ-E2 Motor Driver IC 8-Pin, HTSOP-J&lt;/b&gt;&lt;p&gt;
-Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E2.pdf"&gt; Datasheet &lt;/a&gt;</description>
-<gates>
-<gate name="G$1" symbol="BD62120AEFJ-E2" x="0" y="0"/>
-</gates>
-<devices>
-<device name="" package="SOIC127P600X100-9N">
-<connects>
-<connect gate="G$1" pin="EP" pad="9"/>
-<connect gate="G$1" pin="GND_1" pad="1"/>
-<connect gate="G$1" pin="GND_2" pad="4"/>
-<connect gate="G$1" pin="IN1" pad="5"/>
-<connect gate="G$1" pin="IN2" pad="6"/>
-<connect gate="G$1" pin="OUT1" pad="2"/>
-<connect gate="G$1" pin="OUT2" pad="8"/>
-<connect gate="G$1" pin="TEST" pad="7"/>
-<connect gate="G$1" pin="VCC" pad="3"/>
-</connects>
-<technologies>
-<technology name="">
-<attribute name="DESCRIPTION" value="ROHM BD62120AEFJ-E2 Motor Driver IC 8-Pin, HTSOP-J" constant="no"/>
-<attribute name="HEIGHT" value="1mm" constant="no"/>
-<attribute name="MANUFACTURER_NAME" value="ROHM Semiconductor" constant="no"/>
-<attribute name="MANUFACTURER_PART_NUMBER" value="BD62120AEFJ-E2" constant="no"/>
-<attribute name="MOUSER_PART_NUMBER" value="755-BD62120AEFJ-E2" constant="no"/>
-<attribute name="MOUSER_PRICE-STOCK" value="https://www.mouser.com/Search/Refine.aspx?Keyword=755-BD62120AEFJ-E2" constant="no"/>
-</technology>
 </technologies>
 </device>
 </devices>
@@ -11080,6 +10996,86 @@ www.irf.com&lt;p&gt;
 </deviceset>
 </devicesets>
 </library>
+<library name="SamacSys_Parts">
+<description>&lt;b&gt;https://componentsearchengine.com&lt;/b&gt;&lt;p&gt;
+&lt;author&gt;Created by SamacSys&lt;/author&gt;</description>
+<packages>
+<package name="SOIC127P600X100-9N">
+<description>&lt;b&gt;HTSOP-J8-12&lt;/b&gt;&lt;br&gt;
+</description>
+<smd name="1" x="-2.712" y="1.905" dx="1.525" dy="0.7" layer="1"/>
+<smd name="2" x="-2.712" y="0.635" dx="1.525" dy="0.7" layer="1"/>
+<smd name="3" x="-2.712" y="-0.635" dx="1.525" dy="0.7" layer="1"/>
+<smd name="4" x="-2.712" y="-1.905" dx="1.525" dy="0.7" layer="1"/>
+<smd name="5" x="2.712" y="-1.905" dx="1.525" dy="0.7" layer="1"/>
+<smd name="6" x="2.712" y="-0.635" dx="1.525" dy="0.7" layer="1"/>
+<smd name="7" x="2.712" y="0.635" dx="1.525" dy="0.7" layer="1"/>
+<smd name="8" x="2.712" y="1.905" dx="1.525" dy="0.7" layer="1"/>
+<smd name="9" x="0" y="0" dx="3.2" dy="2.4" layer="1" rot="R90"/>
+<text x="0" y="0" size="1.27" layer="25" align="center">&gt;NAME</text>
+<text x="0" y="0" size="1.27" layer="27" align="center">&gt;VALUE</text>
+<wire x1="-3.725" y1="2.75" x2="3.725" y2="2.75" width="0.05" layer="51"/>
+<wire x1="3.725" y1="2.75" x2="3.725" y2="-2.75" width="0.05" layer="51"/>
+<wire x1="3.725" y1="-2.75" x2="-3.725" y2="-2.75" width="0.05" layer="51"/>
+<wire x1="-3.725" y1="-2.75" x2="-3.725" y2="2.75" width="0.05" layer="51"/>
+<wire x1="-1.95" y1="2.45" x2="1.95" y2="2.45" width="0.1" layer="51"/>
+<wire x1="1.95" y1="2.45" x2="1.95" y2="-2.45" width="0.1" layer="51"/>
+<wire x1="1.95" y1="-2.45" x2="-1.95" y2="-2.45" width="0.1" layer="51"/>
+<wire x1="-1.95" y1="-2.45" x2="-1.95" y2="2.45" width="0.1" layer="51"/>
+<wire x1="-1.95" y1="1.18" x2="-0.68" y2="2.45" width="0.1" layer="51"/>
+<wire x1="-3.475" y1="2.605" x2="-1.95" y2="2.605" width="0.2" layer="21"/>
+</package>
+</packages>
+<symbols>
+<symbol name="BD62120AEFJ-E2">
+<wire x1="5.08" y1="2.54" x2="25.4" y2="2.54" width="0.254" layer="94"/>
+<wire x1="25.4" y1="-15.24" x2="25.4" y2="2.54" width="0.254" layer="94"/>
+<wire x1="25.4" y1="-15.24" x2="5.08" y2="-15.24" width="0.254" layer="94"/>
+<wire x1="5.08" y1="2.54" x2="5.08" y2="-15.24" width="0.254" layer="94"/>
+<text x="26.67" y="7.62" size="1.778" layer="95" align="center-left">&gt;NAME</text>
+<text x="26.67" y="5.08" size="1.778" layer="96" align="center-left">&gt;VALUE</text>
+<pin name="OUT1" x="30.48" y="-2.54" length="middle" rot="R180"/>
+<pin name="VCC" x="15.24" y="7.62" length="middle" rot="R270"/>
+<pin name="OUT2" x="30.48" y="-5.08" length="middle" rot="R180"/>
+<pin name="TEST" x="0" y="-2.54" length="middle"/>
+<pin name="IN2" x="0" y="-5.08" length="middle"/>
+<pin name="IN1" x="0" y="-7.62" length="middle"/>
+<pin name="GND" x="15.24" y="-20.32" length="middle" rot="R90"/>
+</symbol>
+</symbols>
+<devicesets>
+<deviceset name="BD62120AEFJ-E2" prefix="IC">
+<description>&lt;b&gt;ROHM BD62120AEFJ-E2 Motor Driver IC 8-Pin, HTSOP-J&lt;/b&gt;&lt;p&gt;
+Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E2.pdf"&gt; Datasheet &lt;/a&gt;</description>
+<gates>
+<gate name="G$1" symbol="BD62120AEFJ-E2" x="0" y="0"/>
+</gates>
+<devices>
+<device name="" package="SOIC127P600X100-9N">
+<connects>
+<connect gate="G$1" pin="GND" pad="1 4 9"/>
+<connect gate="G$1" pin="IN1" pad="5"/>
+<connect gate="G$1" pin="IN2" pad="6"/>
+<connect gate="G$1" pin="OUT1" pad="2"/>
+<connect gate="G$1" pin="OUT2" pad="8"/>
+<connect gate="G$1" pin="TEST" pad="7"/>
+<connect gate="G$1" pin="VCC" pad="3"/>
+</connects>
+<technologies>
+<technology name="">
+<attribute name="DESCRIPTION" value="ROHM BD62120AEFJ-E2 Motor Driver IC 8-Pin, HTSOP-J" constant="no"/>
+<attribute name="HEIGHT" value="1mm" constant="no"/>
+<attribute name="MANUFACTURER_NAME" value="ROHM Semiconductor" constant="no"/>
+<attribute name="MANUFACTURER_PART_NUMBER" value="BD62120AEFJ-E2" constant="no"/>
+<attribute name="MOUSER_PART_NUMBER" value="755-BD62120AEFJ-E2" constant="no"/>
+<attribute name="MOUSER_PRICE-STOCK" value="https://www.mouser.com/Search/Refine.aspx?Keyword=755-BD62120AEFJ-E2" constant="no"/>
+</technology>
+</technologies>
+</device>
+</devices>
+</deviceset>
+</devicesets>
+</library>
 </libraries>
 <attributes>
 </attributes>
@@ -11091,8 +11087,6 @@ www.irf.com&lt;p&gt;
 </classes>
 <parts>
 <part name="U1" library="U-ST-STM32F042K-uC" deviceset="STM32F042K6" device=""/>
-<part name="IC1" library="SamacSys_Parts" deviceset="BD62120AEFJ-E2" device=""/>
-<part name="SUPPLY1" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="SUPPLY2" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="C1" library="oresat-rcl" deviceset="C-EU" device="0603-C-NOSILK" value="0.1uF"/>
 <part name="SUPPLY3" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
@@ -11324,6 +11318,7 @@ www.irf.com&lt;p&gt;
 <attribute name="DPN" value=" SML-D12U1WT86CT-ND"/>
 <attribute name="MPN" value="SML-D12U1WT86"/>
 </part>
+<part name="IC1" library="SamacSys_Parts" deviceset="BD62120AEFJ-E2" device=""/>
 </parts>
 <sheets>
 <sheet>
@@ -12278,18 +12273,13 @@ From Telemetrum</text>
 <attribute name="NAME" x="287.02" y="157.48" size="1.778" layer="95"/>
 <attribute name="VALUE" x="287.02" y="154.94" size="1.778" layer="96"/>
 </instance>
-<instance part="IC1" gate="G$1" x="453.39" y="161.29" smashed="yes">
-<attribute name="NAME" x="480.06" y="168.91" size="1.778" layer="95" align="center-left"/>
-<attribute name="VALUE" x="480.06" y="166.37" size="1.778" layer="96" align="center-left"/>
-</instance>
-<instance part="SUPPLY1" gate="GND" x="443.23" y="138.43" smashed="yes"/>
 <instance part="SUPPLY2" gate="GND" x="499.11" y="143.51" smashed="yes"/>
-<instance part="C1" gate="CE" x="425.45" y="149.86" smashed="yes">
-<attribute name="NAME" x="426.974" y="150.241" size="1.778" layer="95"/>
-<attribute name="VALUE" x="426.974" y="145.161" size="1.778" layer="96"/>
+<instance part="C1" gate="CE" x="451.485" y="170.815" smashed="yes">
+<attribute name="NAME" x="453.009" y="171.196" size="1.778" layer="95"/>
+<attribute name="VALUE" x="453.009" y="166.116" size="1.778" layer="96"/>
 </instance>
-<instance part="SUPPLY3" gate="GND" x="417.83" y="140.97" smashed="yes"/>
-<instance part="SUPPLY4" gate="GND" x="425.45" y="140.97" smashed="yes"/>
+<instance part="SUPPLY3" gate="GND" x="443.865" y="161.925" smashed="yes"/>
+<instance part="SUPPLY4" gate="GND" x="451.485" y="161.925" smashed="yes"/>
 <instance part="R7" gate="R" x="125.73" y="147.32" smashed="yes" rot="R90">
 <attribute name="NAME" x="124.2314" y="143.51" size="1.778" layer="95" rot="R90"/>
 <attribute name="VALUE" x="121.412" y="143.51" size="1.778" layer="96" rot="R90"/>
@@ -12326,8 +12316,8 @@ From Telemetrum</text>
 <attribute name="VALUE" x="210.8514" y="194.328809375" size="1.784590625" layer="96" rot="R180"/>
 </instance>
 <instance part="SUPPLY29" gate="GND" x="200.66" y="177.8" smashed="yes"/>
-<instance part="P+2" gate="1" x="417.83" y="166.37" smashed="yes">
-<attribute name="VALUE" x="425.45" y="166.37" size="1.778" layer="96" rot="R180"/>
+<instance part="P+2" gate="1" x="443.865" y="187.325" smashed="yes">
+<attribute name="VALUE" x="451.485" y="187.325" size="1.778" layer="96" rot="R180"/>
 </instance>
 <instance part="FRAME3" gate="G$1" x="0" y="0" smashed="yes"/>
 <instance part="FRAME3" gate="G$2" x="452.12" y="0" smashed="yes">
@@ -12467,9 +12457,9 @@ From Telemetrum</text>
 <attribute name="NAME" x="252.73" y="341.63" size="1.778" layer="95"/>
 <attribute name="VALUE" x="252.73" y="339.09" size="1.778" layer="96"/>
 </instance>
-<instance part="C22" gate="CE" x="417.83" y="149.86" smashed="yes">
-<attribute name="NAME" x="419.354" y="150.241" size="1.778" layer="95"/>
-<attribute name="VALUE" x="419.354" y="145.161" size="1.778" layer="96"/>
+<instance part="C22" gate="CE" x="443.865" y="170.815" smashed="yes">
+<attribute name="NAME" x="445.389" y="171.196" size="1.778" layer="95"/>
+<attribute name="VALUE" x="445.389" y="166.116" size="1.778" layer="96"/>
 </instance>
 <instance part="D5" gate="G$1" x="246.38" y="182.88" smashed="yes" rot="R270">
 <attribute name="NAME" x="247.1166" y="184.5564" size="1.016" layer="95" rot="R270"/>
@@ -12504,31 +12494,19 @@ From Telemetrum</text>
 <attribute name="NAME" x="408.94" y="314.96" size="1.778" layer="95"/>
 <attribute name="VALUE" x="408.94" y="312.42" size="1.778" layer="96"/>
 </instance>
+<instance part="IC1" gate="G$1" x="453.39" y="161.29" smashed="yes">
+<attribute name="NAME" x="480.06" y="168.91" size="1.778" layer="95" align="center-left"/>
+<attribute name="VALUE" x="480.06" y="166.37" size="1.778" layer="96" align="center-left"/>
+</instance>
 </instances>
 <busses>
 </busses>
 <nets>
 <net name="GND" class="0">
 <segment>
-<pinref part="IC1" gate="G$1" pin="GND_2"/>
-<wire x1="453.39" y1="153.67" x2="443.23" y2="153.67" width="0.1524" layer="91"/>
-<wire x1="443.23" y1="153.67" x2="443.23" y2="140.97" width="0.1524" layer="91"/>
-<pinref part="SUPPLY1" gate="GND" pin="GND"/>
-<wire x1="443.23" y1="153.67" x2="443.23" y2="161.29" width="0.1524" layer="91"/>
-<junction x="443.23" y="153.67"/>
-<pinref part="IC1" gate="G$1" pin="GND_1"/>
-<wire x1="443.23" y1="161.29" x2="453.39" y2="161.29" width="0.1524" layer="91"/>
-</segment>
-<segment>
-<pinref part="IC1" gate="G$1" pin="TEST"/>
-<pinref part="SUPPLY2" gate="GND" pin="GND"/>
-<wire x1="483.87" y1="158.75" x2="499.11" y2="158.75" width="0.1524" layer="91"/>
-<wire x1="499.11" y1="158.75" x2="499.11" y2="146.05" width="0.1524" layer="91"/>
-</segment>
-<segment>
 <pinref part="SUPPLY4" gate="GND" pin="GND"/>
 <pinref part="C1" gate="CE" pin="2"/>
-<wire x1="425.45" y1="144.78" x2="425.45" y2="143.51" width="0.1524" layer="91"/>
+<wire x1="451.485" y1="165.735" x2="451.485" y2="164.465" width="0.1524" layer="91"/>
 </segment>
 <segment>
 <pinref part="U1" gate="G$1" pin="VSS"/>
@@ -12650,7 +12628,7 @@ From Telemetrum</text>
 <segment>
 <pinref part="SUPPLY3" gate="GND" pin="GND"/>
 <pinref part="C22" gate="CE" pin="2"/>
-<wire x1="417.83" y1="144.78" x2="417.83" y2="143.51" width="0.1524" layer="91"/>
+<wire x1="443.865" y1="165.735" x2="443.865" y2="164.465" width="0.1524" layer="91"/>
 </segment>
 <segment>
 <pinref part="SUPPLY48" gate="GND" pin="GND"/>
@@ -12668,31 +12646,19 @@ From Telemetrum</text>
 </segment>
 <segment>
 <pinref part="SUPPLY50" gate="GND" pin="GND"/>
-<pinref part="IC1" gate="G$1" pin="EP"/>
 <wire x1="468.63" y1="139.7" x2="468.63" y2="140.97" width="0.1524" layer="91"/>
+<pinref part="IC1" gate="G$1" pin="GND"/>
 </segment>
 <segment>
 <pinref part="SUPPLY42" gate="GND" pin="GND"/>
 <pinref part="Q3" gate="G$1" pin="S"/>
 </segment>
 </net>
-<net name="LAMOTOR+" class="0">
-<segment>
-<pinref part="IC1" gate="G$1" pin="OUT1"/>
-<wire x1="453.39" y1="158.75" x2="427.99" y2="158.75" width="0.1524" layer="91"/>
-<label x="427.99" y="189.23" size="1.6764" layer="95" rot="R90"/>
-<pinref part="J2" gate="A" pin="1"/>
-<wire x1="427.99" y1="158.75" x2="427.99" y2="215.9" width="0.1524" layer="91"/>
-<wire x1="427.99" y1="215.9" x2="461.01" y2="215.9" width="0.1524" layer="91"/>
-</segment>
-</net>
 <net name="IN1" class="0">
 <segment>
-<pinref part="IC1" gate="G$1" pin="IN1"/>
-<wire x1="483.87" y1="153.67" x2="488.95" y2="153.67" width="0.1524" layer="91"/>
-<label x="491.49" y="148.59" size="1.6764" layer="95" rot="R90"/>
-<wire x1="488.95" y1="153.67" x2="488.95" y2="118.11" width="0.1524" layer="91"/>
-<wire x1="488.95" y1="118.11" x2="386.08" y2="118.11" width="0.1524" layer="91"/>
+<label x="455.93" y="145.415" size="1.6764" layer="95" rot="R90"/>
+<wire x1="453.39" y1="153.67" x2="453.39" y2="118.11" width="0.1524" layer="91"/>
+<wire x1="453.39" y1="118.11" x2="386.08" y2="118.11" width="0.1524" layer="91"/>
 <wire x1="386.08" y1="118.11" x2="344.17" y2="118.11" width="0.1524" layer="91"/>
 <wire x1="344.17" y1="118.11" x2="344.17" y2="185.42" width="0.1524" layer="91"/>
 <pinref part="U1" gate="G$1" pin="PA8"/>
@@ -12700,6 +12666,7 @@ From Telemetrum</text>
 <label x="299.72" y="185.42" size="1.27" layer="95"/>
 <pinref part="R32" gate="R" pin="1"/>
 <junction x="386.08" y="118.11"/>
+<pinref part="IC1" gate="G$1" pin="IN1"/>
 </segment>
 </net>
 <net name="IN2" class="0">
@@ -12709,13 +12676,13 @@ From Telemetrum</text>
 <label x="299.72" y="182.88" size="1.27" layer="95"/>
 <wire x1="341.63" y1="182.88" x2="341.63" y2="134.62" width="0.1524" layer="91"/>
 <wire x1="341.63" y1="134.62" x2="386.08" y2="134.62" width="0.1524" layer="91"/>
-<wire x1="386.08" y1="134.62" x2="486.41" y2="134.62" width="0.1524" layer="91"/>
-<wire x1="486.41" y1="134.62" x2="486.41" y2="156.21" width="0.1524" layer="91"/>
-<pinref part="IC1" gate="G$1" pin="IN2"/>
-<wire x1="483.87" y1="156.21" x2="486.41" y2="156.21" width="0.1524" layer="91"/>
-<label x="488.95" y="156.21" size="1.6764" layer="95"/>
+<wire x1="386.08" y1="134.62" x2="451.485" y2="134.62" width="0.1524" layer="91"/>
+<wire x1="451.485" y1="134.62" x2="451.485" y2="156.21" width="0.1524" layer="91"/>
+<label x="450.85" y="144.78" size="1.6764" layer="95" rot="R90"/>
 <pinref part="R33" gate="R" pin="1"/>
 <junction x="386.08" y="134.62"/>
+<pinref part="IC1" gate="G$1" pin="IN2"/>
+<wire x1="453.39" y1="156.21" x2="451.485" y2="156.21" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="SENSOR1" class="0">
@@ -12828,18 +12795,19 @@ From Telemetrum</text>
 </net>
 <net name="+12V" class="0">
 <segment>
-<pinref part="IC1" gate="G$1" pin="VCC"/>
 <pinref part="C1" gate="CE" pin="1"/>
-<wire x1="425.45" y1="152.4" x2="425.45" y2="156.21" width="0.1524" layer="91"/>
-<wire x1="425.45" y1="156.21" x2="453.39" y2="156.21" width="0.1524" layer="91"/>
-<junction x="425.45" y="156.21"/>
-<wire x1="425.45" y1="156.21" x2="417.83" y2="156.21" width="0.1524" layer="91"/>
-<wire x1="417.83" y1="156.21" x2="417.83" y2="163.83" width="0.1524" layer="91"/>
-<label x="427.99" y="156.21" size="1.6764" layer="95"/>
+<wire x1="451.485" y1="173.355" x2="451.485" y2="176.53" width="0.1524" layer="91"/>
+<wire x1="451.485" y1="176.53" x2="443.865" y2="176.53" width="0.1524" layer="91"/>
+<wire x1="443.865" y1="176.53" x2="443.865" y2="184.785" width="0.1524" layer="91"/>
+<label x="438.785" y="175.895" size="1.6764" layer="95"/>
 <pinref part="P+2" gate="1" pin="+12V"/>
 <pinref part="C22" gate="CE" pin="1"/>
-<wire x1="417.83" y1="152.4" x2="417.83" y2="156.21" width="0.1524" layer="91"/>
-<junction x="417.83" y="156.21"/>
+<wire x1="443.865" y1="173.355" x2="443.865" y2="176.53" width="0.1524" layer="91"/>
+<junction x="443.865" y="176.53"/>
+<pinref part="IC1" gate="G$1" pin="VCC"/>
+<wire x1="451.485" y1="176.53" x2="468.63" y2="176.53" width="0.1524" layer="91"/>
+<wire x1="468.63" y1="176.53" x2="468.63" y2="168.91" width="0.1524" layer="91"/>
+<junction x="451.485" y="176.53"/>
 </segment>
 <segment>
 <pinref part="P+1" gate="1" pin="+12V"/>
@@ -12969,12 +12937,12 @@ From Telemetrum</text>
 </net>
 <net name="LAMOTOR-" class="0">
 <segment>
-<pinref part="J2" gate="A" pin="2"/>
-<wire x1="499.11" y1="161.29" x2="499.11" y2="213.36" width="0.1524" layer="91"/>
-<wire x1="499.11" y1="213.36" x2="461.01" y2="213.36" width="0.1524" layer="91"/>
-<pinref part="IC1" gate="G$1" pin="OUT2"/>
-<wire x1="483.87" y1="161.29" x2="499.11" y2="161.29" width="0.1524" layer="91"/>
-<label x="499.11" y="179.07" size="1.6764" layer="95" rot="R90"/>
+<wire x1="497.84" y1="158.75" x2="497.84" y2="215.9" width="0.1524" layer="91"/>
+<label x="497.205" y="178.435" size="1.6764" layer="95" rot="R90"/>
+<pinref part="IC1" gate="G$1" pin="OUT1"/>
+<wire x1="483.87" y1="158.75" x2="497.84" y2="158.75" width="0.1524" layer="91"/>
+<pinref part="J2" gate="A" pin="1"/>
+<wire x1="461.01" y1="215.9" x2="497.84" y2="215.9" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="DCM_PWM" class="0">
@@ -12998,7 +12966,7 @@ From Telemetrum</text>
 <wire x1="461.01" y1="208.28" x2="488.95" y2="208.28" width="0.1524" layer="91"/>
 <wire x1="488.95" y1="208.28" x2="488.95" y2="180.34" width="0.1524" layer="91"/>
 <wire x1="488.95" y1="180.34" x2="294.64" y2="180.34" width="0.1524" layer="91"/>
-<label x="405.13" y="187.96" size="1.778" layer="95"/>
+<label x="413.385" y="182.245" size="1.778" layer="95"/>
 <pinref part="U1" gate="G$1" pin="PA10"/>
 <label x="299.72" y="180.34" size="1.27" layer="95"/>
 </segment>
@@ -13211,6 +13179,15 @@ From Telemetrum</text>
 <pinref part="U$7" gate="G$1" pin="NEG"/>
 <pinref part="Q1" gate="G$1" pin="D"/>
 <wire x1="259.08" y1="132.08" x2="259.08" y2="129.54" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$8" class="0">
+<segment>
+<pinref part="J2" gate="A" pin="2"/>
+<wire x1="461.01" y1="213.36" x2="501.015" y2="213.36" width="0.1524" layer="91"/>
+<pinref part="IC1" gate="G$1" pin="OUT2"/>
+<wire x1="501.015" y1="156.21" x2="483.87" y2="156.21" width="0.1524" layer="91"/>
+<wire x1="501.015" y1="213.36" x2="501.015" y2="156.21" width="0.1524" layer="91"/>
 </segment>
 </net>
 </nets>
