@@ -11222,8 +11222,8 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <part name="SUPPLY3" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="SUPPLY4" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="R7" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10K"/>
-<part name="R8" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="439"/>
-<part name="R9" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="439"/>
+<part name="R8" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="442"/>
+<part name="R9" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="442"/>
 <part name="R10" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10K"/>
 <part name="SUPPLY24" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="CM1" library="J-Samtec-FTSH-105-XXX-DV-K-ARM-SWD" deviceset="FTSH-105-XX-X-DV-K" device=""/>
@@ -11350,10 +11350,10 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <part name="R12" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="1K"/>
 <part name="SUPPLY8" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="SUPPLY9" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
-<part name="R13" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="1.7K"/>
+<part name="R13" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="1.69K"/>
 <part name="R14" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="3.3K"/>
 <part name="P+4" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="+12V" device=""/>
-<part name="R15" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="26.36K">
+<part name="R15" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="26.4K">
 <attribute name="DIS" value="Digi-Key"/>
 <attribute name="DPN" value="1276-4275-1-ND"/>
 <attribute name="MFR" value="Samsung"/>
@@ -11383,7 +11383,7 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <part name="C16" library="oresat-rcl" deviceset="C-EU" device="0603-C-NOSILK" value="2.2n"/>
 <part name="L2" library="L-Coilcraft-XFL4020" deviceset="L-COILCRAFT-XFL4020" device=""/>
 <part name="R22" library="oresat-rcl" deviceset="R-US_" device="1206-C" value="100m"/>
-<part name="C17" library="oresat-rcl" deviceset="C-EU" device="0805-C-NOSILK" value="22u"/>
+<part name="C17" library="oresat-rcl" deviceset="C-EU" device="0805-C-NOSILK" value="22uF"/>
 <part name="SUPPLY18" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="U$7" library="SPK--SMT-0440-S-R--Speaker" deviceset="SMT-0440-S-R" device=""/>
 <part name="JP1" library="pinhead" library_urn="urn:adsk.eagle:library:325" deviceset="PINHD-1X4" device="" package3d_urn="urn:adsk.eagle:package:22407/2"/>
@@ -11397,9 +11397,9 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <part name="R25" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="1k"/>
 <part name="SUPPLY23" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="SUPPLY5" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="3.3V" device=""/>
-<part name="R26" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="50"/>
-<part name="R27" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="50"/>
-<part name="R28" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="50"/>
+<part name="R26" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="51.1"/>
+<part name="R27" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="51.1"/>
+<part name="R28" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10K"/>
 <part name="R29" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10k"/>
 <part name="SUPPLY34" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="C18" library="oresat-rcl" deviceset="C-EU" device="0603-C-NOSILK" value="100n"/>
