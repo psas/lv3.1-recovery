@@ -1636,58 +1636,6 @@ In this library the device names are the same as the pin names of the symbols, t
 </deviceset>
 </devicesets>
 </library>
-<library name="L-Coilcraft-XFL4020">
-<packages>
-<package name="L-COILCRAFT-XFL4020">
-<description>&lt;b&gt;PIS 2826&lt;/b&gt; Inductor&lt;p&gt;
-Source: http://www.stetco.com/products/inductors/pdf/PIS2816.pdf</description>
-<wire x1="2" y1="2" x2="2" y2="-2" width="0.127" layer="51"/>
-<wire x1="0.5" y1="2" x2="-0.5" y2="2" width="0.127" layer="21"/>
-<wire x1="-2" y1="2" x2="-2" y2="-2" width="0.127" layer="51"/>
-<wire x1="-0.5" y1="-2" x2="0.5" y2="-2" width="0.127" layer="21"/>
-<smd name="1" x="-1.2" y="0" dx="3.4" dy="0.98" layer="1" rot="R90"/>
-<smd name="2" x="1.2" y="0" dx="3.4" dy="0.98" layer="1" rot="R90"/>
-<text x="-0.9" y="-3" size="0.635" layer="25" font="vector" ratio="20">&gt;NAME</text>
-<text x="-0.9" y="-4" size="0.635" layer="27" font="vector" ratio="20">&gt;VALUE</text>
-<wire x1="-2" y1="-2" x2="2" y2="-2" width="0.127" layer="51"/>
-<wire x1="-2" y1="2" x2="2" y2="2" width="0.127" layer="51"/>
-</package>
-</packages>
-<symbols>
-<symbol name="L-US">
-<wire x1="0" y1="5.08" x2="1.27" y2="3.81" width="0.254" layer="94" curve="-90"/>
-<wire x1="0" y1="2.54" x2="1.27" y2="3.81" width="0.254" layer="94" curve="90"/>
-<wire x1="0" y1="2.54" x2="1.27" y2="1.27" width="0.254" layer="94" curve="-90"/>
-<wire x1="0" y1="0" x2="1.27" y2="1.27" width="0.254" layer="94" curve="90"/>
-<wire x1="0" y1="0" x2="1.27" y2="-1.27" width="0.254" layer="94" curve="-90"/>
-<wire x1="0" y1="-2.54" x2="1.27" y2="-1.27" width="0.254" layer="94" curve="90"/>
-<wire x1="0" y1="-2.54" x2="1.27" y2="-3.81" width="0.254" layer="94" curve="-90"/>
-<wire x1="0" y1="-5.08" x2="1.27" y2="-3.81" width="0.254" layer="94" curve="90"/>
-<text x="-1.27" y="-5.08" size="1.778" layer="95" rot="R90">&gt;NAME</text>
-<text x="3.81" y="-5.08" size="1.778" layer="96" rot="R90">&gt;VALUE</text>
-<pin name="2" x="0" y="-7.62" visible="off" length="short" direction="pas" swaplevel="1" rot="R90"/>
-<pin name="1" x="0" y="7.62" visible="off" length="short" direction="pas" swaplevel="1" rot="R270"/>
-</symbol>
-</symbols>
-<devicesets>
-<deviceset name="L-COILCRAFT-XFL4020" prefix="L">
-<gates>
-<gate name="G$1" symbol="L-US" x="0" y="0"/>
-</gates>
-<devices>
-<device name="" package="L-COILCRAFT-XFL4020">
-<connects>
-<connect gate="G$1" pin="1" pad="1"/>
-<connect gate="G$1" pin="2" pad="2"/>
-</connects>
-<technologies>
-<technology name=""/>
-</technologies>
-</device>
-</devices>
-</deviceset>
-</devicesets>
-</library>
 <library name="SparkFun-PowerSymbols" urn="urn:adsk.eagle:library:530">
 <description>&lt;h3&gt;SparkFun Power Symbols&lt;/h3&gt;
 This library contains power, ground, and voltage-supply symbols.
@@ -11025,86 +10973,6 @@ www.irf.com&lt;p&gt;
 </deviceset>
 </devicesets>
 </library>
-<library name="SamacSys_Parts">
-<description>&lt;b&gt;https://componentsearchengine.com&lt;/b&gt;&lt;p&gt;
-&lt;author&gt;Created by SamacSys&lt;/author&gt;</description>
-<packages>
-<package name="SOIC127P600X100-9N">
-<description>&lt;b&gt;HTSOP-J8-12&lt;/b&gt;&lt;br&gt;
-</description>
-<smd name="1" x="-2.712" y="1.905" dx="1.525" dy="0.7" layer="1"/>
-<smd name="2" x="-2.712" y="0.635" dx="1.525" dy="0.7" layer="1"/>
-<smd name="3" x="-2.712" y="-0.635" dx="1.525" dy="0.7" layer="1"/>
-<smd name="4" x="-2.712" y="-1.905" dx="1.525" dy="0.7" layer="1"/>
-<smd name="5" x="2.712" y="-1.905" dx="1.525" dy="0.7" layer="1"/>
-<smd name="6" x="2.712" y="-0.635" dx="1.525" dy="0.7" layer="1"/>
-<smd name="7" x="2.712" y="0.635" dx="1.525" dy="0.7" layer="1"/>
-<smd name="8" x="2.712" y="1.905" dx="1.525" dy="0.7" layer="1"/>
-<smd name="9" x="0" y="0" dx="3.2" dy="2.4" layer="1" rot="R90"/>
-<text x="0" y="0" size="1.27" layer="25" align="center">&gt;NAME</text>
-<text x="0" y="0" size="1.27" layer="27" align="center">&gt;VALUE</text>
-<wire x1="-3.725" y1="2.75" x2="3.725" y2="2.75" width="0.05" layer="51"/>
-<wire x1="3.725" y1="2.75" x2="3.725" y2="-2.75" width="0.05" layer="51"/>
-<wire x1="3.725" y1="-2.75" x2="-3.725" y2="-2.75" width="0.05" layer="51"/>
-<wire x1="-3.725" y1="-2.75" x2="-3.725" y2="2.75" width="0.05" layer="51"/>
-<wire x1="-1.95" y1="2.45" x2="1.95" y2="2.45" width="0.1" layer="51"/>
-<wire x1="1.95" y1="2.45" x2="1.95" y2="-2.45" width="0.1" layer="51"/>
-<wire x1="1.95" y1="-2.45" x2="-1.95" y2="-2.45" width="0.1" layer="51"/>
-<wire x1="-1.95" y1="-2.45" x2="-1.95" y2="2.45" width="0.1" layer="51"/>
-<wire x1="-1.95" y1="1.18" x2="-0.68" y2="2.45" width="0.1" layer="51"/>
-<wire x1="-3.475" y1="2.605" x2="-1.95" y2="2.605" width="0.2" layer="21"/>
-</package>
-</packages>
-<symbols>
-<symbol name="BD62120AEFJ-E2">
-<wire x1="5.08" y1="2.54" x2="25.4" y2="2.54" width="0.254" layer="94"/>
-<wire x1="25.4" y1="-15.24" x2="25.4" y2="2.54" width="0.254" layer="94"/>
-<wire x1="25.4" y1="-15.24" x2="5.08" y2="-15.24" width="0.254" layer="94"/>
-<wire x1="5.08" y1="2.54" x2="5.08" y2="-15.24" width="0.254" layer="94"/>
-<text x="26.67" y="7.62" size="1.778" layer="95" align="center-left">&gt;NAME</text>
-<text x="26.67" y="5.08" size="1.778" layer="96" align="center-left">&gt;VALUE</text>
-<pin name="OUT1" x="30.48" y="-2.54" length="middle" rot="R180"/>
-<pin name="VCC" x="15.24" y="7.62" length="middle" rot="R270"/>
-<pin name="OUT2" x="30.48" y="-5.08" length="middle" rot="R180"/>
-<pin name="TEST" x="0" y="-2.54" length="middle"/>
-<pin name="IN2" x="0" y="-5.08" length="middle"/>
-<pin name="IN1" x="0" y="-7.62" length="middle"/>
-<pin name="GND" x="15.24" y="-20.32" length="middle" rot="R90"/>
-</symbol>
-</symbols>
-<devicesets>
-<deviceset name="BD62120AEFJ-E2" prefix="IC">
-<description>&lt;b&gt;ROHM BD62120AEFJ-E2 Motor Driver IC 8-Pin, HTSOP-J&lt;/b&gt;&lt;p&gt;
-Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E2.pdf"&gt; Datasheet &lt;/a&gt;</description>
-<gates>
-<gate name="G$1" symbol="BD62120AEFJ-E2" x="0" y="0"/>
-</gates>
-<devices>
-<device name="" package="SOIC127P600X100-9N">
-<connects>
-<connect gate="G$1" pin="GND" pad="1 4 9"/>
-<connect gate="G$1" pin="IN1" pad="5"/>
-<connect gate="G$1" pin="IN2" pad="6"/>
-<connect gate="G$1" pin="OUT1" pad="2"/>
-<connect gate="G$1" pin="OUT2" pad="8"/>
-<connect gate="G$1" pin="TEST" pad="7"/>
-<connect gate="G$1" pin="VCC" pad="3"/>
-</connects>
-<technologies>
-<technology name="">
-<attribute name="DESCRIPTION" value="ROHM BD62120AEFJ-E2 Motor Driver IC 8-Pin, HTSOP-J" constant="no"/>
-<attribute name="HEIGHT" value="1mm" constant="no"/>
-<attribute name="MANUFACTURER_NAME" value="ROHM Semiconductor" constant="no"/>
-<attribute name="MANUFACTURER_PART_NUMBER" value="BD62120AEFJ-E2" constant="no"/>
-<attribute name="MOUSER_PART_NUMBER" value="755-BD62120AEFJ-E2" constant="no"/>
-<attribute name="MOUSER_PRICE-STOCK" value="https://www.mouser.com/Search/Refine.aspx?Keyword=755-BD62120AEFJ-E2" constant="no"/>
-</technology>
-</technologies>
-</device>
-</devices>
-</deviceset>
-</devicesets>
-</library>
 <library name="Q--BPR-301--Phototransistor">
 <packages>
 <package name="BPR-301">
@@ -11207,6 +11075,184 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 </deviceset>
 </devicesets>
 </library>
+<library name="SamacSys_Parts">
+<description>&lt;b&gt;https://componentsearchengine.com&lt;/b&gt;&lt;p&gt;
+&lt;author&gt;Created by SamacSys&lt;/author&gt;</description>
+<packages>
+<package name="SOIC127P600X100-9N">
+<description>&lt;b&gt;HTSOP-J8-12&lt;/b&gt;&lt;br&gt;
+</description>
+<smd name="1" x="-2.712" y="1.905" dx="1.525" dy="0.7" layer="1"/>
+<smd name="2" x="-2.712" y="0.635" dx="1.525" dy="0.7" layer="1"/>
+<smd name="3" x="-2.712" y="-0.635" dx="1.525" dy="0.7" layer="1"/>
+<smd name="4" x="-2.712" y="-1.905" dx="1.525" dy="0.7" layer="1"/>
+<smd name="5" x="2.712" y="-1.905" dx="1.525" dy="0.7" layer="1"/>
+<smd name="6" x="2.712" y="-0.635" dx="1.525" dy="0.7" layer="1"/>
+<smd name="7" x="2.712" y="0.635" dx="1.525" dy="0.7" layer="1"/>
+<smd name="8" x="2.712" y="1.905" dx="1.525" dy="0.7" layer="1"/>
+<smd name="9" x="0" y="0" dx="3.2" dy="2.4" layer="1" rot="R90"/>
+<text x="0" y="-3.81" size="1.27" layer="25" align="center">&gt;NAME</text>
+<text x="0" y="3.81" size="1.27" layer="27" align="center">&gt;VALUE</text>
+<wire x1="-3.725" y1="2.75" x2="3.725" y2="2.75" width="0.05" layer="51"/>
+<wire x1="3.725" y1="2.75" x2="3.725" y2="-2.75" width="0.05" layer="51"/>
+<wire x1="3.725" y1="-2.75" x2="-3.725" y2="-2.75" width="0.05" layer="51"/>
+<wire x1="-3.725" y1="-2.75" x2="-3.725" y2="2.75" width="0.05" layer="51"/>
+<wire x1="-1.95" y1="2.45" x2="1.95" y2="2.45" width="0.1" layer="51"/>
+<wire x1="1.95" y1="2.45" x2="1.95" y2="-2.45" width="0.1" layer="51"/>
+<wire x1="1.95" y1="-2.45" x2="-1.95" y2="-2.45" width="0.1" layer="51"/>
+<wire x1="-1.95" y1="-2.45" x2="-1.95" y2="2.45" width="0.1" layer="51"/>
+<wire x1="-1.95" y1="1.18" x2="-0.68" y2="2.45" width="0.1" layer="51"/>
+<wire x1="-3.475" y1="2.605" x2="-1.95" y2="2.605" width="0.2" layer="21"/>
+</package>
+</packages>
+<symbols>
+<symbol name="BD62120AEFJ-E2">
+<wire x1="5.08" y1="2.54" x2="25.4" y2="2.54" width="0.254" layer="94"/>
+<wire x1="25.4" y1="-15.24" x2="25.4" y2="2.54" width="0.254" layer="94"/>
+<wire x1="25.4" y1="-15.24" x2="5.08" y2="-15.24" width="0.254" layer="94"/>
+<wire x1="5.08" y1="2.54" x2="5.08" y2="-15.24" width="0.254" layer="94"/>
+<text x="26.67" y="7.62" size="1.778" layer="95" align="center-left">&gt;NAME</text>
+<text x="26.67" y="5.08" size="1.778" layer="96" align="center-left">&gt;VALUE</text>
+<pin name="OUT1" x="30.48" y="-2.54" length="middle" rot="R180"/>
+<pin name="VCC" x="15.24" y="7.62" length="middle" rot="R270"/>
+<pin name="OUT2" x="30.48" y="-5.08" length="middle" rot="R180"/>
+<pin name="TEST" x="0" y="-2.54" length="middle"/>
+<pin name="IN2" x="0" y="-5.08" length="middle"/>
+<pin name="IN1" x="0" y="-7.62" length="middle"/>
+<pin name="GND" x="15.24" y="-20.32" length="middle" rot="R90"/>
+</symbol>
+</symbols>
+<devicesets>
+<deviceset name="BD62120AEFJ-E2" prefix="U">
+<description>&lt;b&gt;ROHM BD62120AEFJ-E2 Motor Driver IC 8-Pin, HTSOP-J&lt;/b&gt;&lt;p&gt;
+Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E2.pdf"&gt; Datasheet &lt;/a&gt;</description>
+<gates>
+<gate name="G$1" symbol="BD62120AEFJ-E2" x="0" y="0"/>
+</gates>
+<devices>
+<device name="" package="SOIC127P600X100-9N">
+<connects>
+<connect gate="G$1" pin="GND" pad="1 4 9"/>
+<connect gate="G$1" pin="IN1" pad="5"/>
+<connect gate="G$1" pin="IN2" pad="6"/>
+<connect gate="G$1" pin="OUT1" pad="2"/>
+<connect gate="G$1" pin="OUT2" pad="8"/>
+<connect gate="G$1" pin="TEST" pad="7"/>
+<connect gate="G$1" pin="VCC" pad="3"/>
+</connects>
+<technologies>
+<technology name="">
+<attribute name="DESCRIPTION" value="ROHM BD62120AEFJ-E2 Motor Driver IC 8-Pin, HTSOP-J" constant="no"/>
+<attribute name="HEIGHT" value="1mm" constant="no"/>
+<attribute name="MANUFACTURER_NAME" value="ROHM Semiconductor" constant="no"/>
+<attribute name="MANUFACTURER_PART_NUMBER" value="BD62120AEFJ-E2" constant="no"/>
+<attribute name="MOUSER_PART_NUMBER" value="755-BD62120AEFJ-E2" constant="no"/>
+<attribute name="MOUSER_PRICE-STOCK" value="https://www.mouser.com/Search/Refine.aspx?Keyword=755-BD62120AEFJ-E2" constant="no"/>
+</technology>
+</technologies>
+</device>
+</devices>
+</deviceset>
+</devicesets>
+</library>
+<library name="L--IHLP2020BZER4R7M11--4.7uInductor">
+<packages>
+<package name="IHLP2020BZER4R7M11">
+<smd name="P$1" x="-2.42" y="0" dx="1.905" dy="2.79" layer="1"/>
+<smd name="P$2" x="2.42" y="0" dx="1.905" dy="2.79" layer="1"/>
+<wire x1="-2.59" y1="3" x2="2.59" y2="3" width="0.1524" layer="21"/>
+<wire x1="2.59" y1="3" x2="2.59" y2="-3" width="0.1524" layer="21"/>
+<wire x1="2.59" y1="-3" x2="-2.59" y2="-3" width="0.1524" layer="21"/>
+<wire x1="-2.59" y1="-3" x2="-2.59" y2="3" width="0.1524" layer="21"/>
+<text x="-2.54" y="3.81" size="1.27" layer="25" font="vector">&gt;NAME</text>
+<text x="-2.54" y="-5.08" size="1.27" layer="27" font="vector">&gt;VALUE</text>
+</package>
+</packages>
+<symbols>
+<symbol name="IHLP2020BZER4R7M11">
+<pin name="P$1" x="-7.62" y="0" visible="pad" length="short"/>
+<pin name="P$2" x="7.62" y="0" visible="pad" length="short" rot="R180"/>
+<wire x1="0" y1="0" x2="2.54" y2="0" width="0.1524" layer="94" curve="-180"/>
+<wire x1="2.54" y1="0" x2="5.08" y2="0" width="0.1524" layer="94" curve="-180"/>
+<wire x1="-5.08" y1="0" x2="-2.54" y2="0" width="0.1524" layer="94" curve="-180"/>
+<wire x1="-2.54" y1="0" x2="0" y2="0" width="0.1524" layer="94" curve="-180"/>
+<text x="-2.54" y="5.08" size="1.778" layer="95" font="vector">&gt;NAME</text>
+<text x="-2.54" y="2.54" size="1.778" layer="96" font="vector">&gt;VALUE</text>
+</symbol>
+</symbols>
+<devicesets>
+<deviceset name="IHLP2020BZER4R7M11" prefix="L" uservalue="yes">
+<gates>
+<gate name="G$1" symbol="IHLP2020BZER4R7M11" x="0" y="0"/>
+</gates>
+<devices>
+<device name="" package="IHLP2020BZER4R7M11">
+<connects>
+<connect gate="G$1" pin="P$1" pad="P$1"/>
+<connect gate="G$1" pin="P$2" pad="P$2"/>
+</connects>
+<technologies>
+<technology name="">
+<attribute name="DIS" value="Digi-Key" constant="no"/>
+<attribute name="DPN" value=" 541-1222-1-ND" constant="no"/>
+<attribute name="MFR" value="Vishay Dale" constant="no"/>
+<attribute name="MPN" value="IHLP2020BZER4R7M11" constant="no"/>
+</technology>
+</technologies>
+</device>
+</devices>
+</deviceset>
+</devicesets>
+</library>
+<library name="L--IHLP2020CZER1R5M11--1.5uHInductor">
+<packages>
+<package name="IHLP2020CZER1R5M11">
+<smd name="P$1" x="-2.42" y="0" dx="1.905" dy="2.79" layer="1"/>
+<smd name="P$2" x="2.42" y="0" dx="1.905" dy="2.79" layer="1"/>
+<wire x1="-2.59" y1="3" x2="2.59" y2="3" width="0.1524" layer="21"/>
+<wire x1="2.59" y1="3" x2="2.59" y2="-3" width="0.1524" layer="21"/>
+<wire x1="2.59" y1="-3" x2="-2.59" y2="-3" width="0.1524" layer="21"/>
+<wire x1="-2.59" y1="-3" x2="-2.59" y2="3" width="0.1524" layer="21"/>
+<text x="-2.54" y="3.81" size="1.27" layer="25" font="vector">&gt;NAME</text>
+<text x="-2.54" y="-5.08" size="1.27" layer="27" font="vector">&gt;VALUE</text>
+</package>
+</packages>
+<symbols>
+<symbol name="IHLP2020CZER1R5M11">
+<pin name="P$1" x="-7.62" y="0" visible="pad" length="short"/>
+<pin name="P$2" x="7.62" y="0" visible="pad" length="short" rot="R180"/>
+<wire x1="0" y1="0" x2="2.54" y2="0" width="0.1524" layer="94" curve="-180"/>
+<wire x1="2.54" y1="0" x2="5.08" y2="0" width="0.1524" layer="94" curve="-180"/>
+<wire x1="-5.08" y1="0" x2="-2.54" y2="0" width="0.1524" layer="94" curve="-180"/>
+<wire x1="-2.54" y1="0" x2="0" y2="0" width="0.1524" layer="94" curve="-180"/>
+<text x="-2.54" y="5.08" size="1.778" layer="95" font="vector">&gt;NAME</text>
+<text x="-2.54" y="2.54" size="1.778" layer="96" font="vector">&gt;VALUE</text>
+</symbol>
+</symbols>
+<devicesets>
+<deviceset name="IHLP2020CZER1R5M11" prefix="L" uservalue="yes">
+<gates>
+<gate name="G$1" symbol="IHLP2020CZER1R5M11" x="0" y="0"/>
+</gates>
+<devices>
+<device name="" package="IHLP2020CZER1R5M11">
+<connects>
+<connect gate="G$1" pin="P$1" pad="P$1"/>
+<connect gate="G$1" pin="P$2" pad="P$2"/>
+</connects>
+<technologies>
+<technology name="">
+<attribute name="DIS" value="Digi-Key" constant="no"/>
+<attribute name="DPN" value=" 541-1222-1-ND" constant="no"/>
+<attribute name="MFR" value="Vishay Dale" constant="no"/>
+<attribute name="MPN" value="IHLP2020BZER4R7M11" constant="no"/>
+</technology>
+</technologies>
+</device>
+</devices>
+</deviceset>
+</devicesets>
+</library>
 </libraries>
 <attributes>
 </attributes>
@@ -11221,10 +11267,10 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <part name="C1" library="oresat-rcl" deviceset="C-EU" device="0603-C-NOSILK" value="100n"/>
 <part name="SUPPLY3" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="SUPPLY4" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
-<part name="R7" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10K"/>
+<part name="R7" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10k"/>
 <part name="R8" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="442"/>
 <part name="R9" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="442"/>
-<part name="R10" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10K"/>
+<part name="R10" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10k"/>
 <part name="SUPPLY24" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="CM1" library="J-Samtec-FTSH-105-XXX-DV-K-ARM-SWD" deviceset="FTSH-105-XX-X-DV-K" device=""/>
 <part name="SUPPLY25" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
@@ -11244,12 +11290,6 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <attribute name="DPN" value="1276-1001-1-ND"/>
 <attribute name="MFR" value="Samsung"/>
 <attribute name="MPN" value="CL05B104KO5NNNC"/>
-</part>
-<part name="L1" library="L-Coilcraft-XFL4020" deviceset="L-COILCRAFT-XFL4020" device="" value="1.5 uH">
-<attribute name="DIS" value="Mouser"/>
-<attribute name="DPN" value="994-XFL4020-152MEB"/>
-<attribute name="MFR" value="Coilcraft"/>
-<attribute name="MPN" value="XFL4020-152ME"/>
 </part>
 <part name="R1" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10k">
 <attribute name="DIS" value="Digi-Key"/>
@@ -11277,7 +11317,7 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <attribute name="MFR" value="Samsung"/>
 <attribute name="MPN" value="RC1005F6653CS"/>
 </part>
-<part name="R3" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="150K">
+<part name="R3" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="150k">
 <attribute name="DIS" value="Digi-Key"/>
 <attribute name="DPN" value="1276-4275-1-ND"/>
 <attribute name="MFR" value="Samsung"/>
@@ -11295,7 +11335,7 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 </part>
 <part name="GND26" library="supply1" deviceset="GND" device=""/>
 <part name="TP29" library="Tova" deviceset="TEST-POINT" device=""/>
-<part name="R5" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="NP">
+<part name="R5" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="100k">
 <attribute name="DIS" value="Digi-Key"/>
 <attribute name="DPN" value="1276-4275-1-ND"/>
 <attribute name="MFR" value="Samsung"/>
@@ -11314,20 +11354,13 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <part name="C9" library="oresat-rcl" deviceset="C-EU" device="0805-C-NOSILK" value="22u"/>
 <part name="C28" library="oresat-rcl" deviceset="C-EU" device="0805-C-NOSILK" value="22u"/>
 <part name="GND35" library="supply1" deviceset="GND" device=""/>
-<part name="R6" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="NP">
-<attribute name="DIS" value="Digi-Key"/>
-<attribute name="DPN" value="1276-4275-1-ND"/>
-<attribute name="MFR" value="Samsung"/>
-<attribute name="MPN" value="RC1005F6653CS"/>
-</part>
-<part name="GND39" library="supply1" deviceset="GND" device=""/>
 <part name="SUPPLY31" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="3.3V" device=""/>
 <part name="SUPPLY32" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="3.3V" device=""/>
 <part name="SUPPLY33" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="3.3V" device=""/>
 <part name="SUPPLY35" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="SUPPLY36" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
-<part name="R32" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10K"/>
-<part name="R33" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10K"/>
+<part name="R32" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10k"/>
+<part name="R33" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10k"/>
 <part name="SUPPLY28" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="SUPPLY37" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="P+1" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="+12V" device=""/>
@@ -11336,30 +11369,30 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <part name="SUPPLY40" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="SUPPLY41" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="3.3V" device=""/>
 <part name="Q6" library="Q-MOSFET-PCH-SOT23-6" deviceset="MOSFET-PCH-SOT23-6" device=""/>
-<part name="R34" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10K"/>
-<part name="R35" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10K"/>
+<part name="R34" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10k"/>
+<part name="R35" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10k"/>
 <part name="SUPPLY42" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="SUPPLY43" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
-<part name="R36" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10K"/>
+<part name="R36" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10k"/>
 <part name="SUPPLY44" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="P+3" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="+12V" device=""/>
 <part name="GND1" library="supply1" deviceset="GND" device=""/>
 <part name="SUPPLY7" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="3.3V" device=""/>
 <part name="SUPPLY6" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
-<part name="R11" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="1K"/>
-<part name="R12" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="1K"/>
+<part name="R11" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="1k"/>
+<part name="R12" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="1k"/>
 <part name="SUPPLY8" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="SUPPLY9" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
-<part name="R13" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="1.69K"/>
-<part name="R14" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="3.3K"/>
+<part name="R13" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="1.69k"/>
+<part name="R14" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="3.3k"/>
 <part name="P+4" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="+12V" device=""/>
-<part name="R15" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="26.4K">
+<part name="R15" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="26.4k">
 <attribute name="DIS" value="Digi-Key"/>
 <attribute name="DPN" value="1276-4275-1-ND"/>
 <attribute name="MFR" value="Samsung"/>
 <attribute name="MPN" value="RC1005F6653CS"/>
 </part>
-<part name="R16" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10K">
+<part name="R16" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10k">
 <attribute name="DIS" value="Digi-Key"/>
 <attribute name="DPN" value="1276-4275-1-ND"/>
 <attribute name="MFR" value="Samsung"/>
@@ -11370,18 +11403,17 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <part name="D1" library="D-Generic-Schottky-DO-214AC-SMA" deviceset="DIODE-SCHOTTKY-(DO-214AC)" device="" value="1N4007"/>
 <part name="C11" library="oresat-rcl" deviceset="C-EU" device="0805-C-NOSILK" value="10u"/>
 <part name="SUPPLY10" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
-<part name="C13" library="oresat-rcl" deviceset="C-EU" device="0603-C-NOSILK" value="0.1u"/>
+<part name="C13" library="oresat-rcl" deviceset="C-EU" device="0603-C-NOSILK" value="100n"/>
 <part name="D2" library="D-Generic-Schottky-DO-214AC-SMA" deviceset="DIODE-SCHOTTKY-(DO-214AC)" device="" value="1N4007"/>
 <part name="SUPPLY12" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="U$6" library="R--NHQ103B375T10--Thermistor" deviceset="NHQ103B375T10" device=""/>
-<part name="R17" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK"/>
+<part name="R17" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10k"/>
 <part name="R18" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="1k"/>
 <part name="SUPPLY13" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="SUPPLY14" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="SUPPLY16" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="R21" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="750"/>
 <part name="C16" library="oresat-rcl" deviceset="C-EU" device="0603-C-NOSILK" value="2.2n"/>
-<part name="L2" library="L-Coilcraft-XFL4020" deviceset="L-COILCRAFT-XFL4020" device=""/>
 <part name="R22" library="oresat-rcl" deviceset="R-US_" device="1206-C" value="100m"/>
 <part name="C17" library="oresat-rcl" deviceset="C-EU" device="0805-C-NOSILK" value="22uF"/>
 <part name="SUPPLY18" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
@@ -11399,7 +11431,7 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <part name="SUPPLY5" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="3.3V" device=""/>
 <part name="R26" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="51.1"/>
 <part name="R27" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="51.1"/>
-<part name="R28" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10K"/>
+<part name="R28" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10k"/>
 <part name="R29" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10k"/>
 <part name="SUPPLY34" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="C18" library="oresat-rcl" deviceset="C-EU" device="0603-C-NOSILK" value="100n"/>
@@ -11411,7 +11443,7 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <part name="U$8" library="Q--Si7465DP--Vishay Power MOSFET with multple S+D leads" deviceset="SI7465DP" device=""/>
 <part name="C15" library="oresat-rcl" deviceset="C-EU" device="0603-C-NOSILK" value="100n"/>
 <part name="C14" library="oresat-rcl" deviceset="C-EU" device="0603-C-NOSILK" value="100n"/>
-<part name="R20" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK"/>
+<part name="R20" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="2.4k"/>
 <part name="SUPPLY15" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="SUPPLY17" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="C12" library="oresat-rcl" deviceset="C-EU" device="0805-C-NOSILK" value="10u"/>
@@ -11446,7 +11478,6 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <attribute name="DPN" value=" SML-D12U1WT86CT-ND"/>
 <attribute name="MPN" value="SML-D12U1WT86"/>
 </part>
-<part name="IC1" library="SamacSys_Parts" deviceset="BD62120AEFJ-E2" device=""/>
 <part name="SUPPLY1" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="Q4" library="Q--BPR-301--Phototransistor" deviceset="BPR-301" device=""/>
 <part name="Q5" library="Q--BPR-301--Phototransistor" deviceset="BPR-301" device=""/>
@@ -11456,6 +11487,9 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <part name="TP4" library="Tova" deviceset="TEST-POINT" device=""/>
 <part name="JP3" library="pinhead" library_urn="urn:adsk.eagle:library:325" deviceset="PINHD-1X3" device="" package3d_urn="urn:adsk.eagle:package:22458/2"/>
 <part name="SUPPLY2" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
+<part name="U2" library="SamacSys_Parts" deviceset="BD62120AEFJ-E2" device=""/>
+<part name="L2" library="L--IHLP2020BZER4R7M11--4.7uInductor" deviceset="IHLP2020BZER4R7M11" device="" value="4.7uH"/>
+<part name="L1" library="L--IHLP2020CZER1R5M11--1.5uHInductor" deviceset="IHLP2020CZER1R5M11" device="" value="1.5uH"/>
 </parts>
 <sheets>
 <sheet>
@@ -11499,14 +11533,6 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <attribute name="MPN" x="139.7" y="67.31" size="1.778" layer="96" display="off"/>
 <attribute name="NAME" x="140.97" y="67.31" size="1.778" layer="95"/>
 <attribute name="VALUE" x="140.97" y="62.23" size="1.778" layer="96"/>
-</instance>
-<instance part="L1" gate="G$1" x="182.88" y="80.01" smashed="yes" rot="R90">
-<attribute name="DIS" x="182.88" y="80.01" size="1.778" layer="96" rot="R90" display="off"/>
-<attribute name="DPN" x="182.88" y="80.01" size="1.778" layer="96" rot="R90" display="off"/>
-<attribute name="MFR" x="182.88" y="80.01" size="1.778" layer="96" rot="R90" display="off"/>
-<attribute name="MPN" x="182.88" y="80.01" size="1.778" layer="96" rot="R90" display="off"/>
-<attribute name="NAME" x="177.8" y="82.55" size="1.778" layer="95"/>
-<attribute name="VALUE" x="184.15" y="82.55" size="1.778" layer="96"/>
 </instance>
 <instance part="R1" gate="R" x="151.13" y="66.04" smashed="yes" rot="R90">
 <attribute name="DIS" x="151.13" y="66.04" size="1.778" layer="96" rot="R90" display="off"/>
@@ -11632,17 +11658,6 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <instance part="GND35" gate="1" x="247.65" y="57.15" smashed="yes">
 <attribute name="VALUE" x="245.11" y="54.61" size="1.778" layer="96"/>
 </instance>
-<instance part="R6" gate="R" x="151.13" y="53.34" smashed="yes" rot="R90">
-<attribute name="DIS" x="151.13" y="53.34" size="1.778" layer="96" rot="R90" display="off"/>
-<attribute name="DPN" x="151.13" y="53.34" size="1.778" layer="96" rot="R90" display="off"/>
-<attribute name="MFR" x="151.13" y="53.34" size="1.778" layer="96" rot="R90" display="off"/>
-<attribute name="MPN" x="151.13" y="53.34" size="1.778" layer="96" rot="R90" display="off"/>
-<attribute name="NAME" x="149.6314" y="49.53" size="1.778" layer="95" rot="R90"/>
-<attribute name="VALUE" x="154.432" y="49.53" size="1.778" layer="96" rot="R90"/>
-</instance>
-<instance part="GND39" gate="1" x="151.13" y="44.45" smashed="yes">
-<attribute name="VALUE" x="148.59" y="41.91" size="1.778" layer="96"/>
-</instance>
 <instance part="P+3" gate="1" x="118.11" y="77.47" smashed="yes">
 <attribute name="VALUE" x="118.11" y="81.28" size="1.778" layer="96" rot="R180"/>
 </instance>
@@ -11715,10 +11730,6 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <instance part="C16" gate="CE" x="220.98" y="140.97" smashed="yes">
 <attribute name="NAME" x="221.996" y="141.605" size="1.016" layer="95"/>
 <attribute name="VALUE" x="221.996" y="136.779" size="1.016" layer="96"/>
-</instance>
-<instance part="L2" gate="G$1" x="231.14" y="181.61" smashed="yes" rot="R90">
-<attribute name="NAME" x="236.22" y="180.34" size="1.016" layer="95" rot="R180"/>
-<attribute name="VALUE" x="236.22" y="185.42" size="1.016" layer="96" rot="R180"/>
 </instance>
 <instance part="R22" gate="R" x="247.65" y="181.61" smashed="yes" rot="R180">
 <attribute name="NAME" x="248.92" y="180.1114" size="1.016" layer="95" rot="R180"/>
@@ -11808,6 +11819,14 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <attribute name="VALUE" x="76.2" y="119.38" size="1.778" layer="96"/>
 </instance>
 <instance part="SUPPLY2" gate="GND" x="66.675" y="121.92" smashed="yes"/>
+<instance part="L2" gate="G$1" x="231.14" y="181.61" smashed="yes">
+<attribute name="NAME" x="228.6" y="186.69" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="228.6" y="184.15" size="1.778" layer="96" font="vector"/>
+</instance>
+<instance part="L1" gate="G$1" x="182.88" y="80.01" smashed="yes">
+<attribute name="NAME" x="180.34" y="85.09" size="1.778" layer="95" font="vector"/>
+<attribute name="VALUE" x="180.34" y="82.55" size="1.778" layer="96" font="vector"/>
+</instance>
 </instances>
 <busses>
 </busses>
@@ -11866,11 +11885,6 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <pinref part="GND13" gate="1" pin="GND"/>
 <pinref part="C9" gate="CE" pin="2"/>
 <wire x1="237.49" y1="59.69" x2="237.49" y2="62.23" width="0.1524" layer="91"/>
-</segment>
-<segment>
-<pinref part="R6" gate="R" pin="1"/>
-<pinref part="GND39" gate="1" pin="GND"/>
-<wire x1="151.13" y1="46.99" x2="151.13" y2="48.26" width="0.1524" layer="91"/>
 </segment>
 <segment>
 <wire x1="86.36" y1="175.26" x2="86.36" y2="151.13" width="0.1524" layer="91"/>
@@ -12003,9 +12017,6 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <pinref part="TP29" gate="G$1" pin="1"/>
 <wire x1="166.37" y1="59.69" x2="151.13" y2="59.69" width="0.1524" layer="91"/>
 <junction x="166.37" y="59.69"/>
-<pinref part="R6" gate="R" pin="2"/>
-<wire x1="151.13" y1="58.42" x2="151.13" y2="59.69" width="0.1524" layer="91"/>
-<junction x="151.13" y="59.69"/>
 </segment>
 </net>
 <net name="TPS-VAUX" class="0">
@@ -12064,8 +12075,8 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <pinref part="U10" gate="G$1" pin="L1"/>
 <wire x1="170.18" y1="74.93" x2="168.91" y2="74.93" width="0.1524" layer="91"/>
 <wire x1="168.91" y1="74.93" x2="168.91" y2="80.01" width="0.1524" layer="91"/>
-<pinref part="L1" gate="G$1" pin="1"/>
 <wire x1="168.91" y1="80.01" x2="175.26" y2="80.01" width="0.1524" layer="91"/>
+<pinref part="L1" gate="G$1" pin="P$1"/>
 </segment>
 </net>
 <net name="TPS-L2" class="0">
@@ -12073,8 +12084,8 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <pinref part="U10" gate="G$1" pin="L2"/>
 <wire x1="195.58" y1="74.93" x2="198.12" y2="74.93" width="0.1524" layer="91"/>
 <wire x1="198.12" y1="74.93" x2="198.12" y2="80.01" width="0.1524" layer="91"/>
-<pinref part="L1" gate="G$1" pin="2"/>
 <wire x1="198.12" y1="80.01" x2="190.5" y2="80.01" width="0.1524" layer="91"/>
+<pinref part="L1" gate="G$1" pin="P$2"/>
 </segment>
 </net>
 <net name="+12V" class="0">
@@ -12243,25 +12254,25 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 </net>
 <net name="N$10" class="0">
 <segment>
-<pinref part="L2" gate="G$1" pin="1"/>
 <pinref part="D2" gate="G$1" pin="-"/>
 <pinref part="C13" gate="CE" pin="1"/>
 <wire x1="223.52" y1="181.61" x2="213.36" y2="181.61" width="0.1524" layer="91"/>
-<junction x="223.52" y="181.61"/>
 <wire x1="213.36" y1="181.61" x2="203.2" y2="181.61" width="0.1524" layer="91"/>
 <junction x="213.36" y="181.61"/>
 <pinref part="U$5" gate="G$1" pin="SW"/>
 <wire x1="203.2" y1="181.61" x2="203.2" y2="179.07" width="0.1524" layer="91"/>
+<pinref part="L2" gate="G$1" pin="P$1"/>
+<junction x="223.52" y="181.61"/>
 </segment>
 </net>
 <net name="N$28" class="0">
 <segment>
 <pinref part="R22" gate="R" pin="2"/>
-<pinref part="L2" gate="G$1" pin="2"/>
 <wire x1="238.76" y1="181.61" x2="242.57" y2="181.61" width="0.1524" layer="91"/>
 <pinref part="U$5" gate="G$1" pin="CSP"/>
 <wire x1="203.2" y1="168.91" x2="238.76" y2="168.91" width="0.1524" layer="91"/>
 <wire x1="238.76" y1="168.91" x2="238.76" y2="181.61" width="0.1524" layer="91"/>
+<pinref part="L2" gate="G$1" pin="P$2"/>
 <junction x="238.76" y="181.61"/>
 </segment>
 </net>
@@ -12649,10 +12660,6 @@ From Telemetrum</text>
 <attribute name="NAME" x="408.94" y="314.96" size="1.778" layer="95"/>
 <attribute name="VALUE" x="408.94" y="312.42" size="1.778" layer="96"/>
 </instance>
-<instance part="IC1" gate="G$1" x="453.39" y="161.29" smashed="yes">
-<attribute name="NAME" x="480.06" y="168.91" size="1.778" layer="95" align="center-left"/>
-<attribute name="VALUE" x="480.06" y="166.37" size="1.778" layer="96" align="center-left"/>
-</instance>
 <instance part="SUPPLY1" gate="GND" x="443.865" y="148.59" smashed="yes"/>
 <instance part="Q4" gate="BPR-301" x="99.06" y="167.64" smashed="yes">
 <attribute name="NAME" x="93.06" y="179.18" size="1.778" layer="95"/>
@@ -12673,6 +12680,10 @@ From Telemetrum</text>
 </instance>
 <instance part="TP4" gate="G$1" x="305.435" y="200.66" smashed="yes">
 <attribute name="NAME" x="307.975" y="199.39" size="1.778" layer="95" font="vector"/>
+</instance>
+<instance part="U2" gate="G$1" x="453.39" y="161.29" smashed="yes">
+<attribute name="NAME" x="480.06" y="168.91" size="1.778" layer="95" align="center-left"/>
+<attribute name="VALUE" x="480.06" y="166.37" size="1.778" layer="96" align="center-left"/>
 </instance>
 </instances>
 <busses>
@@ -12823,17 +12834,11 @@ From Telemetrum</text>
 <segment>
 <pinref part="SUPPLY50" gate="GND" pin="GND"/>
 <wire x1="468.63" y1="139.7" x2="468.63" y2="140.97" width="0.1524" layer="91"/>
-<pinref part="IC1" gate="G$1" pin="GND"/>
+<pinref part="U2" gate="G$1" pin="GND"/>
 </segment>
 <segment>
 <pinref part="SUPPLY42" gate="GND" pin="GND"/>
 <pinref part="Q3" gate="G$1" pin="S"/>
-</segment>
-<segment>
-<pinref part="IC1" gate="G$1" pin="TEST"/>
-<wire x1="453.39" y1="158.75" x2="443.865" y2="158.75" width="0.1524" layer="91"/>
-<wire x1="443.865" y1="158.75" x2="443.865" y2="151.13" width="0.1524" layer="91"/>
-<pinref part="SUPPLY1" gate="GND" pin="GND"/>
 </segment>
 </net>
 <net name="IN1" class="0">
@@ -12848,7 +12853,7 @@ From Telemetrum</text>
 <label x="299.72" y="185.42" size="1.27" layer="95"/>
 <pinref part="R32" gate="R" pin="1"/>
 <junction x="388.62" y="139.065"/>
-<pinref part="IC1" gate="G$1" pin="IN1"/>
+<pinref part="U2" gate="G$1" pin="IN1"/>
 </segment>
 </net>
 <net name="IN2" class="0">
@@ -12862,7 +12867,7 @@ From Telemetrum</text>
 <label x="450.85" y="144.78" size="1.6764" layer="95" rot="R90"/>
 <pinref part="R33" gate="R" pin="1"/>
 <junction x="388.62" y="156.21"/>
-<pinref part="IC1" gate="G$1" pin="IN2"/>
+<pinref part="U2" gate="G$1" pin="IN2"/>
 </segment>
 </net>
 <net name="SENSOR1" class="0">
@@ -12990,10 +12995,10 @@ From Telemetrum</text>
 <pinref part="C22" gate="CE" pin="1"/>
 <wire x1="443.865" y1="173.355" x2="443.865" y2="176.53" width="0.1524" layer="91"/>
 <junction x="443.865" y="176.53"/>
-<pinref part="IC1" gate="G$1" pin="VCC"/>
 <wire x1="451.485" y1="176.53" x2="468.63" y2="176.53" width="0.1524" layer="91"/>
 <wire x1="468.63" y1="176.53" x2="468.63" y2="168.91" width="0.1524" layer="91"/>
 <junction x="451.485" y="176.53"/>
+<pinref part="U2" gate="G$1" pin="VCC"/>
 </segment>
 <segment>
 <pinref part="P+1" gate="1" pin="+12V"/>
@@ -13125,10 +13130,10 @@ From Telemetrum</text>
 <segment>
 <wire x1="497.84" y1="158.75" x2="497.84" y2="215.9" width="0.1524" layer="91"/>
 <label x="497.205" y="178.435" size="1.6764" layer="95" rot="R90"/>
-<pinref part="IC1" gate="G$1" pin="OUT1"/>
 <wire x1="483.87" y1="158.75" x2="497.84" y2="158.75" width="0.1524" layer="91"/>
 <pinref part="J2" gate="A" pin="1"/>
 <wire x1="461.01" y1="215.9" x2="497.84" y2="215.9" width="0.1524" layer="91"/>
+<pinref part="U2" gate="G$1" pin="OUT1"/>
 </segment>
 </net>
 <net name="DCM_PWM" class="0">
@@ -13373,10 +13378,18 @@ From Telemetrum</text>
 <segment>
 <pinref part="J2" gate="A" pin="2"/>
 <wire x1="461.01" y1="213.36" x2="501.015" y2="213.36" width="0.1524" layer="91"/>
-<pinref part="IC1" gate="G$1" pin="OUT2"/>
 <wire x1="501.015" y1="156.21" x2="483.87" y2="156.21" width="0.1524" layer="91"/>
 <wire x1="501.015" y1="213.36" x2="501.015" y2="156.21" width="0.1524" layer="91"/>
 <label x="502.92" y="179.07" size="1.778" layer="95" rot="R90"/>
+<pinref part="U2" gate="G$1" pin="OUT2"/>
+</segment>
+</net>
+<net name="N$3" class="0">
+<segment>
+<wire x1="453.39" y1="158.75" x2="443.865" y2="158.75" width="0.1524" layer="91"/>
+<wire x1="443.865" y1="158.75" x2="443.865" y2="151.13" width="0.1524" layer="91"/>
+<pinref part="SUPPLY1" gate="GND" pin="GND"/>
+<pinref part="U2" gate="G$1" pin="TEST"/>
 </segment>
 </net>
 </nets>
