@@ -11311,7 +11311,7 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <attribute name="MPN" value="CL05B104KO5NNNC"/>
 </part>
 <part name="GND34" library="supply1" deviceset="GND" device=""/>
-<part name="R2" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="470k">
+<part name="R2" library="oresat-rcl" deviceset="R-US_" device="0805-A-NOSILK" value="470k">
 <attribute name="DIS" value="Digi-Key"/>
 <attribute name="DPN" value="1276-4275-1-ND"/>
 <attribute name="MFR" value="Samsung"/>
@@ -11335,7 +11335,7 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 </part>
 <part name="GND26" library="supply1" deviceset="GND" device=""/>
 <part name="TP29" library="Tova" deviceset="TEST-POINT" device=""/>
-<part name="R5" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="100k">
+<part name="R5" library="oresat-rcl" deviceset="R-US_" device="0805-A-NOSILK" value="100k">
 <attribute name="DIS" value="Digi-Key"/>
 <attribute name="DPN" value="1276-4275-1-ND"/>
 <attribute name="MFR" value="Samsung"/>
@@ -13330,6 +13330,7 @@ From Telemetrum</text>
 <pinref part="U1" gate="G$1" pin="PB7"/>
 <wire x1="254" y1="167.64" x2="246.38" y2="167.64" width="0.1524" layer="91"/>
 <label x="246.38" y="164.465" size="1.778" layer="95" rot="R180" xref="yes"/>
+<wire x1="246.38" y1="167.64" x2="246.38" y2="164.465" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$4" class="0">

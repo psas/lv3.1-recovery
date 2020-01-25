@@ -3,7 +3,7 @@
 <eagle version="9.4.2">
 <drawing>
 <settings>
-<setting alwaysvectorfont="yes"/>
+<setting alwaysvectorfont="no"/>
 <setting verticaltext="up"/>
 </settings>
 <grid distance="0.1" unitdist="mm" unit="mm" style="lines" multiple="1" display="no" altdistance="5" altunitdist="mil" altunit="mil"/>
@@ -1403,6 +1403,42 @@ chip</description>
 <rectangle x1="0.9517" y1="-0.8491" x2="1.7018" y2="0.8509" layer="51"/>
 <rectangle x1="-0.1999" y1="-0.4001" x2="0.1999" y2="0.4001" layer="35"/>
 </package>
+<package name=".0805-A-NOSILK">
+<description>&lt;b&gt;0805 (metric 2012) loose 'IPC-A' without silkscreen&lt;/b&gt;
+&lt;br&gt;In house package for generous spacing based on IPC-7351B.
+This package is identical to 0805-A, but has its tPlace silkscreen layer removed.</description>
+<smd name="1" x="-1" y="0" dx="1.35" dy="1.55" layer="1" roundness="26" stop="no"/>
+<smd name="2" x="1" y="0" dx="1.35" dy="1.55" layer="1" roundness="26" stop="no"/>
+<text x="-1.5" y="1" size="0.8" layer="25" font="vector" ratio="15">&gt;NAME</text>
+<text x="-1.5" y="-1.8" size="0.8" layer="27" font="vector" ratio="15">&gt;VALUE</text>
+<wire x1="1" y1="0.625" x2="1" y2="-0.625" width="0.15" layer="51"/>
+<wire x1="1" y1="-0.625" x2="-1" y2="-0.625" width="0.15" layer="51"/>
+<wire x1="-1" y1="-0.625" x2="-1" y2="0.625" width="0.15" layer="51"/>
+<wire x1="-1" y1="0.625" x2="1" y2="0.625" width="0.15" layer="51"/>
+<rectangle x1="0.425" y1="-0.6" x2="0.8" y2="0.6" layer="51"/>
+<rectangle x1="-0.8" y1="-0.6" x2="-0.425" y2="0.6" layer="51"/>
+<polygon width="0.52" layer="29">
+<vertex x="1.48" y="0.58"/>
+<vertex x="0.52" y="0.58"/>
+<vertex x="0.52" y="-0.58"/>
+<vertex x="1.48" y="-0.58"/>
+</polygon>
+<polygon width="0.52" layer="29">
+<vertex x="-0.52" y="0.58"/>
+<vertex x="-1.48" y="0.58"/>
+<vertex x="-1.48" y="-0.58"/>
+<vertex x="-0.52" y="-0.58"/>
+</polygon>
+<wire x1="2.095" y1="1.195" x2="-2.095" y2="1.195" width="0.01" layer="39"/>
+<wire x1="-2.095" y1="1.195" x2="-2.095" y2="-1.195" width="0.01" layer="39"/>
+<wire x1="-2.095" y1="-1.195" x2="2.095" y2="-1.195" width="0.01" layer="39"/>
+<wire x1="2.095" y1="-1.195" x2="2.095" y2="1.195" width="0.01" layer="39"/>
+<wire x1="1" y1="0.625" x2="1" y2="-0.625" width="0.15" layer="33"/>
+<wire x1="1" y1="-0.625" x2="-1" y2="-0.625" width="0.15" layer="33"/>
+<wire x1="-1" y1="-0.625" x2="-1" y2="0.625" width="0.15" layer="33"/>
+<wire x1="-1" y1="0.625" x2="1" y2="0.625" width="0.15" layer="33"/>
+<text x="0" y="0" size="0.4" layer="33" ratio="15" align="center">&gt;NAME</text>
+</package>
 </packages>
 </library>
 <library name="J-Samtec-FTSH-105-XXX-DV-K-ARM-SWD">
@@ -2650,14 +2686,14 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 <attribute name="NAME" x="57.73" y="42.77" size="0.3" layer="33" ratio="15" rot="R90" align="center"/>
 <attribute name="VALUE" x="58.22" y="43.13" size="0.4064" layer="27" font="vector" ratio="15" rot="R270"/>
 </element>
-<element name="R2" library="oresat-rcl" package=".0603-C-NOSILK" value="470k" x="22.07" y="42.31" smashed="yes" rot="R180">
-<attribute name="DIS" value="Digi-Key" x="-30" y="102" size="1.778" layer="27" rot="R180" display="off"/>
-<attribute name="DPN" value="1276-4275-1-ND" x="-30" y="102" size="1.778" layer="27" rot="R180" display="off"/>
-<attribute name="MFR" value="Samsung" x="-30" y="102" size="1.778" layer="27" rot="R180" display="off"/>
-<attribute name="MPN" value="RC1005F6653CS" x="-30" y="102" size="1.778" layer="27" rot="R180" display="off"/>
-<attribute name="NAME" x="22.37" y="41.76" size="0.4064" layer="25" font="vector" ratio="15" rot="R180"/>
-<attribute name="NAME" x="22.07" y="42.31" size="0.2" layer="33" ratio="15" rot="R180" align="center"/>
-<attribute name="VALUE" x="22.87" y="43.66" size="0.4064" layer="27" font="vector" ratio="15" rot="R180"/>
+<element name="R2" library="oresat-rcl" package=".0805-A-NOSILK" value="470k" x="20.87" y="41.41" smashed="yes" rot="R180">
+<attribute name="DIS" value="Digi-Key" x="-31.2" y="101.1" size="1.778" layer="27" rot="R180" display="off"/>
+<attribute name="DPN" value="1276-4275-1-ND" x="-31.2" y="101.1" size="1.778" layer="27" rot="R180" display="off"/>
+<attribute name="MFR" value="Samsung" x="-31.2" y="101.1" size="1.778" layer="27" rot="R180" display="off"/>
+<attribute name="MPN" value="RC1005F6653CS" x="-31.2" y="101.1" size="1.778" layer="27" rot="R180" display="off"/>
+<attribute name="NAME" x="21.17" y="40.86" size="0.4064" layer="25" font="vector" ratio="15" rot="R180"/>
+<attribute name="NAME" x="20.87" y="41.41" size="0.2" layer="33" ratio="15" rot="R180" align="center"/>
+<attribute name="VALUE" x="21.67" y="42.76" size="0.4064" layer="27" font="vector" ratio="15" rot="R180"/>
 </element>
 <element name="R21" library="oresat-rcl" package=".0603-C-NOSILK" value="750" x="55.73" y="30.78" smashed="yes" rot="R90">
 <attribute name="NAME" x="56.3" y="31.12" size="0.4064" layer="25" font="vector" ratio="15" rot="R270"/>
@@ -2737,7 +2773,7 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 <attribute name="NAME" x="36.98" y="38.29" size="0.2" layer="33" ratio="15" rot="R180" align="center"/>
 <attribute name="VALUE" x="37.78" y="39.64" size="0.4064" layer="27" font="vector" ratio="15" rot="R180"/>
 </element>
-<element name="R5" library="oresat-rcl" package=".0603-C-NOSILK" value="100k" x="30.54" y="42.41" smashed="yes" rot="R180">
+<element name="R5" library="oresat-rcl" package=".0805-A-NOSILK" value="100k" x="30.54" y="42.41" smashed="yes" rot="R180">
 <attribute name="DIS" value="Digi-Key" x="-35.5" y="102.1" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="DPN" value="1276-4275-1-ND" x="-35.5" y="102.1" size="1.778" layer="27" rot="R180" display="off"/>
 <attribute name="MFR" value="Samsung" x="-35.5" y="102.1" size="1.778" layer="27" rot="R180" display="off"/>
@@ -3147,14 +3183,12 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 <wire x1="96.8" y1="11.2" x2="98.4" y2="9.6" width="0.5" layer="1"/>
 <wire x1="98.4" y1="9.6" x2="98.4" y2="4.545" width="1" layer="1"/>
 <wire x1="98.4" y1="4.545" x2="98.38" y2="4.525" width="1" layer="1"/>
-<wire x1="29.84" y1="42.41" x2="29.06" y2="42.41" width="0.5" layer="1"/>
+<wire x1="29.54" y1="42.41" x2="29.06" y2="42.41" width="0.5" layer="1"/>
 <wire x1="29.06" y1="42.41" x2="27.585" y2="43.885" width="0.5" layer="1"/>
 <wire x1="27.585" y1="43.885" x2="26.51" y2="44.96" width="0.5" layer="1"/>
 <wire x1="26.51" y1="44.96" x2="24.81" y2="44.96" width="0.5" layer="1"/>
 <wire x1="21.39" y1="45.21" x2="24.56" y2="45.21" width="0.5" layer="1"/>
 <wire x1="24.56" y1="45.21" x2="24.81" y2="44.96" width="0.5" layer="1"/>
-<wire x1="21.37" y1="42.31" x2="21.37" y2="45.19" width="0.5" layer="1"/>
-<wire x1="21.37" y1="45.19" x2="21.39" y2="45.21" width="1" layer="1"/>
 <wire x1="27.585" y1="43.885" x2="32.9" y2="49.2" width="0.5" layer="1"/>
 <wire x1="56.02" y1="46.09" x2="52.91" y2="49.2" width="1" layer="1"/>
 <wire x1="32.9" y1="49.2" x2="52.91" y2="49.2" width="1" layer="1"/>
@@ -3204,11 +3238,10 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 <wire x1="57.73" y1="43.47" x2="57.73" y2="44.38" width="0.5" layer="1"/>
 <wire x1="57.73" y1="44.38" x2="56.02" y2="46.09" width="0.5" layer="1"/>
 <wire x1="19.5" y1="45.2" x2="13.88" y2="50.82" width="0.5" layer="1"/>
-<wire x1="19.5" y1="45.2" x2="21.38" y2="45.2" width="0.5" layer="1"/>
+<wire x1="21.38" y1="45.2" x2="19.5" y2="45.2" width="0.5" layer="1"/>
 <wire x1="21.38" y1="45.2" x2="21.39" y2="45.21" width="0.5" layer="1"/>
-<wire x1="21.37" y1="42.31" x2="21.37" y2="40.17" width="0.5" layer="1"/>
 <wire x1="19.28" y1="38.08" x2="17.14" y2="38.08" width="0.5" layer="1"/>
-<wire x1="21.37" y1="40.17" x2="19.28" y2="38.08" width="0.5" layer="1"/>
+<wire x1="19.28" y1="38.08" x2="19.94376875" y2="38.74376875" width="0.5" layer="1"/>
 <wire x1="95.52" y1="32.95" x2="95.5" y2="32.93" width="0.5" layer="1"/>
 <wire x1="95.5" y1="32.93" x2="95.5" y2="32" width="0.5" layer="1"/>
 <wire x1="95.5" y1="32" x2="96.3" y2="31.2" width="0.5" layer="1"/>
@@ -3231,6 +3264,10 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 <wire x1="96.4" y1="50.82" x2="111.154" y2="50.82" width="0.5" layer="1"/>
 <wire x1="111.154" y1="38.08" x2="106.78" y2="38.08" width="0.5" layer="1"/>
 <wire x1="106.78" y1="38.08" x2="103.7" y2="35" width="0.5" layer="1"/>
+<wire x1="19.5" y1="45.2" x2="19.5" y2="41.78" width="0.5" layer="1"/>
+<wire x1="19.5" y1="41.78" x2="19.87" y2="41.41" width="0.5" layer="1"/>
+<wire x1="19.94376875" y1="38.74376875" x2="19.94376875" y2="41.33623125" width="0.5" layer="1"/>
+<wire x1="19.94376875" y1="41.33623125" x2="19.87" y2="41.41" width="0.5" layer="1"/>
 </signal>
 <signal name="TPS-EN">
 <contactref element="R1" pad="1"/>
@@ -3263,19 +3300,19 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 <wire x1="29.47" y1="38.375" x2="28.925" y2="38.375" width="0.2" layer="1"/>
 <wire x1="25.24" y1="42.06" x2="24.19" y2="42.06" width="0.2" layer="1"/>
 <wire x1="28.925" y1="38.375" x2="25.24" y2="42.06" width="0.2" layer="1"/>
-<wire x1="24.14" y1="42.11" x2="22.97" y2="42.11" width="0.2" layer="1"/>
-<wire x1="22.77" y1="42.31" x2="22.97" y2="42.11" width="0.2" layer="1"/>
-<wire x1="24.14" y1="42.11" x2="24.19" y2="42.06" width="0.2" layer="1"/>
+<wire x1="21.87" y1="41.41" x2="22.71" y2="41.41" width="0.3" layer="1"/>
+<wire x1="23.36" y1="42.06" x2="24.19" y2="42.06" width="0.3" layer="1"/>
+<wire x1="22.71" y1="41.41" x2="23.36" y2="42.06" width="0.3" layer="1"/>
 </signal>
 <signal name="TPS-PG">
 <contactref element="TP26" pad="1"/>
 <contactref element="U10" pad="2"/>
 <contactref element="R5" pad="1"/>
 <wire x1="33.82" y1="44.29" x2="31.94" y2="42.41" width="0.2" layer="1"/>
-<wire x1="31.24" y1="42.41" x2="31.94" y2="42.41" width="0.2" layer="1"/>
+<wire x1="31.54" y1="42.41" x2="31.94" y2="42.41" width="0.2" layer="1"/>
 <wire x1="33.82" y1="44.29" x2="34.7" y2="44.29" width="0.2" layer="1"/>
 <wire x1="31.12" y1="38.8" x2="31.12" y2="39.52" width="0.2" layer="1"/>
-<wire x1="31.24" y1="39.64" x2="31.24" y2="42.41" width="0.2" layer="1"/>
+<wire x1="31.24" y1="39.64" x2="31.54" y2="42.41" width="0.2" layer="1"/>
 <wire x1="31.12" y1="39.52" x2="31.24" y2="39.64" width="0.2" layer="1"/>
 </signal>
 <signal name="TPS-VSEL">
