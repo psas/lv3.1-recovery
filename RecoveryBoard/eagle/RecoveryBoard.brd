@@ -3082,7 +3082,7 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 <via x="33.9" y="27.2" extent="1-16" drill="0.35"/>
 <via x="52.4" y="19.5" extent="1-16" drill="0.35"/>
 <via x="76.2" y="8.4" extent="1-16" drill="0.35"/>
-<via x="87.8" y="2.6" extent="1-16" drill="0.35"/>
+<via x="87.5" y="1.9" extent="1-16" drill="0.35"/>
 <via x="103.6" y="2.1" extent="1-16" drill="0.35"/>
 <via x="102.3" y="11.4" extent="1-16" drill="0.35"/>
 <via x="94.5" y="19.2" extent="1-16" drill="0.35"/>
@@ -4178,14 +4178,12 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 </signal>
 <signal name="LAMOTOR-">
 <contactref element="J2" pad="2"/>
-<wire x1="88.805" y1="2.105" x2="88.8" y2="2.1" width="0.5" layer="1"/>
-<wire x1="88.8" y1="2.1" x2="89.5" y2="1.4" width="1" layer="1"/>
-<wire x1="89.5" y1="1.4" x2="94.9" y2="1.4" width="1" layer="1"/>
+<wire x1="94.9" y1="1.4" x2="89.5" y2="1.4" width="1" layer="1"/>
 <wire x1="95.84" y1="2.34" x2="95.84" y2="4.525" width="1" layer="1"/>
 <wire x1="94.9" y1="1.4" x2="95.84" y2="2.34" width="1" layer="1"/>
 <contactref element="U2" pad="8"/>
-<wire x1="88.605" y1="3.988" x2="88.605" y2="2.295" width="0.5" layer="1"/>
-<wire x1="88.605" y1="2.295" x2="88.8" y2="2.1" width="0.2" layer="1"/>
+<wire x1="88.605" y1="2.295" x2="88.605" y2="3.988" width="0.5" layer="1"/>
+<wire x1="89.5" y1="1.4" x2="88.605" y2="2.295" width="1" layer="1"/>
 </signal>
 <signal name="GND1">
 <via x="84.4" y="11.2" extent="1-16" drill="0.35"/>
@@ -4245,6 +4243,7 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 <approved hash="19,1,dd1ec010485c5552"/>
 <approved hash="19,1,6d1c701f0c531150"/>
 <approved hash="19,1,dc1eddd0559c5452"/>
+<approved hash="23,1,fba37e42020a66e8"/>
 </errors>
 </board>
 </drawing>
