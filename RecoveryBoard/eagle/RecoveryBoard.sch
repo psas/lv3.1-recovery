@@ -11370,8 +11370,8 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <part name="SUPPLY3" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="SUPPLY4" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="R7" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10k"/>
-<part name="R8" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="442"/>
-<part name="R9" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="442"/>
+<part name="R8" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="470"/>
+<part name="R9" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="470"/>
 <part name="R10" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10k"/>
 <part name="SUPPLY24" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="CM1" library="J-Samtec-FTSH-105-XXX-DV-K-ARM-SWD" deviceset="FTSH-105-XX-X-DV-K" device=""/>
