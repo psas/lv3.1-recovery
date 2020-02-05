@@ -1,0 +1,6 @@
+# jupyter checkpoints
+.ipynb_checkpoints/*
+*.s#[1-9]
+*.s##
+*.b#[1-9]
+*.b##
