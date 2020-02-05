@@ -11519,8 +11519,8 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <part name="R25" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="1k"/>
 <part name="SUPPLY23" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="SUPPLY5" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="3.3V" device=""/>
-<part name="R26" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="51.1"/>
-<part name="R27" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="51.1"/>
+<part name="R26" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="51"/>
+<part name="R27" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="51"/>
 <part name="R28" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10k"/>
 <part name="R29" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="10k"/>
 <part name="SUPPLY34" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
