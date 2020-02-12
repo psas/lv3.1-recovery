@@ -1,8 +1,8 @@
 #include<stdio.h>
 
-void gpio_check(){
+int * gpio_check(){
     FILE *fp = fopen("gpio_sim.txt", "r");
-    int pins[32];
+    static int pins[32];
 
     for (int i = 0; i < 32; i++)
     {
@@ -15,13 +15,15 @@ void gpio_check(){
     //     printf("%d", pins[i]);
     // }
     fclose(fp);
+
+    return pins;
 }
 
 
 int main(){
     while (1){
         
-        gpio_check();
+        int * status = gpio_check();
     }
     
     return 0;
