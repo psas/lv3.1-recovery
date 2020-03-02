@@ -11078,10 +11078,10 @@ www.irf.com&lt;p&gt;
 <library name="Q--BPR-301--Phototransistor">
 <packages>
 <package name="BPR-301">
-<pad name="CAT" x="-3.83" y="0" drill="0.6"/>
-<pad name="AN" x="-6.37" y="0" drill="0.6"/>
-<pad name="E" x="3.83" y="0" drill="0.6"/>
-<pad name="C" x="6.37" y="0" drill="0.6"/>
+<pad name="CAT" x="-3.83" y="0" drill="0.8"/>
+<pad name="AN" x="-6.37" y="0" drill="0.8"/>
+<pad name="E" x="3.83" y="0" drill="0.8"/>
+<pad name="C" x="6.37" y="0" drill="0.8"/>
 <wire x1="-8" y1="-1" x2="-8" y2="1" width="0.1524" layer="21"/>
 <wire x1="-8" y1="1" x2="8" y2="1" width="0.1524" layer="21"/>
 <wire x1="8" y1="1" x2="8" y2="-1" width="0.1524" layer="21"/>

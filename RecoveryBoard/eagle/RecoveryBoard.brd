@@ -32,9 +32,9 @@
 <layer number="22" name="bPlace" color="7" fill="1" visible="yes" active="yes"/>
 <layer number="23" name="tOrigins" color="15" fill="1" visible="yes" active="yes"/>
 <layer number="24" name="bOrigins" color="15" fill="1" visible="yes" active="yes"/>
-<layer number="25" name="tNames" color="7" fill="1" visible="no" active="yes"/>
+<layer number="25" name="tNames" color="7" fill="1" visible="yes" active="yes"/>
 <layer number="26" name="bNames" color="7" fill="1" visible="no" active="yes"/>
-<layer number="27" name="tValues" color="7" fill="1" visible="no" active="yes"/>
+<layer number="27" name="tValues" color="7" fill="1" visible="yes" active="yes"/>
 <layer number="28" name="bValues" color="7" fill="1" visible="no" active="yes"/>
 <layer number="29" name="tStop" color="7" fill="3" visible="no" active="yes"/>
 <layer number="30" name="bStop" color="7" fill="6" visible="no" active="yes"/>
@@ -56,7 +56,7 @@
 <layer number="46" name="Milling" color="3" fill="1" visible="yes" active="yes"/>
 <layer number="47" name="Measures" color="7" fill="1" visible="no" active="yes"/>
 <layer number="48" name="Document" color="7" fill="1" visible="no" active="yes"/>
-<layer number="49" name="Reference" color="7" fill="1" visible="no" active="yes"/>
+<layer number="49" name="Reference" color="7" fill="1" visible="yes" active="yes"/>
 <layer number="50" name="dxf" color="7" fill="1" visible="no" active="yes"/>
 <layer number="51" name="tDocu" color="7" fill="1" visible="yes" active="yes"/>
 <layer number="52" name="bDocu" color="7" fill="1" visible="yes" active="yes"/>
@@ -84,7 +84,7 @@
 <layer number="101" name="Patch_Top" color="7" fill="1" visible="no" active="yes"/>
 <layer number="102" name="Vscore" color="7" fill="1" visible="no" active="yes"/>
 <layer number="103" name="tMap" color="7" fill="1" visible="no" active="yes"/>
-<layer number="104" name="Name" color="7" fill="1" visible="no" active="yes"/>
+<layer number="104" name="Name" color="7" fill="1" visible="yes" active="yes"/>
 <layer number="105" name="tPlate" color="7" fill="1" visible="no" active="yes"/>
 <layer number="106" name="bPlate" color="7" fill="1" visible="no" active="yes"/>
 <layer number="107" name="Crop" color="7" fill="1" visible="no" active="yes"/>
@@ -235,6 +235,9 @@
 <wire x1="63.4" y1="2.4" x2="63.4" y2="2.7" width="0.2" layer="21"/>
 <text x="47.1" y="24.3" size="0.635" layer="21" font="vector" ratio="20">THERMISTOR</text>
 <text x="20.3" y="49.3" size="1.016" layer="21" font="vector" ratio="10">2020/01/30</text>
+<text x="-4.1" y="72.1" size="1.778" layer="49">1. thermistor footprint is wrong - i recieved 1206 footprint
+2. increase diameter of sensor holes
+3. C22 footprint too big</text>
 </plain>
 <libraries>
 <library name="oresat-rcl">
@@ -2221,10 +2224,10 @@ www.irf.com&lt;p&gt;
 <library name="Q--BPR-301--Phototransistor">
 <packages>
 <package name="BPR-301">
-<pad name="CAT" x="-3.83" y="0" drill="0.6"/>
-<pad name="AN" x="-6.37" y="0" drill="0.6"/>
-<pad name="E" x="3.83" y="0" drill="0.6"/>
-<pad name="C" x="6.37" y="0" drill="0.6"/>
+<pad name="CAT" x="-3.83" y="0" drill="0.8"/>
+<pad name="AN" x="-6.37" y="0" drill="0.8"/>
+<pad name="E" x="3.83" y="0" drill="0.8"/>
+<pad name="C" x="6.37" y="0" drill="0.8"/>
 <wire x1="-8" y1="-1" x2="-8" y2="1" width="0.1524" layer="21"/>
 <wire x1="-8" y1="1" x2="8" y2="1" width="0.1524" layer="21"/>
 <wire x1="8" y1="1" x2="8" y2="-1" width="0.1524" layer="21"/>
@@ -4208,6 +4211,10 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 </board>
 </drawing>
 <compatibility>
+<note version="6.3" minversion="6.2.2" severity="warning">
+Since Version 6.2.2 text objects can contain more than one line,
+which will not be processed correctly with this version.
+</note>
 <note version="8.2" severity="warning">
 Since Version 8.2, EAGLE supports online libraries. The ids
 of those online libraries will not be understood (or retained)
