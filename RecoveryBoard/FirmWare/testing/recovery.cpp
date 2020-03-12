@@ -1,8 +1,8 @@
 #include<iostream>
 #include<fstream>
 #include<string>
-#include<windows.h>
 #include"pins.h"
+#include <windows.h>
 
 using namespace std;
 
@@ -92,20 +92,23 @@ void drogue(){
         //move back and forth a bit with the motor
         cout << "[INFO] NOT OPEN...\n";
     }
-    Sleep(1000);
     // do not move motor
     cout << "[INFO] Drogue Launched\n";
+    Sleep(2000);
+
 
 }
 
 
 // main parachute pull
 void chute(){
+    // open the nose cone 
     // pull linear actuator
     // check linear actuator position
     // make sure its open
-    Sleep(1000);
     cout << "[INFO] Main Pulled\n";
+    Sleep(2000);
+
 }
 
 // the ARMED function dealing with telemetrum
@@ -136,9 +139,9 @@ int waitForAvionics(){
 int main(int argc, char const *argv[]){
     int blank;
     while(1){
-    
+        // if locked...
         if(checkLock()){
-
+            // armed and wait for avionics
             while(1){
                 blank = waitForAvionics();
 
@@ -146,7 +149,8 @@ int main(int argc, char const *argv[]){
                 if (blank == 1){
                     cout << "[INFO] BLANKED\n";
                     Sleep(1000);
-                    cout << "Refreshing...";
+                    cout << "[INFO] Refreshing...";
+                    // blank = 0; // reset the task
                     Sleep(1000);
                     break;
                 }
