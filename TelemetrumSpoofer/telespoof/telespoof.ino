@@ -34,7 +34,7 @@ void loop() {
 
     // Check that jumper has shorted and system is not yet armed.
     if (digitalRead(jumper_reading_pin) && armed == false) {
-        // Set start time and arm system
+        // Set GO_time and arm system
         GO_time = millis();
         armed = true;
     }
