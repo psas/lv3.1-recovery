@@ -7,7 +7,7 @@
 // Usage: drogue_delay --> time from GO to drogue deployment
 //        main_delay   --> time from GO to main   deployment
 //        Set these to values as defined by flight model.
-//        IMPORTANT: These values must be converted to milliseconds.
+//        IMPORTANT: The code expects these values in milliseconds
 //
 // Physical setup:
 // -- connect jumper to short (with static line) to jumper_reading_pin and GND
@@ -46,7 +46,7 @@ void loop() {
     static bool drogue = false;
     static bool main = false;
 
-    // Serial debugging
+    //---------------- Serial debugging ----------------
     // Serial.println(digitalRead(jumper_reading_pin));
     // Serial.print("armed = ");
     // Serial.print(armed);
