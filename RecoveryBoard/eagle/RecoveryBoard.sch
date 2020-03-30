@@ -11458,7 +11458,6 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <part name="SUPPLY37" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="P+1" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="+12V" device=""/>
 <part name="SUPPLY38" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
-<part name="SUPPLY39" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="SUPPLY40" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="SUPPLY41" library="SparkFun-PowerSymbols" library_urn="urn:adsk.eagle:library:530" deviceset="3.3V" device=""/>
 <part name="Q6" library="Q-MOSFET-PCH-SOT23-6" deviceset="MOSFET-PCH-SOT23-6" device=""/>
@@ -11476,8 +11475,6 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <part name="R12" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="1k"/>
 <part name="SUPPLY8" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="SUPPLY9" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
-<part name="R13" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="1.8k"/>
-<part name="R14" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="3.3k"/>
 <part name="P+4" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="+12V" device=""/>
 <part name="R15" library="oresat-rcl" deviceset="R-US_" device="0603-C-NOSILK" value="27k">
 <attribute name="DIS" value="Digi-Key"/>
@@ -11786,7 +11783,7 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 </instance>
 <instance part="D1" gate="G$1" x="166.37" y="198.12" smashed="yes">
 <attribute name="NAME" x="163.83" y="200.66" size="1.016" layer="95" ratio="10"/>
-<attribute name="VALUE" x="163.83" y="194.31" size="1.016" layer="96" ratio="10"/>
+<attribute name="VALUE" x="164.465" y="193.675" size="1.016" layer="96" ratio="10"/>
 </instance>
 <instance part="C11" gate="CE" x="148.59" y="195.58" smashed="yes">
 <attribute name="NAME" x="149.606" y="196.215" size="1.016" layer="95"/>
@@ -12526,7 +12523,7 @@ TSINY TS37GB60-BL3625</text>
 <text x="474.98" y="297.18" size="1.778" layer="97">Power (12V - RED)</text>
 <text x="474.98" y="294.64" size="1.778" layer="97">GND (BLK)</text>
 <text x="474.98" y="292.1" size="1.778" layer="97">DIR (WHT)</text>
-<text x="474.98" y="289.56" size="1.778" layer="97">PWM IN (BLU)</text>
+<text x="474.98" y="289.56" size="1.778" layer="97">PWM OUT (BLU)</text>
 <text x="474.98" y="287.02" size="1.778" layer="97">9 pulse/rot (YLW)</text>
 <text x="137.16" y="367.03" size="6.4516" layer="95">Opto-isolated Inputs
 From Telemetrum</text>
@@ -12544,6 +12541,8 @@ From Telemetrum</text>
 <wire x1="510.54" y1="238.76" x2="510.54" y2="96.52" width="0.1524" layer="97"/>
 <wire x1="510.54" y1="96.52" x2="381" y2="96.52" width="0.1524" layer="97"/>
 <wire x1="381" y1="96.52" x2="381" y2="238.76" width="0.1524" layer="97"/>
+<text x="457.2" y="279.4" size="1.778" layer="97">Use the pull up resistor in the STM with
+ this...there is a resistor in the motor</text>
 </plain>
 <instances>
 <instance part="U1" gate="G$1" x="274.32" y="185.42" smashed="yes">
@@ -12634,7 +12633,6 @@ From Telemetrum</text>
 <attribute name="VALUE" x="422.91" y="334.01" size="1.778" layer="96"/>
 </instance>
 <instance part="SUPPLY38" gate="GND" x="453.39" y="284.48" smashed="yes"/>
-<instance part="SUPPLY39" gate="GND" x="459.74" y="260.35" smashed="yes"/>
 <instance part="SUPPLY40" gate="GND" x="488.95" y="196.85" smashed="yes"/>
 <instance part="SUPPLY41" gate="G$1" x="485.14" y="223.52" smashed="yes">
 <attribute name="VALUE" x="485.14" y="226.314" size="1.778" layer="96" align="bottom-center"/>
@@ -12672,14 +12670,6 @@ From Telemetrum</text>
 </instance>
 <instance part="SUPPLY8" gate="GND" x="421.64" y="274.32" smashed="yes"/>
 <instance part="SUPPLY9" gate="GND" x="429.26" y="274.32" smashed="yes"/>
-<instance part="R13" gate="R" x="459.74" y="281.94" smashed="yes" rot="R270">
-<attribute name="NAME" x="461.2386" y="281.94" size="1.778" layer="95" rot="R270"/>
-<attribute name="VALUE" x="464.058" y="280.67" size="1.778" layer="96" rot="R270"/>
-</instance>
-<instance part="R14" gate="R" x="459.74" y="269.24" smashed="yes" rot="R270">
-<attribute name="NAME" x="461.2386" y="269.24" size="1.778" layer="95" rot="R270"/>
-<attribute name="VALUE" x="464.058" y="267.97" size="1.778" layer="96" rot="R270"/>
-</instance>
 <instance part="U$7" gate="G$1" x="271.78" y="134.62" smashed="yes"/>
 <instance part="SUPPLY23" gate="GND" x="96.52" y="87.63" smashed="yes"/>
 <instance part="SUPPLY5" gate="G$1" x="116.84" y="168.91" smashed="yes">
@@ -12904,11 +12894,6 @@ From Telemetrum</text>
 <pinref part="SUPPLY9" gate="GND" pin="GND"/>
 <pinref part="R11" gate="R" pin="2"/>
 <wire x1="429.26" y1="276.86" x2="429.26" y2="278.13" width="0.1524" layer="91"/>
-</segment>
-<segment>
-<pinref part="R14" gate="R" pin="2"/>
-<pinref part="SUPPLY39" gate="GND" pin="GND"/>
-<wire x1="459.74" y1="264.16" x2="459.74" y2="262.89" width="0.1524" layer="91"/>
 </segment>
 <segment>
 <pinref part="SUPPLY23" gate="GND" pin="GND"/>
@@ -13387,30 +13372,6 @@ From Telemetrum</text>
 <junction x="200.66" y="355.6"/>
 </segment>
 </net>
-<net name="PULSEOUT" class="0">
-<segment>
-<pinref part="J1" gate="A" pin="5"/>
-<wire x1="468.63" y1="287.02" x2="459.74" y2="287.02" width="0.1524" layer="91"/>
-<pinref part="R13" gate="R" pin="1"/>
-<label x="454.66" y="287.02" size="1.778" layer="95"/>
-</segment>
-</net>
-<net name="DCM_SPEED" class="0">
-<segment>
-<pinref part="R14" gate="R" pin="1"/>
-<pinref part="R13" gate="R" pin="2"/>
-<wire x1="441.96" y1="275.59" x2="441.96" y2="264.16" width="0.1524" layer="91"/>
-<wire x1="441.96" y1="264.16" x2="304.8" y2="264.16" width="0.1524" layer="91"/>
-<wire x1="459.74" y1="274.32" x2="459.74" y2="275.59" width="0.1524" layer="91"/>
-<wire x1="459.74" y1="275.59" x2="459.74" y2="276.86" width="0.1524" layer="91"/>
-<wire x1="441.96" y1="275.59" x2="459.74" y2="275.59" width="0.1524" layer="91"/>
-<junction x="459.74" y="275.59"/>
-<pinref part="U1" gate="G$1" pin="PA0"/>
-<label x="303.53" y="207.01" size="1.778" layer="95" rot="R90"/>
-<wire x1="304.8" y1="264.16" x2="304.8" y2="205.74" width="0.1524" layer="91"/>
-<wire x1="304.8" y1="205.74" x2="294.64" y2="205.74" width="0.1524" layer="91"/>
-</segment>
-</net>
 <net name="CAN_RX" class="0">
 <segment>
 <pinref part="U1" gate="G$1" pin="PA11"/>
@@ -13514,14 +13475,12 @@ From Telemetrum</text>
 <wire x1="254" y1="121.92" x2="250.19" y2="121.92" width="0.1524" layer="91"/>
 <pinref part="R37" gate="R" pin="1"/>
 <wire x1="250.19" y1="120.65" x2="250.19" y2="121.92" width="0.1524" layer="91"/>
-<pinref part="U1" gate="G$1" pin="PA10"/>
-<wire x1="294.64" y1="180.34" x2="327.66" y2="180.34" width="0.1524" layer="91"/>
-<wire x1="327.66" y1="180.34" x2="327.66" y2="147.32" width="0.1524" layer="91"/>
-<wire x1="327.66" y1="147.32" x2="250.19" y2="147.32" width="0.1524" layer="91"/>
-<wire x1="250.19" y1="147.32" x2="250.19" y2="120.65" width="0.1524" layer="91"/>
 <junction x="250.19" y="120.65"/>
-<label x="299.72" y="180.34" size="1.778" layer="95"/>
+<label x="250.825" y="159.385" size="1.778" layer="95"/>
 <label x="271.78" y="147.32" size="1.778" layer="95"/>
+<pinref part="U1" gate="G$1" pin="PB8-BOOT0"/>
+<wire x1="250.19" y1="165.1" x2="250.19" y2="120.65" width="0.1524" layer="91"/>
+<wire x1="254" y1="165.1" x2="250.19" y2="165.1" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="LED" class="0">
@@ -13555,6 +13514,19 @@ From Telemetrum</text>
 <pinref part="U1" gate="G$1" pin="PB1"/>
 <wire x1="254" y1="180.34" x2="241.3" y2="180.34" width="0.1524" layer="91"/>
 <label x="241.3" y="180.34" size="1.778" layer="95" rot="R180" xref="yes"/>
+</segment>
+</net>
+<net name="DCM_SPEED" class="0">
+<segment>
+<pinref part="J1" gate="A" pin="5"/>
+<label x="447.675" y="287.655" size="1.778" layer="95"/>
+<wire x1="441.96" y1="264.16" x2="304.8" y2="264.16" width="0.1524" layer="91"/>
+<pinref part="U1" gate="G$1" pin="PA0"/>
+<label x="303.53" y="207.01" size="1.778" layer="95" rot="R90"/>
+<wire x1="304.8" y1="264.16" x2="304.8" y2="205.74" width="0.1524" layer="91"/>
+<wire x1="304.8" y1="205.74" x2="294.64" y2="205.74" width="0.1524" layer="91"/>
+<wire x1="468.63" y1="287.02" x2="441.96" y2="287.02" width="0.1524" layer="91"/>
+<wire x1="441.96" y1="287.02" x2="441.96" y2="264.16" width="0.1524" layer="91"/>
 </segment>
 </net>
 </nets>
