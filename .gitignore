@@ -4,3 +4,4 @@
 *.s##
 *.b#[1-9]
 *.b##.DS_Store
+.DS_Store
