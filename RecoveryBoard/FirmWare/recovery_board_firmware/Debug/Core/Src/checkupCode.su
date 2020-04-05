@@ -1,0 +1,9 @@
+checkupCode.cpp:6:6:void ledBlink()	16	static
+checkupCode.cpp:18:6:void spkrTest()	16	static
+checkupCode.cpp:34:6:void motorTest()	16	static
+checkupCode.cpp:68:6:void writeLA(int, int)	24	static
+checkupCode.cpp:92:6:void testLA(ADC_HandleTypeDef&)	24	static
+checkupCode.cpp:149:6:void sensorTestSingle(int)	16	static
+checkupCode.cpp:180:6:void sensorTestDouble()	16	static
+checkupCode.cpp:208:6:void telemetrumTest()	24	static
+checkupCode.cpp:236:6:void testRoutine()	8	static
