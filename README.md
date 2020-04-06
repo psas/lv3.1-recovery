@@ -44,15 +44,24 @@ The LV-3.1 Electromechanical Recovery System (ERS) is a fully-resettable recover
 ## Control System
 
 ### Requirements
+The control system is a PCBA with an STM32F0 microcontroller. The PCBA drives a motor and linear actuator which will release the main chute and the nose cone when told to do so by the main avionics. The full requirements are summarized here: 
 
+* Receive two incoming signals from main avionics
+	* Release nose cone
+	* Release parachute
+* All logic controlled by an STM32F0
+* Use BPR-301 phototransistor sensors to verify nose cone separation
+* Run off LiPo batteries
 
 
 ### Code Overview
 
+The firmware being run by the STM32F0 is written in C/C++. It was written in an IDE provided by STMicroelectronics called STM32CubeIDE, and the firmware folder contains this project. Within this project directory, the /Core subdirectory contains all the control code. 
 
 
 ### Board Design
 
+The board was designed in EAGLE to support the requirements of the system. this is in the /eagle subdirectory of the control system.
 
 
 ### Testing and Miscellany
