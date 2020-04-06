@@ -1,6 +1,6 @@
 # LV-3.1 Recovery Repository
 
-The LV-3.1 Electromechanical Recovery System (ERS) is a fully-resettable recovery system for the [PSAS](http://psas.pdx.edu/_) Launch Vehicle v 3.1 (LV-3.1).  The system uses a geared motor to release the nosecone and drogue chute, and a linear actuator to release the main chute. The ERS expects deployment signals from LV-3.1 avoics  and an onboard control board uses optical encoding to determine and confirm deployment states.
+The LV-3.1 Electromechanical Recovery System (ERS) is a fully-resettable recovery system for the [PSAS](http://psas.pdx.edu/) Launch Vehicle v 3.1 (LV-3.1).  The system uses a geared motor to release the nosecone and drogue chute, and a linear actuator to release the main chute. The ERS expects deployment signals from LV-3.1 avoics  and an onboard control board uses optical encoding to determine and confirm deployment states.
 
 ## Table of Contents
 
