@@ -23,11 +23,13 @@ The LV-3.1 Electromechanical Recovery System (ERS) is a fully-resettable recover
 
 note: Solidworks files for all components are found under /mechanicalsystem/cad, and primarily follow the naming convention of "Foo part" --> foo_part.ext (e.g. twist coupling -> twist_coupling_v4.SLDPRT). The complete assembly can be found [here](https://github.com/psas/lv3.1-recovery/tree/master/mechanicalSystem/cad/AssemblyV3.2); all parts in its parent directory are needed to properly view the assembly.
 
+![complete assembly](/images/stack_sideways.jpg)
+
 ### Main Assembly
 
 The ERS main assembly houses all the necessary components for functionality of the system. The upper ring houses the electromechanical components, and is coupled with the upper ring by the [twist coupling](#twist-coupling). The [nose cone](https://github.com/psas/lv3.1-airframe/tree/master/cad/nose) is fastened to the upper ring using the [LV-3.1 arc-clamp system](https://github.com/psas/lv3.1-airframe/tree/master/cad/coupling) and houses the [parachute cups](#parachute-cups) above the main assembly. The keeper ring is fastened near the bottom of the lower ring and serves as a platform for the battery, control board, geared motor, linear actuator, parachute anchors, and the [pizza table](#pizza-table). Attached to the inner diameter of the upper ring is the tube ring which serves as an attachment point for the surgical tubing used to eject the nose cone from the rocket. The ring components of the main assembly are machined out of 6061 aluminum.
 
-// Add schematic
+![ERS main assembly](/images/Twist.jpg)
 
 ### Pizza Table
 
@@ -39,17 +41,17 @@ The pizza table elevates the parachute cups above the electromechanical componen
 
 The twist coupling couples the nose cone the rest of the rocket assembly and releases the nose cone by twisting out of a locked state. Once released, the surgical tubing rapidly deploys the nose cone, which then deploys the drogue parachute . The twist coupling has six L-shaped channels that mesh with six pins on the upper ring, and an internal spur gear that meshes with a gear on the motor. Upon [receiving the necessary signal](#control-system), the motor will rotate the twist coupling to release the upper ring and nose cone. The grey code tape necessary for control logic is attached to the inside of a skirt on the twist coupling, and is read my the sensors on the control board. Machined Delrin was used to fabricate the twist coupling to reduce friction between the mating surfaces.
 
-// twist coupling image
+![twist coupling](twist_coupling_V4_skirt_teeth)
 
 ### 3-Ring Release
 
 Deployment of the main parachute is accomplished through a 3-ring release system widely used skydivers and military personnel. Three interlocked rings tie two ends of webbing together and are released by pulling on a stiff cord (we use a nylon coated wire). The interlocking rings multiply the mechincal advantage of the release cord and can release of >150 lbs of force with only a 3 lb force. A linear actuator is used to pull the release cord upon receiving signal from the control board. A member of the design team sew the 3-ring release system, but commercial alternatives are available.
 
-// 3-ring release schematic/photos
+![3 ring release](/images/RINGZ.jpg)
 
 ### Parachute Cups
 
-The parachute cups seperately house the drogue and main parachutes and related webbing cord needed the secure and deploy the parachutes. The cups are stacked upon each other and supported by the pizza table in pizza-table/main-cup/drogue-cup order from bottom to top. 
+The parachute cups separately house the drogue and main parachutes and related webbing cord needed the secure and deploy the parachutes. The cups are stacked upon each other and supported by the pizza table in pizza-table/main-cup/drogue-cup order from bottom to top. 
 
 #### Drogue Cup
 
@@ -57,13 +59,13 @@ The top of the drogue cup has cone-shaped indent to support the elastic bands fo
 
 #### Main Cup
 
-The main cup houses the main parachute and 3-ring release system. Upon release of the 3-ring release system, the rocket airframe will enter free fall and the drogue parachute will pull away the main cup to deploy the main parachute. For the rest of the flight, the rocket airframe will descend on the main parachute, and the nose cone, drogue, and parachute cups descend seperately.
+The main cup houses the main parachute and 3-ring release system. Upon release of the 3-ring release system, the rocket airframe will enter free fall and the drogue parachute will pull away the main cup to deploy the main parachute. For the rest of the flight, the rocket airframe will descend on the main parachute, and the nose cone, drogue, and parachute cups descend separately.
 
 // parachute cup schematics/photos
 
 ### Interfacing and Miscellany
 
-
+The ERS attaches to the rocket airframe using the same arc clamp system used to attach the nose cone to the ERS. Two signal wires from the rocket avionics module enter the ERS through the bottom and are used to signal release of the parachutes. On the exterior of the ERS are keys used to turn the system on and to arm the system, for integration into the launch procedure.
 
 ## Control System
 
