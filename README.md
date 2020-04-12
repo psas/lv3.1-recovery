@@ -29,7 +29,7 @@ note: Solidworks files for all components are found under /mechanicalsystem/cad,
 
 The ERS main assembly houses all the necessary components for functionality of the system. The upper ring houses the electromechanical components, and is coupled with the upper ring by the [twist coupling](#twist-coupling). The [nose cone](https://github.com/psas/lv3.1-airframe/tree/master/cad/nose) is fastened to the upper ring using the [LV-3.1 arc-clamp system](https://github.com/psas/lv3.1-airframe/tree/master/cad/coupling) and houses the [parachute cups](#parachute-cups) above the main assembly. The keeper ring is fastened near the bottom of the lower ring and serves as a platform for the battery, control board, geared motor, linear actuator, parachute anchors, and the [pizza table](#pizza-table). Attached to the inner diameter of the upper ring is the tube ring which serves as an attachment point for the surgical tubing used to eject the nose cone from the rocket. The ring components of the main assembly are machined out of 6061 aluminum.
 
-![ERS main assembly](/images/Twist.jpg)
+![ERS main assembly](/images/Twist.JPG)
 
 ### Pizza Table
 
