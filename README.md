@@ -41,8 +41,6 @@ The pizza table elevates the parachute cups above the electromechanical componen
 
 The twist coupling couples the nose cone the rest of the rocket assembly and releases the nose cone by twisting out of a locked state. Once released, the surgical tubing rapidly deploys the nose cone, which then deploys the drogue parachute . The twist coupling has six L-shaped channels that mesh with six pins on the upper ring, and an internal spur gear that meshes with a gear on the motor. Upon [receiving the necessary signal](#control-system), the motor will rotate the twist coupling to release the upper ring and nose cone. The grey code tape necessary for control logic is attached to the inside of a skirt on the twist coupling, and is read my the sensors on the control board. Machined Delrin was used to fabricate the twist coupling to reduce friction between the mating surfaces.
 
-![twist coupling](twist_coupling_V4_skirt_teeth)
-
 ### 3-Ring Release
 
 Deployment of the main parachute is accomplished through a 3-ring release system widely used skydivers and military personnel. Three interlocked rings tie two ends of webbing together and are released by pulling on a stiff cord (we use a nylon coated wire). The interlocking rings multiply the mechincal advantage of the release cord and can release of >150 lbs of force with only a 3 lb force. A linear actuator is used to pull the release cord upon receiving signal from the control board. A member of the design team sew the 3-ring release system, but commercial alternatives are available.
@@ -60,8 +58,6 @@ The top of the drogue cup has cone-shaped indent to support the elastic bands fo
 #### Main Cup
 
 The main cup houses the main parachute and 3-ring release system. Upon release of the 3-ring release system, the rocket airframe will enter free fall and the drogue parachute will pull away the main cup to deploy the main parachute. For the rest of the flight, the rocket airframe will descend on the main parachute, and the nose cone, drogue, and parachute cups descend separately.
-
-// parachute cup schematics/photos
 
 ### Interfacing and Miscellany
 
