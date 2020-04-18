@@ -94,7 +94,6 @@ The board was designed in EAGLE to support the requirements of the system. this 
 
 The ERS system will be tested by dropping it from a helicopter over a field. Many parameters must be considered for this test including wind speed, altitude, field size, parachute drag coefficients, and parachute release timing. Analysis of drop test dispersal patterns based on fixing some parameters and simulating variation in others enables us to choose an appropriate drop site and drop parameters. Analysis notebooks can by found in the /analysis directory.
 
-* Parent Directory
-
+* [Parent Directory](https://github.com/psas/lv3.1-recovery/tree/master/Analysis)
 * [Primary mission analysis document](https://github.com/psas/lv3.1-recovery/blob/master/Analysis/Mission_Analysis.ipynb)
 * [Jupyter Notebook to run simulations](https://github.com/psas/lv3.1-recovery/blob/master/Analysis/drop_test_simulator.ipynb)
