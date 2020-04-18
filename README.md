@@ -61,8 +61,6 @@ The top of the drogue cup has cone-shaped indent to support the elastic bands fo
 
 The main cup houses the main parachute and 3-ring release system. Upon release of the 3-ring release system, the rocket airframe will enter free fall and the drogue parachute will pull away the main cup to deploy the main parachute. For the rest of the flight, the rocket airframe will descend on the main parachute, and the nose cone, drogue, and parachute cups descend separately.
 
-// parachute cup schematics/photos
-
 ### Interfacing and Miscellany
 
 The ERS attaches to the rocket airframe using the same arc clamp system used to attach the nose cone to the ERS. Two signal wires from the rocket avionics module enter the ERS through the bottom and are used to signal release of the parachutes. On the exterior of the ERS are keys used to turn the system on and to arm the system, for integration into the launch procedure.
@@ -77,7 +75,7 @@ The control system is a PCBA with an STM32F0 microcontroller. The PCBA drives a 
 	* Release parachute
 * All logic controlled by an STM32F0
 * Use BPR-301 phototransistor sensors to verify nose cone separation
-* Run off LiPo batteries
+* RJupyter un off LiPo batteries
 
 
 ### Code Overview
@@ -95,3 +93,10 @@ The board was designed in EAGLE to support the requirements of the system. this 
 
 
 ## Testing and Analysis
+
+The ERS system will be tested by dropping it from a helicopter over a field. Many parameters must be considered for this test including wind speed, altitude, field size, parachute drag coefficients, and parachute release timing. Analysis of drop test dispersal patterns based on fixing some parameters and simulating variation in others enables us to choose an appropriate drop site and drop parameters. Analysis notebooks can by found in the /analysis directory.
+
+* Parent Directory
+
+* [Primary mission analysis document](https://github.com/psas/lv3.1-recovery/blob/master/Analysis/Mission_Analysis.ipynb)
+* [Jupyter Notebook to run simulations](https://github.com/psas/lv3.1-recovery/blob/master/Analysis/drop_test_simulator.ipynb)
