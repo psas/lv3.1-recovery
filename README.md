@@ -29,7 +29,7 @@ note: Solidworks files for all components are found under /mechanicalsystem/cad,
 
 The ERS main assembly houses all the necessary components for functionality of the system. The upper ring houses the electromechanical components, and is coupled with the upper ring by the [twist coupling](#twist-coupling). The [nose cone](https://github.com/psas/lv3.1-airframe/tree/master/cad/nose) is fastened to the upper ring using the [LV-3.1 arc-clamp system](https://github.com/psas/lv3.1-airframe/tree/master/cad/coupling) and houses the [parachute cups](#parachute-cups) above the main assembly. The keeper ring is fastened near the bottom of the lower ring and serves as a platform for the battery, control board, geared motor, linear actuator, parachute anchors, and the [pizza table](#pizza-table). Attached to the inner diameter of the upper ring is the tube ring which serves as an attachment point for the surgical tubing used to eject the nose cone from the rocket. The ring components of the main assembly are machined out of 6061 aluminum.
 
-![ERS main assembly](/images/Twist.jpg)
+![ERS main assembly](/images/Twist.JPG)
 
 ### Pizza Table
 
@@ -40,8 +40,6 @@ The pizza table elevates the parachute cups above the electromechanical componen
 ### Twist Coupling
 
 The twist coupling couples the nose cone the rest of the rocket assembly and releases the nose cone by twisting out of a locked state. Once released, the surgical tubing rapidly deploys the nose cone, which then deploys the drogue parachute . The twist coupling has six L-shaped channels that mesh with six pins on the upper ring, and an internal spur gear that meshes with a gear on the motor. Upon [receiving the necessary signal](#control-system), the motor will rotate the twist coupling to release the upper ring and nose cone. The grey code tape necessary for control logic is attached to the inside of a skirt on the twist coupling, and is read my the sensors on the control board. Machined Delrin was used to fabricate the twist coupling to reduce friction between the mating surfaces.
-
-![twist coupling](twist_coupling_V4_skirt_teeth)
 
 ### 3-Ring Release
 
