@@ -76,6 +76,6 @@ void speakerToggle(SPKR_State state, TIM_HandleTypeDef htim){
 		TIM3->CCR1 = 499;
 	}
 	else{
-		HAL_TIMEx_PWMN_Stop(&htim, TIM_CHANNEL_1);
+		HAL_TIM_PWM_Stop(&htim, TIM_CHANNEL_1);
 	}
 }

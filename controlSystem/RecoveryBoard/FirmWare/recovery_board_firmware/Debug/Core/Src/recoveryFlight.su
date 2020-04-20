@@ -7,3 +7,4 @@ recoveryFlight.cpp:109:14:LA_PullState linActPos(ADC_HandleTypeDef&)	32	static
 recoveryFlight.cpp:122:6:void motorDrive(DCM_Dir, DCM_State)	16	static
 recoveryFlight.cpp:148:5:int motorSpeed()	16	static
 recoveryFlight.cpp:156:6:void LAWrite(LA_State)	24	static
+recoveryFlight.cpp:198:6:void speakerFeedback(SN_LockState, TIM_HandleTypeDef&)	80	static

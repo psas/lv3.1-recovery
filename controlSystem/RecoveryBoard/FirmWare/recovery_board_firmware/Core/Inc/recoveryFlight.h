@@ -79,4 +79,6 @@ void motorDrive(DCM_Dir dir, DCM_State state);
 // move LA
 void LAWrite(LA_State state);
 
+void speakerFeedback();
+
 #endif

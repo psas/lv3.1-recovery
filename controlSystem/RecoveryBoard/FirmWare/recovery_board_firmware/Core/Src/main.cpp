@@ -25,6 +25,7 @@
 /* USER CODE BEGIN Includes */
 #include "recoveryFlight.h"
 #include "recoveryUtils.h"
+#include "checkupCode.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

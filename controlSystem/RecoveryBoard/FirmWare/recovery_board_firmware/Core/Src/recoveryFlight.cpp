@@ -192,3 +192,34 @@ void LAWrite(LA_State state){
 	HAL_GPIO_WritePin(LA_IN2_GPIO_Port, LA_IN2_Pin, IN2);
 
 }
+
+
+// function to handle the different speaker patterns depending on lock state
+void speakerFeedback(SN_LockState noseState, TIM_HandleTypeDef &htim){
+	switch(noseState){
+
+	case SN_LOCK_LOCKED:
+		speakerToggle(SPKR_ON, htim);
+		HAL_Delay(500);
+		speakerToggle(SPKR_OFF, htim);
+		HAL_Delay(1000);
+		break;
+
+	case SN_LOCK_MOVING:
+		speakerToggle(SPKR_ON, htim);
+		HAL_Delay(300);
+		speakerToggle(SPKR_OFF, htim);
+		HAL_Delay(300);
+		break;
+
+	case SN_LOCK_UNLOCKED:
+		speakerToggle(SPKR_ON, htim);
+		break;
+
+	default:
+		speakerToggle(SPKR_OFF, htim);
+		break;
+
+	}
+
+}
