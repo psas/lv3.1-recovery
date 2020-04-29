@@ -232,7 +232,7 @@
 <wire x1="56.2" y1="2.4" x2="58.8" y2="2.4" width="0.2" layer="21"/>
 <wire x1="58.8" y1="2.4" x2="58.8" y2="2.7" width="0.2" layer="21"/>
 <text x="47.1" y="24.3" size="0.635" layer="21" font="vector" ratio="20">THERMISTOR</text>
-<text x="20.3" y="49.3" size="1.016" layer="21" font="vector" ratio="10">2020/03/11</text>
+<text x="20.3" y="49.3" size="1.016" layer="21" font="vector" ratio="10">2020/04/29</text>
 <text x="97.9" y="1.5" size="0.635" layer="21" font="vector" ratio="20">LA+</text>
 <text x="78" y="1.55" size="0.635" layer="21" font="vector" ratio="20">M+</text>
 <text x="72.7" y="1.55" size="0.635" layer="21" font="vector" ratio="20">DIR</text>
