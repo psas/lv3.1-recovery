@@ -11625,6 +11625,7 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <wire x1="73.66" y1="172.72" x2="73.66" y2="167.64" width="0.1524" layer="97"/>
 <wire x1="73.66" y1="167.64" x2="74.93" y2="167.64" width="0.1524" layer="97"/>
 <text x="60.325" y="136.525" size="1.778" layer="97">USART Connector for Laptop</text>
+<text x="239.395" y="191.135" size="1.778" layer="97">12V Out at 1A</text>
 </plain>
 <instances>
 <instance part="FRAME1" gate="G$1" x="0" y="0" smashed="yes"/>
