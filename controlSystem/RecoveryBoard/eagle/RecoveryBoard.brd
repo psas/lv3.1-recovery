@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="9.4.2">
+<eagle version="9.6.1">
 <drawing>
 <settings>
-<setting alwaysvectorfont="yes"/>
+<setting alwaysvectorfont="no"/>
 <setting verticaltext="up"/>
 </settings>
 <grid distance="0.025" unitdist="inch" unit="inch" style="lines" multiple="1" display="yes" altdistance="5" altunitdist="mil" altunit="mil"/>
@@ -3782,17 +3782,13 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 <contactref element="U1" pad="3"/>
 <contactref element="Y1" pad="OUT/IN"/>
 <contactref element="C4" pad="1"/>
-<wire x1="79.61715625" y1="36.43528125" x2="79.61715625" y2="36.456496875" width="0.2" layer="1"/>
-<wire x1="79.61715625" y1="36.385784375" x2="79.61715625" y2="36.43528125" width="0.3" layer="1"/>
 <wire x1="85.92" y1="36.88" x2="82.58" y2="36.88" width="0.3" layer="1"/>
 <wire x1="82.58" y1="36.88" x2="81.5" y2="35.8" width="0.3" layer="1"/>
 <wire x1="81.5" y1="35.8" x2="80.202940625" y2="35.8" width="0.3" layer="1"/>
-<wire x1="78.627203125" y1="35.395834375" x2="79.265684375" y2="36.034315625" width="0.3" layer="1"/>
-<wire x1="79.265684375" y1="36.034315625" x2="79.617153125" y2="36.385784375" width="0.3" layer="1"/>
-<wire x1="79.617153125" y1="36.385784375" x2="79.61715625" y2="36.385784375" width="0.2" layer="1"/>
 <wire x1="80.202940625" y1="35.8" x2="79.61715625" y2="36.385784375" width="0.3" layer="1"/>
-<wire x1="79.61715625" y1="36.45649375" x2="79.61715625" y2="36.3857875" width="0.3" layer="1"/>
-<wire x1="79.61715625" y1="36.3857875" x2="79.617153125" y2="36.385784375" width="0.3" layer="1"/>
+<wire x1="79.61715625" y1="36.385784375" x2="79.61715625" y2="36.45649375" width="0.3" layer="1"/>
+<wire x1="79.61715625" y1="36.45649375" x2="78.627203125" y2="35.466540625" width="0.3" layer="1"/>
+<wire x1="78.627203125" y1="35.466540625" x2="78.627203125" y2="35.395834375" width="0.3" layer="1"/>
 </signal>
 <signal name="USART2_TX">
 <contactref element="U1" pad="8"/>
@@ -3927,15 +3923,14 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 <contactref element="Y1" pad="IN/OUT"/>
 <contactref element="C3" pad="1"/>
 <contactref element="U1" pad="2"/>
-<wire x1="80.889946875" y1="39.638475" x2="80.889946875" y2="39.638471875" width="0.3" layer="1"/>
 <wire x1="85.92" y1="37.68" x2="83.62" y2="37.68" width="0.3" layer="1"/>
 <wire x1="83.62" y1="37.68" x2="83.2" y2="38.1" width="0.3" layer="1"/>
 <wire x1="83.2" y1="38.1" x2="83.2" y2="39" width="0.3" layer="1"/>
 <wire x1="83.2" y1="39" x2="82.2" y2="40" width="0.3" layer="1"/>
-<wire x1="81.251475" y1="40" x2="80.889946875" y2="39.638471875" width="0.3" layer="1"/>
 <wire x1="82.2" y1="40" x2="81.251475" y2="40" width="0.3" layer="1"/>
-<wire x1="80.889946875" y1="39.638471875" x2="80.889946875" y2="39.567765625" width="0.3" layer="1"/>
-<wire x1="80.889946875" y1="39.567765625" x2="79.899996875" y2="38.577815625" width="0.3" layer="1"/>
+<wire x1="81.251475" y1="40" x2="80.889946875" y2="39.638471875" width="0.3" layer="1"/>
+<wire x1="80.889946875" y1="39.638471875" x2="79.899996875" y2="38.648521875" width="0.3" layer="1"/>
+<wire x1="79.899996875" y1="38.648521875" x2="79.899996875" y2="38.577815625" width="0.3" layer="1"/>
 </signal>
 <signal name="LAMOTOR+">
 <contactref element="U2" pad="2"/>
@@ -4362,9 +4357,6 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 <approved hash="19,1,5c1e5f00534c5052"/>
 <approved hash="19,1,dc1bdf1953555057"/>
 <approved hash="19,1,df1bc01d4c515357"/>
-<approved hash="23,1,a3d404000780a054"/>
-<approved hash="23,1,e645e651e636e622"/>
-<approved hash="23,1,da70e58ce20eddf2"/>
 </errors>
 </board>
 </drawing>

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="9.4.2">
+<eagle version="9.6.1">
 <drawing>
 <settings>
 <setting alwaysvectorfont="no"/>
 <setting verticaltext="up"/>
 </settings>
-<grid distance="0.025" unitdist="inch" unit="inch" style="lines" multiple="1" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>
+<grid distance="0.05" unitdist="inch" unit="inch" style="lines" multiple="2" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>
 <layers>
 <layer number="1" name="Top" color="4" fill="1" visible="no" active="no"/>
 <layer number="2" name="Route2" color="16" fill="1" visible="no" active="no"/>
@@ -12564,9 +12564,9 @@ From Telemetrum</text>
 <attribute name="NAME" x="90.3986" y="154.305" size="1.778" layer="95" rot="R270"/>
 <attribute name="VALUE" x="93.218" y="156.845" size="1.778" layer="96" rot="R270"/>
 </instance>
-<instance part="R9" gate="R" x="96.52" y="108.585" smashed="yes" rot="R270">
-<attribute name="NAME" x="90.3986" y="112.395" size="1.778" layer="95" rot="R270"/>
-<attribute name="VALUE" x="93.218" y="112.395" size="1.778" layer="96" rot="R270"/>
+<instance part="R9" gate="R" x="96.52" y="111.125" smashed="yes" rot="R270">
+<attribute name="NAME" x="90.3986" y="114.935" size="1.778" layer="95" rot="R270"/>
+<attribute name="VALUE" x="93.218" y="114.935" size="1.778" layer="96" rot="R270"/>
 </instance>
 <instance part="R10" gate="R" x="123.19" y="109.22" smashed="yes" rot="R90">
 <attribute name="NAME" x="121.6914" y="105.41" size="1.778" layer="95" rot="R90"/>
@@ -12633,7 +12633,7 @@ From Telemetrum</text>
 <instance part="P+1" gate="1" x="426.72" y="331.47" smashed="yes">
 <attribute name="VALUE" x="422.91" y="334.01" size="1.778" layer="96"/>
 </instance>
-<instance part="SUPPLY38" gate="GND" x="453.39" y="284.48" smashed="yes"/>
+<instance part="SUPPLY38" gate="GND" x="453.39" y="283.21" smashed="yes"/>
 <instance part="SUPPLY40" gate="GND" x="488.95" y="196.85" smashed="yes"/>
 <instance part="SUPPLY41" gate="G$1" x="485.14" y="223.52" smashed="yes">
 <attribute name="VALUE" x="485.14" y="226.314" size="1.778" layer="96" align="bottom-center"/>
@@ -12868,7 +12868,7 @@ From Telemetrum</text>
 <segment>
 <pinref part="J1" gate="A" pin="2"/>
 <wire x1="468.63" y1="294.64" x2="453.39" y2="294.64" width="0.1524" layer="91"/>
-<wire x1="453.39" y1="294.64" x2="453.39" y2="287.02" width="0.1524" layer="91"/>
+<wire x1="453.39" y1="294.64" x2="453.39" y2="285.75" width="0.1524" layer="91"/>
 <pinref part="SUPPLY38" gate="GND" pin="GND"/>
 <label x="455.93" y="294.64" size="1.778" layer="95"/>
 </segment>
@@ -13241,7 +13241,7 @@ From Telemetrum</text>
 <net name="N$5" class="0">
 <segment>
 <pinref part="R9" gate="R" pin="1"/>
-<wire x1="96.52" y1="113.665" x2="96.52" y2="118.11" width="0.1524" layer="91"/>
+<wire x1="96.52" y1="116.205" x2="96.52" y2="118.11" width="0.1524" layer="91"/>
 <pinref part="Q5" gate="BPR-301" pin="CATH"/>
 <pinref part="TP17" gate="G$1" pin="1"/>
 <wire x1="96.52" y1="118.11" x2="96.52" y2="120.65" width="0.1524" layer="91"/>
@@ -13395,7 +13395,7 @@ From Telemetrum</text>
 <pinref part="R9" gate="R" pin="2"/>
 <wire x1="83.82" y1="147.32" x2="83.82" y2="104.14" width="0.1524" layer="91"/>
 <wire x1="96.52" y1="102.87" x2="96.52" y2="104.14" width="0.1524" layer="91"/>
-<wire x1="96.52" y1="104.14" x2="96.52" y2="103.505" width="0.1524" layer="91"/>
+<wire x1="96.52" y1="104.14" x2="96.52" y2="106.045" width="0.1524" layer="91"/>
 <wire x1="83.82" y1="104.14" x2="96.52" y2="104.14" width="0.1524" layer="91"/>
 <junction x="96.52" y="104.14"/>
 <wire x1="83.82" y1="147.32" x2="96.52" y2="147.32" width="0.1524" layer="91"/>
@@ -13543,12 +13543,13 @@ From Telemetrum</text>
 <approved hash="104,1,185.42,36.83,U10,PGND,GND,,,"/>
 <approved hash="113,1,215.796,139.596,FRAME1,,,,,"/>
 <approved hash="113,2,279.296,215.796,FRAME3,,,,,"/>
-<approved hash="113,2,460.773,212.316,J2,,,,,"/>
-<approved hash="113,2,468.867,293.596,J1,,,,,"/>
-<approved hash="113,1,322.817,179.296,JP1,,,,,"/>
-<approved hash="113,1,79.7729,176.756,JP2,,,,,"/>
-<approved hash="113,1,80.2471,128.496,JP3,,,,,"/>
-<approved hash="113,1,121.683,143.736,JP4,,,,,"/>
+<approved hash="113,2,460.773,212.286,J2,,,,,"/>
+<approved hash="113,2,468.867,293.566,J1,,,,,"/>
+<approved hash="113,1,322.817,179.266,JP1,,,,,"/>
+<approved hash="113,1,79.7729,176.726,JP2,,,,,"/>
+<approved hash="113,1,80.2471,128.466,JP3,,,,,"/>
+<approved hash="113,1,116.603,141.166,JP4,,,,,"/>
+<approved hash="113,1,130.81,139.7,R5,,,,,"/>
 </errors>
 </schematic>
 </drawing>
