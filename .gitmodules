@@ -1,0 +1,3 @@
+[submodule "controlSystem/RecoveryBoard/Firmware2/ChibiOS"]
+	path = controlSystem/RecoveryBoard/Firmware2/ChibiOS
+	url = https://github.com/ChibiOS/ChibiOS.git
