@@ -101,7 +101,7 @@ include $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk/startup_stm32f0xx.m
 # HAL-OSAL files (optional).
 include $(CHIBIOS)/os/hal/hal.mk
 include $(CHIBIOS)/os/hal/ports/STM32/STM32F0xx/platform.mk
-include $(CHIBIOS)/os/hal/boards/ST_NUCLEO32_F042K6/board.mk
+#include $(CHIBIOS)/os/hal/boards/ST_NUCLEO32_F042K6/board.mk
 include $(CHIBIOS)/os/hal/osal/rt-nil/osal.mk
 # RTOS files (optional).
 include $(CHIBIOS)/os/rt/rt.mk
@@ -120,6 +120,7 @@ LDSCRIPT= $(STARTUPLD)/STM32F042x6.ld
 # setting.
 CSRC = $(ALLCSRC) \
        $(TESTSRC) \
+       cfg/board.c \
        main.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
