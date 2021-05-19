@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="9.6.1">
+<eagle version="9.6.2">
 <drawing>
 <settings>
 <setting alwaysvectorfont="no"/>
@@ -3615,7 +3615,7 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 <wire x1="57.1" y1="38.52" x2="56.4" y2="37.82" width="0.35" layer="1"/>
 <wire x1="56.4" y1="37.82" x2="56.4" y2="37.1" width="0.35" layer="1"/>
 </signal>
-<signal name="ACOK">
+<signal name="UMB_ON">
 <contactref element="U$5" pad="!ACOK"/>
 <contactref element="R19" pad="1"/>
 <contactref element="U1" pad="30"/>
@@ -3715,7 +3715,7 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 <wire x1="62.5" y1="8" x2="64.9" y2="8" width="0.2" layer="1"/>
 <wire x1="62.5" y1="5.5" x2="62.5" y2="8" width="0.2" layer="1"/>
 </signal>
-<signal name="LA_IN1">
+<signal name="LA_DRV1">
 <contactref element="U1" pad="18"/>
 <contactref element="R32" pad="1"/>
 <wire x1="94.42" y1="33.68" x2="99.08" y2="33.68" width="0.2" layer="1"/>
@@ -3731,7 +3731,7 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 <wire x1="85.5" y1="3.993" x2="85.595" y2="4.088" width="0.2" layer="1"/>
 <wire x1="85.5" y1="2" x2="85.5" y2="3.993" width="0.2" layer="1"/>
 </signal>
-<signal name="LA_IN2">
+<signal name="LA_DRV2">
 <contactref element="U1" pad="19"/>
 <contactref element="R33" pad="1"/>
 <via x="86.8" y="2" extent="1-16" drill="0.35"/>
@@ -3748,7 +3748,7 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 <wire x1="86.8" y1="4.023" x2="86.865" y2="4.088" width="0.2" layer="1"/>
 <wire x1="86.8" y1="2" x2="86.8" y2="4.023" width="0.2" layer="1"/>
 </signal>
-<signal name="SENSOR1">
+<signal name="ROTSENE1">
 <contactref element="R7" pad="2"/>
 <contactref element="U1" pad="28"/>
 <wire x1="90.57" y1="39.93" x2="90.4894" y2="40.0106" width="0.2" layer="1"/>
@@ -3824,7 +3824,7 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 <wire x1="92.97" y1="38.47" x2="92.3" y2="37.8" width="0.2" layer="1"/>
 <wire x1="85.1" y1="37.8" x2="90.4" y2="37.8" width="0.2" layer="16"/>
 </signal>
-<signal name="DCMDIR">
+<signal name="DCM_DIR">
 <contactref element="J1" pad="3"/>
 <contactref element="R12" pad="1"/>
 <wire x1="73.4" y1="8.4" x2="73.48" y2="8.32" width="0.2" layer="1"/>
@@ -3840,7 +3840,7 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 <wire x1="73.5" y1="10.3" x2="77.3" y2="10.3" width="0.2" layer="16"/>
 <wire x1="89.8" y1="22.8" x2="77.3" y2="10.3" width="0.2" layer="16"/>
 </signal>
-<signal name="SENSOR_ON">
+<signal name="ROTSENSE_PWR">
 <contactref element="R36" pad="1"/>
 <contactref element="U1" pad="26"/>
 <contactref element="Q2" pad="1"/>
@@ -3879,7 +3879,7 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 <wire x1="94.42" y1="38.48" x2="97.58" y2="38.48" width="0.2" layer="1"/>
 <wire x1="97.58" y1="38.48" x2="97.7" y2="38.6" width="0.2" layer="1"/>
 </signal>
-<signal name="SENSOR2">
+<signal name="ROTSENSE2">
 <contactref element="R10" pad="2"/>
 <contactref element="U1" pad="27"/>
 <via x="94" y="41.2" extent="1-16" drill="0.35"/>
@@ -4011,7 +4011,7 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 <wire x1="80.6" y1="11.9" x2="80.2" y2="11.9" width="0.2" layer="1"/>
 <wire x1="81.3" y1="11.2" x2="80.6" y2="11.9" width="0.2" layer="1"/>
 </signal>
-<signal name="DCM_ON">
+<signal name="DCM_PWR">
 <contactref element="R35" pad="1"/>
 <contactref element="U1" pad="13"/>
 <wire x1="90.57" y1="31.43" x2="90.57" y2="27.33" width="0.2" layer="1"/>
@@ -4076,7 +4076,7 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 <wire x1="28" y1="6.7" x2="30.66" y2="6.7" width="0.5" layer="1"/>
 <wire x1="30.66" y1="6.7" x2="30.9" y2="6.46" width="0.5" layer="1"/>
 </signal>
-<signal name="ISO-CHUTE">
+<signal name="ISO_MAIN">
 <contactref element="R28" pad="1"/>
 <contactref element="U3" pad="OUT"/>
 <contactref element="U1" pad="9"/>
@@ -4095,7 +4095,7 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 <wire x1="44" y1="14.9" x2="49.3" y2="14.9" width="0.3" layer="16"/>
 <wire x1="49.3" y1="14.9" x2="60.2" y2="14.9" width="0.3" layer="16"/>
 </signal>
-<signal name="ISO-DROGUE">
+<signal name="ISO_DROGUE">
 <contactref element="R29" pad="1"/>
 <contactref element="U5" pad="OUT"/>
 <contactref element="U1" pad="10"/>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="9.6.1">
+<eagle version="9.6.2">
 <drawing>
 <settings>
 <setting alwaysvectorfont="no"/>
@@ -12266,7 +12266,7 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <wire x1="213.36" y1="173.99" x2="203.2" y2="173.99" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="ACOK" class="0">
+<net name="UMB_ON" class="0">
 <segment>
 <pinref part="U$5" gate="G$1" pin="!ACOK"/>
 <wire x1="157.48" y1="163.83" x2="165.1" y2="163.83" width="0.1524" layer="91"/>
@@ -12507,11 +12507,11 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <sheet>
 <description>Microcontroller</description>
 <plain>
-<wire x1="72.39" y1="64.77" x2="72.39" y2="198.12" width="0.1524" layer="95"/>
-<wire x1="72.39" y1="198.12" x2="151.13" y2="198.12" width="0.1524" layer="95"/>
-<wire x1="151.13" y1="198.12" x2="151.13" y2="64.77" width="0.1524" layer="95"/>
-<wire x1="151.13" y1="64.77" x2="72.39" y2="64.77" width="0.1524" layer="95"/>
-<text x="74.93" y="190.5" size="6.4516" layer="95">Light Sensor</text>
+<wire x1="57.15" y1="64.77" x2="57.15" y2="198.12" width="0.1524" layer="95"/>
+<wire x1="57.15" y1="198.12" x2="135.89" y2="198.12" width="0.1524" layer="95"/>
+<wire x1="135.89" y1="198.12" x2="135.89" y2="64.77" width="0.1524" layer="95"/>
+<wire x1="135.89" y1="64.77" x2="57.15" y2="64.77" width="0.1524" layer="95"/>
+<text x="59.69" y="190.5" size="6.4516" layer="95">Rotation Sensor</text>
 <wire x1="264.16" y1="86.36" x2="317.5" y2="86.36" width="0.1524" layer="95"/>
 <wire x1="317.5" y1="86.36" x2="317.5" y2="30.48" width="0.1524" layer="95"/>
 <wire x1="317.5" y1="30.48" x2="264.16" y2="30.48" width="0.1524" layer="95"/>
@@ -12524,7 +12524,7 @@ TSINY TS37GB60-BL3625</text>
 <text x="474.98" y="297.18" size="1.778" layer="97">Power (12V - RED)</text>
 <text x="474.98" y="294.64" size="1.778" layer="97">GND (BLK)</text>
 <text x="474.98" y="292.1" size="1.778" layer="97">DIR (WHT)</text>
-<text x="474.98" y="289.56" size="1.778" layer="97">PWM OUT (BLU)</text>
+<text x="474.98" y="289.56" size="1.778" layer="97">PWM (BLU)</text>
 <text x="474.98" y="287.02" size="1.778" layer="97">9 pulse/rot (YLW)</text>
 <text x="137.16" y="367.03" size="6.4516" layer="95">Opto-isolated Inputs
 From Telemetrum</text>
@@ -12542,8 +12542,12 @@ From Telemetrum</text>
 <wire x1="510.54" y1="238.76" x2="510.54" y2="96.52" width="0.1524" layer="97"/>
 <wire x1="510.54" y1="96.52" x2="381" y2="96.52" width="0.1524" layer="97"/>
 <wire x1="381" y1="96.52" x2="381" y2="238.76" width="0.1524" layer="97"/>
-<text x="457.2" y="279.4" size="1.778" layer="97">Use the pull up resistor in the STM with
- this...there is a resistor in the motor</text>
+<text x="144.78" y="186.69" size="1.778" layer="97">16 MHz</text>
+<text x="384.81" y="261.62" size="1.778" layer="94"> NEEDS 1K RESISTOR 
+OR SOMETHING</text>
+<text x="453.39" y="275.59" size="1.778" layer="97">(~0.3, ~ 1, ~ 2) A</text>
+<text x="453.39" y="271.78" size="1.778" layer="97">DCM_SPEED floats up to 5V?!</text>
+<text x="453.39" y="267.97" size="1.778" layer="97">PWM = 0% DC = Motor off</text>
 </plain>
 <instances>
 <instance part="U1" gate="G$1" x="274.32" y="185.42" smashed="yes">
@@ -12556,42 +12560,42 @@ From Telemetrum</text>
 </instance>
 <instance part="SUPPLY3" gate="GND" x="443.865" y="161.925" smashed="yes"/>
 <instance part="SUPPLY4" gate="GND" x="451.485" y="161.925" smashed="yes"/>
-<instance part="R7" gate="R" x="125.73" y="147.32" smashed="yes" rot="R90">
-<attribute name="NAME" x="124.2314" y="143.51" size="1.778" layer="95" rot="R90"/>
-<attribute name="VALUE" x="121.412" y="143.51" size="1.778" layer="96" rot="R90"/>
+<instance part="R7" gate="R" x="110.49" y="147.32" smashed="yes" rot="R90">
+<attribute name="NAME" x="108.9914" y="143.51" size="1.778" layer="95" rot="R90"/>
+<attribute name="VALUE" x="106.172" y="143.51" size="1.778" layer="96" rot="R90"/>
 </instance>
-<instance part="R8" gate="R" x="96.52" y="153.035" smashed="yes" rot="R270">
-<attribute name="NAME" x="90.3986" y="154.305" size="1.778" layer="95" rot="R270"/>
-<attribute name="VALUE" x="93.218" y="156.845" size="1.778" layer="96" rot="R270"/>
+<instance part="R8" gate="R" x="81.28" y="153.035" smashed="yes" rot="R270">
+<attribute name="NAME" x="75.1586" y="154.305" size="1.778" layer="95" rot="R270"/>
+<attribute name="VALUE" x="77.978" y="156.845" size="1.778" layer="96" rot="R270"/>
 </instance>
-<instance part="R9" gate="R" x="96.52" y="111.125" smashed="yes" rot="R270">
-<attribute name="NAME" x="90.3986" y="114.935" size="1.778" layer="95" rot="R270"/>
-<attribute name="VALUE" x="93.218" y="114.935" size="1.778" layer="96" rot="R270"/>
+<instance part="R9" gate="R" x="81.28" y="111.125" smashed="yes" rot="R270">
+<attribute name="NAME" x="75.1586" y="114.935" size="1.778" layer="95" rot="R270"/>
+<attribute name="VALUE" x="77.978" y="114.935" size="1.778" layer="96" rot="R270"/>
 </instance>
-<instance part="R10" gate="R" x="123.19" y="109.22" smashed="yes" rot="R90">
-<attribute name="NAME" x="121.6914" y="105.41" size="1.778" layer="95" rot="R90"/>
-<attribute name="VALUE" x="118.872" y="107.95" size="1.778" layer="96" rot="R90"/>
+<instance part="R10" gate="R" x="107.95" y="109.22" smashed="yes" rot="R90">
+<attribute name="NAME" x="106.4514" y="105.41" size="1.778" layer="95" rot="R90"/>
+<attribute name="VALUE" x="103.632" y="107.95" size="1.778" layer="96" rot="R90"/>
 </instance>
 <instance part="SUPPLY24" gate="GND" x="274.32" y="154.94" smashed="yes"/>
 <instance part="CM1" gate="A" x="292.1" y="53.34" smashed="yes">
 <attribute name="NAME" x="285.75" y="71.755" size="1.778" layer="95"/>
 </instance>
 <instance part="SUPPLY25" gate="GND" x="281.94" y="38.1" smashed="yes"/>
-<instance part="C3" gate="CE" x="193.04" y="177.8" smashed="yes">
-<attribute name="NAME" x="194.564" y="178.181" size="1.778" layer="95"/>
-<attribute name="VALUE" x="194.564" y="173.101" size="1.778" layer="96"/>
+<instance part="C3" gate="CE" x="153.67" y="177.8" smashed="yes">
+<attribute name="NAME" x="155.194" y="178.181" size="1.778" layer="95"/>
+<attribute name="VALUE" x="155.194" y="173.101" size="1.778" layer="96"/>
 </instance>
-<instance part="C4" gate="CE" x="205.74" y="177.8" smashed="yes">
-<attribute name="NAME" x="207.264" y="178.181" size="1.778" layer="95"/>
-<attribute name="VALUE" x="207.264" y="173.101" size="1.778" layer="96"/>
+<instance part="C4" gate="CE" x="166.37" y="177.8" smashed="yes">
+<attribute name="NAME" x="167.894" y="178.181" size="1.778" layer="95"/>
+<attribute name="VALUE" x="167.894" y="173.101" size="1.778" layer="96"/>
 </instance>
-<instance part="SUPPLY26" gate="GND" x="205.74" y="170.18" smashed="yes"/>
-<instance part="SUPPLY27" gate="GND" x="193.04" y="170.18" smashed="yes"/>
-<instance part="Y1" gate="G$1" x="200.66" y="190.5" smashed="yes">
-<attribute name="NAME" x="185.3888" y="190.00636875" size="1.78843125" layer="95"/>
-<attribute name="VALUE" x="210.8514" y="194.328809375" size="1.784590625" layer="96" rot="R180"/>
+<instance part="SUPPLY26" gate="GND" x="166.37" y="170.18" smashed="yes"/>
+<instance part="SUPPLY27" gate="GND" x="153.67" y="170.18" smashed="yes"/>
+<instance part="Y1" gate="G$1" x="161.29" y="190.5" smashed="yes">
+<attribute name="NAME" x="146.0188" y="190.00636875" size="1.78843125" layer="95"/>
+<attribute name="VALUE" x="171.4814" y="194.328809375" size="1.784590625" layer="96" rot="R180"/>
 </instance>
-<instance part="SUPPLY29" gate="GND" x="200.66" y="177.8" smashed="yes"/>
+<instance part="SUPPLY29" gate="GND" x="161.29" y="177.8" smashed="yes"/>
 <instance part="P+2" gate="1" x="443.865" y="187.325" smashed="yes">
 <attribute name="VALUE" x="451.485" y="187.325" size="1.778" layer="96" rot="R180"/>
 </instance>
@@ -12615,11 +12619,11 @@ From Telemetrum</text>
 <instance part="SUPPLY32" gate="G$1" x="274.32" y="234.95" smashed="yes">
 <attribute name="VALUE" x="274.32" y="237.744" size="1.778" layer="96" align="bottom-center"/>
 </instance>
-<instance part="SUPPLY33" gate="G$1" x="80.01" y="167.64" smashed="yes">
-<attribute name="VALUE" x="80.01" y="171.704" size="1.778" layer="96" align="bottom-center"/>
+<instance part="SUPPLY33" gate="G$1" x="64.77" y="167.64" smashed="yes">
+<attribute name="VALUE" x="64.77" y="171.704" size="1.778" layer="96" align="bottom-center"/>
 </instance>
-<instance part="SUPPLY35" gate="GND" x="125.73" y="138.43" smashed="yes"/>
-<instance part="SUPPLY36" gate="GND" x="123.19" y="100.33" smashed="yes"/>
+<instance part="SUPPLY35" gate="GND" x="110.49" y="138.43" smashed="yes"/>
+<instance part="SUPPLY36" gate="GND" x="107.95" y="100.33" smashed="yes"/>
 <instance part="R32" gate="R" x="388.62" y="133.985" smashed="yes" rot="R270">
 <attribute name="NAME" x="390.1186" y="137.795" size="1.778" layer="95" rot="R270"/>
 <attribute name="VALUE" x="392.938" y="137.795" size="1.778" layer="96" rot="R270"/>
@@ -12633,7 +12637,7 @@ From Telemetrum</text>
 <instance part="P+1" gate="1" x="426.72" y="331.47" smashed="yes">
 <attribute name="VALUE" x="422.91" y="334.01" size="1.778" layer="96"/>
 </instance>
-<instance part="SUPPLY38" gate="GND" x="453.39" y="283.21" smashed="yes"/>
+<instance part="SUPPLY38" gate="GND" x="462.28" y="281.94" smashed="yes"/>
 <instance part="SUPPLY40" gate="GND" x="488.95" y="196.85" smashed="yes"/>
 <instance part="SUPPLY41" gate="G$1" x="485.14" y="223.52" smashed="yes">
 <attribute name="VALUE" x="485.14" y="226.314" size="1.778" layer="96" align="bottom-center"/>
@@ -12652,11 +12656,11 @@ From Telemetrum</text>
 </instance>
 <instance part="SUPPLY42" gate="GND" x="406.4" y="307.34" smashed="yes"/>
 <instance part="SUPPLY43" gate="GND" x="393.7" y="298.45" smashed="yes"/>
-<instance part="R36" gate="R" x="88.9" y="90.17" smashed="yes" rot="R270">
-<attribute name="NAME" x="90.3986" y="93.98" size="1.778" layer="95" rot="R270"/>
-<attribute name="VALUE" x="85.598" y="93.98" size="1.778" layer="96" rot="R270"/>
+<instance part="R36" gate="R" x="73.66" y="90.17" smashed="yes" rot="R270">
+<attribute name="NAME" x="75.1586" y="93.98" size="1.778" layer="95" rot="R270"/>
+<attribute name="VALUE" x="70.358" y="93.98" size="1.778" layer="96" rot="R270"/>
 </instance>
-<instance part="SUPPLY44" gate="GND" x="88.9" y="82.55" smashed="yes"/>
+<instance part="SUPPLY44" gate="GND" x="73.66" y="82.55" smashed="yes"/>
 <instance part="SUPPLY7" gate="G$1" x="218.44" y="363.22" smashed="yes">
 <attribute name="VALUE" x="218.44" y="366.014" size="1.778" layer="96" align="bottom-center"/>
 </instance>
@@ -12672,9 +12676,9 @@ From Telemetrum</text>
 <instance part="SUPPLY8" gate="GND" x="421.64" y="274.32" smashed="yes"/>
 <instance part="SUPPLY9" gate="GND" x="429.26" y="274.32" smashed="yes"/>
 <instance part="U$7" gate="G$1" x="271.78" y="134.62" smashed="yes"/>
-<instance part="SUPPLY23" gate="GND" x="96.52" y="87.63" smashed="yes"/>
-<instance part="SUPPLY5" gate="G$1" x="116.84" y="168.91" smashed="yes">
-<attribute name="VALUE" x="116.84" y="172.974" size="1.778" layer="96" align="bottom-center"/>
+<instance part="SUPPLY23" gate="GND" x="81.28" y="87.63" smashed="yes"/>
+<instance part="SUPPLY5" gate="G$1" x="101.6" y="168.91" smashed="yes">
+<attribute name="VALUE" x="101.6" y="172.974" size="1.778" layer="96" align="bottom-center"/>
 </instance>
 <instance part="R26" gate="R" x="198.12" y="306.07" smashed="yes" rot="R270">
 <attribute name="NAME" x="199.6186" y="309.88" size="1.778" layer="95" rot="R270"/>
@@ -12720,18 +12724,18 @@ From Telemetrum</text>
 <attribute name="NAME" x="445.389" y="171.196" size="1.778" layer="95"/>
 <attribute name="VALUE" x="445.389" y="166.116" size="1.778" layer="96"/>
 </instance>
-<instance part="D5" gate="G$1" x="246.38" y="182.88" smashed="yes" rot="R270">
-<attribute name="NAME" x="247.1166" y="184.5564" size="1.016" layer="95" rot="R270"/>
-<attribute name="VALUE" x="241.2746" y="187.2742" size="1.016" layer="96"/>
-<attribute name="DIS" x="246.38" y="182.88" size="1.778" layer="96" rot="R270" display="off"/>
-<attribute name="DPN" x="246.38" y="182.88" size="1.778" layer="96" rot="R270" display="off"/>
-<attribute name="MPN" x="246.38" y="182.88" size="1.778" layer="96" rot="R270" display="off"/>
+<instance part="D5" gate="G$1" x="200.66" y="182.88" smashed="yes" rot="R270">
+<attribute name="NAME" x="195.58" y="189.23" size="1.016" layer="95"/>
+<attribute name="VALUE" x="195.5546" y="187.2742" size="1.016" layer="96"/>
+<attribute name="DIS" x="200.66" y="182.88" size="1.778" layer="96" rot="R270" display="off"/>
+<attribute name="DPN" x="200.66" y="182.88" size="1.778" layer="96" rot="R270" display="off"/>
+<attribute name="MPN" x="200.66" y="182.88" size="1.778" layer="96" rot="R270" display="off"/>
 </instance>
-<instance part="R31" gate="R" x="232.41" y="182.88" smashed="yes" rot="R180">
-<attribute name="NAME" x="234.95" y="186.4614" size="1.778" layer="95" rot="R180"/>
-<attribute name="VALUE" x="231.14" y="188.722" size="1.778" layer="96" rot="R180"/>
+<instance part="R31" gate="R" x="194.31" y="176.53" smashed="yes" rot="R270">
+<attribute name="NAME" x="192.8114" y="172.72" size="1.778" layer="95" rot="R90"/>
+<attribute name="VALUE" x="192.532" y="179.07" size="1.778" layer="96" rot="R90"/>
 </instance>
-<instance part="SUPPLY48" gate="GND" x="227.33" y="185.42" smashed="yes" rot="R180"/>
+<instance part="SUPPLY48" gate="GND" x="194.31" y="167.64" smashed="yes"/>
 <instance part="Q1" gate="G$1" x="259.08" y="124.46" smashed="yes">
 <attribute name="NAME" x="261.62" y="124.46" size="1.778" layer="95"/>
 <attribute name="VALUE" x="261.62" y="121.92" size="1.778" layer="96"/>
@@ -12745,22 +12749,22 @@ From Telemetrum</text>
 <attribute name="VALUE" x="254.508" y="114.3" size="1.778" layer="96" rot="R270"/>
 </instance>
 <instance part="SUPPLY50" gate="GND" x="468.63" y="137.16" smashed="yes"/>
-<instance part="Q2" gate="G$1" x="96.52" y="97.79" smashed="yes">
-<attribute name="NAME" x="99.06" y="97.79" size="1.778" layer="95"/>
-<attribute name="VALUE" x="99.06" y="95.25" size="1.778" layer="96"/>
+<instance part="Q2" gate="G$1" x="81.28" y="97.79" smashed="yes">
+<attribute name="NAME" x="83.82" y="97.79" size="1.778" layer="95"/>
+<attribute name="VALUE" x="83.82" y="95.25" size="1.778" layer="96"/>
 </instance>
 <instance part="Q3" gate="G$1" x="406.4" y="314.96" smashed="yes">
 <attribute name="NAME" x="408.94" y="314.96" size="1.778" layer="95"/>
 <attribute name="VALUE" x="408.94" y="312.42" size="1.778" layer="96"/>
 </instance>
 <instance part="SUPPLY1" gate="GND" x="443.865" y="148.59" smashed="yes"/>
-<instance part="Q4" gate="BPR-301" x="99.06" y="167.64" smashed="yes">
-<attribute name="NAME" x="93.06" y="179.18" size="1.778" layer="95"/>
-<attribute name="VALUE" x="93.06" y="176.64" size="1.778" layer="96"/>
+<instance part="Q4" gate="BPR-301" x="83.82" y="167.64" smashed="yes">
+<attribute name="NAME" x="77.82" y="179.18" size="1.778" layer="95"/>
+<attribute name="VALUE" x="77.82" y="176.64" size="1.778" layer="96"/>
 </instance>
-<instance part="Q5" gate="BPR-301" x="99.06" y="125.73" smashed="yes">
-<attribute name="NAME" x="93.06" y="137.27" size="1.778" layer="95"/>
-<attribute name="VALUE" x="93.06" y="134.73" size="1.778" layer="96"/>
+<instance part="Q5" gate="BPR-301" x="83.82" y="125.73" smashed="yes">
+<attribute name="NAME" x="77.82" y="137.27" size="1.778" layer="95"/>
+<attribute name="VALUE" x="77.82" y="134.73" size="1.778" layer="96"/>
 </instance>
 <instance part="TP1" gate="G$1" x="299.72" y="177.8" smashed="yes">
 <attribute name="NAME" x="300.99" y="177.165" size="1.778" layer="95" font="vector"/>
@@ -12799,11 +12803,11 @@ From Telemetrum</text>
 <instance part="TP15" gate="G$1" x="314.96" y="311.15" smashed="yes">
 <attribute name="NAME" x="313.69" y="307.34" size="1.778" layer="95" font="vector"/>
 </instance>
-<instance part="TP16" gate="G$1" x="96.52" y="160.655" smashed="yes">
-<attribute name="NAME" x="93.98" y="162.56" size="1.778" layer="95" font="vector"/>
+<instance part="TP16" gate="G$1" x="81.28" y="160.655" smashed="yes">
+<attribute name="NAME" x="78.74" y="162.56" size="1.778" layer="95" font="vector"/>
 </instance>
-<instance part="TP17" gate="G$1" x="96.52" y="118.11" smashed="yes">
-<attribute name="NAME" x="94.615" y="120.65" size="1.778" layer="95" font="vector"/>
+<instance part="TP17" gate="G$1" x="81.28" y="118.11" smashed="yes">
+<attribute name="NAME" x="79.375" y="120.65" size="1.778" layer="95" font="vector"/>
 </instance>
 </instances>
 <busses>
@@ -12845,17 +12849,17 @@ From Telemetrum</text>
 <segment>
 <pinref part="SUPPLY29" gate="GND" pin="GND"/>
 <pinref part="Y1" gate="G$1" pin="GND"/>
-<wire x1="200.66" y1="180.34" x2="200.66" y2="185.42" width="0.1524" layer="91"/>
+<wire x1="161.29" y1="180.34" x2="161.29" y2="185.42" width="0.1524" layer="91"/>
 </segment>
 <segment>
 <pinref part="R10" gate="R" pin="1"/>
 <pinref part="SUPPLY36" gate="GND" pin="GND"/>
-<wire x1="123.19" y1="102.87" x2="123.19" y2="104.14" width="0.1524" layer="91"/>
+<wire x1="107.95" y1="102.87" x2="107.95" y2="104.14" width="0.1524" layer="91"/>
 </segment>
 <segment>
 <pinref part="R7" gate="R" pin="1"/>
 <pinref part="SUPPLY35" gate="GND" pin="GND"/>
-<wire x1="125.73" y1="142.24" x2="125.73" y2="140.97" width="0.1524" layer="91"/>
+<wire x1="110.49" y1="142.24" x2="110.49" y2="140.97" width="0.1524" layer="91"/>
 </segment>
 <segment>
 <pinref part="SUPPLY28" gate="GND" pin="GND"/>
@@ -12867,10 +12871,9 @@ From Telemetrum</text>
 </segment>
 <segment>
 <pinref part="J1" gate="A" pin="2"/>
-<wire x1="468.63" y1="294.64" x2="453.39" y2="294.64" width="0.1524" layer="91"/>
-<wire x1="453.39" y1="294.64" x2="453.39" y2="285.75" width="0.1524" layer="91"/>
+<wire x1="468.63" y1="294.64" x2="462.28" y2="294.64" width="0.1524" layer="91"/>
+<wire x1="462.28" y1="294.64" x2="462.28" y2="284.48" width="0.1524" layer="91"/>
 <pinref part="SUPPLY38" gate="GND" pin="GND"/>
-<label x="455.93" y="294.64" size="1.778" layer="95"/>
 </segment>
 <segment>
 <pinref part="SUPPLY43" gate="GND" pin="GND"/>
@@ -12898,7 +12901,7 @@ From Telemetrum</text>
 </segment>
 <segment>
 <pinref part="SUPPLY23" gate="GND" pin="GND"/>
-<wire x1="96.52" y1="90.17" x2="96.52" y2="92.71" width="0.1524" layer="91"/>
+<wire x1="81.28" y1="90.17" x2="81.28" y2="92.71" width="0.1524" layer="91"/>
 <pinref part="Q2" gate="G$1" pin="S"/>
 </segment>
 <segment>
@@ -12929,6 +12932,7 @@ From Telemetrum</text>
 <segment>
 <pinref part="SUPPLY48" gate="GND" pin="GND"/>
 <pinref part="R31" gate="R" pin="2"/>
+<wire x1="194.31" y1="170.18" x2="194.31" y2="171.45" width="0.1524" layer="91"/>
 </segment>
 <segment>
 <pinref part="Q1" gate="G$1" pin="S"/>
@@ -12963,7 +12967,7 @@ From Telemetrum</text>
 <label x="464.82" y="215.9" size="1.778" layer="95"/>
 </segment>
 </net>
-<net name="LA_IN1" class="0">
+<net name="LA_DRV1" class="0">
 <segment>
 <label x="455.93" y="145.415" size="1.6764" layer="95" rot="R90"/>
 <wire x1="453.39" y1="153.67" x2="453.39" y2="139.065" width="0.1524" layer="91"/>
@@ -12978,7 +12982,7 @@ From Telemetrum</text>
 <pinref part="U2" gate="G$1" pin="IN1"/>
 </segment>
 </net>
-<net name="LA_IN2" class="0">
+<net name="LA_DRV2" class="0">
 <segment>
 <pinref part="U1" gate="G$1" pin="PA9"/>
 <wire x1="294.64" y1="182.88" x2="341.63" y2="182.88" width="0.1524" layer="91"/>
@@ -12992,18 +12996,18 @@ From Telemetrum</text>
 <pinref part="U2" gate="G$1" pin="IN2"/>
 </segment>
 </net>
-<net name="SENSOR1" class="0">
+<net name="ROTSENE1" class="0">
 <segment>
-<wire x1="125.73" y1="152.4" x2="170.18" y2="152.4" width="0.1524" layer="91"/>
+<wire x1="110.49" y1="152.4" x2="170.18" y2="152.4" width="0.1524" layer="91"/>
 <pinref part="R7" gate="R" pin="2"/>
-<wire x1="170.18" y1="152.4" x2="219.71" y2="152.4" width="0.1524" layer="91"/>
-<wire x1="125.73" y1="152.4" x2="101.6" y2="152.4" width="0.1524" layer="91"/>
-<wire x1="101.6" y1="152.4" x2="101.6" y2="162.56" width="0.1524" layer="91"/>
-<junction x="125.73" y="152.4"/>
-<label x="133.35" y="152.4" size="1.778" layer="95"/>
+<wire x1="170.18" y1="152.4" x2="201.93" y2="152.4" width="0.1524" layer="91"/>
+<wire x1="110.49" y1="152.4" x2="86.36" y2="152.4" width="0.1524" layer="91"/>
+<wire x1="86.36" y1="152.4" x2="86.36" y2="162.56" width="0.1524" layer="91"/>
+<junction x="110.49" y="152.4"/>
+<label x="118.11" y="152.4" size="1.778" layer="95"/>
 <pinref part="U1" gate="G$1" pin="PB5"/>
-<wire x1="219.71" y1="172.72" x2="219.71" y2="152.4" width="0.1524" layer="91"/>
-<wire x1="219.71" y1="172.72" x2="254" y2="172.72" width="0.1524" layer="91"/>
+<wire x1="201.93" y1="172.72" x2="201.93" y2="152.4" width="0.1524" layer="91"/>
+<wire x1="201.93" y1="172.72" x2="254" y2="172.72" width="0.1524" layer="91"/>
 <label x="231.14" y="172.72" size="1.778" layer="95"/>
 <pinref part="Q4" gate="BPR-301" pin="EMIT"/>
 <pinref part="TP5" gate="G$1" pin="1"/>
@@ -13014,7 +13018,7 @@ From Telemetrum</text>
 <segment>
 <pinref part="U1" gate="G$1" pin="NRST"/>
 <wire x1="254" y1="203.2" x2="223.52" y2="203.2" width="0.1524" layer="91"/>
-<label x="251.46" y="205.74" size="1.6764" layer="95" rot="R180"/>
+<label x="231.14" y="203.2" size="1.6764" layer="95"/>
 <pinref part="CM1" gate="A" pin="!RESET"/>
 <label x="251.46" y="48.26" size="1.6764" layer="95" rot="R180"/>
 <wire x1="223.52" y1="203.2" x2="223.52" y2="45.72" width="0.1524" layer="91"/>
@@ -13024,12 +13028,12 @@ From Telemetrum</text>
 <net name="OSC_OUT" class="0">
 <segment>
 <pinref part="U1" gate="G$1" pin="PF1-OSC_OUT"/>
-<wire x1="254" y1="190.5" x2="205.74" y2="190.5" width="0.1524" layer="91"/>
-<label x="236.22" y="190.5" size="1.6764" layer="95"/>
+<wire x1="254" y1="190.5" x2="166.37" y2="190.5" width="0.1524" layer="91"/>
+<label x="231.14" y="190.5" size="1.6764" layer="95"/>
 <pinref part="Y1" gate="G$1" pin="OUT/IN"/>
 <pinref part="C4" gate="CE" pin="1"/>
-<wire x1="205.74" y1="180.34" x2="205.74" y2="190.5" width="0.1524" layer="91"/>
-<junction x="205.74" y="190.5"/>
+<wire x1="166.37" y1="180.34" x2="166.37" y2="190.5" width="0.1524" layer="91"/>
+<junction x="166.37" y="190.5"/>
 </segment>
 </net>
 <net name="USART2_TX" class="0">
@@ -13052,9 +13056,9 @@ From Telemetrum</text>
 <junction x="307.34" y="167.64"/>
 </segment>
 </net>
-<net name="DCMDIR" class="0">
+<net name="DCM_DIR" class="0">
 <segment>
-<label x="400.05" y="292.1" size="1.6764" layer="95"/>
+<label x="443.23" y="292.1" size="1.6764" layer="95"/>
 <wire x1="341.63" y1="292.1" x2="421.64" y2="292.1" width="0.1524" layer="91"/>
 <pinref part="J1" gate="A" pin="3"/>
 <wire x1="421.64" y1="288.29" x2="421.64" y2="292.1" width="0.1524" layer="91"/>
@@ -13065,21 +13069,22 @@ From Telemetrum</text>
 <label x="299.72" y="190.5" size="1.4224" layer="95"/>
 <wire x1="421.64" y1="292.1" x2="468.63" y2="292.1" width="0.1524" layer="91"/>
 <junction x="421.64" y="292.1"/>
+<label x="354.33" y="292.1" size="1.778" layer="95"/>
 </segment>
 </net>
-<net name="SENSOR_ON" class="0">
+<net name="ROTSENSE_PWR" class="0">
 <segment>
-<wire x1="213.36" y1="177.8" x2="213.36" y2="76.2" width="0.1524" layer="91"/>
-<wire x1="213.36" y1="76.2" x2="81.28" y2="76.2" width="0.1524" layer="91"/>
-<wire x1="81.28" y1="76.2" x2="81.28" y2="95.25" width="0.1524" layer="91"/>
-<wire x1="81.28" y1="95.25" x2="88.9" y2="95.25" width="0.1524" layer="91"/>
+<wire x1="207.01" y1="177.8" x2="207.01" y2="76.2" width="0.1524" layer="91"/>
+<wire x1="207.01" y1="76.2" x2="66.04" y2="76.2" width="0.1524" layer="91"/>
+<wire x1="66.04" y1="76.2" x2="66.04" y2="95.25" width="0.1524" layer="91"/>
+<wire x1="66.04" y1="95.25" x2="73.66" y2="95.25" width="0.1524" layer="91"/>
 <pinref part="R36" gate="R" pin="1"/>
-<wire x1="88.9" y1="95.25" x2="91.44" y2="95.25" width="0.1524" layer="91"/>
-<junction x="88.9" y="95.25"/>
-<label x="130.81" y="76.2" size="1.778" layer="95"/>
+<wire x1="73.66" y1="95.25" x2="76.2" y2="95.25" width="0.1524" layer="91"/>
+<junction x="73.66" y="95.25"/>
+<label x="115.57" y="76.2" size="1.778" layer="95"/>
 <pinref part="U1" gate="G$1" pin="PB3"/>
-<wire x1="213.36" y1="177.8" x2="254" y2="177.8" width="0.1524" layer="91"/>
-<label x="213.36" y="154.94" size="1.778" layer="95" rot="R90"/>
+<wire x1="207.01" y1="177.8" x2="254" y2="177.8" width="0.1524" layer="91"/>
+<label x="231.14" y="177.8" size="1.778" layer="95"/>
 <pinref part="Q2" gate="G$1" pin="G"/>
 </segment>
 </net>
@@ -13167,12 +13172,12 @@ From Telemetrum</text>
 <junction x="257.81" y="231.14"/>
 </segment>
 <segment>
-<wire x1="88.9" y1="162.56" x2="80.01" y2="162.56" width="0.1524" layer="91"/>
-<wire x1="80.01" y1="162.56" x2="80.01" y2="120.65" width="0.1524" layer="91"/>
-<wire x1="80.01" y1="120.65" x2="88.9" y2="120.65" width="0.1524" layer="91"/>
+<wire x1="73.66" y1="162.56" x2="64.77" y2="162.56" width="0.1524" layer="91"/>
+<wire x1="64.77" y1="162.56" x2="64.77" y2="120.65" width="0.1524" layer="91"/>
+<wire x1="64.77" y1="120.65" x2="73.66" y2="120.65" width="0.1524" layer="91"/>
 <pinref part="SUPPLY33" gate="G$1" pin="3.3V"/>
-<wire x1="80.01" y1="162.56" x2="80.01" y2="167.64" width="0.1524" layer="91"/>
-<junction x="80.01" y="162.56"/>
+<wire x1="64.77" y1="162.56" x2="64.77" y2="167.64" width="0.1524" layer="91"/>
+<junction x="64.77" y="162.56"/>
 <pinref part="Q4" gate="BPR-301" pin="ANOD"/>
 <pinref part="Q5" gate="BPR-301" pin="ANOD"/>
 </segment>
@@ -13192,15 +13197,15 @@ From Telemetrum</text>
 <wire x1="259.08" y1="142.24" x2="259.08" y2="137.16" width="0.1524" layer="91"/>
 </segment>
 <segment>
-<wire x1="109.22" y1="120.65" x2="116.84" y2="120.65" width="0.1524" layer="91"/>
-<wire x1="116.84" y1="120.65" x2="116.84" y2="162.56" width="0.1524" layer="91"/>
-<wire x1="116.84" y1="162.56" x2="109.22" y2="162.56" width="0.1524" layer="91"/>
-<label x="111.76" y="127" size="1.778" layer="95" rot="R90"/>
+<wire x1="93.98" y1="120.65" x2="101.6" y2="120.65" width="0.1524" layer="91"/>
+<wire x1="101.6" y1="120.65" x2="101.6" y2="162.56" width="0.1524" layer="91"/>
+<wire x1="101.6" y1="162.56" x2="93.98" y2="162.56" width="0.1524" layer="91"/>
+<label x="96.52" y="127" size="1.778" layer="95" rot="R90"/>
 <pinref part="Q4" gate="BPR-301" pin="COLL"/>
 <pinref part="Q5" gate="BPR-301" pin="COLL"/>
 <pinref part="SUPPLY5" gate="G$1" pin="3.3V"/>
-<wire x1="116.84" y1="168.91" x2="116.84" y2="162.56" width="0.1524" layer="91"/>
-<junction x="116.84" y="162.56"/>
+<wire x1="101.6" y1="168.91" x2="101.6" y2="162.56" width="0.1524" layer="91"/>
+<junction x="101.6" y="162.56"/>
 </segment>
 <segment>
 <pinref part="J2" gate="A" pin="5"/>
@@ -13210,18 +13215,18 @@ From Telemetrum</text>
 <wire x1="485.14" y1="205.74" x2="485.14" y2="223.52" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="SENSOR2" class="0">
+<net name="ROTSENSE2" class="0">
 <segment>
 <pinref part="R10" gate="R" pin="2"/>
-<wire x1="123.19" y1="114.3" x2="101.6" y2="114.3" width="0.1524" layer="91"/>
-<wire x1="101.6" y1="114.3" x2="101.6" y2="120.65" width="0.1524" layer="91"/>
-<label x="133.35" y="114.3" size="1.6764" layer="95"/>
-<wire x1="123.19" y1="114.3" x2="170.18" y2="114.3" width="0.1524" layer="91"/>
-<wire x1="170.18" y1="114.3" x2="217.17" y2="114.3" width="0.1524" layer="91"/>
-<wire x1="217.17" y1="114.3" x2="217.17" y2="175.26" width="0.1524" layer="91"/>
-<junction x="123.19" y="114.3"/>
+<wire x1="107.95" y1="114.3" x2="86.36" y2="114.3" width="0.1524" layer="91"/>
+<wire x1="86.36" y1="114.3" x2="86.36" y2="120.65" width="0.1524" layer="91"/>
+<label x="118.11" y="114.3" size="1.6764" layer="95"/>
+<wire x1="107.95" y1="114.3" x2="170.18" y2="114.3" width="0.1524" layer="91"/>
+<wire x1="170.18" y1="114.3" x2="204.47" y2="114.3" width="0.1524" layer="91"/>
+<wire x1="204.47" y1="114.3" x2="204.47" y2="175.26" width="0.1524" layer="91"/>
+<junction x="107.95" y="114.3"/>
 <pinref part="U1" gate="G$1" pin="PB4"/>
-<wire x1="254" y1="175.26" x2="217.17" y2="175.26" width="0.1524" layer="91"/>
+<wire x1="254" y1="175.26" x2="204.47" y2="175.26" width="0.1524" layer="91"/>
 <label x="231.14" y="175.26" size="1.778" layer="95"/>
 <pinref part="Q5" gate="BPR-301" pin="EMIT"/>
 <pinref part="TP7" gate="G$1" pin="1"/>
@@ -13231,34 +13236,34 @@ From Telemetrum</text>
 <net name="N$2" class="0">
 <segment>
 <pinref part="R8" gate="R" pin="1"/>
-<wire x1="96.52" y1="158.115" x2="96.52" y2="160.655" width="0.1524" layer="91"/>
+<wire x1="81.28" y1="158.115" x2="81.28" y2="160.655" width="0.1524" layer="91"/>
 <pinref part="Q4" gate="BPR-301" pin="CATH"/>
 <pinref part="TP16" gate="G$1" pin="1"/>
-<wire x1="96.52" y1="160.655" x2="96.52" y2="162.56" width="0.1524" layer="91"/>
-<junction x="96.52" y="160.655"/>
+<wire x1="81.28" y1="160.655" x2="81.28" y2="162.56" width="0.1524" layer="91"/>
+<junction x="81.28" y="160.655"/>
 </segment>
 </net>
 <net name="N$5" class="0">
 <segment>
 <pinref part="R9" gate="R" pin="1"/>
-<wire x1="96.52" y1="116.205" x2="96.52" y2="118.11" width="0.1524" layer="91"/>
+<wire x1="81.28" y1="116.205" x2="81.28" y2="118.11" width="0.1524" layer="91"/>
 <pinref part="Q5" gate="BPR-301" pin="CATH"/>
 <pinref part="TP17" gate="G$1" pin="1"/>
-<wire x1="96.52" y1="118.11" x2="96.52" y2="120.65" width="0.1524" layer="91"/>
-<junction x="96.52" y="118.11"/>
+<wire x1="81.28" y1="118.11" x2="81.28" y2="120.65" width="0.1524" layer="91"/>
+<junction x="81.28" y="118.11"/>
 </segment>
 </net>
 <net name="OSC_IN" class="0">
 <segment>
 <pinref part="Y1" gate="G$1" pin="IN/OUT"/>
 <pinref part="C3" gate="CE" pin="1"/>
-<wire x1="195.58" y1="190.5" x2="193.04" y2="190.5" width="0.1524" layer="91"/>
-<wire x1="193.04" y1="190.5" x2="193.04" y2="180.34" width="0.1524" layer="91"/>
-<wire x1="193.04" y1="195.58" x2="193.04" y2="190.5" width="0.1524" layer="91"/>
-<junction x="193.04" y="190.5"/>
+<wire x1="156.21" y1="190.5" x2="153.67" y2="190.5" width="0.1524" layer="91"/>
+<wire x1="153.67" y1="190.5" x2="153.67" y2="180.34" width="0.1524" layer="91"/>
+<wire x1="153.67" y1="195.58" x2="153.67" y2="190.5" width="0.1524" layer="91"/>
+<junction x="153.67" y="190.5"/>
 <pinref part="U1" gate="G$1" pin="PF0-OSC_IN"/>
-<wire x1="193.04" y1="195.58" x2="254" y2="195.58" width="0.1524" layer="91"/>
-<label x="237.49" y="195.58" size="1.778" layer="95"/>
+<wire x1="153.67" y1="195.58" x2="254" y2="195.58" width="0.1524" layer="91"/>
+<label x="231.14" y="195.58" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="LAMOTOR+" class="0">
@@ -13277,7 +13282,7 @@ From Telemetrum</text>
 <pinref part="J1" gate="A" pin="4"/>
 <wire x1="429.26" y1="288.29" x2="429.26" y2="289.56" width="0.1524" layer="91"/>
 <wire x1="429.26" y1="289.56" x2="339.09" y2="289.56" width="0.1524" layer="91"/>
-<label x="400.05" y="289.56" size="1.778" layer="95"/>
+<label x="443.23" y="289.56" size="1.778" layer="95"/>
 <pinref part="R11" gate="R" pin="1"/>
 <pinref part="U1" gate="G$1" pin="PA5"/>
 <wire x1="339.09" y1="193.04" x2="339.09" y2="289.56" width="0.1524" layer="91"/>
@@ -13285,6 +13290,7 @@ From Telemetrum</text>
 <label x="299.72" y="193.04" size="1.4224" layer="95"/>
 <wire x1="429.26" y1="289.56" x2="468.63" y2="289.56" width="0.1524" layer="91"/>
 <junction x="429.26" y="289.56"/>
+<label x="354.33" y="289.56" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="LA_POS" class="0">
@@ -13310,7 +13316,7 @@ From Telemetrum</text>
 <wire x1="426.72" y1="297.18" x2="468.63" y2="297.18" width="0.1524" layer="91"/>
 <pinref part="Q6" gate="G$1" pin="D"/>
 <wire x1="426.72" y1="314.96" x2="426.72" y2="297.18" width="0.1524" layer="91"/>
-<label x="447.04" y="298.45" size="1.778" layer="95"/>
+<label x="443.23" y="297.18" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="N$6" class="0">
@@ -13325,7 +13331,7 @@ From Telemetrum</text>
 <pinref part="Q3" gate="G$1" pin="D"/>
 </segment>
 </net>
-<net name="DCM_ON" class="0">
+<net name="DCM_PWR" class="0">
 <segment>
 <pinref part="R35" gate="R" pin="1"/>
 <wire x1="401.32" y1="312.42" x2="393.7" y2="312.42" width="0.1524" layer="91"/>
@@ -13337,6 +13343,7 @@ From Telemetrum</text>
 <label x="299.72" y="187.96" size="1.4224" layer="95"/>
 <wire x1="294.64" y1="187.96" x2="344.17" y2="187.96" width="0.1524" layer="91"/>
 <pinref part="Q3" gate="G$1" pin="G"/>
+<label x="355.6" y="312.42" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="T_GND" class="0">
@@ -13393,13 +13400,13 @@ From Telemetrum</text>
 <segment>
 <pinref part="R8" gate="R" pin="2"/>
 <pinref part="R9" gate="R" pin="2"/>
-<wire x1="83.82" y1="147.32" x2="83.82" y2="104.14" width="0.1524" layer="91"/>
-<wire x1="96.52" y1="102.87" x2="96.52" y2="104.14" width="0.1524" layer="91"/>
-<wire x1="96.52" y1="104.14" x2="96.52" y2="106.045" width="0.1524" layer="91"/>
-<wire x1="83.82" y1="104.14" x2="96.52" y2="104.14" width="0.1524" layer="91"/>
-<junction x="96.52" y="104.14"/>
-<wire x1="83.82" y1="147.32" x2="96.52" y2="147.32" width="0.1524" layer="91"/>
-<wire x1="96.52" y1="147.32" x2="96.52" y2="147.955" width="0.1524" layer="91"/>
+<wire x1="68.58" y1="147.32" x2="68.58" y2="104.14" width="0.1524" layer="91"/>
+<wire x1="81.28" y1="102.87" x2="81.28" y2="104.14" width="0.1524" layer="91"/>
+<wire x1="81.28" y1="104.14" x2="81.28" y2="106.045" width="0.1524" layer="91"/>
+<wire x1="68.58" y1="104.14" x2="81.28" y2="104.14" width="0.1524" layer="91"/>
+<junction x="81.28" y="104.14"/>
+<wire x1="68.58" y1="147.32" x2="81.28" y2="147.32" width="0.1524" layer="91"/>
+<wire x1="81.28" y1="147.32" x2="81.28" y2="147.955" width="0.1524" layer="91"/>
 <pinref part="Q2" gate="G$1" pin="D"/>
 </segment>
 </net>
@@ -13417,7 +13424,7 @@ From Telemetrum</text>
 <pinref part="U5" gate="G$1" pin="CAT"/>
 </segment>
 </net>
-<net name="ISO-CHUTE" class="0">
+<net name="ISO_MAIN" class="0">
 <segment>
 <label x="299.72" y="198.12" size="1.27" layer="95"/>
 <wire x1="330.2" y1="198.12" x2="330.2" y2="290.83" width="0.1524" layer="91"/>
@@ -13437,7 +13444,7 @@ From Telemetrum</text>
 <junction x="228.6" y="294.64"/>
 </segment>
 </net>
-<net name="ISO-DROGUE" class="0">
+<net name="ISO_DROGUE" class="0">
 <segment>
 <label x="299.72" y="195.58" size="1.4224" layer="95"/>
 <wire x1="332.74" y1="195.58" x2="332.74" y2="311.15" width="0.1524" layer="91"/>
@@ -13455,18 +13462,18 @@ From Telemetrum</text>
 <junction x="314.96" y="311.15"/>
 </segment>
 </net>
-<net name="ACOK" class="0">
+<net name="UMB_ON" class="0">
 <segment>
 <pinref part="U1" gate="G$1" pin="PB7"/>
 <wire x1="254" y1="167.64" x2="246.38" y2="167.64" width="0.1524" layer="91"/>
-<label x="246.38" y="164.465" size="1.778" layer="95" rot="R180" xref="yes"/>
-<wire x1="246.38" y1="167.64" x2="246.38" y2="164.465" width="0.1524" layer="91"/>
+<label x="246.38" y="167.64" size="1.778" layer="95" rot="R180" xref="yes"/>
 </segment>
 </net>
 <net name="N$4" class="0">
 <segment>
 <pinref part="D5" gate="G$1" pin="C"/>
-<wire x1="241.3" y1="182.88" x2="237.49" y2="182.88" width="0.1524" layer="91"/>
+<wire x1="195.58" y1="182.88" x2="194.31" y2="182.88" width="0.1524" layer="91"/>
+<wire x1="194.31" y1="182.88" x2="194.31" y2="181.61" width="0.1524" layer="91"/>
 <pinref part="R31" gate="R" pin="1"/>
 </segment>
 </net>
@@ -13477,7 +13484,7 @@ From Telemetrum</text>
 <pinref part="R37" gate="R" pin="1"/>
 <wire x1="250.19" y1="120.65" x2="250.19" y2="121.92" width="0.1524" layer="91"/>
 <junction x="250.19" y="120.65"/>
-<label x="250.825" y="159.385" size="1.778" layer="95"/>
+<label x="249.555" y="153.035" size="1.778" layer="95" rot="R90"/>
 <label x="271.78" y="147.32" size="1.778" layer="95"/>
 <pinref part="U1" gate="G$1" pin="PB8-BOOT0"/>
 <wire x1="250.19" y1="165.1" x2="250.19" y2="120.65" width="0.1524" layer="91"/>
@@ -13488,8 +13495,8 @@ From Telemetrum</text>
 <segment>
 <pinref part="U1" gate="G$1" pin="PB0"/>
 <pinref part="D5" gate="G$1" pin="A"/>
-<wire x1="254" y1="182.88" x2="248.92" y2="182.88" width="0.1524" layer="91"/>
-<label x="249.555" y="183.515" size="1.778" layer="95"/>
+<wire x1="254" y1="182.88" x2="203.2" y2="182.88" width="0.1524" layer="91"/>
+<label x="231.14" y="182.88" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="N$1" class="0">
@@ -13513,14 +13520,16 @@ From Telemetrum</text>
 <net name="BATT_READ" class="0">
 <segment>
 <pinref part="U1" gate="G$1" pin="PB1"/>
-<wire x1="254" y1="180.34" x2="241.3" y2="180.34" width="0.1524" layer="91"/>
-<label x="241.3" y="180.34" size="1.778" layer="95" rot="R180" xref="yes"/>
+<wire x1="254" y1="180.34" x2="215.9" y2="180.34" width="0.1524" layer="91"/>
+<wire x1="215.9" y1="180.34" x2="215.9" y2="208.28" width="0.1524" layer="91"/>
+<wire x1="215.9" y1="208.28" x2="208.28" y2="208.28" width="0.1524" layer="91"/>
+<label x="208.28" y="208.28" size="1.778" layer="95" rot="R180" xref="yes"/>
 </segment>
 </net>
 <net name="DCM_SPEED" class="0">
 <segment>
 <pinref part="J1" gate="A" pin="5"/>
-<label x="447.675" y="287.655" size="1.778" layer="95"/>
+<label x="443.23" y="287.02" size="1.778" layer="95"/>
 <wire x1="441.96" y1="264.16" x2="304.8" y2="264.16" width="0.1524" layer="91"/>
 <pinref part="U1" gate="G$1" pin="PA0"/>
 <label x="303.53" y="207.01" size="1.778" layer="95" rot="R90"/>
@@ -13528,6 +13537,7 @@ From Telemetrum</text>
 <wire x1="304.8" y1="205.74" x2="294.64" y2="205.74" width="0.1524" layer="91"/>
 <wire x1="468.63" y1="287.02" x2="441.96" y2="287.02" width="0.1524" layer="91"/>
 <wire x1="441.96" y1="287.02" x2="441.96" y2="264.16" width="0.1524" layer="91"/>
+<label x="353.06" y="264.16" size="1.778" layer="95"/>
 </segment>
 </net>
 </nets>

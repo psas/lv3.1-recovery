@@ -16,11 +16,13 @@
 
 #include "ch.h"
 #include "hal.h"
-#include "rt_test_root.h"
-//#include "oslib_test_root.h"
 #include "chprintf.h"
 
+/*
+ * Define the chprinf serial stream (to serial device 2 on UART2)
+ */
 #define DEBUG_SD  (BaseSequentialStream *) &SD2
+
 /*
  * Green LED blinker thread, times are in milliseconds.
  */
@@ -29,11 +31,14 @@ static THD_FUNCTION(Thread1, arg) {
 
   (void)arg;
   chRegSetThreadName("blinker");
-
+  chprintf(DEBUG_SD, "Blinker thread starting up (main.c)!\r\n");
+  
   while (true) {
     palClearLine(LINE_LED);
+//    palClearLine(LINE_SPKR);
     chThdSleepMilliseconds(100);
     palSetLine(LINE_LED);
+//    palSetLine(LINE_SPKR);
     chThdSleepMilliseconds(100);
   }
 }
@@ -59,21 +64,15 @@ int main(void) {
   sdStart(&SD2, NULL);
 
   /*
-   * Creates the blinker thread.
+   * Create the blinker thread.
    */
+  chprintf(DEBUG_SD, "\r\nPSAS ERS control board starting up (main.c)!\r\n");
   chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO, Thread1, NULL);
 
   /*
-   * Normal main() thread activity, in this demo it does nothing except
-   * sleeping in a loop and check the button state.
+   * main() thread activity
    */
-  
-  chprintf(DEBUG_SD, "\r\nPSAS ERS control board starting up!\r\n");
   while (true) {
-//    if (!palReadLine(LINE_ARD_D3)) {
- //     test_execute((BaseSequentialStream *)&SD2, &rt_test_suite);
-//      test_execute((BaseSequentialStream *)&SD2, &oslib_test_suite);
-//    }
     chThdSleepMilliseconds(500);
   }
 }
