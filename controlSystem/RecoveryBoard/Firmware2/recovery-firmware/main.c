@@ -29,9 +29,9 @@ static THD_FUNCTION(Thread1, arg) {
   chRegSetThreadName("blinker");
 
   while (true) {
-    palClearLine(LINE_ARD_D3);
+    palClearLine(LINE_LED);
     chThdSleepMilliseconds(500);
-    palSetLine(LINE_ARD_D3);
+    palSetLine(LINE_LED);
     chThdSleepMilliseconds(500);
   }
 }
