@@ -34,7 +34,7 @@
  * Board identifier.
  */
 #define BOARD_ST_NUCLEO32_F042K6
-#define BOARD_NAME                  "STMicroelectronics STM32 Nucleo32-F042K6"
+#define BOARD_NAME                  "PSAS LV3.1 Electromechanical Recovery System Control Board Rev 1"
 
 /*
  * Board oscillators-related settings.
@@ -48,7 +48,7 @@
 #define STM32_LSEDRV                (3U << 3U)
 
 #if !defined(STM32_HSECLK)
-#define STM32_HSECLK                0U
+#define STM32_HSECLK                16000000U
 #endif
 
 /*
