@@ -18,7 +18,9 @@
 #include "hal.h"
 #include "rt_test_root.h"
 //#include "oslib_test_root.h"
+#include "chprintf.h"
 
+#define DEBUG_SD  (BaseSequentialStream *) &SD2
 /*
  * Green LED blinker thread, times are in milliseconds.
  */
@@ -30,9 +32,9 @@ static THD_FUNCTION(Thread1, arg) {
 
   while (true) {
     palClearLine(LINE_LED);
-    chThdSleepMilliseconds(500);
+    chThdSleepMilliseconds(100);
     palSetLine(LINE_LED);
-    chThdSleepMilliseconds(500);
+    chThdSleepMilliseconds(100);
   }
 }
 
@@ -65,6 +67,8 @@ int main(void) {
    * Normal main() thread activity, in this demo it does nothing except
    * sleeping in a loop and check the button state.
    */
+  
+  chprintf(DEBUG_SD, "\r\nPSAS ERS control board starting up!\r\n");
   while (true) {
 //    if (!palReadLine(LINE_ARD_D3)) {
  //     test_execute((BaseSequentialStream *)&SD2, &rt_test_suite);
