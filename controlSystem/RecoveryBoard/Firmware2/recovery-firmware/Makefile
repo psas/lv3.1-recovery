@@ -55,7 +55,7 @@ endif
 # Stack size to be allocated to the Cortex-M process stack. This stack is
 # the stack used by the main() thread.
 ifeq ($(USE_PROCESS_STACKSIZE),)
-  USE_PROCESS_STACKSIZE = 0x400
+  USE_PROCESS_STACKSIZE = 0x200
 endif
 
 # Stack size to the allocated to the Cortex-M main/exceptions stack. This
@@ -101,7 +101,7 @@ include $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk/startup_stm32f0xx.m
 # HAL-OSAL files (optional).
 include $(CHIBIOS)/os/hal/hal.mk
 include $(CHIBIOS)/os/hal/ports/STM32/STM32F0xx/platform.mk
-#include $(CHIBIOS)/os/hal/boards/ST_NUCLEO32_F042K6/board.mk
+# include $(CHIBIOS)/os/hal/boards/ST_NUCLEO32_F042K6/board.mk -- moving to custom board files
 include $(CHIBIOS)/os/hal/osal/rt-nil/osal.mk
 # RTOS files (optional).
 include $(CHIBIOS)/os/rt/rt.mk
@@ -109,8 +109,8 @@ include $(CHIBIOS)/os/common/ports/ARMv6-M/compilers/GCC/mk/port.mk
 # Auto-build files in ./source recursively.
 include $(CHIBIOS)/tools/mk/autobuild.mk
 # Other files (optional).
-#include $(CHIBIOS)/test/lib/test.mk
-#include $(CHIBIOS)/test/rt/rt_test.mk
+include $(CHIBIOS)/test/lib/test.mk
+include $(CHIBIOS)/test/rt/rt_test.mk
 #include $(CHIBIOS)/test/oslib/oslib_test.mk
 
 # Define linker script file here
@@ -120,9 +120,9 @@ LDSCRIPT= $(STARTUPLD)/STM32F042x6.ld
 # setting.
 CSRC = $(ALLCSRC) \
        $(TESTSRC) \
-       cfg/board.c \
-       main.c
-
+       main.c \
+       $(CONFDIR)/board.c
+       
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
 CPPSRC = $(ALLCPPSRC)
@@ -184,7 +184,8 @@ include $(RULESPATH)/rules.mk
 ##############################################################################
 # Custom rules
 #
-
+write:
+	openocd -f toolchain/oocd.cfg -c "program $(BUILDDIR)/$(PROJECT).hex verify reset exit"
 #
 # Custom rules
 ##############################################################################
