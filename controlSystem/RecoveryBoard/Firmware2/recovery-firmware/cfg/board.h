@@ -30,6 +30,8 @@
  * Setup for STMicroelectronics STM32 Nucleo32-F042K6 board.
  */
 
+#define SHELL_CMD_TEST_ENABLED     FALSE
+
 /*
  * Board identifier.
  */

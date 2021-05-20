@@ -17,6 +17,7 @@
 #include "ch.h"
 #include "hal.h"
 #include "chprintf.h"
+#include "shell.h"
 
 /*
  * Define the chprinf serial stream (to serial device 2 on UART2)
@@ -26,7 +27,7 @@
 /*
  * Green LED blinker thread, times are in milliseconds.
  */
-static THD_WORKING_AREA(waThread1, 128);
+static THD_WORKING_AREA(waThread1, 256);
 static THD_FUNCTION(Thread1, arg) {
 
   (void)arg;
@@ -42,6 +43,25 @@ static THD_FUNCTION(Thread1, arg) {
     chThdSleepMilliseconds(100);
   }
 }
+
+
+void cmd_DdaaaAaavVVvveEEEE(BaseSequentialStream *chp, int argc, char *argv[]) {
+	chprintf(chp, "You have successfully whined to Dave to write this code... :)\r\n");
+}
+
+
+static THD_WORKING_AREA(waShell, 2048);
+
+static const ShellCommand commands[] = {
+  {"DdaaaAaavVVvveEEEE", cmd_DdaaaAaavVVvveEEEE},
+  {NULL, NULL}
+};
+
+static const ShellConfig shell_cfg1 = {
+  DEBUG_SD,
+  commands
+};
+
 
 /*
  * Application entry point.
@@ -68,7 +88,7 @@ int main(void) {
    */
   chprintf(DEBUG_SD, "\r\nPSAS ERS control board starting up (main.c)!\r\n");
   chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO, Thread1, NULL);
-
+  chThdCreateStatic(waShell, sizeof(waShell), NORMALPRIO, shellThread, NULL);
   /*
    * main() thread activity
    */
