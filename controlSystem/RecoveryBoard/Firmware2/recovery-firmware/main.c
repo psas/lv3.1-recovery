@@ -24,15 +24,17 @@
  */
 #define DEBUG_SD  (BaseSequentialStream *) &SD2
 
-/*
- * Green LED blinker thread, times are in milliseconds.
- */
+
+//===========================================================================================
+// Blinky thread
+//===========================================================================================
+
 static THD_WORKING_AREA(waThread1, 256);
 static THD_FUNCTION(Thread1, arg) {
 
   (void)arg;
-  chRegSetThreadName("blinker");
-  chprintf(DEBUG_SD, "Blinker thread starting up (main.c)!\r\n");
+  chRegSetThreadName("blinky");
+  //chprintf(DEBUG_SD, "Blinker thread starting up (main.c)!\r\n");
   
   while (true) {
     palClearLine(LINE_LED);
@@ -45,27 +47,33 @@ static THD_FUNCTION(Thread1, arg) {
 }
 
 
-void cmd_DdaaaAaavVVvveEEEE(BaseSequentialStream *chp, int argc, char *argv[]) {
-	chprintf(chp, "You have successfully whined to Dave to write this code... :)\r\n");
+//===========================================================================================
+// Shell stuff
+//===========================================================================================
+
+static THD_WORKING_AREA(waShell, 1024);
+
+static void cmd_DdaaaAaavVVvveEEEE(BaseSequentialStream *chp, int argc, char *argv[]) {
+    (void)argv;
+    (void)argc;
+    chprintf(chp, "You have successfully whined to Dave to write this code... :)\r\n");
 }
 
-
-static THD_WORKING_AREA(waShell, 2048);
-
 static const ShellCommand commands[] = {
-  {"DdaaaAaavVVvveEEEE", cmd_DdaaaAaavVVvveEEEE},
-  {NULL, NULL}
+    {"DdaaaAaavVVvveEEEE", cmd_DdaaaAaavVVvveEEEE},
+    {NULL, NULL}
 };
 
-static const ShellConfig shell_cfg1 = {
+static const ShellConfig shell_cfg = {
   DEBUG_SD,
   commands
 };
 
 
-/*
- * Application entry point.
- */
+//===========================================================================================
+// main
+//===========================================================================================
+
 int main(void) {
 
   /*
@@ -78,20 +86,17 @@ int main(void) {
   halInit();
   chSysInit();
 
-  /*
-   * Activates the serial driver 2 using the driver default configuration.
-   */
+  // Activate the serial driver 2 using the driver default configuration.
   sdStart(&SD2, NULL);
 
-  /*
-   * Create the blinker thread.
-   */
-  chprintf(DEBUG_SD, "\r\nPSAS ERS control board starting up (main.c)!\r\n");
+  // Print a nice message that we're alive and don't let the shell stomp on the message
+  chprintf(DEBUG_SD, "\r\nPSAS ERS control board starting up\r\n");
+  chThdSleepMilliseconds(100);
+  
+  // START THEM THREADS
   chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO, Thread1, NULL);
-  chThdCreateStatic(waShell, sizeof(waShell), NORMALPRIO, shellThread, NULL);
-  /*
-   * main() thread activity
-   */
+  chThdCreateStatic(waShell, sizeof(waShell), NORMALPRIO, shellThread, (void *)&shell_cfg);
+  
   while (true) {
     chThdSleepMilliseconds(500);
   }
