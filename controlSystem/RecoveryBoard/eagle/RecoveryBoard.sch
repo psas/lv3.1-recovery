@@ -6,7 +6,7 @@
 <setting alwaysvectorfont="no"/>
 <setting verticaltext="up"/>
 </settings>
-<grid distance="0.05" unitdist="inch" unit="inch" style="lines" multiple="2" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>
+<grid distance="0.1" unitdist="inch" unit="inch" style="lines" multiple="1" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>
 <layers>
 <layer number="1" name="Top" color="4" fill="1" visible="no" active="no"/>
 <layer number="2" name="Route2" color="16" fill="1" visible="no" active="no"/>
@@ -12214,7 +12214,7 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <wire x1="302.26" y1="245.11" x2="302.26" y2="232.41" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="CHUTE" class="0">
+<net name="T_MAIN" class="0">
 <segment>
 <label x="102.87" y="175.26" size="1.778" layer="95" xref="yes"/>
 <pinref part="JP2" gate="A" pin="5"/>
@@ -12223,7 +12223,7 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <wire x1="101.6" y1="172.72" x2="101.6" y2="175.26" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="DROGUE" class="0">
+<net name="T_DROGUE" class="0">
 <segment>
 <label x="102.87" y="171.45" size="1.778" layer="95" xref="yes"/>
 <wire x1="102.87" y1="171.45" x2="101.6" y2="171.45" width="0.1524" layer="91"/>
@@ -12232,7 +12232,7 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <wire x1="101.6" y1="170.18" x2="80.01" y2="170.18" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="T_GND" class="0">
+<net name="T_VLIPO" class="0">
 <segment>
 <label x="102.87" y="167.64" size="1.778" layer="95" xref="yes"/>
 <pinref part="JP2" gate="A" pin="7"/>
@@ -13346,7 +13346,7 @@ OR SOMETHING</text>
 <label x="355.6" y="312.42" size="1.778" layer="95"/>
 </segment>
 </net>
-<net name="T_GND" class="0">
+<net name="T_VLIPO" class="0">
 <segment>
 <wire x1="185.42" y1="287.02" x2="198.12" y2="287.02" width="0.1524" layer="91"/>
 <label x="185.42" y="287.02" size="1.778" layer="95" rot="R180" xref="yes"/>
@@ -13358,7 +13358,7 @@ OR SOMETHING</text>
 <junction x="198.12" y="287.02"/>
 </segment>
 </net>
-<net name="CHUTE" class="0">
+<net name="T_MAIN" class="0">
 <segment>
 <wire x1="198.12" y1="341.63" x2="198.12" y2="342.9" width="0.1524" layer="91"/>
 <wire x1="198.12" y1="342.9" x2="190.5" y2="342.9" width="0.1524" layer="91"/>
@@ -13369,7 +13369,7 @@ OR SOMETHING</text>
 <junction x="190.5" y="342.9"/>
 </segment>
 </net>
-<net name="DROGUE" class="0">
+<net name="T_DROGUE" class="0">
 <segment>
 <wire x1="250.19" y1="341.63" x2="250.19" y2="355.6" width="0.1524" layer="91"/>
 <wire x1="250.19" y1="355.6" x2="200.66" y2="355.6" width="0.1524" layer="91"/>

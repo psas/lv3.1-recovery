@@ -3544,7 +3544,7 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 <wire x1="55.595" y1="17.905" x2="55.595" y2="17.795" width="1" layer="1"/>
 <wire x1="55.595" y1="17.795" x2="55.595" y2="15.155" width="1" layer="1"/>
 </signal>
-<signal name="CHUTE">
+<signal name="T_MAIN">
 <contactref element="U3" pad="ANOD"/>
 <contactref element="JP2" pad="5"/>
 <wire x1="22.43" y1="8.83" x2="25.1" y2="11.5" width="0.5" layer="1"/>
@@ -3554,7 +3554,7 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 <wire x1="25.1" y1="11.5" x2="25.1" y2="15.95" width="0.5" layer="1"/>
 <wire x1="27.85" y1="18.7" x2="30.9" y2="18.7" width="0.5" layer="1"/>
 </signal>
-<signal name="DROGUE">
+<signal name="T_DROGUE">
 <contactref element="U5" pad="ANOD"/>
 <contactref element="JP2" pad="6"/>
 <wire x1="20.25" y1="6.29" x2="23.59" y2="6.29" width="0.5" layer="1"/>
@@ -3563,7 +3563,7 @@ Note, that not all DRC settings must be set by the manufacturer. Several can be 
 <wire x1="23.59" y1="6.29" x2="26.3" y2="9" width="0.5" layer="1"/>
 <wire x1="27.85" y1="9" x2="30.9" y2="9" width="0.5" layer="1"/>
 </signal>
-<signal name="T_GND">
+<signal name="T_VLIPO">
 <contactref element="R26" pad="2"/>
 <contactref element="R27" pad="2"/>
 <contactref element="JP2" pad="7"/>
