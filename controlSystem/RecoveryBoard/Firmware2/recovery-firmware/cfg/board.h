@@ -85,7 +85,7 @@
 #define GPIO_PB4_ROTSENSE2        4U
 #define GPIO_PB5_ROTSENSE1        5U
 #define GPIO_PB6_NC               6U
-#define GPIO_PB7_UMB_ON           7U
+#define GPIO_PB7_SHORE_PWR        7U
 #define GPIO_PB8_SPKR             8U
 #define GPIO_PB9_NOPIN            9U
 #define GPIO_PB10_NOPIN           10U
@@ -188,7 +188,7 @@
 #define LINE_ROTSENSE_PWR             PAL_LINE(GPIOB, 3U)
 #define LINE_ROTSENSE2                PAL_LINE(GPIOB, 4U)
 #define LINE_ROTSENSE1                PAL_LINE(GPIOB, 5U)
-#define LINE_UMB_ON                   PAL_LINE(GPIOB, 7U)
+#define LINE_SHORE_PWR                PAL_LINE(GPIOB, 7U)
 #define LINE_SPKR                     PAL_LINE(GPIOB, 8U)
 
 #define LINE_OSC_IN                   PAL_LINE(GPIOF, 0U)
@@ -242,7 +242,7 @@
                            PIN_MODE_ALTERNATE (GPIO_PA2_UART2_TX)  | \
                            PIN_MODE_INPUT     (GPIO_PA3_ISO_MAIN)  | \
                            PIN_MODE_INPUT     (GPIO_PA4_ISO_DROGUE)| \
-                           PIN_MODE_ALTERNATE (GPIO_PA5_DCM_PWM)   | \
+                           PIN_MODE_OUTPUT    (GPIO_PA5_DCM_PWM)   | \
                            PIN_MODE_OUTPUT    (GPIO_PA6_DCM_DIR)   | \
                            PIN_MODE_OUTPUT    (GPIO_PA7_DCM_PWR)   | \
                            PIN_MODE_OUTPUT    (GPIO_PA8_LA_DRV1)   | \
@@ -327,7 +327,7 @@
                            PIN_AFIO_AF (GPIO_PA2_UART2_TX,   1U) | \
                            PIN_AFIO_AF (GPIO_PA3_ISO_MAIN,   0U) | \
                            PIN_AFIO_AF (GPIO_PA4_ISO_DROGUE, 0U) | \
-                           PIN_AFIO_AF (GPIO_PA5_DCM_PWM,    1U) | \
+                           PIN_AFIO_AF (GPIO_PA5_DCM_PWM,    0U) | \
                            PIN_AFIO_AF (GPIO_PA6_DCM_DIR,    0U) | \
                            PIN_AFIO_AF (GPIO_PA7_DCM_PWR,    0U))
 
@@ -353,7 +353,7 @@
                            PIN_MODE_INPUT  (GPIO_PB4_ROTSENSE2)    | \
                            PIN_MODE_INPUT  (GPIO_PB5_ROTSENSE1)    | \
                            PIN_MODE_INPUT  (GPIO_PB6_NC)           | \
-                           PIN_MODE_INPUT  (GPIO_PB7_UMB_ON)       | \
+                           PIN_MODE_INPUT  (GPIO_PB7_SHORE_PWR)    | \
                            PIN_MODE_OUTPUT (GPIO_PB8_SPKR)         | \
                            PIN_MODE_INPUT  (GPIO_PB9_NOPIN)        | \
                            PIN_MODE_INPUT  (GPIO_PB10_NOPIN)       | \
@@ -370,7 +370,7 @@
                            PIN_OTYPE_PUSHPULL (GPIO_PB4_ROTSENSE2)    | \
                            PIN_OTYPE_PUSHPULL (GPIO_PB5_ROTSENSE1)    | \
                            PIN_OTYPE_PUSHPULL (GPIO_PB6_NC)           | \
-                           PIN_OTYPE_PUSHPULL (GPIO_PB7_UMB_ON)       | \
+                           PIN_OTYPE_PUSHPULL (GPIO_PB7_SHORE_PWR)    | \
                            PIN_OTYPE_PUSHPULL (GPIO_PB8_SPKR)         | \
                            PIN_OTYPE_PUSHPULL (GPIO_PB9_NOPIN)        | \
                            PIN_OTYPE_PUSHPULL (GPIO_PB10_NOPIN)       | \
@@ -387,7 +387,7 @@
                            PIN_OSPEED_LOW  (GPIO_PB4_ROTSENSE2)    | \
                            PIN_OSPEED_LOW  (GPIO_PB5_ROTSENSE1)    | \
                            PIN_OSPEED_LOW  (GPIO_PB6_NC)           | \
-                           PIN_OSPEED_LOW  (GPIO_PB7_UMB_ON)       | \
+                           PIN_OSPEED_LOW  (GPIO_PB7_SHORE_PWR)    | \
                            PIN_OSPEED_LOW  (GPIO_PB8_SPKR)         | \
                            PIN_OSPEED_LOW  (GPIO_PB9_NOPIN)        | \
                            PIN_OSPEED_LOW  (GPIO_PB10_NOPIN)       | \
@@ -404,7 +404,7 @@
                            PIN_PUPDR_FLOATING (GPIO_PB4_ROTSENSE2)    | \
                            PIN_PUPDR_FLOATING (GPIO_PB5_ROTSENSE1)    | \
                            PIN_PUPDR_PULLDOWN (GPIO_PB6_NC)           | \
-                           PIN_PUPDR_FLOATING (GPIO_PB7_UMB_ON)       | \
+                           PIN_PUPDR_FLOATING (GPIO_PB7_SHORE_PWR)    | \
                            PIN_PUPDR_FLOATING (GPIO_PB8_SPKR)         | \
                            PIN_PUPDR_PULLDOWN (GPIO_PB9_NOPIN)        | \
                            PIN_PUPDR_PULLDOWN (GPIO_PB10_NOPIN)       | \
@@ -421,7 +421,7 @@
                            PIN_ODR_LOW  (GPIO_PB4_ROTSENSE2)    | \
                            PIN_ODR_LOW  (GPIO_PB5_ROTSENSE1)    | \
                            PIN_ODR_LOW  (GPIO_PB6_NC)           | \
-                           PIN_ODR_LOW  (GPIO_PB7_UMB_ON)       | \
+                           PIN_ODR_LOW  (GPIO_PB7_SHORE_PWR)    | \
                            PIN_ODR_LOW  (GPIO_PB8_SPKR)         | \
                            PIN_ODR_LOW  (GPIO_PB9_NOPIN)        | \
                            PIN_ODR_LOW  (GPIO_PB10_NOPIN)       | \
@@ -438,7 +438,7 @@
                            PIN_AFIO_AF (GPIO_PB4_ROTSENSE2,    0U) | \
                            PIN_AFIO_AF (GPIO_PB5_ROTSENSE1,    0U) | \
                            PIN_AFIO_AF (GPIO_PB6_NC,           0U) | \
-                           PIN_AFIO_AF (GPIO_PB7_UMB_ON,       0U))
+                           PIN_AFIO_AF (GPIO_PB7_SHORE_PWR,    0U))
 
 #define VAL_GPIOB_AFRH    (PIN_AFIO_AF (GPIO_PB8_SPKR,   0U) | \
                            PIN_AFIO_AF (GPIO_PB9_NOPIN,  0U) | \

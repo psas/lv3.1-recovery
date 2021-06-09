@@ -17,16 +17,59 @@ THD_WORKING_AREA(waTelemetrumThread, 256);
 THD_FUNCTION(TelemetrumThread, arg) {
 
     (void)arg;
-    static int drogueState = 0;
+    
+    static int powerState = 0;  // Keep track of the shore power state locally.
+    static int powerCount = 0;    
+    static int drogueState = 0; // Keep track of drogue line from the Telemetrum locally.
     static int drogueCount = 0;
-    static int mainState = 0;
+    static int mainState = 0;   // Keep track of main line from the Telemetrum locally.
     static int mainCount = 0;
   
     chRegSetThreadName("telemetrum");
     //chprintf(DEBUG_SD, "Blinker thread starting up (main.c)!\r\n");
    
     while (true) {
-     
+
+        // Process the shore power line. Broadcast any change in shore power state. Disarm if shore power is on, and /*arm */if it's off.
+        if (powerState == 0) {
+            if (palReadLine(LINE_SHORE_PWR) == 0) {
+                ++powerCount;
+                if (powerCount > 5) {
+                    powerCount = 5;
+                    powerState = 1;
+                    chprintf (DEBUG_SD, "SHORE POWER: On!\r\n");
+                    chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
+                    if (recoveryState == armed) {
+                        chprintf (DEBUG_SD, "SHORE POWER: Disarming!\r\n");
+                        chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
+                        recoveryState = disarmed;
+                    }
+                }
+            }
+            else {
+                powerCount = 0; // Nope, it wasn't 5 in a row, reset to zero if there was any previous powerCount
+            }
+        }
+        else // powerState == 1
+           if (palReadLine(LINE_SHORE_PWR) == 0) {
+               powerCount = 5; // Nope, it wasn't 5 in a row, reset back to 5 if there was any previous powerCount
+           }
+           else {
+               --powerCount;
+               if (powerCount < 1) {
+                   powerCount = 0;
+                   powerState = 0;
+                    chprintf (DEBUG_SD, "SHORE POWER: Off!\r\n");
+                    chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
+                    if (recoveryState == disarmed) {
+                        chprintf (DEBUG_SD, "SHORE POWER: arming!\r\n");
+                        chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
+                        recoveryState = armed;
+                    }
+               }
+           }
+        
+        
         // Process the drogue line
         if (drogueState == 0) {
             if (palReadLine(LINE_ISO_DROGUE) == TRUE) {
@@ -35,7 +78,12 @@ THD_FUNCTION(TelemetrumThread, arg) {
                     drogueCount = 5;
                     drogueState = 1;
                     chprintf (DEBUG_SD, "TELEMETRUM: DROGUE DETECT!\r\n");
-                    // TODO: TRIGGER DROGUE DETECT AND/OR SET GLOBAL STATE
+                    chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
+                    if (recoveryState == armed) {
+                        chprintf (DEBUG_SD, "TELEMETRUM: DROGUE FIRING!\r\n");
+                        chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
+                        drogueCommand = fire;
+                    }
                 }
             }
             else {
@@ -51,7 +99,7 @@ THD_FUNCTION(TelemetrumThread, arg) {
                if (drogueCount < 1) {
                    drogueCount = 0;
                    drogueState = 0;
-                   chprintf (DEBUG_SD, "TELEMETRUM: DROGUE DETECT OFF\r\n");
+                   chprintf (DEBUG_SD, "TELEMETRUM: DROGUE OFF\r\n");
                    // TODO: Maybe let the world know there's no more drogue? Maybe not.
                }
            }
@@ -64,7 +112,12 @@ THD_FUNCTION(TelemetrumThread, arg) {
                     mainCount = 5;
                     mainState = 1;
                     chprintf (DEBUG_SD, "TELEMETRUM: MAIN DETECT!\r\n");
-                    // TODO: TRIGGER MAIN DETECT AND/OR SET GLOBAL STATE
+                    chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
+                    if (recoveryState == armed) {
+                        chprintf (DEBUG_SD, "TELEMETRUM: MAIN FIRING!\r\n");
+                        chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
+                        //fireMain = TRUE;
+                    }
                 }
             }
             else {
@@ -80,7 +133,7 @@ THD_FUNCTION(TelemetrumThread, arg) {
                if (mainCount < 1) {
                    mainCount = 0;
                    mainState = 0;
-                   chprintf (DEBUG_SD, "TELEMETRUM: MAIN DETECT OFF\r\n");
+                   chprintf (DEBUG_SD, "TELEMETRUM: MAIN OFF\r\n");
                    // TODO: Maybe let the world know there's no more main? Maybe not.
                }
            }

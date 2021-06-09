@@ -4,6 +4,7 @@
 
 #include "ch.h"
 #include "hal.h"
+#include "recovery.h"
 
 
 //===========================================================================================
@@ -15,22 +16,33 @@ THD_WORKING_AREA(waBlinkyThread, 256);
 THD_FUNCTION(BlinkyThread, arg) {
 
   (void)arg;
+  
   chRegSetThreadName("blinky");
   //chprintf(DEBUG_SD, "Blinker thread starting up (main.c)!\r\n");
   
-  while (true) {
-    palClearLine(LINE_LED);
-//    palSetLine(LINE_SPKR);
-//    chThdSleepMilliseconds(1);
-//    palClearLine(LINE_SPKR);
+    while (true) {
+        
+        palSetLine(LINE_LED);
+//      palSetLine(LINE_SPKR);
+//      chThdSleepMilliseconds(1);
+//      palClearLine(LINE_SPKR);
 
-    chThdSleepMilliseconds(100);
+        if (recoveryState == armed) {
+            chThdSleepMilliseconds(100);
+        } else {
+            chThdSleepMilliseconds(500);
+        }
 
-    palSetLine(LINE_LED);
-//    palSetLine(LINE_SPKR);
-//    chThdSleepMilliseconds(1);
-//    palClearLine(LINE_SPKR);
+        palClearLine(LINE_LED);
+//      palSetLine(LINE_SPKR);
+//      chThdSleepMilliseconds(1);
+//      palClearLine(LINE_SPKR);
 
-    chThdSleepMilliseconds(100);
-  }
+        if (recoveryState == armed) {
+            chThdSleepMilliseconds(100);
+        } else {
+            chThdSleepMilliseconds(500);
+        }
+          
+    }
 }

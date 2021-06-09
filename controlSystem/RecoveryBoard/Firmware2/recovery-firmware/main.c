@@ -27,15 +27,16 @@
 
 #include "blinky.h"
 #include "telemetrum.h"
+#include "drogue.h"
+#include "mainchute.h"
 
 //===========================================================================================
 // Global variables because I'm OLDSKOOLCOOL
 //===========================================================================================
 
-volatile enum recoverystate recoveryState = armed;
-volatile int fireDrogue = FALSE;
-volatile int fireMain = FALSE;
-
+volatile enum recoverystatetype recoveryState = armed;
+volatile enum droguecommandtype drogueCommand = idle;
+volatile enum mainchutecommandtype mainchuteCommand = idle_m;
 
 //===========================================================================================
 // Shell stuff
@@ -47,6 +48,7 @@ static void cmd_DdaaaAaavVVvveEEEE(BaseSequentialStream *chp, int argc, char *ar
     (void)argv;
     (void)argc;
     chprintf(chp, "You have successfully whined to Dave to write this code... :)\r\n");
+    chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
 }
 
 static void cmd_state(BaseSequentialStream *chp, int argc, char *argv[]) {
@@ -66,6 +68,7 @@ static void cmd_state(BaseSequentialStream *chp, int argc, char *argv[]) {
             chprintf(chp, "STATE = INVALID; SWITCHING TO ARMED\r\n");
             recoveryState = armed;
         }
+        chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
         return;
     }
     
@@ -85,40 +88,82 @@ static void cmd_state(BaseSequentialStream *chp, int argc, char *argv[]) {
                      "    arm, disarm, and reset\r\n"
                      "\r\n");
     }
+    chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
 }
 
-static void cmd_fire(BaseSequentialStream *chp, int argc, char *argv[]) {
+static void cmd_drogue(BaseSequentialStream *chp, int argc, char *argv[]) {
 
     if (argc == 1) {
-        if (!strcmp(argv[0], "drogue")) {
+        if (!strcmp(argv[0], "fire")) {
             if (recoveryState == disarmed) {
                 chprintf(chp, "FIRING DROGUE (DC Motor)\r\n");
-                fireDrogue = TRUE;
+                drogueCommand = fire;
             }
             else
                 chprintf(chp, "INVALID: CAN'T MANUALLY FIRE DROGUE IF ARMED.\r\n"); 
             return;
         }
-        if (!strcmp(argv[0], "main")) {
+        if (!strcmp(argv[0], "lock")) {
             if (recoveryState == disarmed) {
-                chprintf(chp, "FIRING MAIN (Linear actuator)\r\n");
-                fireMain = TRUE;
+                chprintf(chp, "LOCKING DROGUE (DC Motor)\r\n");
+                drogueCommand = lock;
             }
             else
-                chprintf(chp, "INVALID: CAN'T MANUALLY FIRE MAIN IF ARMED.\r\n");  
+                chprintf(chp, "INVALID: CAN'T MANUALLY LOCK DROGUE IF ARMED.\r\n");  
+            return;
+        }
+        if (!strcmp(argv[0], "stop")) {
+            chprintf(chp, "STOPPING DROGUE (DC Motor)\r\n");
+            drogueCommand = stop;
             return;
         }
     }
-
-    chprintf(chp,"Usage: fire <type>\r\n"
-                "    drogue, main\r\n"
+   
+    chprintf(chp,"Usage: drogue <command>\r\n"
+                "    fire, lock, stop\r\n"
                      "\r\n");
+    chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
+}
+
+static void cmd_mainchute(BaseSequentialStream *chp, int argc, char *argv[]) {
+
+    if (argc == 1) {
+        if (!strcmp(argv[0], "fire")) {
+            if (recoveryState == disarmed) {
+                chprintf(chp, "FIRING MAIN CHUTE (LA)\r\n");
+                mainchuteCommand = fire_m;
+            }
+            else
+                chprintf(chp, "INVALID: CAN'T MANUALLY FIRE MAIN IF ARMED.\r\n"); 
+            return;
+        }
+        if (!strcmp(argv[0], "reset")) {
+            if (recoveryState == disarmed) {
+                chprintf(chp, "RESETING MAIN CHUTE (LA)\r\n");
+                mainchuteCommand = reset_m;
+            }
+            else
+                chprintf(chp, "INVALID: CAN'T MANUALLY RESET MAIN IF ARMED.\r\n");  
+            return;
+        }
+        if (!strcmp(argv[0], "stop")) {
+            chprintf(chp, "STOPPING MAIN CHUTE (LA)\r\n");
+            mainchuteCommand = stop_m;
+            return;
+        }
+    }
+   
+    chprintf(chp,"Usage: main <command>\r\n"
+                "    fire, reset, stop\r\n"
+                     "\r\n");
+    chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
 }
 
 static const ShellCommand commands[] = {
     {"DdaaaAaavVVvveEEEE", cmd_DdaaaAaavVVvveEEEE},
     {"state", cmd_state},
-    {"fire", cmd_fire},
+    {"drogue", cmd_drogue},
+    {"main", cmd_mainchute},
     {NULL, NULL}
 };
 
@@ -149,12 +194,14 @@ int main(void) {
     
     // Print a nice message that we're alive and don't let the shell stomp on the message
     chprintf(DEBUG_SD, "\r\nPSAS ERS control board starting up\r\n");
-    chThdSleepMilliseconds(100);
+    chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
     
     // START THEM THREADS
     
     chThdCreateStatic(waBlinkyThread, sizeof(waBlinkyThread), NORMALPRIO, BlinkyThread, NULL);
     chThdCreateStatic(waTelemetrumThread, sizeof(waTelemetrumThread), NORMALPRIO, TelemetrumThread, NULL);
+    chThdCreateStatic(waDrogueThread, sizeof(waDrogueThread), NORMALPRIO, DrogueThread, NULL);
+    chThdCreateStatic(waMainchuteThread, sizeof(waMainchuteThread), NORMALPRIO, MainchuteThread, NULL);    
     chThdCreateStatic(waShell, sizeof(waShell), NORMALPRIO, shellThread, (void *)&shell_cfg);
     
     while (true) {
