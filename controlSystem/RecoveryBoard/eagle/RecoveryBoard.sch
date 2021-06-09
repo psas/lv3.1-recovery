@@ -11608,7 +11608,7 @@ Source: &lt;a href="https://componentsearchengine.com/Datasheets/1/BD62120AEFJ-E
 <text x="248.92" y="59.69" size="1.778" layer="97">0805</text>
 <text x="72.39" y="190.5" size="1.778" layer="95">Outside World</text>
 <text x="327.66" y="176.53" size="1.778" layer="97">TO 3S1P battery</text>
-<text x="49.53" y="180.34" size="1.778" layer="97">SHORT TO DISARM</text>
+<text x="41.91" y="180.34" size="1.778" layer="97">SHORT TO POWER DOWN</text>
 <text x="57.15" y="175.26" size="1.778" layer="97">19V umbilical</text>
 <text x="308.61" y="231.14" size="1.778" layer="97">12V power switch</text>
 <text x="311.15" y="228.6" size="1.778" layer="97">Usually on</text>
@@ -12548,6 +12548,11 @@ OR SOMETHING</text>
 <text x="453.39" y="275.59" size="1.778" layer="97">(~0.3, ~ 1, ~ 2) A</text>
 <text x="453.39" y="271.78" size="1.778" layer="97">DCM_SPEED floats up to 5V?!</text>
 <text x="453.39" y="267.97" size="1.778" layer="97">PWM = 0% DC = Motor off</text>
+<text x="431.8" y="215.9" size="1.778" layer="97">POT- (ORG)</text>
+<text x="431.8" y="213.36" size="1.778" layer="97">POT  (PUR)</text>
+<text x="431.8" y="210.82" size="1.778" layer="97">M+   (RED)</text>
+<text x="431.8" y="208.28" size="1.778" layer="97">M-   (BLK)</text>
+<text x="431.8" y="205.74" size="1.778" layer="97">POT+ (YLW)</text>
 </plain>
 <instances>
 <instance part="U1" gate="G$1" x="274.32" y="185.42" smashed="yes">
@@ -12605,9 +12610,9 @@ OR SOMETHING</text>
 <attribute name="SHEET" x="538.48" y="1.27" size="2.54" layer="94"/>
 <attribute name="DRAWING_NAME" x="469.9" y="19.05" size="2.54" layer="94"/>
 </instance>
-<instance part="J2" gate="A" x="458.47" y="210.82" smashed="yes" rot="MR0">
-<attribute name="NAME" x="464.82" y="219.075" size="1.778" layer="95" rot="MR0"/>
-<attribute name="VALUE" x="464.82" y="200.66" size="1.778" layer="96" rot="MR0"/>
+<instance part="J2" gate="A" x="448.31" y="210.82" smashed="yes" rot="MR0">
+<attribute name="NAME" x="454.66" y="219.075" size="1.778" layer="95" rot="MR0"/>
+<attribute name="VALUE" x="454.66" y="200.66" size="1.778" layer="96" rot="MR0"/>
 </instance>
 <instance part="J1" gate="A" x="471.17" y="292.1" smashed="yes">
 <attribute name="NAME" x="464.82" y="300.355" size="1.778" layer="95"/>
@@ -12961,10 +12966,10 @@ OR SOMETHING</text>
 </segment>
 <segment>
 <pinref part="J2" gate="A" pin="1"/>
-<wire x1="461.01" y1="215.9" x2="488.95" y2="215.9" width="0.1524" layer="91"/>
+<wire x1="450.85" y1="215.9" x2="488.95" y2="215.9" width="0.1524" layer="91"/>
 <pinref part="SUPPLY40" gate="GND" pin="GND"/>
 <wire x1="488.95" y1="215.9" x2="488.95" y2="199.39" width="0.1524" layer="91"/>
-<label x="464.82" y="215.9" size="1.778" layer="95"/>
+<label x="457.2" y="215.9" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="LA_DRV1" class="0">
@@ -13209,8 +13214,8 @@ OR SOMETHING</text>
 </segment>
 <segment>
 <pinref part="J2" gate="A" pin="5"/>
-<wire x1="461.01" y1="205.74" x2="485.14" y2="205.74" width="0.1524" layer="91"/>
-<label x="464.82" y="205.74" size="1.778" layer="95"/>
+<wire x1="450.85" y1="205.74" x2="485.14" y2="205.74" width="0.1524" layer="91"/>
+<label x="457.2" y="205.74" size="1.778" layer="95"/>
 <pinref part="SUPPLY41" gate="G$1" pin="3.3V"/>
 <wire x1="485.14" y1="205.74" x2="485.14" y2="223.52" width="0.1524" layer="91"/>
 </segment>
@@ -13273,8 +13278,8 @@ OR SOMETHING</text>
 <wire x1="483.87" y1="158.75" x2="497.84" y2="158.75" width="0.1524" layer="91"/>
 <pinref part="U2" gate="G$1" pin="OUT1"/>
 <pinref part="J2" gate="A" pin="3"/>
-<wire x1="497.84" y1="210.82" x2="461.01" y2="210.82" width="0.1524" layer="91"/>
-<label x="464.82" y="210.82" size="1.778" layer="95"/>
+<wire x1="497.84" y1="210.82" x2="450.85" y2="210.82" width="0.1524" layer="91"/>
+<label x="457.2" y="210.82" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="DCM_PWM" class="0">
@@ -13298,9 +13303,9 @@ OR SOMETHING</text>
 <label x="413.385" y="182.245" size="1.778" layer="95"/>
 <label x="299.72" y="203.2" size="1.27" layer="95"/>
 <pinref part="J2" gate="A" pin="2"/>
-<wire x1="461.01" y1="213.36" x2="480.06" y2="213.36" width="0.1524" layer="91"/>
+<wire x1="450.85" y1="213.36" x2="480.06" y2="213.36" width="0.1524" layer="91"/>
 <wire x1="480.06" y1="180.34" x2="480.06" y2="213.36" width="0.1524" layer="91"/>
-<label x="464.82" y="213.36" size="1.778" layer="95"/>
+<label x="457.2" y="213.36" size="1.778" layer="95"/>
 <wire x1="480.06" y1="180.34" x2="401.32" y2="180.34" width="0.1524" layer="91"/>
 <wire x1="401.32" y1="180.34" x2="358.14" y2="180.34" width="0.1524" layer="91"/>
 <wire x1="358.14" y1="180.34" x2="358.14" y2="203.2" width="0.1524" layer="91"/>
@@ -13509,8 +13514,8 @@ OR SOMETHING</text>
 <net name="LAMOTOR-" class="0">
 <segment>
 <pinref part="J2" gate="A" pin="4"/>
-<label x="464.82" y="208.28" size="1.778" layer="95"/>
-<wire x1="461.01" y1="208.28" x2="500.38" y2="208.28" width="0.1524" layer="91"/>
+<label x="457.2" y="208.28" size="1.778" layer="95"/>
+<wire x1="450.85" y1="208.28" x2="500.38" y2="208.28" width="0.1524" layer="91"/>
 <pinref part="U2" gate="G$1" pin="OUT2"/>
 <wire x1="500.38" y1="208.28" x2="500.38" y2="156.21" width="0.1524" layer="91"/>
 <wire x1="500.38" y1="156.21" x2="483.87" y2="156.21" width="0.1524" layer="91"/>
