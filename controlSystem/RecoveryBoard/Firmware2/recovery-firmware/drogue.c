@@ -39,7 +39,7 @@ THD_FUNCTION(DrogueThread, arg) {
     
     // Turn on power to motor (but keep it off) TODO: Better power management
     palClearLine(LINE_DCM_PWM);
-    palClearLine(LINE_DCM_DIR);
+    palSetLine(LINE_DCM_DIR);
     chThdSleepMilliseconds(10); // Wait for lines to settle
     palSetLine(LINE_DCM_PWR);
     
@@ -55,7 +55,7 @@ THD_FUNCTION(DrogueThread, arg) {
         
         if (drogueCommand == stop) {
             palClearLine(LINE_DCM_PWM); // Turn off motor
-            palClearLine(LINE_DCM_DIR); // Set direction to firing
+            palSetLine(LINE_DCM_DIR); // Set direction to firing
             drogueCommand = idle;       // and we're done here.
             chprintf(DEBUG_SD, "DrogueThread: Ring position = ");
             switch (ringPosition) {
@@ -94,7 +94,7 @@ THD_FUNCTION(DrogueThread, arg) {
                 case RING_LOCKED:
                     chprintf(DEBUG_SD, "DrogueThread: FIRING, Position = Locked, MOTOR ON\r\n");
                     chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
-                    palClearLine(LINE_DCM_DIR); // Turn on motor full blast, unlock direction
+                    palSetLine(LINE_DCM_DIR); // Turn on motor full blast, unlock direction
                     palSetLine(LINE_DCM_PWM);
                     break;
         
@@ -102,7 +102,7 @@ THD_FUNCTION(DrogueThread, arg) {
                     chprintf(DEBUG_SD, "DrogueThread: FIRING, Position = Moving, MOTOR ON\r\n");
                     chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
                     // TODO: Slow down? Reduce current? Anything to do here?
-                    palClearLine(LINE_DCM_DIR); // Turn on motor full blast, unlock direction
+                    palSetLine(LINE_DCM_DIR); // Turn on motor full blast, unlock direction
                     palSetLine(LINE_DCM_PWM);
                     break;
             
@@ -110,7 +110,7 @@ THD_FUNCTION(DrogueThread, arg) {
                     chprintf(DEBUG_SD, "DrogueThread: FIRING, Position = Unlocked, MOTOR ON\r\n");
                     chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
                     // TODO: Slow down? Reduce current? Anything to do here?
-                    palClearLine(LINE_DCM_DIR); // Turn on motor full blast, unlock direction
+                    palSetLine(LINE_DCM_DIR); // Turn on motor full blast, unlock direction
                     palSetLine(LINE_DCM_PWM);
                     break;
 
@@ -141,14 +141,14 @@ THD_FUNCTION(DrogueThread, arg) {
                 case RING_SPINNING:
                     chprintf(DEBUG_SD, "DrogueThread: LOCKING, Position = Spinning, MOTOR ON, \r\n");
                     chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
-                    palSetLine(LINE_DCM_DIR); // Lock direction
+                    palClearLine(LINE_DCM_DIR); // Lock direction
                     palSetLine(LINE_DCM_PWM); // Full blast on
                     break;
 
                 case RING_UNLOCKED:
                     chprintf(DEBUG_SD, "DrogueThread: LOCKING, Position = Unlocked, MOTOR ON\r\n");
                     chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
-                    palSetLine(LINE_DCM_DIR); // Lock direction
+                    palClearLine(LINE_DCM_DIR); // Lock direction
                     palSetLine(LINE_DCM_PWM); // Full blast on
                     break;
 
@@ -156,7 +156,7 @@ THD_FUNCTION(DrogueThread, arg) {
                     chprintf(DEBUG_SD, "DrogueThread: LOCKING, Position = Moving, MOTOR ON\r\n");
                     chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
                     // TODO: Slow down? Reduce current? Anything to do here?
-                    palSetLine(LINE_DCM_DIR); // Lock direction
+                    palClearLine(LINE_DCM_DIR); // Lock direction
                     palSetLine(LINE_DCM_PWM); // Full blast on
                     break;
 
@@ -164,7 +164,7 @@ THD_FUNCTION(DrogueThread, arg) {
                     chprintf(DEBUG_SD, "DrogueThread: LOCKING, Position = Locked, MOTOR OFF\r\n");
                     chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
                     palClearLine(LINE_DCM_PWM); // Turn off the motor
-                    palClearLine(LINE_DCM_PWM); // Set direction back to firing
+                    palSetLine(LINE_DCM_DIR); // Set direction back to firing
                     drogueCommand = idle;
                     break;
 
