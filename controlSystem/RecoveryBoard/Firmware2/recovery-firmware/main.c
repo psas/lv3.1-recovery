@@ -96,7 +96,7 @@ static void cmd_drogue(BaseSequentialStream *chp, int argc, char *argv[]) {
     if (argc == 1) {
         if (!strcmp(argv[0], "fire")) {
             if (recoveryState == disarmed) {
-                chprintf(chp, "FIRING DROGUE (DC Motor)\r\n");
+                chprintf(chp, "Command: FIRING DROGUE (DC Motor)\r\n");
                 drogueCommand = fire;
             }
             else
@@ -105,11 +105,20 @@ static void cmd_drogue(BaseSequentialStream *chp, int argc, char *argv[]) {
         }
         if (!strcmp(argv[0], "lock")) {
             if (recoveryState == disarmed) {
-                chprintf(chp, "LOCKING DROGUE (DC Motor)\r\n");
+                chprintf(chp, "Command: LOCKING DROGUE (DC Motor)\r\n");
                 drogueCommand = lock;
             }
             else
                 chprintf(chp, "INVALID: CAN'T MANUALLY LOCK DROGUE IF ARMED.\r\n");  
+            return;
+        }
+        if (!strcmp(argv[0], "unlock")) {
+            if (recoveryState == disarmed) {
+                chprintf(chp, "Command: UNLOCKING DROGUE (DC Motor)\r\n");
+                drogueCommand = unlock;
+            }
+            else
+                chprintf(chp, "INVALID: CAN'T MANUALLY UNLOCK DROGUE IF ARMED.\r\n");  
             return;
         }
         if (!strcmp(argv[0], "stop")) {
@@ -117,10 +126,28 @@ static void cmd_drogue(BaseSequentialStream *chp, int argc, char *argv[]) {
             drogueCommand = stop;
             return;
         }
+        if (!strcmp(argv[0], "cw")) {
+            if (recoveryState == disarmed) {
+                chprintf(chp, "Command: PULSING CLOCKWISE (LOCKING) (DC Motor)\r\n");
+                drogueCommand = cw;
+            }
+            else
+                chprintf(chp, "INVALID: CAN'T PULSE DROGUE IF ARMED.\r\n");  
+            return;
+        }
+        if (!strcmp(argv[0], "ccw")) {
+            if (recoveryState == disarmed) {
+                chprintf(chp, "Command: PULSING COUNTERCLOCKWISE (UNLOCKING) (DC Motor)\r\n");
+                drogueCommand = ccw;
+            }
+            else
+                chprintf(chp, "INVALID: CAN'T PULSE DROGUE IF ARMED.\r\n");  
+            return;
+        }
     }
    
-    chprintf(chp,"Usage: drogue <command>\r\n"
-                "    fire, lock, stop\r\n"
+    chprintf(chp,"Usage: d <command>\r\n"
+                "    fire, lock, stop, cw, ccw\r\n"
                      "\r\n");
     chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
 }
@@ -130,7 +157,7 @@ static void cmd_mainchute(BaseSequentialStream *chp, int argc, char *argv[]) {
     if (argc == 1) {
         if (!strcmp(argv[0], "fire")) {
             if (recoveryState == disarmed) {
-                chprintf(chp, "FIRING MAIN CHUTE (LA)\r\n");
+                chprintf(chp, "Command: FIRING MAIN CHUTE (LA)\r\n");
                 mainchuteCommand = fire_m;
             }
             else
@@ -139,7 +166,7 @@ static void cmd_mainchute(BaseSequentialStream *chp, int argc, char *argv[]) {
         }
         if (!strcmp(argv[0], "reset")) {
             if (recoveryState == disarmed) {
-                chprintf(chp, "RESETING MAIN CHUTE (LA)\r\n");
+                chprintf(chp, "Command: RESETING MAIN CHUTE (LA)\r\n");
                 mainchuteCommand = reset_m;
             }
             else
@@ -147,13 +174,13 @@ static void cmd_mainchute(BaseSequentialStream *chp, int argc, char *argv[]) {
             return;
         }
         if (!strcmp(argv[0], "stop")) {
-            chprintf(chp, "STOPPING MAIN CHUTE (LA)\r\n");
+            chprintf(chp, "Command: STOPPING MAIN CHUTE (LA)\r\n");
             mainchuteCommand = stop_m;
             return;
         }
     }
    
-    chprintf(chp,"Usage: main <command>\r\n"
+    chprintf(chp,"Usage: m <command>\r\n"
                 "    fire, reset, stop\r\n"
                      "\r\n");
     chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
@@ -162,8 +189,8 @@ static void cmd_mainchute(BaseSequentialStream *chp, int argc, char *argv[]) {
 static const ShellCommand commands[] = {
     {"DdaaaAaavVVvveEEEE", cmd_DdaaaAaavVVvveEEEE},
     {"state", cmd_state},
-    {"drogue", cmd_drogue},
-    {"main", cmd_mainchute},
+    {"d", cmd_drogue},
+    {"m", cmd_mainchute},
     {NULL, NULL}
 };
 

@@ -33,6 +33,7 @@ THD_FUNCTION(DrogueThread, arg) {
     //chprintf(DEBUG_SD, "Drogue thread starting up!\r\n");
   
     static int ringPosition = 0;
+    static int pulseCount = 0;
     
     // Turn on the power to the sensors TODO: power them on only when we need them.
     palSetLine(LINE_ROTSENSE_PWR);
@@ -174,7 +175,90 @@ THD_FUNCTION(DrogueThread, arg) {
                     ringPosition = 0;
                 }
         }
-      
+
+        // ----------------------------------------------------------------------------------------
+        // Unlock Drogue -- go to unlock state form either side
+        // ----------------------------------------------------------------------------------------
+        
+        // TODO: HANDLE ERROR CASES, LIKE STARTING UP IN MOVING OR WHATEVER
+        // TODO: Monitor LINE_DCM_SPEED, and check for motor jamming. Try going backwards if necessary.
+
+        else if (drogueCommand == unlock) {
+            switch (ringPosition) {
+                case RING_SPINNING:
+                    chprintf(DEBUG_SD, "DrogueThread: Unlock; Position = Spinning, MOTOR ON LOCKING, \r\n");
+                    chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
+                    palClearLine(LINE_DCM_DIR); // Lock direction
+                    palSetLine(LINE_DCM_PWM); // Full blast on
+                    break;
+
+                case RING_UNLOCKED:
+                    chprintf(DEBUG_SD, "DrogueThread: Unlock; Position = UNLOCKED, MOTOR OFF\r\n");
+                    chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
+                    palClearLine(LINE_DCM_PWM); // Turn off the motor
+                    palSetLine(LINE_DCM_DIR); // Set direction back to firing
+                    drogueCommand = idle;
+                    break;
+
+                case RING_LOCKED:
+                case RING_MOVING:
+                    chprintf(DEBUG_SD, "DrogueThread: Unlock, Position = Locked/Moving, MOTOR ON FIRING\r\n");
+                    chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
+                    palSetLine(LINE_DCM_DIR); // Turn on motor full blast, unlock direction
+                    palSetLine(LINE_DCM_PWM);
+                    break;
+        
+                default:
+                    chprintf(DEBUG_SD, "DrogueThread: INVALID POSITION.\r\n");
+                    chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
+                    ringPosition = 0;
+                }
+        }
+
+        // ----------------------------------------------------------------------------------------
+        // Pulse clockwise (looking from the top of the  twist coupling, same as lock)
+        // ----------------------------------------------------------------------------------------
+        
+        else if (drogueCommand == cw) {
+            if (pulseCount == 0) {
+                chprintf(DEBUG_SD, "DrogueThread: Pulsing CLOCKWISE (locking)\r\n");
+                chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
+                palClearLine(LINE_DCM_DIR); // Lock direction
+                palSetLine(LINE_DCM_PWM); // Full blast on
+            }
+            ++pulseCount;
+            if (pulseCount > 3) {
+                pulseCount = 0;
+                chprintf(DEBUG_SD, "DrogueThread: Pulsing CLOCKWISE (done)\r\n");
+                chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
+                palClearLine(LINE_DCM_PWM); // Turn off the motor
+                palSetLine(LINE_DCM_DIR); // Set direction back to firing
+                drogueCommand = idle;
+            }
+        }
+
+        // ----------------------------------------------------------------------------------------
+        // Pulse counterclockwise (looking from the top of the  twist coupling, same as unlock)
+        // ----------------------------------------------------------------------------------------
+        
+        else if (drogueCommand == ccw) {
+            if (pulseCount == 0) {
+                chprintf(DEBUG_SD, "DrogueThread: Pulsing COUNTERCLOCKWISE (unlocking)\r\n");
+                chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
+                palSetLine(LINE_DCM_DIR); // Fire/Unlock direction
+                palSetLine(LINE_DCM_PWM); // Full blast on
+            }
+            ++pulseCount;
+            if (pulseCount > 3) {
+                pulseCount = 0;
+                chprintf(DEBUG_SD, "DrogueThread: Pulsing COUNTERCLOCKWISE (done)\r\n");
+                chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
+                palClearLine(LINE_DCM_PWM); // Turn off the motor
+                drogueCommand = idle;
+            }
+        }
+
+        
         // Check every 100 ms
         chThdSleepMilliseconds(100);        
     }

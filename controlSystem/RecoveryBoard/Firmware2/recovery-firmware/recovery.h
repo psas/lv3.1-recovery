@@ -4,7 +4,7 @@
 #define DEBUG_SD  (BaseSequentialStream *) &SD2
 
 enum mainchutecommandtype {idle_m, stop_m, fire_m, reset_m};
-enum droguecommandtype {idle, stop, fire, lock};
+enum droguecommandtype {idle, stop, fire, lock, unlock, cw, ccw};
 enum recoverystatetype {armed, disarmed};
 
 extern volatile enum recoverystatetype recoveryState;

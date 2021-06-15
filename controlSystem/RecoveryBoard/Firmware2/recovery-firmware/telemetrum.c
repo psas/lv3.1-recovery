@@ -116,7 +116,7 @@ THD_FUNCTION(TelemetrumThread, arg) {
                     if (recoveryState == armed) {
                         chprintf (DEBUG_SD, "TELEMETRUM: MAIN FIRING!\r\n");
                         chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
-                        mainchuteCommand = fire;
+                        mainchuteCommand = fire_m;
                     }
                 }
             }
