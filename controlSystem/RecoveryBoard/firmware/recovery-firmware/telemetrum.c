@@ -70,29 +70,30 @@ THD_FUNCTION(TelemetrumThread, arg) {
            }
         
         
-        // Process the drogue line
+        // Process the drogue line - when the TeleMetrum fires, it fires between 50-60 ms. At 10 ms per tick in this
+        //                           thread, we only have at most 3 guaranteed cycles. Fire after 3 ticks.
         if (drogueState == 0) {
             if (palReadLine(LINE_ISO_DROGUE) == TRUE) {
                 ++drogueCount;
-                if (drogueCount > 5) {
-                    drogueCount = 5;
+                if (drogueCount > 2) {
+                    drogueCount = 3;
                     drogueState = 1;
                     chprintf (DEBUG_SD, "TELEMETRUM: DROGUE DETECT!\r\n");
-                    chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
+                    // chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
                     if (recoveryState == armed) {
                         chprintf (DEBUG_SD, "TELEMETRUM: DROGUE FIRING!\r\n");
-                        chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
+                        // chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
                         drogueCommand = fire;
                     }
                 }
             }
             else {
-                drogueCount = 0; // Nope, it wasn't 5 in a row, reset to zero if there was any previous drogueCount
+                drogueCount = 0; // Nope, it wasn't 3 in a row, reset to zero if there was any previous drogueCount
             }
         }
         else // drogueState == 1
            if (palReadLine(LINE_ISO_DROGUE) == TRUE) {
-               drogueCount = 5; // Nope, it wasn't 5 in a row, reset back to 5 if there was any previous drogueCount
+               drogueCount = 3; // Nope, it wasn't 3 in a row, reset back to 5 if there was any previous drogueCount
            }
            else {
                --drogueCount;
@@ -104,18 +105,19 @@ THD_FUNCTION(TelemetrumThread, arg) {
                }
            }
      
-        // Process the main line
+        // Process the main line - when the TeleMetrum fires, it fires between 50-60 ms. At 10 ms per tick in this
+        //                           thread, we only have at most 3 guaranteed cycles. Fire after 3 ticks.
         if (mainState == 0) {
             if (palReadLine(LINE_ISO_MAIN) == TRUE) {
                 ++mainCount;
-                if (mainCount > 5) {
-                    mainCount = 5;
+                if (mainCount > 2) {
+                    mainCount = 3;
                     mainState = 1;
                     chprintf (DEBUG_SD, "TELEMETRUM: MAIN DETECT!\r\n");
-                    chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
+                    // chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
                     if (recoveryState == armed) {
                         chprintf (DEBUG_SD, "TELEMETRUM: MAIN FIRING!\r\n");
-                        chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
+                        // chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
                         mainchuteCommand = fire_m;
                     }
                 }
@@ -126,7 +128,7 @@ THD_FUNCTION(TelemetrumThread, arg) {
         }
         else // mainState == 1
            if (palReadLine(LINE_ISO_MAIN) == TRUE) {
-              mainCount = 5; // Nope, it wasn't 5 in a row, reset back to 5 if there was any previous mainCount
+              mainCount = 3; // Nope, it wasn't 3 in a row, reset back to 5 if there was any previous mainCount
            }
            else {
                --mainCount;
@@ -138,7 +140,7 @@ THD_FUNCTION(TelemetrumThread, arg) {
                }
            }
      
-        chThdSleepMilliseconds(100); // Run this loop every 100 ms (10 Hz)
+        chThdSleepMilliseconds(10); // Run this loop every 10 ms (100 Hz)
     }
 }
   
