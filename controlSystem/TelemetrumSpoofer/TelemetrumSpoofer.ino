@@ -10,11 +10,11 @@
 //        IMPORTANT: The code expects these values in milliseconds
 //
 // Physical setup:
-// -- connect jumper to short (with static line) to jumper_reading_pin and GND
+// -- connect jumper to short (with static line) to armed_pin and GND
 // -- connect drogue_pin and main_pin to control board as required
 
 // Setup pin numbers
-const int jumper_reading_pin = 8;
+const int armed_pin = 8;
 const int drogue_pin = 9;
 const int main_pin = 10;
 
@@ -24,12 +24,9 @@ const int main_pin = 10;
 
 void setup() {
     // configure pins
-    pinMode(jumper_reading_pin, INPUT_PULLUP);
-    pinMode(drogue_pin, OUTPUT);
-    pinMode(main_pin, OUTPUT);
-
-    // pinMode(drogue_read_pin, INPUT);
-    // pinMode(main_read_pin, INPUT);
+    pinMode(armed_pin, INPUT_PULLUP); // Arming input to ground via a static line: High = armed, Low = safed
+    pinMode(drogue_pin, INPUT);       // Yes, it's an output, but low = fire and we'll let it float when not firing
+    pinMode(main_pin, INPUT);         // Yes, it's an output, but low = fire and we'll let it float when not firing
 
     // Serial comms for debugging
     Serial.begin(9600);
@@ -42,12 +39,13 @@ void loop() {
 
     // Setup state variables
     static int GO_time = 0;
+    static int arm_debounce = 0;
     static bool armed = false;
     static bool drogue = false;
     static bool main = false;
 
     //---------------- Serial debugging ----------------
-    // Serial.println(digitalRead(jumper_reading_pin));
+    // Serial.println(digitalRead(armed_pin));
     // Serial.print("armed = ");
     // Serial.print(armed);
     // Serial.print("  |  drogue deployed = ");
@@ -59,23 +57,37 @@ void loop() {
     // Serial.print("  |  main reading = ");
     // Serial.println(digitalRead(main_read_pin));
 
-    // Check that jumper has shorted and system is not yet armed.
-    if (digitalRead(jumper_reading_pin) == 1 && armed == false) {
-        // Set GO_time and arm system
-        GO_time = millis();
-        armed = true;
+    // Debounce the arm_pin; it must be unshorted to ground for 100 ms
+    // else the count resets. Once we pass 100 ms, we fire the system.
+    if (armed == false) {
+          if (digitalRead(armed_pin) == 1) {
+            ++arm_debounce;
+            if (arm_debounce > 9) {
+                GO_time = millis();
+                armed = true;          
+            }
+            else {
+                arm_debounce = 0;
+            }
+        }
     }
-
-    if (armed == true){
+    else {
         if (millis()-GO_time > drogue_delay) {
             // Send signal to release drogue chute
-            digitalWrite(drogue_pin, 1);
+            pinMode(drogue_pin, OUTPUT);
+            digitalWrite(drogue_pin, 0);
             drogue = true;
         }
         if (millis()-GO_time > main_delay) {
             // Send signal to release main chute
-            digitalWrite(main_pin, 1);
+            pinMode(main_pin, OUTPUT);
+            digitalWrite(main_pin, 0);
             main = true;
         } 
     }
+
+    // Set the time to be >= 10 ms
+    delay (10);
 }
+id|moose>
+  
