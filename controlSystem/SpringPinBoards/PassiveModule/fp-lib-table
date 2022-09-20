@@ -1,0 +1,4 @@
+(fp_lib_table
+  (lib (name "Wire_Pads")(type "KiCad")(uri "${KIPRJMOD}/Wire_Pads.pretty")(options "")(descr ""))
+  (lib (name "Mill-Max-1578-3-00-15-00-00-03-0")(type "KiCad")(uri "${KIPRJMOD}/Mill-Max-1578-3-00-15-00-00-03-0.pretty")(options "")(descr ""))
+)

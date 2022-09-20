@@ -268,7 +268,7 @@
     (uuid f7160f4d-655b-4b76-9eaa-8217e0c121e6)
   )
 
-  (text "Note:\nBoard is designed to be compatible\nwith reverse pinout of the DRV5056.\nPlace bypass cap between VCC and GND pins\naccordingly."
+  (text "Note:\nBoard can be flipped 180 degrees around\nthe vertical axis with the\nDRV5056 pins reversed.\nPlace bypass cap between VCC and GND pins\naccordingly.\n"
     (at 124.46 102.87 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 4f73f224-2fd7-4cdd-a9c0-a0cf511b497c)

@@ -16,4 +16,9 @@
   )
   (fp_circle (center 0 0) (end 0 -1.27) (layer "F.SilkS") (width 0.12) (fill none) (tstamp a3e9106e-14b0-4679-a8a9-e7e905477b7c))
   (pad "1" smd circle (at 0 0) (size 2.254 2.254) (layers "F.Cu" "F.Paste" "F.Mask") (tstamp 086f90ad-4c89-4e66-afd9-af4acbafe03e))
+  (model "${KIPRJMOD}/mill-max-1578-3-00-15-00-00-03-0.step"
+    (offset (xyz 0 0 0))
+    (scale (xyz 1 1 1))
+    (rotate (xyz -90 0 0))
+  )
 )
