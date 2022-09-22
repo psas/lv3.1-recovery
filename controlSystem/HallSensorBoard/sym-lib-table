@@ -1,3 +1,3 @@
 (sym_lib_table
-  (lib (name "DRV5056-Q1")(type "KiCad")(uri "${KIPRJMOD}/DRV5056-Q1.kicad_sym")(options "")(descr ""))
+  (lib (name "U-TI-DRV5056-Q1-hall-effect-sensor")(type "KiCad")(uri "${PSAS_LIBRARIES}/psas-symbols/U-TI-DRV5056-Q1-hall-effect-sensor.kicad_sym")(options "")(descr ""))
 )
