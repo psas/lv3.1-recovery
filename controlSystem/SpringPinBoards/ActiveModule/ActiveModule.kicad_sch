@@ -181,7 +181,7 @@
     (property "Value" "Conn_01x01_Male" (id 1) (at 84.455 58.42 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (property "Footprint" "Mill-Max-0921-5-15-20-77-14-11-0:0921-5-15-20-77-14-11-0" (id 2) (at 83.82 60.96 0)
+    (property "Footprint" "psas-footprints:Mill-Max-0921-5-15-20-77-14-11-0" (id 2) (at 83.82 60.96 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 83.82 60.96 0)
@@ -197,7 +197,7 @@
     (property "Value" "Conn_01x01_Male" (id 1) (at 84.455 55.88 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (property "Footprint" "Mill-Max-0921-5-15-20-77-14-11-0:0921-5-15-20-77-14-11-0" (id 2) (at 83.82 58.42 0)
+    (property "Footprint" "psas-footprints:Mill-Max-0921-5-15-20-77-14-11-0" (id 2) (at 83.82 58.42 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 83.82 58.42 0)
@@ -213,7 +213,7 @@
     (property "Value" "Conn_01x01_Male" (id 1) (at 84.455 60.96 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (property "Footprint" "Mill-Max-0921-5-15-20-77-14-11-0:0921-5-15-20-77-14-11-0" (id 2) (at 83.82 63.5 0)
+    (property "Footprint" "psas-footprints:Mill-Max-0921-5-15-20-77-14-11-0" (id 2) (at 83.82 63.5 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 83.82 63.5 0)
@@ -229,7 +229,7 @@
     (property "Value" "Conn_01x01_Male" (id 1) (at 84.455 53.34 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (property "Footprint" "Mill-Max-0921-5-15-20-77-14-11-0:0921-5-15-20-77-14-11-0" (id 2) (at 83.82 55.88 0)
+    (property "Footprint" "psas-footprints:Mill-Max-0921-5-15-20-77-14-11-0" (id 2) (at 83.82 55.88 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 83.82 55.88 0)
@@ -245,7 +245,7 @@
     (property "Value" "Conn_01x01_Male" (id 1) (at 84.455 63.5 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (property "Footprint" "Mill-Max-0921-5-15-20-77-14-11-0:0921-5-15-20-77-14-11-0" (id 2) (at 83.82 66.04 0)
+    (property "Footprint" "psas-footprints:Mill-Max-0921-5-15-20-77-14-11-0" (id 2) (at 83.82 66.04 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 83.82 66.04 0)
@@ -261,7 +261,7 @@
     (property "Value" "Conn_01x01_Male" (id 1) (at 84.455 66.04 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (property "Footprint" "Mill-Max-0921-5-15-20-77-14-11-0:0921-5-15-20-77-14-11-0" (id 2) (at 83.82 68.58 0)
+    (property "Footprint" "psas-footprints:Mill-Max-0921-5-15-20-77-14-11-0" (id 2) (at 83.82 68.58 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 83.82 68.58 0)
@@ -276,22 +276,22 @@
 
   (symbol_instances
     (path "/c38baf86-59b9-4a0e-9197-aa4d1c923d6d"
-      (reference "J1") (unit 1) (value "Conn_01x01_Male") (footprint "Mill-Max-0921-5-15-20-77-14-11-0:0921-5-15-20-77-14-11-0")
+      (reference "J1") (unit 1) (value "Conn_01x01_Male") (footprint "psas-footprints:Mill-Max-0921-5-15-20-77-14-11-0")
     )
     (path "/3efc3ac9-1572-4e56-9d8c-77011f1c85d0"
-      (reference "J2") (unit 1) (value "Conn_01x01_Male") (footprint "Mill-Max-0921-5-15-20-77-14-11-0:0921-5-15-20-77-14-11-0")
+      (reference "J2") (unit 1) (value "Conn_01x01_Male") (footprint "psas-footprints:Mill-Max-0921-5-15-20-77-14-11-0")
     )
     (path "/2fb62400-7539-4f92-af35-b4fdccbcd1bd"
-      (reference "J3") (unit 1) (value "Conn_01x01_Male") (footprint "Mill-Max-0921-5-15-20-77-14-11-0:0921-5-15-20-77-14-11-0")
+      (reference "J3") (unit 1) (value "Conn_01x01_Male") (footprint "psas-footprints:Mill-Max-0921-5-15-20-77-14-11-0")
     )
     (path "/99681fee-26ef-482d-9671-f22d12b18513"
-      (reference "J4") (unit 1) (value "Conn_01x01_Male") (footprint "Mill-Max-0921-5-15-20-77-14-11-0:0921-5-15-20-77-14-11-0")
+      (reference "J4") (unit 1) (value "Conn_01x01_Male") (footprint "psas-footprints:Mill-Max-0921-5-15-20-77-14-11-0")
     )
     (path "/c9c1f0f7-9f7f-4430-81a2-cabe8adef765"
-      (reference "J5") (unit 1) (value "Conn_01x01_Male") (footprint "Mill-Max-0921-5-15-20-77-14-11-0:0921-5-15-20-77-14-11-0")
+      (reference "J5") (unit 1) (value "Conn_01x01_Male") (footprint "psas-footprints:Mill-Max-0921-5-15-20-77-14-11-0")
     )
     (path "/d4b3e7c6-cf56-49ee-9ccb-2d482c23fd0c"
-      (reference "J6") (unit 1) (value "Conn_01x01_Male") (footprint "Mill-Max-0921-5-15-20-77-14-11-0:0921-5-15-20-77-14-11-0")
+      (reference "J6") (unit 1) (value "Conn_01x01_Male") (footprint "psas-footprints:Mill-Max-0921-5-15-20-77-14-11-0")
     )
     (path "/139b8e95-4001-4472-9402-e9a4321149ad"
       (reference "J7") (unit 1) (value "Conn_01x06") (footprint "Connector_PinHeader_2.00mm:PinHeader_1x06_P2.00mm_Vertical")
