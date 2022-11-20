@@ -223,9 +223,13 @@ int main(void) {
     chprintf(DEBUG_SD, "\r\nPSAS ERS control board starting up\r\n");
     chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
     
+    palSetLine(LINE_DCM_DIR);
     // START THEM THREADS
-    
+
     chThdCreateStatic(waBlinkyThread, sizeof(waBlinkyThread), NORMALPRIO, BlinkyThread, NULL);
+    while (true) {
+          chThdSleepMilliseconds(500);
+      }
     chThdCreateStatic(waTelemetrumThread, sizeof(waTelemetrumThread), NORMALPRIO, TelemetrumThread, NULL);
     chThdCreateStatic(waDrogueThread, sizeof(waDrogueThread), NORMALPRIO, DrogueThread, NULL);
     chThdCreateStatic(waMainchuteThread, sizeof(waMainchuteThread), NORMALPRIO, MainchuteThread, NULL);    

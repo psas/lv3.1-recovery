@@ -217,13 +217,13 @@
 
 
 
+#define LINE_DCM_DIR                PAL_LINE(GPIOA, 7U)
+#define LINE_DCM_PWM                PAL_LINE(GPIOA, 8U)
 #define LINE_ISO_DROGUE             PAL_LINE(GPIOA, 9U)
 #define LINE_ISO_MAIN               PAL_LINE(GPIOA, 10U)
 #define LINE_SHORE_PWR              PAL_LINE(GPIOA, 11U)
 
 #define LINE_ROTSENSE_PWR           PAL_LINE(GPIOA, 12U)
-#define LINE_DCM_PWM                PAL_LINE(GPIOA, 13U)
-#define LINE_DCM_DIR                PAL_LINE(GPIOA, 14U)
 #define LINE_DCM_PWR                PAL_LINE(GPIOA, 15U)
 #define LINE_ROTSENSE1              PAL_LINE(GPIOB, 0U)
 #define LINE_ROTSENSE2              PAL_LINE(GPIOB, 1U)
@@ -296,7 +296,7 @@
                                      PIN_MODE_INPUT(GPIOA_ARD_A2) |         \
                                      PIN_MODE_OUTPUT(GPIOA_LED_GREEN) |     \
                                      PIN_MODE_INPUT(GPIOA_ARD_D12) |        \
-                                     PIN_MODE_INPUT(GPIOA_ARD_D11) |        \
+                                     PIN_MODE_OUTPUT(GPIOA_ARD_D11) |        \
                                      PIN_MODE_INPUT(GPIOA_ARD_D7) |         \
                                      PIN_MODE_INPUT(GPIOA_ARD_D8) |         \
                                      PIN_MODE_INPUT(GPIOA_ARD_D2) |         \

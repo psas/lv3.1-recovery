@@ -22,6 +22,9 @@ THD_FUNCTION(BlinkyThread, arg) {
   
     while (true) {
         
+//        palToggleLine(LINE_DCM_DIR);
+
+
 		palSetLine(LINE_LED_GREEN);
 //		palSetLine(LINE_LED);
 //      palSetLine(LINE_SPKR);
