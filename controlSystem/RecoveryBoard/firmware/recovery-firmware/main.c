@@ -227,9 +227,9 @@ int main(void) {
     // START THEM THREADS
 
     chThdCreateStatic(waBlinkyThread, sizeof(waBlinkyThread), NORMALPRIO, BlinkyThread, NULL);
-    while (true) {
-          chThdSleepMilliseconds(500);
-      }
+//    while (true) {
+//          chThdSleepMilliseconds(500);
+//      }
     chThdCreateStatic(waTelemetrumThread, sizeof(waTelemetrumThread), NORMALPRIO, TelemetrumThread, NULL);
     chThdCreateStatic(waDrogueThread, sizeof(waDrogueThread), NORMALPRIO, DrogueThread, NULL);
     chThdCreateStatic(waMainchuteThread, sizeof(waMainchuteThread), NORMALPRIO, MainchuteThread, NULL);    
