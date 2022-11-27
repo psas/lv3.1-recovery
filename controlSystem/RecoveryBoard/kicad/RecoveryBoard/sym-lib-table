@@ -7,4 +7,5 @@
   (lib (name "psas-testpoint")(type "KiCad")(uri "${PSAS_LIBRARIES}/psas-symbols/psas-testpoint.kicad_sym")(options "")(descr ""))
   (lib (name "U-TI-TPS63070x-buck-boost-regulator")(type "KiCad")(uri "${PSAS_LIBRARIES}/psas-symbols/U-TI-TPS63070x-buck-boost-regulator.kicad_sym")(options "")(descr ""))
   (lib (name "U-Rohm-BD62120AEFJ-E2-h-bridge-motor-driver")(type "KiCad")(uri "${PSAS_LIBRARIES}/psas-symbols/U-Rohm-BD62120AEFJ-E2-h-bridge-motor-driver.kicad_sym")(options "")(descr ""))
+  (lib (name "U-Rohm-BD63150AFM-E2-h-bridge-motor-driver")(type "KiCad")(uri "${PSAS_LIBRARIES}/psas-symbols/U-Rohm-BD63150AFM-E2-h-bridge-motor-driver.kicad_sym")(options "")(descr ""))
 )

@@ -39,9 +39,6 @@
   )
 
   (symbol_instances
-    (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/313d7452-8443-4558-9049-897c23bf46f6"
-      (reference "#PWR01") (unit 1) (value "GND") (footprint "")
-    )
     (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/bad0058d-4dc7-43d7-b9a5-f71d38d89cc5"
       (reference "#PWR02") (unit 1) (value "GND") (footprint "")
     )
@@ -252,6 +249,9 @@
     (path "/a2be619b-613b-4397-a3ca-45ce4e9dd56c/5e5240ac-31c5-4e01-bd5d-fe421388e318"
       (reference "#PWR071") (unit 1) (value "GND") (footprint "")
     )
+    (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/f8860576-635b-4fd1-9041-4e81efc2287b"
+      (reference "#PWR0101") (unit 1) (value "GND") (footprint "")
+    )
     (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/4c835d97-8f01-4285-a7fe-bc70fefd474d"
       (reference "C1") (unit 1) (value "10u") (footprint "Capacitor_SMD:C_0805_2012Metric")
     )
@@ -348,8 +348,8 @@
     (path "/a2be619b-613b-4397-a3ca-45ce4e9dd56c/b6c44af7-d3ad-437b-92d2-bd60696bc277"
       (reference "D7") (unit 1) (value "Green") (footprint "LED_SMD:LED_0603_1608Metric")
     )
-    (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/fd676120-a472-4371-8f1b-f690f7d53d6d"
-      (reference "J1") (unit 1) (value "From Outside World") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x06_P2.54mm_Vertical")
+    (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/dc3141b3-c487-4b02-a663-a1f578c212c0"
+      (reference "J1") (unit 1) (value "Conn_01x04") (footprint "")
     )
     (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/691ee90d-caeb-42ea-a658-09277e0c0b3b"
       (reference "J2") (unit 1) (value "Thermistor") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical")
@@ -374,6 +374,9 @@
     )
     (path "/a2be619b-613b-4397-a3ca-45ce4e9dd56c/2cadbae9-ea1c-4cd6-8df9-59d9d3d5d0eb"
       (reference "J9") (unit 1) (value "Motor") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical")
+    )
+    (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/b1fdefe9-f9d0-4fbe-b820-62c6672cfd0e"
+      (reference "J10") (unit 1) (value "3.5mm Jack") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical")
     )
     (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/7c7a7d7d-2931-4f70-8e2f-4e970eaa7dbe"
       (reference "L1") (unit 1) (value "1.5uH") (footprint "")
@@ -471,18 +474,6 @@
     (path "/a2be619b-613b-4397-a3ca-45ce4e9dd56c/713de75b-98af-435b-bdd2-08f81bc6af77"
       (reference "R27") (unit 1) (value "10k") (footprint "Resistor_SMD:R_0603_1608Metric")
     )
-    (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/50d900ed-4e98-4610-94a3-09fdcb8ee2e7"
-      (reference "TP1") (unit 1) (value "Test-Point") (footprint "psas-footprints:TP-through-hole-1X01")
-    )
-    (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/9ef96a73-64aa-43d1-a032-37b51787ef42"
-      (reference "TP2") (unit 1) (value "Test-Point") (footprint "psas-footprints:TP-through-hole-1X01")
-    )
-    (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/1d7e4144-fb35-4a3e-be13-9e1bb9c472fa"
-      (reference "TP3") (unit 1) (value "Test-Point") (footprint "psas-footprints:TP-through-hole-1X01")
-    )
-    (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/1523ab89-a61b-4231-a734-2357963b9c4f"
-      (reference "TP4") (unit 1) (value "Test-Point") (footprint "psas-footprints:TP-through-hole-1X01")
-    )
     (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/a88c8151-a93f-4d2f-9535-4a9d680fda1b"
       (reference "TP5") (unit 1) (value "Test-Point") (footprint "psas-footprints:TP-through-hole-1X01")
     )
@@ -571,7 +562,7 @@
       (reference "U2") (unit 1) (value "MP26123DR-LF-Z") (footprint "Package_DFN_QFN:QFN-16-1EP_4x4mm_P0.65mm_EP2.5x2.5mm")
     )
     (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/97b0aa31-73da-48ed-8ea5-800942f3f9e4"
-      (reference "U3") (unit 1) (value "TPS63070") (footprint "")
+      (reference "U3") (unit 1) (value "TPS63070") (footprint "psas-footprints:U-TI-TPS63070")
     )
     (path "/a2be619b-613b-4397-a3ca-45ce4e9dd56c/d7908152-1ccb-463c-862f-9f1216375686"
       (reference "U4") (unit 1) (value "H11F1SR2M") (footprint "Package_DIP:SMDIP-6_W9.53mm_Clearance8mm")
