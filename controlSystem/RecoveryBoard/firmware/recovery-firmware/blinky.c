@@ -22,15 +22,19 @@ THD_FUNCTION(BlinkyThread, arg) {
   
     while (true) {
         
-//        palToggleLine(LINE_LA_DRV1);
+        palToggleLine(LINE_LA_DRV1);
 
-//        palToggleLine(LINE_LA_DRV2);
+        palToggleLine(LINE_LA_DRV2);
+
+        palToggleLine(LINE_LA_DRV12);
 
 
 		palSetLine(LINE_LED_GREEN);
+		palSetLine(LINE_LA_DRV12);
+		palSetLine(LINE_LA_C8);
 //		palSetLine(LINE_LED);
 //      palSetLine(LINE_SPKR);
-//      chThdSleepMilliseconds(1);
+		chThdSleepMilliseconds(1);
 //      palClearLine(LINE_SPKR);
 
         if (recoveryState == armed) {
@@ -41,6 +45,8 @@ THD_FUNCTION(BlinkyThread, arg) {
 
 //        palClearLine(LINE_LED);
         palClearLine(LINE_LED_GREEN);
+        palClearLine(LINE_LA_DRV12);
+        palClearLine(LINE_LA_C8);
 //      palSetLine(LINE_SPKR);
 //      chThdSleepMilliseconds(1);
 //      palClearLine(LINE_SPKR);

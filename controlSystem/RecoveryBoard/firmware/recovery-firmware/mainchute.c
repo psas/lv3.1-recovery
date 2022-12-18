@@ -124,6 +124,6 @@ THD_FUNCTION(MainchuteThread, arg) {
         }
         
         // Check every 100 ms
-        chThdSleepMilliseconds(100);        
+        chThdSleepMilliseconds(1000);
     }
 }

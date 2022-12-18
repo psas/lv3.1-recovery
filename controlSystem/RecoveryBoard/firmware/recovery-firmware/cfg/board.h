@@ -227,8 +227,13 @@
 #define LINE_DCM_PWR                PAL_LINE(GPIOA, 15U)
 #define LINE_ROTSENSE1              PAL_LINE(GPIOB, 0U)
 #define LINE_ROTSENSE2              PAL_LINE(GPIOB, 1U)
+
+/*this has been added as practice*/
 #define LINE_LA_DRV1                PAL_LINE(GPIOB, 2U)
 #define LINE_LA_DRV2                PAL_LINE(GPIOB, 3U)
+#define LINE_LA_DRV12               PAL_LINE(GPIOB, 12U)
+#define LINE_LA_C8 					PAL_LINE(GPIOC, 8U)
+/*Line for B1 has already been defined in line 232 as LINE_LA_DRV1*/
 
 
 /*===========================================================================*/
@@ -407,7 +412,7 @@
  * PB15 - PIN15                     (input pullup).
  */
 #define VAL_GPIOB_MODER             (PIN_MODE_INPUT(GPIOB_ARD_A3) |         \
-                                     PIN_MODE_INPUT(GPIOB_PIN1) |           \
+                                     PIN_MODE_OUTPUT(GPIOB_PIN1) |           \
                                      PIN_MODE_OUTPUT(GPIOB_PIN2) |           \
                                      PIN_MODE_OUTPUT(GPIOB_SWO) |        \
                                      PIN_MODE_INPUT(GPIOB_ARD_D5) |         \
@@ -418,7 +423,7 @@
                                      PIN_MODE_INPUT(GPIOB_ARD_D14) |        \
                                      PIN_MODE_INPUT(GPIOB_ARD_D6) |         \
                                      PIN_MODE_INPUT(GPIOB_PIN11) |          \
-                                     PIN_MODE_INPUT(GPIOB_PIN12) |          \
+                                     PIN_MODE_OUTPUT(GPIOB_PIN12) |          \
                                      PIN_MODE_INPUT(GPIOB_PIN13) |          \
                                      PIN_MODE_INPUT(GPIOB_PIN14) |          \
                                      PIN_MODE_INPUT(GPIOB_PIN15))
@@ -455,7 +460,7 @@
                                      PIN_OSPEED_HIGH(GPIOB_PIN14) |         \
                                      PIN_OSPEED_HIGH(GPIOB_PIN15))
 #define VAL_GPIOB_PUPDR             (PIN_PUPDR_PULLUP(GPIOB_ARD_A3) |       \
-                                     PIN_PUPDR_PULLUP(GPIOB_PIN1) |         \
+                                     PIN_PUPDR_FLOATING(GPIOB_PIN1) |         \
                                      PIN_PUPDR_FLOATING(GPIOB_PIN2) |         \
                                      PIN_PUPDR_FLOATING(GPIOB_SWO) |          \
                                      PIN_PUPDR_PULLUP(GPIOB_ARD_D5) |       \
@@ -466,12 +471,12 @@
                                      PIN_PUPDR_PULLUP(GPIOB_ARD_D14) |      \
                                      PIN_PUPDR_PULLUP(GPIOB_ARD_D6) |       \
                                      PIN_PUPDR_PULLUP(GPIOB_PIN11) |        \
-                                     PIN_PUPDR_PULLUP(GPIOB_PIN12) |        \
+                                     PIN_PUPDR_FLOATING(GPIOB_PIN12) |        \
                                      PIN_PUPDR_PULLUP(GPIOB_PIN13) |        \
                                      PIN_PUPDR_PULLUP(GPIOB_PIN14) |        \
                                      PIN_PUPDR_PULLUP(GPIOB_PIN15))
 #define VAL_GPIOB_ODR               (PIN_ODR_HIGH(GPIOB_ARD_A3) |           \
-                                     PIN_ODR_HIGH(GPIOB_PIN1) |             \
+                                     PIN_ODR_LOW(GPIOB_PIN1) |             \
                                      PIN_ODR_LOW(GPIOB_PIN2) |             \
                                      PIN_ODR_LOW(GPIOB_SWO) |              \
                                      PIN_ODR_HIGH(GPIOB_ARD_D5) |           \
@@ -482,7 +487,7 @@
                                      PIN_ODR_HIGH(GPIOB_ARD_D14) |          \
                                      PIN_ODR_HIGH(GPIOB_ARD_D6) |           \
                                      PIN_ODR_HIGH(GPIOB_PIN11) |            \
-                                     PIN_ODR_HIGH(GPIOB_PIN12) |            \
+                                     PIN_ODR_LOW(GPIOB_PIN12) |            \
                                      PIN_ODR_HIGH(GPIOB_PIN13) |            \
                                      PIN_ODR_HIGH(GPIOB_PIN14) |            \
                                      PIN_ODR_HIGH(GPIOB_PIN15))
@@ -531,7 +536,7 @@
                                      PIN_MODE_INPUT(GPIOC_PIN5) |           \
                                      PIN_MODE_INPUT(GPIOC_PIN6) |           \
                                      PIN_MODE_INPUT(GPIOC_ARD_D9) |         \
-                                     PIN_MODE_INPUT(GPIOC_PIN8) |           \
+                                     PIN_MODE_OUTPUT(GPIOC_PIN8) |           \
                                      PIN_MODE_INPUT(GPIOC_PIN9) |           \
                                      PIN_MODE_INPUT(GPIOC_PIN10) |          \
                                      PIN_MODE_INPUT(GPIOC_PIN11) |          \
@@ -579,7 +584,7 @@
                                      PIN_PUPDR_PULLUP(GPIOC_PIN5) |         \
                                      PIN_PUPDR_PULLUP(GPIOC_PIN6) |         \
                                      PIN_PUPDR_PULLUP(GPIOC_ARD_D9) |       \
-                                     PIN_PUPDR_PULLUP(GPIOC_PIN8) |         \
+                                     PIN_PUPDR_FLOATING(GPIOC_PIN8) |         \
                                      PIN_PUPDR_PULLUP(GPIOC_PIN9) |         \
                                      PIN_PUPDR_PULLUP(GPIOC_PIN10) |        \
                                      PIN_PUPDR_PULLUP(GPIOC_PIN11) |        \
@@ -595,7 +600,7 @@
                                      PIN_ODR_HIGH(GPIOC_PIN5) |             \
                                      PIN_ODR_HIGH(GPIOC_PIN6) |             \
                                      PIN_ODR_HIGH(GPIOC_ARD_D9) |           \
-                                     PIN_ODR_HIGH(GPIOC_PIN8) |             \
+                                     PIN_ODR_LOW(GPIOC_PIN8) |             \
                                      PIN_ODR_HIGH(GPIOC_PIN9) |             \
                                      PIN_ODR_HIGH(GPIOC_PIN10) |            \
                                      PIN_ODR_HIGH(GPIOC_PIN11) |            \

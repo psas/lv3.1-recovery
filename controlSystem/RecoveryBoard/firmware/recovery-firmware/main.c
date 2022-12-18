@@ -226,10 +226,16 @@ int main(void) {
     palSetLine(LINE_DCM_DIR);
     // START THEM THREADS
 
+    //I believe Dave made this thread as a method of teaching me wtf is going on  -Louis
+    //I now know that the above statement is false
     chThdCreateStatic(waBlinkyThread, sizeof(waBlinkyThread), NORMALPRIO, BlinkyThread, NULL);
-//    while (true) {
-//          chThdSleepMilliseconds(500);
-//      }
+    // put a while true loop here to test leds and pause the whole damn thing
+/*
+    while (true) {
+        chThdSleepMilliseconds(500);
+    }
+*/
+
     chThdCreateStatic(waTelemetrumThread, sizeof(waTelemetrumThread), NORMALPRIO, TelemetrumThread, NULL);
     chThdCreateStatic(waDrogueThread, sizeof(waDrogueThread), NORMALPRIO, DrogueThread, NULL);
     chThdCreateStatic(waMainchuteThread, sizeof(waMainchuteThread), NORMALPRIO, MainchuteThread, NULL);    
