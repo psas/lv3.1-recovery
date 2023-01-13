@@ -8,4 +8,7 @@
   (lib (name "U-Rohm-BD62120AEFJ-E2-h-bridge-motor-driver")(type "KiCad")(uri "${PSAS_LIBRARIES}/psas-symbols/U-Rohm-BD62120AEFJ-E2-h-bridge-motor-driver.kicad_sym")(options "")(descr ""))
   (lib (name "U-Rohm-BD63150AFM-E2-h-bridge-motor-driver")(type "KiCad")(uri "${PSAS_LIBRARIES}/psas-symbols/U-Rohm-BD63150AFM-E2-h-bridge-motor-driver.kicad_sym")(options "")(descr ""))
   (lib (name "U-Vishay-TCMT1107-optocoupler")(type "KiCad")(uri "${PSAS_LIBRARIES}/psas-symbols/U-Vishay-TCMT1107-optocoupler.kicad_sym")(options "")(descr ""))
+  (lib (name "psas-power")(type "KiCad")(uri "${PSAS_LIBRARIES}/psas-symbols/psas-power.kicad_sym")(options "")(descr ""))
+  (lib (name "psas-ics")(type "KiCad")(uri "${PSAS_LIBRARIES}/psas-symbols/psas-ics.kicad_sym")(options "")(descr ""))
+  (lib (name "psas-graphics")(type "KiCad")(uri "${PSAS_LIBRARIES}/psas-symbols/psas-graphics.kicad_sym")(options "")(descr ""))
 )
