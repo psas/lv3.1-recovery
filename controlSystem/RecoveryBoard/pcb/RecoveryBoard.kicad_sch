@@ -313,6 +313,9 @@
     (path "/a2be619b-613b-4397-a3ca-45ce4e9dd56c/8a6514ca-9b4e-4393-a5c1-4bfdb8fe45a5"
       (reference "#PWR0112") (unit 1) (value "GND") (footprint "")
     )
+    (path "/a2be619b-613b-4397-a3ca-45ce4e9dd56c/eda2a892-7fca-43d7-8343-d60efaa2eb3d"
+      (reference "#PWR0113") (unit 1) (value "GND") (footprint "")
+    )
     (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/6fd89f92-cbed-4c67-8170-1dbbe147a984"
       (reference "#VBUS0101") (unit 1) (value "VBUS") (footprint "")
     )
@@ -350,7 +353,7 @@
       (reference "C9") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/cc61a239-d343-4188-ab25-916c46c84277"
-      (reference "C10") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_0603_1608Metric")
+      (reference "C10") (unit 1) (value "2.2n") (footprint "Capacitor_SMD:C_0603_1608Metric")
     )
     (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/03ca289c-087e-4685-8d98-83d2bffaf05b"
       (reference "C11") (unit 1) (value "10u") (footprint "Capacitor_SMD:C_0603_1608Metric")
@@ -413,7 +416,7 @@
       (reference "D3") (unit 1) (value "SS210A") (footprint "Diode_SMD:D_SMA")
     )
     (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/d3397450-aec4-43ce-a4c7-664284c85cf5"
-      (reference "D4") (unit 1) (value "1N4007") (footprint "Diode_SMD:D_SMA")
+      (reference "D4") (unit 1) (value "SS210A") (footprint "Diode_SMD:D_SMA")
     )
     (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/59b0e73f-0dc2-443b-853a-fa2ac4795806"
       (reference "D5") (unit 1) (value "Green") (footprint "LED_SMD:LED_0603_1608Metric")
@@ -462,6 +465,9 @@
     )
     (path "/a2be619b-613b-4397-a3ca-45ce4e9dd56c/c9f3eaca-8b9b-48ab-9f9b-baadcd141293"
       (reference "J11") (unit 1) (value "Conn_01x03") (footprint "Connector_Molex:Molex_KK-254_AE-6410-03A_1x03_P2.54mm_Vertical")
+    )
+    (path "/a2be619b-613b-4397-a3ca-45ce4e9dd56c/2f0ace89-2de9-4b2b-ac49-b50c744fce48"
+      (reference "J12") (unit 1) (value "Conn_01x02") (footprint "Connector_Molex:Molex_KK-254_AE-6410-02A_1x02_P2.54mm_Vertical")
     )
     (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/7c7a7d7d-2931-4f70-8e2f-4e970eaa7dbe"
       (reference "L1") (unit 1) (value "1.5uH") (footprint "Inductor_SMD:L_Vishay_IHLP-2020")
@@ -563,7 +569,7 @@
       (reference "R27") (unit 1) (value "10k") (footprint "Resistor_SMD:R_0603_1608Metric")
     )
     (path "/a2be619b-613b-4397-a3ca-45ce4e9dd56c/c1232922-04bf-4053-ac25-1e6ac67e5ce9"
-      (reference "R28") (unit 1) (value "Rsns") (footprint "Resistor_SMD:R_1206_3216Metric")
+      (reference "R28") (unit 1) (value "0.1") (footprint "Resistor_SMD:R_1206_3216Metric")
     )
     (path "/a2be619b-613b-4397-a3ca-45ce4e9dd56c/4495e155-7b64-4486-a5a6-d73c1e889baa"
       (reference "R29") (unit 1) (value "NP") (footprint "Resistor_SMD:R_0603_1608Metric")
