@@ -6056,8 +6056,8 @@
     (pin "6" (uuid 4aafd887-0b4e-47e2-894a-1b0fe542f599))
     (pin "7" (uuid dc95a1fe-4fd5-4abc-8b95-ca6d225b3102))
     (pin "8" (uuid 3f3414ab-c77b-412d-8e89-bd4f2d58ef20))
-    (pin "FIN" (uuid d11822a7-f65d-4cf7-95dc-62b2c701ca47))
-    (pin "FIN" (uuid d11822a7-f65d-4cf7-95dc-62b2c701ca47))
+    (pin "FIN" (uuid d11822a7-f65d-4cf7-95dc-62b2c701ca49))
+    (pin "FIN" (uuid d11822a7-f65d-4cf7-95dc-62b2c701ca49))
   )
 
   (symbol (lib_id "power:+3.3V") (at 45.72 81.28 0) (unit 1)

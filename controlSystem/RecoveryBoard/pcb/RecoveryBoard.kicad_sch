@@ -437,10 +437,10 @@
       (reference "D2") (unit 1) (value "Green") (footprint "LED_SMD:LED_0603_1608Metric")
     )
     (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/8c8626e4-4eb8-408c-9fa8-ad47bd60d88e"
-      (reference "D3") (unit 1) (value "SS210A") (footprint "Diode_SMD:D_SMA")
+      (reference "D3") (unit 1) (value "RBR5L30BDDTE25") (footprint "Diode_SMD:D_SMA")
     )
     (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/d3397450-aec4-43ce-a4c7-664284c85cf5"
-      (reference "D4") (unit 1) (value "SS210A") (footprint "Diode_SMD:D_SMA")
+      (reference "D4") (unit 1) (value "RBR5L30BDDTE25") (footprint "Diode_SMD:D_SMA")
     )
     (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/59b0e73f-0dc2-443b-853a-fa2ac4795806"
       (reference "D5") (unit 1) (value "Green") (footprint "LED_SMD:LED_0603_1608Metric")
@@ -452,10 +452,10 @@
       (reference "D7") (unit 1) (value "Green") (footprint "LED_SMD:LED_0603_1608Metric")
     )
     (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/35583f76-3b34-4922-82e4-2f43e569ecd7"
-      (reference "D8") (unit 1) (value "SS210A") (footprint "Diode_SMD:D_SMA")
+      (reference "D8") (unit 1) (value "RBR5L30BDDTE25") (footprint "Diode_SMD:D_SMA")
     )
     (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/a318e07e-4d1a-43cd-bf82-bac463f43526"
-      (reference "D9") (unit 1) (value "SS210A") (footprint "Diode_SMD:D_SMA")
+      (reference "D9") (unit 1) (value "RBR5L30BDDTE25") (footprint "Diode_SMD:D_SMA")
     )
     (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/dc3141b3-c487-4b02-a663-a1f578c212c0"
       (reference "J1") (unit 1) (value "Conn_01x06") (footprint "Connector_Molex:Molex_KK-254_AE-6410-06A_1x06_P2.54mm_Vertical")
@@ -506,7 +506,7 @@
       (reference "LS1") (unit 1) (value "SMT-0440-S-R") (footprint "psas-footprints:SMT-0440-S-R")
     )
     (path "/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1/547d939a-691a-460d-869b-8f733400aca4"
-      (reference "Q1") (unit 1) (value "SI7465DP-T1-E3") (footprint "Package_SO:PowerPAK_SO-8_Single")
+      (reference "Q1") (unit 1) (value "SI7465DP-T1-E3") (footprint "psas-footprints:PowerPAK_SO-8_Single")
     )
     (path "/a2be619b-613b-4397-a3ca-45ce4e9dd56c/8a30d94a-5e3f-4cd1-805d-9e8653911c70"
       (reference "Q2") (unit 1) (value "BSS123") (footprint "Package_TO_SOT_SMD:SOT-23")
