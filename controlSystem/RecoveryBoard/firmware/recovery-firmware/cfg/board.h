@@ -350,7 +350,7 @@ Line for B1 has already been defined in line 232 as LINE_LA_DRV1*/
                                      PIN_MODE_OUTPUT(GPIOA_LED_GREEN) |     \
                                      PIN_MODE_INPUT(GPIOA_ARD_D12) |        \
                                      PIN_MODE_OUTPUT(GPIOA_ARD_D11) |        \
-                                     PIN_MODE_INPUT(GPIOA_ARD_D7) |         \
+                                     PIN_MODE_INPUT(GPIOA_UMB_ON) |         \
                                      PIN_MODE_INPUT(GPIOA_ARD_D8) |         \
                                      PIN_MODE_INPUT(GPIOA_ARD_D2) |         \
                                      PIN_MODE_INPUT(GPIOA_PIN11) |          \
@@ -366,7 +366,7 @@ Line for B1 has already been defined in line 232 as LINE_LA_DRV1*/
                                      PIN_OTYPE_PUSHPULL(GPIOA_LED_GREEN) |  \
                                      PIN_OTYPE_PUSHPULL(GPIOA_ARD_D12) |    \
                                      PIN_OTYPE_PUSHPULL(GPIOA_ARD_D11) |    \
-                                     PIN_OTYPE_PUSHPULL(GPIOA_ARD_D7) |     \
+                                     PIN_OTYPE_PUSHPULL(GPIOA_UMB_ON) |     \
                                      PIN_OTYPE_PUSHPULL(GPIOA_ARD_D8) |     \
                                      PIN_OTYPE_PUSHPULL(GPIOA_ARD_D2) |     \
                                      PIN_OTYPE_PUSHPULL(GPIOA_PIN11) |      \
@@ -382,7 +382,7 @@ Line for B1 has already been defined in line 232 as LINE_LA_DRV1*/
                                      PIN_OSPEED_LOW(GPIOA_LED_GREEN) |      \
                                      PIN_OSPEED_HIGH(GPIOA_ARD_D12) |       \
                                      PIN_OSPEED_HIGH(GPIOA_ARD_D11) |       \
-                                     PIN_OSPEED_HIGH(GPIOA_ARD_D7) |        \
+                                     PIN_OSPEED_HIGH(GPIOA_UMB_ON) |        \
                                      PIN_OSPEED_HIGH(GPIOA_ARD_D8) |        \
                                      PIN_OSPEED_HIGH(GPIOA_ARD_D2) |        \
                                      PIN_OSPEED_HIGH(GPIOA_PIN11) |         \
@@ -398,7 +398,7 @@ Line for B1 has already been defined in line 232 as LINE_LA_DRV1*/
                                      PIN_PUPDR_FLOATING(GPIOA_LED_GREEN) |  \
                                      PIN_PUPDR_PULLUP(GPIOA_ARD_D12) |      \
                                      PIN_PUPDR_PULLUP(GPIOA_ARD_D11) |      \
-                                     PIN_PUPDR_PULLUP(GPIOA_ARD_D7) |       \
+                                     PIN_PUPDR_FLOATING(GPIOA_UMB_ON) |       \
                                      PIN_PUPDR_PULLUP(GPIOA_ARD_D8) |       \
                                      PIN_PUPDR_PULLUP(GPIOA_ARD_D2) |       \
                                      PIN_PUPDR_PULLUP(GPIOA_PIN11) |        \
@@ -414,7 +414,7 @@ Line for B1 has already been defined in line 232 as LINE_LA_DRV1*/
                                      PIN_ODR_LOW(GPIOA_LED_GREEN) |         \
                                      PIN_ODR_HIGH(GPIOA_ARD_D12) |          \
                                      PIN_ODR_HIGH(GPIOA_ARD_D11) |          \
-                                     PIN_ODR_HIGH(GPIOA_ARD_D7) |           \
+                                     PIN_ODR_HIGH(GPIOA_UMB_ON) |           \
                                      PIN_ODR_HIGH(GPIOA_ARD_D8) |           \
                                      PIN_ODR_HIGH(GPIOA_ARD_D2) |           \
                                      PIN_ODR_HIGH(GPIOA_PIN11) |            \
@@ -430,7 +430,7 @@ Line for B1 has already been defined in line 232 as LINE_LA_DRV1*/
                                      PIN_AFIO_AF(GPIOA_LED_GREEN, 0U) |     \
                                      PIN_AFIO_AF(GPIOA_ARD_D12, 0U) |       \
                                      PIN_AFIO_AF(GPIOA_ARD_D11, 0U))
-#define VAL_GPIOA_AFRH              (PIN_AFIO_AF(GPIOA_ARD_D7, 0U) |        \
+#define VAL_GPIOA_AFRH              (PIN_AFIO_AF(GPIOA_UMB_ON, 0U) |        \
                                      PIN_AFIO_AF(GPIOA_ARD_D8, 0U) |        \
                                      PIN_AFIO_AF(GPIOA_ARD_D2, 0U) |        \
                                      PIN_AFIO_AF(GPIOA_PIN11, 0U) |         \
@@ -459,7 +459,7 @@ Line for B1 has already been defined in line 232 as LINE_LA_DRV1*/
  * PB14 - Indicator LED             (Output, Digital, PWM?).
  * PB15 - Indicator Buzzer          (Output, Digital, PWM).
  */
-#define VAL_GPIOB_MODER             (PIN_MODE_INPUT(GPIOB_ARD_A3) |         \
+#define VAL_GPIOB_MODER             (PIN_MODE_INPUT(GPIOB_BATT_READ) |         \
                                      PIN_MODE_OUTPUT(GPIOB_PIN1) |           \
                                      PIN_MODE_OUTPUT(GPIOB_PIN2) |           \
                                      PIN_MODE_OUTPUT(GPIOB_SWO) |        \
@@ -469,13 +469,13 @@ Line for B1 has already been defined in line 232 as LINE_LA_DRV1*/
                                      PIN_MODE_INPUT(GPIOB_PIN7) |           \
                                      PIN_MODE_INPUT(GPIOB_ARD_D15) |        \
                                      PIN_MODE_INPUT(GPIOB_ARD_D14) |        \
-                                     PIN_MODE_INPUT(GPIOB_ARD_D6) |         \
-                                     PIN_MODE_INPUT(GPIOB_PIN11) |          \
+                                     PIN_MODE_INPUT(GPIOB_ADDRESS_LSB) |         \
+                                     PIN_MODE_INPUT(GPIOB_ADDRESS_MSB) |          \
                                      PIN_MODE_OUTPUT(GPIOB_PIN12) |          \
                                      PIN_MODE_INPUT(GPIOB_PIN13) |          \
                                      PIN_MODE_INPUT(GPIOB_PIN14) |          \
                                      PIN_MODE_INPUT(GPIOB_PIN15))
-#define VAL_GPIOB_OTYPER            (PIN_OTYPE_PUSHPULL(GPIOB_ARD_A3) |     \
+#define VAL_GPIOB_OTYPER            (PIN_OTYPE_PUSHPULL(GPIOB_UMB_ON) |     \
                                      PIN_OTYPE_PUSHPULL(GPIOB_PIN1) |       \
                                      PIN_OTYPE_PUSHPULL(GPIOB_PIN2) |       \
                                      PIN_OTYPE_PUSHPULL(GPIOB_SWO) |        \
@@ -485,13 +485,13 @@ Line for B1 has already been defined in line 232 as LINE_LA_DRV1*/
                                      PIN_OTYPE_PUSHPULL(GPIOB_PIN7) |       \
                                      PIN_OTYPE_PUSHPULL(GPIOB_ARD_D15) |    \
                                      PIN_OTYPE_PUSHPULL(GPIOB_ARD_D14) |    \
-                                     PIN_OTYPE_PUSHPULL(GPIOB_ARD_D6) |     \
-                                     PIN_OTYPE_PUSHPULL(GPIOB_PIN11) |      \
+                                     PIN_OTYPE_PUSHPULL(GPIOB_ADDRESS_LSB) |     \
+                                     PIN_OTYPE_PUSHPULL(GPIOB_ADDRESS_MSB) |      \
                                      PIN_OTYPE_PUSHPULL(GPIOB_PIN12) |      \
                                      PIN_OTYPE_PUSHPULL(GPIOB_PIN13) |      \
                                      PIN_OTYPE_PUSHPULL(GPIOB_PIN14) |      \
                                      PIN_OTYPE_PUSHPULL(GPIOB_PIN15))
-#define VAL_GPIOB_OSPEEDR           (PIN_OSPEED_HIGH(GPIOB_ARD_A3) |        \
+#define VAL_GPIOB_OSPEEDR           (PIN_OSPEED_HIGH(GPIOB_UMB_ON) |        \
                                      PIN_OSPEED_HIGH(GPIOB_PIN1) |          \
                                      PIN_OSPEED_HIGH(GPIOB_PIN2) |          \
                                      PIN_OSPEED_HIGH(GPIOB_SWO) |           \
@@ -501,13 +501,13 @@ Line for B1 has already been defined in line 232 as LINE_LA_DRV1*/
                                      PIN_OSPEED_HIGH(GPIOB_PIN7) |          \
                                      PIN_OSPEED_HIGH(GPIOB_ARD_D15) |       \
                                      PIN_OSPEED_HIGH(GPIOB_ARD_D14) |       \
-                                     PIN_OSPEED_HIGH(GPIOB_ARD_D6) |        \
-                                     PIN_OSPEED_HIGH(GPIOB_PIN11) |         \
+                                     PIN_OSPEED_HIGH(GPIOB_ADDRESS_LSB) |        \
+                                     PIN_OSPEED_HIGH(GPIOB_ADDRESS_MSB) |         \
                                      PIN_OSPEED_HIGH(GPIOB_PIN12) |         \
                                      PIN_OSPEED_HIGH(GPIOB_PIN13) |         \
                                      PIN_OSPEED_HIGH(GPIOB_PIN14) |         \
                                      PIN_OSPEED_HIGH(GPIOB_PIN15))
-#define VAL_GPIOB_PUPDR             (PIN_PUPDR_PULLUP(GPIOB_ARD_A3) |       \
+#define VAL_GPIOB_PUPDR             (PIN_PUPDR_FLOATING(GPIOB_UMB_ON) |       \
                                      PIN_PUPDR_FLOATING(GPIOB_PIN1) |         \
                                      PIN_PUPDR_FLOATING(GPIOB_PIN2) |         \
                                      PIN_PUPDR_FLOATING(GPIOB_SWO) |          \
@@ -517,13 +517,13 @@ Line for B1 has already been defined in line 232 as LINE_LA_DRV1*/
                                      PIN_PUPDR_PULLUP(GPIOB_PIN7) |         \
                                      PIN_PUPDR_PULLUP(GPIOB_ARD_D15) |      \
                                      PIN_PUPDR_PULLUP(GPIOB_ARD_D14) |      \
-                                     PIN_PUPDR_PULLUP(GPIOB_ARD_D6) |       \
-                                     PIN_PUPDR_PULLUP(GPIOB_PIN11) |        \
+                                     PIN_PUPDR_FLOATING(GPIOB_ADDRESS_LSB) |       \
+                                     PIN_PUPDR_FLOATING(GPIOB_ADDRESS_MSB) |        \
                                      PIN_PUPDR_FLOATING(GPIOB_PIN12) |        \
                                      PIN_PUPDR_PULLUP(GPIOB_PIN13) |        \
                                      PIN_PUPDR_PULLUP(GPIOB_PIN14) |        \
                                      PIN_PUPDR_PULLUP(GPIOB_PIN15))
-#define VAL_GPIOB_ODR               (PIN_ODR_HIGH(GPIOB_ARD_A3) |           \
+#define VAL_GPIOB_ODR               (PIN_ODR_HIGH(GPIOB_UMB_ON) |           \
                                      PIN_ODR_LOW(GPIOB_PIN1) |             \
                                      PIN_ODR_LOW(GPIOB_PIN2) |             \
                                      PIN_ODR_LOW(GPIOB_SWO) |              \
@@ -533,13 +533,13 @@ Line for B1 has already been defined in line 232 as LINE_LA_DRV1*/
                                      PIN_ODR_HIGH(GPIOB_PIN7) |             \
                                      PIN_ODR_HIGH(GPIOB_ARD_D15) |          \
                                      PIN_ODR_HIGH(GPIOB_ARD_D14) |          \
-                                     PIN_ODR_HIGH(GPIOB_ARD_D6) |           \
-                                     PIN_ODR_HIGH(GPIOB_PIN11) |            \
+                                     PIN_ODR_HIGH(GPIOB_ADDRESS_LSB) |           \
+                                     PIN_ODR_HIGH(GPIOB_ADDRESS_MSB) |            \
                                      PIN_ODR_LOW(GPIOB_PIN12) |            \
                                      PIN_ODR_HIGH(GPIOB_PIN13) |            \
                                      PIN_ODR_HIGH(GPIOB_PIN14) |            \
                                      PIN_ODR_HIGH(GPIOB_PIN15))
-#define VAL_GPIOB_AFRL              (PIN_AFIO_AF(GPIOB_ARD_A3, 0U) |        \
+#define VAL_GPIOB_AFRL              (PIN_AFIO_AF(GPIOB_UMB_ON, 0U) |        \
                                      PIN_AFIO_AF(GPIOB_PIN1, 0U) |          \
                                      PIN_AFIO_AF(GPIOB_PIN2, 0U) |          \
                                      PIN_AFIO_AF(GPIOB_SWO, 0U) |           \
@@ -549,8 +549,8 @@ Line for B1 has already been defined in line 232 as LINE_LA_DRV1*/
                                      PIN_AFIO_AF(GPIOB_PIN7, 0U))
 #define VAL_GPIOB_AFRH              (PIN_AFIO_AF(GPIOB_ARD_D15, 0U) |       \
                                      PIN_AFIO_AF(GPIOB_ARD_D14, 0U) |       \
-                                     PIN_AFIO_AF(GPIOB_ARD_D6, 0U) |        \
-                                     PIN_AFIO_AF(GPIOB_PIN11, 0U) |         \
+                                     PIN_AFIO_AF(GPIOB_ADDRESS_LSB, 0U) |        \
+                                     PIN_AFIO_AF(GPIOB_ADDRESS_MsB, 0U) |         \
                                      PIN_AFIO_AF(GPIOB_PIN12, 0U) |         \
                                      PIN_AFIO_AF(GPIOB_PIN13, 0U) |         \
                                      PIN_AFIO_AF(GPIOB_PIN14, 0U) |         \
