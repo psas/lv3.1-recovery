@@ -89,7 +89,7 @@ PROJECT = recovery-firmware
 MCU  = cortex-m0
 
 # Imported source files and paths.
-CHIBIOS  := ../ChibiOS
+CHIBIOS  := ./ChibiOS
 CONFDIR  := ./cfg
 BUILDDIR := ./build
 DEPDIR   := ./.dep
@@ -128,12 +128,6 @@ LDSCRIPT= $(STARTUPLD)/STM32F091xC.ld
 # setting.
 CSRC = $(ALLCSRC) \
        $(TESTSRC) \
-       main.c \
-       blinky.c \
-       telemetrum.c \
-       mainchute.c \
-       position.c \
-       drogue.c \
        $(CONFDIR)/board.c
        
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global

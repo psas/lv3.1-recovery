@@ -19,8 +19,10 @@ THD_FUNCTION(FireThread, arg) {
     chRegSetThreadName("fire");
     //chprintf(DEBUG_SD, "Fire thread starting up!\r\n");
   
+    static int fireDrogue = FALSE;
     static int firingDrogue = FALSE;
     static int lockingDrogue = FALSE;
+    static int fireMain = FALSE;
     static int firingMain = FALSE;
     static int ringPosition = 0;
     
