@@ -24,6 +24,7 @@ THD_FUNCTION(TelemetrumThread, arg) {
     static int drogueCount = 0;
     static int mainState = 0;   // Keep track of main line from the Telemetrum locally.
     static int mainCount = 0;
+    static int drogueCommand = 0;
   
     chRegSetThreadName("telemetrum");
     //chprintf(DEBUG_SD, "Blinker thread starting up (main.c)!\r\n");

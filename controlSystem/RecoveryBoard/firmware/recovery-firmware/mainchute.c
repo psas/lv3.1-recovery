@@ -22,16 +22,17 @@ THD_FUNCTION(MainchuteThread, arg) {
     static int actuatorPosition = 0;
      
     // Make sure the LA is off
+    
     palClearLine(LINE_LA_DRV1);
     palClearLine(LINE_LA_DRV2);
-    
+    //
     // Set up the ADC
     
     //static ADCConfig adccfg = {};
     
     // Create buffer to store ADC results. This is a one-dimensional interleaved array
     #define ADC_BUF_DEPTH 1 // depth of buffer
-    #define ADC_CH_NUM 1    // number of used ADC channels
+    #define ADC_CH_NUM 2    // number of used ADC channels
     static adcsample_t samples[ADC_BUF_DEPTH * ADC_CH_NUM]; // results array
 
     
@@ -42,30 +43,37 @@ THD_FUNCTION(MainchuteThread, arg) {
     */
     static const ADCConversionGroup adccg = {
     FALSE, // not circular buffer
-    1, // just one channel
+    2, // just one channel
     NULL, // no call back
-    NULL,
-    ADC_CFGR1_CONT | ADC_CFGR1_RES_12BIT,             /* CFGR1 */
+    NULL, 
+    ADC_CFGR1_CONT | ADC_CFGR1_RES_12BIT,             /* CFGR1 */ 
     ADC_TR(0, 0),                                     /* TR */
     ADC_SMPR_SMP_1P5,                                 /* SMPR */
-    ADC_CHSELR_CHSEL1                                /* CHSELR -- just channel one*/
+    ADC_CHSELR_CHSEL1 | ADC_CHSELR_CHSEL0                              /* CHSELR -- just channel one*/
     };
     
     // Start the ADC
     adcStart(&ADCD1, NULL);
+
     
     while (true) {
 
         // We always need to know where we are in the LA
         // Linear Actuator potentiometer is on PA1 = ADC_IN1
         
+        palToggleLine(LINE_IND_LED);
         adcConvert (&ADCD1, &adccg, &samples[0], ADC_BUF_DEPTH);
 
         // UNDERSTANDING THE ACTUATOR POSITION
         // 
         // When the LA is all the way down, the potentiometer is close to 0V
         // When the LA is all the way up, the potentiometer is close to 3.3V
-        actuatorPosition = samples[0];
+        int hsensor1 = samples[0];
+        int hsensor2 = samples[1];
+        int sensor1 = (hsensor1 * 3300) /4096;
+        int sensor2 = (hsensor2 *3300) /4096 ;
+        chprintf(DEBUG_SD, "MainchuteThread: Hall sensor 1 = %d\r\n", sensor1);
+        chprintf(DEBUG_SD, "MainchuteThread: Hall sensor 2 = %d\r\n", sensor2);
 
         // ----------------------------------------------------------------------------------------
         // Main STOP
@@ -124,6 +132,6 @@ THD_FUNCTION(MainchuteThread, arg) {
         }
         
         // Check every 100 ms
-        chThdSleepMilliseconds(1000);
+        chThdSleepMilliseconds(1000);//
     }
 }

@@ -1,7 +1,7 @@
 /*
     Fire thread!
 */
-
+#if 0
 #include "ch.h"
 #include "hal.h"
 #include "chprintf.h"
@@ -48,7 +48,7 @@ THD_FUNCTION(DrogueThread, arg) {
 
         
         // We always need to know where we are in the ring
-        ringPosition = 2*palReadLine(LINE_ROTSENSE1) + palReadLine(LINE_ROTSENSE2);
+        ringPosition = 2*palReadLine(LINE_ROTSENSE1) + palReadLine(LINE_ROTSENSE2); //WE DO NOT NEED THESE
 
         // ----------------------------------------------------------------------------------------
         // Drogue STOP
@@ -260,6 +260,8 @@ THD_FUNCTION(DrogueThread, arg) {
 
         
         // Check every 100 ms
-        chThdSleepMilliseconds(100);        
+        chThdSleepMilliseconds(100);  
+             
     }
 }
+#endif
