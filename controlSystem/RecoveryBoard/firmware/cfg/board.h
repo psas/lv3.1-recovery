@@ -220,7 +220,7 @@
 #define LINE_DCM_DIR                PAL_LINE(GPIOA, 7U)
 #define LINE_DCM_PWM                PAL_LINE(GPIOA, 8U)
 #define LINE_CAN_SILENT             PAL_LINE(GPIOA, 9U)
-#define LINE_ISO_MAIN               PAL_LINE(GPIOA, 10U)
+#define LINE_ARD_A2                 PAL_LINE(GPIOA, 10U)
 #define LINE_SHORE_PWR              PAL_LINE(GPIOA, 11U)
 
 #define LINE_ROTSENSE_PWR           PAL_LINE(GPIOA, 12U)

@@ -26,7 +26,7 @@
 // Project includes
 
 #include "blinky.h"
-#include "telemetrum.h"
+//#include "telemetrum.h"
 #include "mainchute.h"
 #include "position.h"
 
@@ -173,7 +173,7 @@ int main(void) {
     }
 */
 
-    chThdCreateStatic(waTelemetrumThread, sizeof(waTelemetrumThread), NORMALPRIO, TelemetrumThread, NULL);
+    //chThdCreateStatic(waTelemetrumThread, sizeof(waTelemetrumThread), NORMALPRIO, TelemetrumThread, NULL);
    // chThdCreateStatic(waDrogueThread, sizeof(waDrogueThread), NORMALPRIO, DrogueThread, NULL);
     chThdCreateStatic(waMainchuteThread, sizeof(waMainchuteThread), NORMALPRIO, MainchuteThread, NULL);    
     chThdCreateStatic(waShell, sizeof(waShell), NORMALPRIO, shellThread, (void *)&shell_cfg);
