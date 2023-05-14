@@ -70,7 +70,7 @@
 #define GPIOA_USART2_RX             3U
 #define GPIOA_ARD_A2                4U
 #define GPIOA_ADC1_IN4              4U
-#define GPIOA_LED_GREEN             5U
+#define GPIO_ISO_MAIN             5U
 #define GPIOA_ARD_D13               5U
 #define GPIOA_ARD_D12               6U
 #define GPIOA_ARD_D11               7U
@@ -183,14 +183,14 @@
 #define LINE_USART2_TX              PAL_LINE(GPIOA, 2U)
 #define LINE_ARD_D0                 PAL_LINE(GPIOA, 3U)
 #define LINE_USART2_RX              PAL_LINE(GPIOA, 3U)
-#define LINE_ARD_A2                 PAL_LINE(GPIOA, 4U)
+#define LINE_ISO_MAIN               PAL_LINE(GPIOA, 4U)
 #define LINE_ADC1_IN4               PAL_LINE(GPIOA, 4U)
-#define LINE_LED_GREEN              PAL_LINE(GPIOA, 5U)
+#define LINE_ISO_DROGUE             PAL_LINE(GPIOA, 5U)
 #define LINE_ARD_D13                PAL_LINE(GPIOA, 5U)
-#define LINE_ARD_D12                PAL_LINE(GPIOA, 6U)
-#define LINE_ARD_D11                PAL_LINE(GPIOA, 7U)
-#define LINE_ARD_D7                 PAL_LINE(GPIOA, 8U)
-#define LINE_ARD_D8                 PAL_LINE(GPIOA, 9U)
+#define LINE_DEPLOY1                PAL_LINE(GPIOA, 6U)
+#define LINE_DEPLOY2                PAL_LINE(GPIOA, 7U)
+#define LINE_ARD_D8                 PAL_LINE(GPIOA, 8U)
+#define LINE_CAN_SILENT             PAL_LINE(GPIOA, 9U)
 #define LINE_ARD_D2                 PAL_LINE(GPIOA, 10U)
 #define LINE_SWDIO                  PAL_LINE(GPIOA, 13U)
 #define LINE_SWCLK                  PAL_LINE(GPIOA, 14U)
@@ -219,7 +219,7 @@
 
 #define LINE_DCM_DIR                PAL_LINE(GPIOA, 7U)
 #define LINE_DCM_PWM                PAL_LINE(GPIOA, 8U)
-#define LINE_ISO_DROGUE             PAL_LINE(GPIOA, 9U)
+#define LINE_CAN_SILENT             PAL_LINE(GPIOA, 9U)
 #define LINE_ISO_MAIN               PAL_LINE(GPIOA, 10U)
 #define LINE_SHORE_PWR              PAL_LINE(GPIOA, 11U)
 
@@ -299,7 +299,7 @@
                                      PIN_MODE_ALTERNATE(GPIOA_ARD_D1) |     \
                                      PIN_MODE_ALTERNATE(GPIOA_ARD_D0) |     \
                                      PIN_MODE_INPUT(GPIOA_ARD_A2) |         \
-                                     PIN_MODE_INPUT(GPIOA_LED_GREEN) |     \
+                                     PIN_MODE_INPUT(GPIO_ISO_MAIN) |     \
                                      PIN_MODE_INPUT(GPIOA_ARD_D12) |        \
                                      PIN_MODE_OUTPUT(GPIOA_ARD_D11) |        \
                                      PIN_MODE_INPUT(GPIOA_ARD_D7) |         \
@@ -316,7 +316,7 @@
                                      PIN_OTYPE_PUSHPULL(GPIOA_ARD_D1) |     \
                                      PIN_OTYPE_PUSHPULL(GPIOA_ARD_D0) |     \
                                      PIN_OTYPE_PUSHPULL(GPIOA_ARD_A2) |     \
-                                     PIN_OTYPE_PUSHPULL(GPIOA_LED_GREEN) |  \
+                                     PIN_OTYPE_PUSHPULL(GPIO_ISO_MAIN) |  \
                                      PIN_OTYPE_PUSHPULL(GPIOA_ARD_D12) |    \
                                      PIN_OTYPE_PUSHPULL(GPIOA_ARD_D11) |    \
                                      PIN_OTYPE_PUSHPULL(GPIOA_ARD_D7) |     \
@@ -332,7 +332,7 @@
                                      PIN_OSPEED_LOW(GPIOA_ARD_D1) |         \
                                      PIN_OSPEED_LOW(GPIOA_ARD_D0) |         \
                                      PIN_OSPEED_HIGH(GPIOA_ARD_A2) |        \
-                                     PIN_OSPEED_LOW(GPIOA_LED_GREEN) |      \
+                                     PIN_OSPEED_LOW(GPIO_ISO_MAIN) |      \
                                      PIN_OSPEED_HIGH(GPIOA_ARD_D12) |       \
                                      PIN_OSPEED_HIGH(GPIOA_ARD_D11) |       \
                                      PIN_OSPEED_HIGH(GPIOA_ARD_D7) |        \
@@ -348,7 +348,7 @@
                                      PIN_PUPDR_FLOATING(GPIOA_ARD_D1) |     \
                                      PIN_PUPDR_FLOATING(GPIOA_ARD_D0) |     \
                                      PIN_PUPDR_PULLUP(GPIOA_ARD_A2) |       \
-                                     PIN_PUPDR_FLOATING(GPIOA_LED_GREEN) |  \
+                                     PIN_PUPDR_FLOATING(GPIO_ISO_MAIN) |  \
                                      PIN_PUPDR_PULLUP(GPIOA_ARD_D12) |      \
                                      PIN_PUPDR_PULLUP(GPIOA_ARD_D11) |      \
                                      PIN_PUPDR_PULLUP(GPIOA_ARD_D7) |       \
@@ -364,7 +364,7 @@
                                      PIN_ODR_HIGH(GPIOA_ARD_D1) |           \
                                      PIN_ODR_HIGH(GPIOA_ARD_D0) |           \
                                      PIN_ODR_HIGH(GPIOA_ARD_A2) |           \
-                                     PIN_ODR_LOW(GPIOA_LED_GREEN) |         \
+                                     PIN_ODR_LOW(GPIO_ISO_MAIN) |         \
                                      PIN_ODR_HIGH(GPIOA_ARD_D12) |          \
                                      PIN_ODR_HIGH(GPIOA_ARD_D11) |          \
                                      PIN_ODR_HIGH(GPIOA_ARD_D7) |           \
@@ -381,7 +381,7 @@
                                      PIN_AFIO_AF(GPIOA_ARD_D1, 1U) |        \
                                      PIN_AFIO_AF(GPIOA_ARD_D0, 1U) |        \
                                      PIN_AFIO_AF(GPIOA_ARD_A2, 0U) |        \
-                                     PIN_AFIO_AF(GPIOA_LED_GREEN, 0U) |     \
+                                     PIN_AFIO_AF(GPIO_ISO_MAIN, 0U) |     \
                                      PIN_AFIO_AF(GPIOA_ARD_D12, 0U) |       \
                                      PIN_AFIO_AF(GPIOA_ARD_D11, 0U))
 #define VAL_GPIOA_AFRH              (PIN_AFIO_AF(GPIOA_ARD_D7, 0U) |        \
@@ -410,7 +410,7 @@
  * PB11 - PIN11                     (input pullup).
  * PB12 - PIN12                     (input pullup).
  * PB13 - PIN13                     (input pullup).
- * PB14 - PIN14                     (input pullup).
+ * PB14 - LED_GREEN                 (input pullup).
  * PB15 - PIN15                     (input pullup).
  */
 #define VAL_GPIOB_MODER             (PIN_MODE_ANALOG(GPIOB_ARD_A3) |         \

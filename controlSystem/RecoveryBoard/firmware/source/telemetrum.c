@@ -1,6 +1,7 @@
 /*
     Telemetrum thread!
 */
+#if 0
 
 #include "ch.h"
 #include "hal.h"
@@ -143,5 +144,7 @@ THD_FUNCTION(TelemetrumThread, arg) {
      
         chThdSleepMilliseconds(10); // Run this loop every 10 ms (100 Hz)
     }
+    
 }
+#endif
   

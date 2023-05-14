@@ -29,7 +29,7 @@ THD_FUNCTION(BlinkyThread, arg) {
         palToggleLine(LINE_LA_DRV12);
 
 
-		palSetLine(LINE_LED_GREEN);
+		palSetLine(LINE_ISO_MAIN);
 		palSetLine(LINE_LA_DRV12);
 		palSetLine(LINE_LA_C8);
 //		palSetLine(LINE_LED);
@@ -44,7 +44,7 @@ THD_FUNCTION(BlinkyThread, arg) {
         }
 
 //        palClearLine(LINE_LED);
-        palClearLine(LINE_LED_GREEN);
+        palClearLine(LINE_ISO_MAIN);
         palClearLine(LINE_LA_DRV12);
         palClearLine(LINE_LA_C8);
 //      palSetLine(LINE_SPKR);

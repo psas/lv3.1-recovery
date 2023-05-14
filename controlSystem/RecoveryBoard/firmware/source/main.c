@@ -27,7 +27,6 @@
 
 #include "blinky.h"
 #include "telemetrum.h"
-#include "drogue.h"
 #include "mainchute.h"
 #include "position.h"
 
@@ -169,7 +168,7 @@ int main(void) {
     chThdCreateStatic(waBlinkyThread, sizeof(waBlinkyThread), NORMALPRIO, BlinkyThread, NULL);
     // put a while true loop here to test leds and pause the whole damn thing
 /*
-    while (true) {
+    while (true) {CHECK CHECK CHECK
         chThdSleepMilliseconds(500);
     }
 */
