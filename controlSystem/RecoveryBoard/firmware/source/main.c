@@ -22,18 +22,11 @@
 #include <string.h>
 #include "shell.h"
 #include "recovery.h"
-
-// Project includes
-
 #include "blinky.h"
 //#include "telemetrum.h"
 #include "mainchute.h"
 #include "position.h"
 
-
-//===========================================================================================
-// Global variables because I'm OLDSKOOLCOOL
-//===========================================================================================
 
 volatile enum recoverystatetype recoveryState = disarmed;
 volatile enum PositionCommandtype PositionCommand = idle;
@@ -45,30 +38,31 @@ volatile enum mainchutecommandtype mainchuteCommand = idle_m;
 
 static THD_WORKING_AREA(waShell, 1024);
 
-static void cmd_DdaaaAaavVVvveEEEE(BaseSequentialStream *chp, int argc, char *argv[]) {
-    (void)argv;
-    (void)argc;
-    chprintf(chp, "You have successfully whined to Dave to write this code... :)\r\n");
-    chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
+void print_hall_sensors(void) {
+	extern position_state_t g_position_state;
+	chprintf(DEBUG_SD, "\r\nSensor 1: %d %s\r\n", g_position_state.sensor1, sensor_voltage_status_t_to_str(g_position_state.sensor1_voltage_status));
+	chprintf(DEBUG_SD, "Sensor 2: %d %s\r\n", g_position_state.sensor2, sensor_voltage_status_t_to_str(g_position_state.sensor2_voltage_status));
+	chprintf(DEBUG_SD, "Ring Position: %s\r\n", ring_position_t_to_str(g_position_state.ring_position));
 }
 
-static void cmd_status(BaseSequentialStream *chp, int argc, char *argv[]) {
+
+static void cmd_state(BaseSequentialStream *chp, int argc, char *argv[]) {
+	print_hall_sensors();
 
     /**/
     if (argc < 1) {
         switch(recoveryState) {
-  
-        case armed:
-            chprintf(chp, "State = ARMED (valid commands: 'arm', 'disarm', and 'reset').\r\n");
-            break;
-  
-        case disarmed:
-            chprintf(chp, "State = DISARMED (valid commands: 'arm', 'disarm' and 'reset')\r\n");
-            break; /* optional */
-      
-        default : /* Optional */
-            chprintf(chp, "STATE = INVALID; SWITCHING TO ARMED\r\n");
-            recoveryState = armed;
+			case armed:
+				chprintf(chp, "State = ARMED (valid commands: 'arm', 'disarm', and 'reset').\r\n");
+				break;
+
+			case disarmed:
+				chprintf(chp, "State = DISARMED (valid commands: 'arm', 'disarm' and 'reset')\r\n");
+				break; /* optional */
+
+			default : /* Optional */
+				chprintf(chp, "STATE = INVALID; SWITCHING TO ARMED\r\n");
+				recoveryState = armed;
         }
         chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
         return;
@@ -77,15 +71,12 @@ static void cmd_status(BaseSequentialStream *chp, int argc, char *argv[]) {
     if (!strcmp(argv[0], "arm")) {
         recoveryState = armed;
         chprintf(chp, "STATE = ARMED\r\n");
-    } 
-    else if (!strcmp(argv[0], "disarm")) {
+    } else if (!strcmp(argv[0], "disarm")) {
         recoveryState = disarmed;
         chprintf(chp, "STATE = DISARMED\r\n");
-    }
-    else if (!strcmp(argv[0], "reset")) {
+    } else if (!strcmp(argv[0], "reset")) {
         NVIC_SystemReset();
-    } 
-    else {
+    } else {
         chprintf(chp,"Usage: state <command>\r\n"
                      "    arm, disarm, and reset\r\n"
                      "\r\n");
@@ -94,38 +85,49 @@ static void cmd_status(BaseSequentialStream *chp, int argc, char *argv[]) {
 }
 
 
-static void cmd_Position(BaseSequentialStream *chp, int argc, char *argv[]) {
-
-    if (argc == 1) {
-        
-        if (!strcmp(argv[0], "lock")) {
-           
-            chprintf(chp, "Command: LOCKING ERS \r\n");
-            PositionCommand = lock;
-            return;
-            }
-                   
-        
-        if (!strcmp(argv[0], "unlock")) {
-            
-            chprintf(chp, "Command: UNLOCKING ERS \r\n");
-            PositionCommand = unlock;
-            return;
-            }
-    }
-   
-        chprintf(chp,"Usage: d <command>\r\n"
-                    "    unlock, lock \r\n"
-                        "\r\n");
-        chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
+static void cmd_lock(BaseSequentialStream *chp, int argc, char *argv[]) {
+	drive_motor(true, 10);
 }
 
+static void cmd_unlock(BaseSequentialStream *chp, int argc, char *argv[]) {
+	drive_motor(false, 10);
+}
+
+static void cmd_stream(BaseSequentialStream *chp, int argc, char *argv[]) {
+	for(;;) {
+		print_hall_sensors();
+		chThdSleepMilliseconds(1000);
+	}
+}
+
+static void cmd_Position(BaseSequentialStream *chp, int argc, char *argv[]) {
+	if (argc == 1) {
+		if (!strcmp(argv[0], "lock")) {
+			chprintf(chp, "Command: LOCKING ERS \r\n");
+			PositionCommand = lock;
+			return;
+		}
+		if (!strcmp(argv[0], "unlock")) {
+			chprintf(chp, "Command: UNLOCKING ERS \r\n");
+			PositionCommand = unlock;
+			return;
+		}
+	}
+
+	chprintf(chp, "Usage: d <command>\r\n"
+			"    unlock, lock \r\n"
+			"\r\n");
+	chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
+}
 
     
 static const ShellCommand commands[] = {
-    {"DdaaaAaavVVvveEEEE", cmd_DdaaaAaavVVvveEEEE},
-    {"state", cmd_status},
-    {"d", cmd_Position},
+    {"state", cmd_state},
+    {"pos", cmd_Position},
+	{"u", cmd_unlock},//dev debug use only
+	{"l", cmd_lock},//dev debug use only
+	{"stream", cmd_stream},
+
     {NULL, NULL}
 };
 
@@ -140,7 +142,6 @@ static const ShellConfig shell_cfg = {
 //===========================================================================================
 
 int main(void) {
-
     /*
      * System initializations.
      * - HAL initialization, this also initializes the configured device drivers
@@ -158,20 +159,10 @@ int main(void) {
     chprintf(DEBUG_SD, "\r\nPSAS ERS control board starting up\r\n");
     chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
     
-    palSetLine(LINE_DEPLOY2);
-    // START THEM THREADS
-
     palSetLine(LINE_BATTREAD); //BATT_READ (shore power)
 
-    //I believe Dave made this thread as a method of teaching me wtf is going on  -Louis
-    //I now know that the above statement is false
+    // START THEM THREADS
     chThdCreateStatic(waBlinkyThread, sizeof(waBlinkyThread), NORMALPRIO, BlinkyThread, NULL);
-    // put a while true loop here to test leds and pause the whole damn thing
-/*
-    while (true) {CHECK CHECK CHECK
-        chThdSleepMilliseconds(500);
-    }
-*/
 
     //chThdCreateStatic(waTelemetrumThread, sizeof(waTelemetrumThread), NORMALPRIO, TelemetrumThread, NULL);
    // chThdCreateStatic(waDrogueThread, sizeof(waDrogueThread), NORMALPRIO, DrogueThread, NULL);

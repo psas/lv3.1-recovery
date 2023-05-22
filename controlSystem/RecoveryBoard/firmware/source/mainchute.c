@@ -53,7 +53,7 @@ THD_FUNCTION(MainchuteThread, arg) {
     };
     
     // Start the ADC
-    adcStart(&ADCD1, NULL);
+//    adcStart(&ADCD1, NULL);
 
     
     while (true) {
@@ -61,19 +61,18 @@ THD_FUNCTION(MainchuteThread, arg) {
         // We always need to know where we are in the LA
         // Linear Actuator potentiometer is on PA1 = ADC_IN1
         
-        palToggleLine(LINE_LED);
-        adcConvert (&ADCD1, &adccg, &samples[0], ADC_BUF_DEPTH);
+//        adcConvert (&ADCD1, &adccg, &samples[0], ADC_BUF_DEPTH);
 
         // UNDERSTANDING THE ACTUATOR POSITION
         // 
         // When the LA is all the way down, the potentiometer is close to 0V
         // When the LA is all the way up, the potentiometer is close to 3.3V
-        int hsensor1 = samples[0];
-        int hsensor2 = samples[1];
-        int sensor1 = (hsensor1 * 3300) /4096;
-        int sensor2 = (hsensor2 *3300) /4096 ;
-        chprintf(DEBUG_SD, "MainchuteThread: Hall sensor 1 = %d\r\n", sensor1);
-        chprintf(DEBUG_SD, "MainchuteThread: Hall sensor 2 = %d\r\n", sensor2);
+//        int hsensor1 = samples[0];
+//        int hsensor2 = samples[1];
+//        int sensor1 = (hsensor1 * 3300) /4096;
+//        int sensor2 = (hsensor2 *3300) /4096 ;
+//        chprintf(DEBUG_SD, "MainchuteThread: Hall sensor 1 = %d\r\n", sensor1);
+//        chprintf(DEBUG_SD, "MainchuteThread: Hall sensor 2 = %d\r\n", sensor2);
 
         // ----------------------------------------------------------------------------------------
         // Main STOP
