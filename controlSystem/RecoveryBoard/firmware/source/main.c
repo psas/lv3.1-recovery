@@ -161,7 +161,7 @@ int main(void) {
     palSetLine(LINE_DEPLOY2);
     // START THEM THREADS
 
-    palSetLine(LINE_BATTREAD); //BATT_READ (shore power)
+    palSetLine(LINE_BATT_READ); //BATT_READ (shore power)
 
     //I believe Dave made this thread as a method of teaching me wtf is going on  -Louis
     //I now know that the above statement is false
