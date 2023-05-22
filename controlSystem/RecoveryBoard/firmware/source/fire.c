@@ -26,20 +26,18 @@ THD_FUNCTION(FireThread, arg) {
     static int firingMain = FALSE;
     static int ringPosition = 0;
     
-    // Turn on the power to the sensors TODO: power them on only when we need them.
-    palSetLine(LINE_ROTSENSE_PWR);
     
     // Turn on power to motor (but keep it off) TODO: Better power management
-    palClearLine(LINE_DCM_PWM);
-    palClearLine(LINE_DCM_DIR);
+    palClearLine(LINE_DEPLOY1);
+    palClearLine(LINE_DEPLOY2);
     chThdSleepMilliseconds(10); // Wait for lines to settle
-    palSetLine(LINE_DCM_PWR);
+    
     
     while (true) {
 
         // We always need to know where we are in the ring
         
-        ringPosition = 2*palReadLine(LINE_ROTSENSE1) + palReadLine(LINE_ROTSENSE2);
+        ringPosition = 2*palReadLine(LINE_HALL1) + palReadLine(LINE_HALL2);
 
         // ----------------------------------------------------------------------------------------
         // Firing Drogue
@@ -67,38 +65,38 @@ THD_FUNCTION(FireThread, arg) {
                 case 2: // Locked
                     chprintf(DEBUG_SD, "FireThread: Position = Locked, MOTOR ON\r\n");
                     chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
-                    palClearLine(LINE_DCM_DIR); // Turn on motor full blast, unlock direction
-                    palSetLine(LINE_DCM_PWM);
+                    palClearLine(LINE_DEPLOY1); // Turn on motor full blast, unlock direction
+                    palSetLine(LINE_DEPLOY2);
                     break;
         
                 case 3: // Moving
                     chprintf(DEBUG_SD, "FireThread: Position = Moving, MOTOR ON\r\n");
                     chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
                     // TODO: Slow down? Reduce current? Anything to do here?
-                    palClearLine(LINE_DCM_DIR); // Turn on motor full blast, unlock direction
-                    palSetLine(LINE_DCM_PWM);
+                    palClearLine(LINE_DEPLOY1); // Turn on motor full blast, unlock direction
+                    palSetLine(LINE_DEPLOY2);
                     break;
             
                 case 1: // Unlocked
                     chprintf(DEBUG_SD, "FireThread: Position = Unlocked, MOTOR ON\r\n");
                     chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
                     // TODO: Slow down? Reduce current? Anything to do here?
-                    palClearLine(LINE_DCM_DIR); // Turn on motor full blast, unlock direction
-                    palSetLine(LINE_DCM_PWM);
+                    palClearLine(LINE_DEPLOY1); // Turn on motor full blast, unlock direction
+                    palSetLine(LINE_DEPLOY2);
                     break;
 
                 case 0: // Spinning
                     chprintf(DEBUG_SD, "FireThread: Position = Spinning, MOTOR OFF, \r\n");
                     chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
                     // OK we're done, we've past the unlock position so we're safely deployed
-                    palClearLine(LINE_DCM_PWM); // Turn off the motor
+                    palClearLine(LINE_DEPLOY2); // Turn off the motor
                     firingDrogue = FALSE;
                     break;
 
                 default:
                     chprintf(DEBUG_SD, "FireThread: INVALID POSITION.\r\n");
                     chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
-                    palClearLine(LINE_DCM_PWM); // Turn off the motor
+                    palClearLine(LINE_DEPLOY2); // Turn off the motor
                     ringPosition = 0;
                 }
         }
@@ -120,43 +118,43 @@ THD_FUNCTION(FireThread, arg) {
         // TODO: HANDLE "LOCK" command
         
         if (firingDrogue == TRUE) {
-            ringPosition = 2*palReadLine(LINE_ROTSENSE1) + palReadLine(LINE_ROTSENSE2);
+            ringPosition = 2*palReadLine(LINE_HALL1) + palReadLine(LINE_HALL2);
             switch (ringPosition) {
                 case 2: // Locked
                     chprintf(DEBUG_SD, "FireThread: Position = Locked, MOTOR ON\r\n");
                     chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
-                    palClearLine(LINE_DCM_DIR); // Turn on motor full blast, unlock direction
-                    palSetLine(LINE_DCM_PWM);
+                    palClearLine(LINE_DEPLOY1); // Turn on motor full blast, unlock direction
+                    palSetLine(LINE_DEPLOY2);
                     break;
         
                 case 3: // Moving
                     chprintf(DEBUG_SD, "FireThread: Position = Moving, MOTOR ON\r\n");
                     chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
                     // TODO: Slow down? Reduce current? Anything to do here?
-                    palClearLine(LINE_DCM_DIR); // Turn on motor full blast, unlock direction
-                    palSetLine(LINE_DCM_PWM);
+                    palClearLine(LINE_DEPLOY1); // Turn on motor full blast, unlock direction
+                    palSetLine(LINE_DEPLOY2);
                     break;
             
                 case 1: // Unlocked
                     chprintf(DEBUG_SD, "FireThread: Position = Unlocked, MOTOR ON\r\n");
                     chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
                     // TODO: Slow down? Reduce current? Anything to do here?
-                    palClearLine(LINE_DCM_DIR); // Turn on motor full blast, unlock direction
-                    palSetLine(LINE_DCM_PWM);
+                    palClearLine(LINE_DEPLOY1); // Turn on motor full blast, unlock direction
+                    palSetLine(LINE_DEPLOY2);
                     break;
 
                 case 0: // Spinning
                     chprintf(DEBUG_SD, "FireThread: Position = Spinning, MOTOR OFF, \r\n");
                     chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
                     // OK we're done, we've past the unlock position so we're safely deployed
-                    palClearLine(LINE_DCM_PWM); // Turn off the motor
+                    palClearLine(LINE_DEPLOY2); // Turn off the motor
                     firingDrogue = FALSE;
                     break;
 
                 default:
                     chprintf(DEBUG_SD, "FireThread: INVALID POSITION.\r\n");
                     chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
-                    palClearLine(LINE_DCM_PWM); // Turn off the motor
+                    palClearLine(LINE_DEPLOY2); // Turn off the motor
                     ringPosition = 0;
                 }
         }

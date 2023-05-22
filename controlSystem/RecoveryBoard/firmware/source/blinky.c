@@ -22,40 +22,8 @@ THD_FUNCTION(BlinkyThread, arg) {
   
     while (true) {
         
-        palToggleLine(LINE_LA_DRV1);
-
-        palToggleLine(LINE_LA_DRV2);
-
-        palToggleLine(LINE_LA_DRV12);
-
-
-		palSetLine(LINE_ISO_MAIN);
-		palSetLine(LINE_LA_DRV12);
-		palSetLine(LINE_LA_C8);
-//		palSetLine(LINE_LED);
-//      palSetLine(LINE_SPKR);
-		chThdSleepMilliseconds(1);
-//      palClearLine(LINE_SPKR);
-
-        if (recoveryState == armed) {
-            chThdSleepMilliseconds(100);
-        } else {
-            chThdSleepMilliseconds(500);
-        }
-
-//        palClearLine(LINE_LED);
-        palClearLine(LINE_ISO_MAIN);
-        palClearLine(LINE_LA_DRV12);
-        palClearLine(LINE_LA_C8);
-//      palSetLine(LINE_SPKR);
-//      chThdSleepMilliseconds(1);
-//      palClearLine(LINE_SPKR);
-
-        if (recoveryState == armed) {
-            chThdSleepMilliseconds(100);
-        } else {
-            chThdSleepMilliseconds(500);
-        }
-          
+        palToggleLine(LINE_LED);
+        chThdSleepMilliseconds(250);         
     }
+    
 }

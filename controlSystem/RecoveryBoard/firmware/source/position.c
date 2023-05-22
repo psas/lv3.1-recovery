@@ -37,13 +37,13 @@ THD_FUNCTION(PositionThread, arg) {
     
     
     // Turn on the power to the sensors TODO: power them on only when we need them.
-    palSetLine(LINE_ROTSENSE_PWR);
+   // palSetLine(LINE_ROTSENSE_PWR);
     
     // Turn on power to motor (but keep it off) TODO: Better power management
-    palClearLine(LINE_ARD_D5);
-    palSetLine(LINE_ARD_D4);
+    palClearLine(LINE_DEPLOY1);
+    palSetLine(LINE_DEPLOY2);
     chThdSleepMilliseconds(1000); // Wait for lines to settle
-    palSetLine(LINE_ARD_D5);
+    palSetLine(LINE_DEPLOY1);
 
 //SETTING UP ADC STUFF     TO STORE HALL SENSOR VALUES
 
@@ -72,7 +72,7 @@ static const ADCConversionGroup adccg = {
         // We always need to know where we are in the LA
         // Linear Actuator potentiometer is on PA1 = ADC_IN1
         
-        palToggleLine(LINE_IND_LED);
+        palToggleLine(LINE_LED);
         adcConvert (&ADCD1, &adccg, &samples[0], ADC_BUF_DEPTH);
 
         int hsensor1 = samples[0];
@@ -286,9 +286,9 @@ static const ADCConversionGroup adccg = {
                     //Command is lock and we're unlocked, so run the motor
                     chprintf(DEBUG_SD, "RingPosition: LOCKING, Position = Unlocked, MOTOR ON\r\n");
                     chThdSleepMilliseconds(100); // Wait for printout (100 char ~ 10 ms)
-                    palClearLine(LINE_ARD_D5); // turn off
-                    palClearLine(LINE_ARD_D4); // turn off
-                    palSetLine(LINE_ARD_D4); // PB5 high
+                    palClearLine(LINE_DEPLOY1); // turn off
+                    palClearLine(LINE_DEPLOY2); // turn off
+                    palSetLine(LINE_DEPLOY2); // PB5 high
                     
                     break;
                 case INBETWEEN:
@@ -301,8 +301,8 @@ static const ADCConversionGroup adccg = {
                     //Command is lock, but we're already locked. So stop motors and exit
                     chprintf(DEBUG_SD, "RingPosition: LOCKING, Position = Locked, MOTOR OFF\r\n");
                     chThdSleepMilliseconds(100); // Wait for printout (100 char ~ 10 ms)
-                    palClearLine(LINE_ARD_D5); // turn off motor
-                    palClearLine(LINE_ARD_D4); // turn off motor
+                    palClearLine(LINE_DEPLOY1); // turn off motor
+                    palClearLine(LINE_DEPLOY2); // turn off motor
                     
                     PositionCommand = idle;
                     break;
@@ -326,8 +326,8 @@ static const ADCConversionGroup adccg = {
                 case UNLOCKED:
                     chprintf(DEBUG_SD, "RingPosition: Unlock; Position = UNLOCKED, MOTOR OFF\r\n");
                     chThdSleepMilliseconds(100); // Wait          for printout (100 char ~ 10 ms)
-                    palClearLine(LINE_ARD_D5); // clear
-                    palClearLine(LINE_ARD_D4); // clear
+                    palClearLine(LINE_DEPLOY1); // clear
+                    palClearLine(LINE_DEPLOY2); // clear
                     PositionCommand = idle;
                     break;
 
@@ -335,9 +335,9 @@ static const ADCConversionGroup adccg = {
                 case INBETWEEN:
                     chprintf(DEBUG_SD, "RingPosition: Unlock, Position = Locked/Moving, MOTOR ON FIRING\r\n");
                     chThdSleepMilliseconds(1000); // Wait for printout (100 char ~ 10 ms)
-                    palClearLine(LINE_ARD_D5); // clear
-                    palClearLine(LINE_ARD_D4); // clear
-                    palSetLine(LINE_ARD_D5); // Full blast on
+                    palClearLine(LINE_DEPLOY1); // clear
+                    palClearLine(LINE_DEPLOY2); // clear
+                    palSetLine(LINE_DEPLOY1); // Full blast on
                     break;
         
                 default:
