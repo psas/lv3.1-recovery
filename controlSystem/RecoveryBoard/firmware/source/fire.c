@@ -1,6 +1,7 @@
 /*
     Fire thread!
 */
+#if 0
 
 #include "ch.h"
 #include "hal.h"
@@ -173,3 +174,6 @@ THD_FUNCTION(FireThread, arg) {
         chThdSleepMilliseconds(100);        
     }
 }
+
+
+#endif

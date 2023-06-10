@@ -33,7 +33,6 @@ bool drive_motor(const bool lock_mode, const uint16_t duration_ms) {
 	return(true);
 }
 
-
 sensor_voltage_status_t get_sensor_voltage_status(const int reading_value, const hall_sensor_t which_sensor) {
 	const int low_threshold = (which_sensor == HALL_SENSOR_1 ? 500 : 500);//FIXME handle different cutoff thresholds for the different sensor referencing which_sensor
 	const int high_threshold = (which_sensor == HALL_SENSOR_1 ? 2750 : 2750);//FIXME handle different cutoff thresholds for the different sensor referencing which_sensor
