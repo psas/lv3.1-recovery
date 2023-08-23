@@ -60,8 +60,8 @@ static PWMConfig pwmcfg = {
 /*
  * Duty cycle Beep Thread.
  */
-static THD_WORKING_AREA(waBeepThread, 128);
-static THD_FUNCTION(BeepThread, arg) {
+THD_WORKING_AREA(waBeepThread, 256);
+THD_FUNCTION(BeepThread, arg) {
   (void)arg;
   chRegSetThreadName("Beep");
 
@@ -70,17 +70,20 @@ static THD_FUNCTION(BeepThread, arg) {
 
   while (true) {
     // For each element of our sequence
-    for(int i = 0; i <4; i++) {
+//    for(int i = 0; i <4; i++) {
+//
+//      // This enables 0 channel with a new duty cycle
+//      pwmEnableChannel(&PWMD3, 0, PWM_PERCENTAGE_TO_WIDTH(&PWMD3, delay[i]));
+//
+//      // This waits 1 second
+//      chThdSleepMilliseconds(1000);
+//    }
+    chThdSleepMilliseconds(1000);
 
-      // This enables 0 channel with a new duty cycle
-      pwmEnableChannel(&PWMD3, 0, PWM_PERCENTAGE_TO_WIDTH(&PWMD3, delay[i]));
-
-      // This waits 1 second
-      chThdSleepMilliseconds(1000);
-    }
   }
 }
 
+#if 0
 int main(void) {
   halInit();
   chSysInit();
@@ -104,3 +107,6 @@ int main(void) {
     chThdSleepMilliseconds(1000);
   }
 }
+
+#endif
+

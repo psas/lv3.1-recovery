@@ -412,8 +412,8 @@
                                      PIN_AFIO_AF(GPIOB_MOTOR_ISENSE, 0U) |          \
                                      PIN_AFIO_AF(GPIOB_UNUSEDPB2, 0U) |          \
                                      PIN_AFIO_AF(GPIOB_SWO, 0U) |           \
-                                     PIN_AFIO_AF(GPIOB_DEPLOY1, 0U) |        \
-                                     PIN_AFIO_AF(GPIOB_DEPLOY1, 0U) |        \
+                                     PIN_AFIO_AF(GPIOB_DEPLOY1, 1U) |        \
+                                     PIN_AFIO_AF(GPIOB_DEPLOY2, 0U) |        \
                                      PIN_AFIO_AF(GPIOB_N_MOTOR_PS, 0U) |       \
                                      PIN_AFIO_AF(GPIOB_N_MOTOR_FAIL_A, 0U))
 #define VAL_GPIOB_AFRH              (PIN_AFIO_AF(GPIOB_UNUSEDPB8, 0U) |       \

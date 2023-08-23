@@ -7,7 +7,80 @@
 
 #define DEFAULT_LOCK_UNLOCK_DURATION_MS      50
 
+
+#define PWM_TIMER_FREQ	1000000 // Hz
+#define PWM_FREQ		20000// periods per sec
+#define PWM_PERIOD		PWM_TIMER_FREQ/PWM_FREQ
+
+//PB4, DEPLOY_1, is TIM3_CH1
+//PB5, DEPLOY_2 is TIM3_CH2
+static PWMConfig pwmcfg_3 = {
+  .frequency = PWM_TIMER_FREQ,
+  .period = PWM_PERIOD,
+  .callback = NULL,
+  .channels = {
+   {PWM_OUTPUT_ACTIVE_HIGH, NULL},
+   {PWM_OUTPUT_ACTIVE_HIGH, NULL},
+   {PWM_OUTPUT_ACTIVE_HIGH, NULL},
+   {PWM_OUTPUT_ACTIVE_HIGH, NULL}
+  },
+  .cr2 = 0,//CR2
+ #if STM32_PWM_USE_ADVANCED
+   .bdtr = 0, //BDTR
+ #endif
+   .dier = 0,//DIER
+};
+
+
+
+//PB15 is TIM1_CH3N complimentary output
+//static PWMConfig pwmcfg_1 = {
+//  .frequency = PWM_TIMER_FREQ,
+//  .period = PWM_PERIOD,
+//  .callback = NULL,
+//  .channels = {
+//   {PWM_OUTPUT_ACTIVE_LOW | PWM_COMPLEMENTARY_OUTPUT_ACTIVE_LOW, NULL},
+//   {PWM_OUTPUT_ACTIVE_LOW | PWM_COMPLEMENTARY_OUTPUT_ACTIVE_LOW, NULL},
+//   {PWM_OUTPUT_ACTIVE_LOW | PWM_COMPLEMENTARY_OUTPUT_ACTIVE_LOW, NULL},
+//   {PWM_OUTPUT_ACTIVE_HIGH, NULL}
+//  },
+//  .cr2 = TIM_CR2_MMS_1,//CR2
+// #if STM32_PWM_USE_ADVANCED
+//   .bdtr = 0, //BDTR
+// #endif
+//   .dier = 0,//DIER
+//};
+
+
+static const DACConfig dac_config = {
+  .init         = 2047u,
+  .datamode     = DAC_DHRM_12BIT_RIGHT,
+  .cr           = 0
+};
+
 position_state_t g_position_state;
+
+
+
+
+
+//void set_motor_pwm_output(uint32_t pwm_percent, uint32_t channel_number) {
+//	if( PWMD1.state == PWM_STOP ) {
+//		pwmStart(&PWMD3, &pwmcfg_3);
+//#if 0
+//		chprintf(DEBUG_SD, "Turning on PWM output...\r\n");
+//		pwmEnableChannel(&PWMD1, MT_X_PWM_PWM_CHANNEL, PWM_PERCENTAGE_TO_WIDTH(&PWMD1, 1000));
+//		pwmEnableChannel(&PWMD1, MT_Y_PWM_PWM_CHANNEL, PWM_PERCENTAGE_TO_WIDTH(&PWMD1, 1000));
+//		pwmEnableChannel(&PWMD1, MT_Z_PWM_PWM_CHANNEL, PWM_PERCENTAGE_TO_WIDTH(&PWMD1, 1000));
+//#endif
+//	}
+//
+//
+//	pwmDisableChannel(&PWMD3, channel_number);
+//	pwmEnableChannel(&PWMD3, channel_number, PWM_PERCENTAGE_TO_WIDTH(&PWMD3, pwm_percent));
+//
+//}
+
 
 bool drive_motor(const bool lock_mode, const uint16_t duration_ms) {
 	chprintf(DEBUG_SD, "Moving motor to %s position\r\n", (lock_mode ? "locked" : "unlocked"));
@@ -85,7 +158,7 @@ ring_position_t determine_ring_position(const int sensor1, const int sensor2, co
 // Position!
 //===========================================================================================
 
-THD_WORKING_AREA(waPositionThread, 256);
+THD_WORKING_AREA(waPositionThread, 512);
 
 THD_FUNCTION(PositionThread, arg) {
     (void)arg;
@@ -118,6 +191,51 @@ THD_FUNCTION(PositionThread, arg) {
     adcStart(&ADCD1, NULL);
     chThdSleepMilliseconds(1000);
     
+
+
+    pwmStart(&PWMD3, &pwmcfg_3);
+    pwmDisableChannel(&PWMD3, 0);
+    pwmEnableChannel(&PWMD3, 0, PWM_PERCENTAGE_TO_WIDTH(&PWMD3, 5000));
+
+
+
+
+	palSetPadMode(GPIOA, GPIOA_MOTOR_ILIM, PAL_MODE_INPUT_ANALOG);
+    dacStart(&DACD1, &dac_config);
+    dacPutChannelX(&DACD1, 0, 3600); //3V
+//    dacPutChannelX(&DACD1, 0, 2400); //2V
+//    dacPutChannelX(&DACD1, 0, 1800); //1.5V
+//      dacPutChannelX(&DACD1, 0, 1440); //1.2V
+//    dacPutChannelX(&DACD1, 0, 1200); //1V
+//    dacPutChannelX(&DACD1, 0, 600); //0.5V
+//    dacPutChannelX(&DACD1, 0, 480); //0.4V
+//    dacPutChannelX(&DACD1, 0, 360); //0.3V
+//    dacPutChannelX(&DACD1, 0, 240); //0.2V
+//    dacPutChannelX(&DACD1, 0, 120); //0.1V
+
+	palSetLine(LINE_N_MOTOR_PS);
+//    palSetLine(LINE_DEPLOY1); // Full blast on
+	palClearLine(LINE_DEPLOY2); // clear
+	while (true) {
+		chprintf(DEBUG_SD, "Sleeping...\r\n");
+		for(uint32_t per = 0; per < 5000; per += 100 ) {
+		    pwmEnableChannel(&PWMD3, 0, PWM_PERCENTAGE_TO_WIDTH(&PWMD3, per));
+	    	chThdSleepMilliseconds(500);
+		}
+
+//		for(uint32_t v = 2400; v <= 3600; v += 120 ) {
+//			chprintf(DEBUG_SD, "Setting output to %u mV\r\n", (v * 100 / 120));
+//	    	dacPutChannelX(&DACD1, 0, v);
+//	    	chThdSleepMilliseconds(5000);
+//		}
+
+    	chThdSleepMilliseconds(3000);
+	}
+
+
+
+
+
     while (true) {
         adcConvert (&ADCD1, &adccg, &samples[0], ADC_BUF_DEPTH);
 
@@ -185,8 +303,6 @@ THD_FUNCTION(PositionThread, arg) {
         chThdSleepMilliseconds(100);
     }
 }
- 
-
 
 const char* sensor_voltage_status_t_to_str(const sensor_voltage_status_t v) {
 	switch (v) {

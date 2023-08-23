@@ -37,7 +37,7 @@ const char* ring_position_t_to_str(const ring_position_t v);
 bool drive_motor(const bool lock_mode, const uint16_t duration_ms);
 
 
-extern THD_WORKING_AREA(waPositionThread, 256);
+extern THD_WORKING_AREA(waPositionThread, 512);
 extern THD_FUNCTION(PositionThread, arg);
 
 
