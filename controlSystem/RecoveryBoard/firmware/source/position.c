@@ -81,6 +81,27 @@ ring_position_t determine_ring_position(const int sensor1, const int sensor2, co
 	return(RING_POSITION_UNKNOWN);
 }
 
+static const DACConfig dac = { .init=0 };
+void motor_current_limit_init(void) {
+	dacStart(&DACD1, &dac);
+}
+
+void motor_current_limit(uint32_t mA) {
+	// MAX 2.75A or 2750mA.VREF must be < 2v, given MOTOR_ILIM is up to
+	// 3.3v and gets divided by 2, it can put at most 1.65v on VREF.
+	// See below for conversion to mA.
+	chDbgAssert(mA <= 2750, "motor_current_limit too high");
+	// Current is controlled by setting a voltage on VREF of the BD63150AFM
+	// motor driver. The current is determined by the formula VREF/3/RNF
+	// where RNF is a current sensing resister chosen by us to be 0.1Ohm.
+	// We can set VREF by the DAC on the MOTOR_ILIM pin, PA4, except it
+	// passes through a 1/2 voltage divider. So for us:
+	//    Iout = MOTOR_ILIM * 5/3
+	// The DAC stepsize is 3.3v/2^12 so:
+	//    Iout = step * 11/8192
+	// Solving for step and using mA instead of A gives:
+	dacPutChannelX(&DACD1, 0, mA * 1024 / 1375);
+}
 
 //===========================================================================================
 // Position!
@@ -92,8 +113,13 @@ THD_FUNCTION(PositionThread, arg) {
     (void)arg;
     chRegSetThreadName("Position");
     memset(&g_position_state, 0, sizeof(g_position_state));
-    
-    // Turn on power to motor (but keep it off) TODO: Better power management
+
+    //TODO: Better power management. Andrew had mentoned something like keep
+    // the current low (how low?) normally, but set it high (how high?) during
+    // some kind of activity (what activity?)
+    motor_current_limit_init();
+    motor_current_limit(1500);
+    // Turn on power to motor (but keep it off)
     palClearLine(LINE_DEPLOY1);
     palClearLine(LINE_DEPLOY2);
 //	palClearLine(LINE_N_MOTOR_PS);

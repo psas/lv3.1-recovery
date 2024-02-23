@@ -238,7 +238,7 @@
                                      PIN_MODE_ANALOG(GPIOA_HALL2) |         \
                                      PIN_MODE_ALTERNATE(GPIOA_USART2_TX) |     \
                                      PIN_MODE_ALTERNATE(GPIOA_USART2_RX) |     \
-                                     PIN_MODE_OUTPUT(GPIOA_MOTOR_ILIM) |         \
+                                     PIN_MODE_ANALOG(GPIOA_MOTOR_ILIM) |         \
                                      PIN_MODE_INPUT(GPIOA_ISO_DROGUE) |     \
                                      PIN_MODE_INPUT(GPIOA_ISO_MAIN) |        \
                                      PIN_MODE_OUTPUT(GPIOA_N_ROCKET_READY) |        \
