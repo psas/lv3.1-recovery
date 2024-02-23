@@ -20,7 +20,7 @@ static THD_FUNCTION(BeepThread, pwm) {
   // - 25 ->  4000Hz
   // - 23 -> ~4350Hz
   const pwmcnt_t periods[] = {28,27,26,25,24,23};
-  const int len = sizeof(period)/sizeof(period[0]);
+  const int len = sizeof(periods)/sizeof(periods[0]);
 
   while (true) {
     for(int i = 0; i < len; i++) {
@@ -63,7 +63,7 @@ static void beep_stop(void * pwm) {
 }
 
 void beep(void) {
-  pwmEnableChannel(PWMD, CHAN, PWM_PERCENTAGE_TO_WIDTH(PWM, 5000));
+  pwmEnableChannel(PWMD, CHAN, PWM_PERCENTAGE_TO_WIDTH(PWMD, 5000));
   chVTSet(&timer, chTimeS2I(1), beep_stop, PWMD);
 }
 
