@@ -1,106 +1,69 @@
-/*
-    NeaPolis Innovation Summer Campus 2021 Examples
-    Copyright (C) 2021 Ciro Mazzocchi
-    [ciro.mazzocchi@outlook.com]
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-        http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-*/
-
-/*
- * Demo Test for PWM Driver.
- * PWM Signal, generated on PB4 pin.
+/* PWM driven beep
+ *
+ * This drives the buzzer on the Recovery Board. The circuit is attached to pin
+ * PB15. It expects a 50% duty cycle square wave optimally at 4000Hz but
+ * supports frequencies between 3500Hz and 4500Hz. Pin PB15 can be configured
+ * to Timer 1 Channel 3 complementary output (TIM1_CH3N) and operated as a PWM.
  */
 
 #include "ch.h"
 #include "hal.h"
 
-#include "stdio.h"
-
-/*
- * PWM Driver Configuration.
- */
-static void pwmPeriodCb(PWMDriver *pwmp){
-  (void)pwmp;
-
-  // This sets to HIGH the pin of green led
-  palSetPad(GPIOB, GPIOB_SPEAKER);
-};
-
-static void pwmPulseCb(PWMDriver *pwmp){
-  (void)pwmp;
-
-  // This sets to LOW the pin of green led
-  palClearPad(GPIOB, GPIOB_SPEAKER);
-};
-
-static PWMConfig pwmcfg = {
-  10000,
-  200,
-  pwmPeriodCb,
-  {
-   {PWM_OUTPUT_ACTIVE_HIGH, pwmPulseCb},
-   {PWM_OUTPUT_DISABLED, NULL},
-   {PWM_OUTPUT_DISABLED, NULL},
-   {PWM_OUTPUT_DISABLED, NULL}
-  },
-  0,
-  0
-};
-
-/*
- * Duty cycle Beep Thread.
- */
 static THD_WORKING_AREA(waBeepThread, 128);
-static THD_FUNCTION(BeepThread, arg) {
-  (void)arg;
+static THD_FUNCTION(BeepThread, pwm) {
   chRegSetThreadName("Beep");
 
-  // This would define out sequence
-  int delay[] = {250,750,1200,750};
+  // Sweeps through the speaker frequency range once a second from low to high
+  // by changing the PWM period. At a PWM timer rate of 100khz the periods
+  // correspond to:
+  // - 28 -> ~3570Hz
+  // - 25 ->  4000Hz
+  // - 23 -> ~4350Hz
+  const pwmcnt_t periods[] = {28,27,26,25,24,23};
+  const int len = sizeof(period)/sizeof(period[0]);
 
   while (true) {
-    // For each element of our sequence
-    for(int i = 0; i <4; i++) {
-
-      // This enables 0 channel with a new duty cycle
-      pwmEnableChannel(&PWMD3, 0, PWM_PERCENTAGE_TO_WIDTH(&PWMD3, delay[i]));
-
-      // This waits 1 second
-      chThdSleepMilliseconds(1000);
+    for(int i = 0; i < len; i++) {
+      pwmChangePeriod(pwm, periods[i]);
+      chThdSleepMilliseconds(1000/len);
     }
   }
 }
 
-int main(void) {
-  halInit();
-  chSysInit();
+// Note that while the STM indexes PWM/Timer channels from 1 but ChibiOS
+// indexes them from 0, so CHAN is one less.
+#define PWMD &PWMD1
+#define CHAN 2
 
-  // It configures PWM related PIN.
-  palSetPadMode(GPIOB, 4, PAL_MODE_ALTERNATE(2));
+static PWMConfig pwmcfg = {
+  .frequency = 100000, // chosen arbitrarily, but high enough to make 4KHz easy
+  .period = 25, // 4KHz at 100KHz PWM rate
+  .channels = {
+   {.mode = PWM_OUTPUT_DISABLED},
+   {.mode = PWM_OUTPUT_DISABLED},
+   // PWM Channel 3 in complementary output mode. This mode is only available
+   // through the low level driver, not officially part of the normal high
+   // level interface, and also only works with STM32_PWM_USE_ADVANCED enabled.
+   {.mode = PWM_COMPLEMENTARY_OUTPUT_ACTIVE_HIGH},
+   {.mode = PWM_OUTPUT_DISABLED},
+  },
+};
 
-  // It stars PWM driver.
-  pwmStart(&PWMD3, &pwmcfg);
+static virtual_timer_t timer;
 
-  // It enables the periodic callback at the beginning of period
-  pwmEnablePeriodicNotification(&PWMD3);
-
-  // It enables the periodic callback at the end of pulse
-  pwmEnableChannelNotification(&PWMD3,0);
-
-  // It creates the Beep's thread
-  chThdCreateStatic(waBeepThread, sizeof(waBeepThread), NORMALPRIO+2, BeepThread, NULL);
-
-  while (true) {
-    chThdSleepMilliseconds(1000);
-  }
+void beep_init(void) {
+  chVTObjectInit(&timer);
+  palSetPadMode(GPIOB, GPIOB_SPEAKER, PAL_MODE_ALTERNATE(2));
+  pwmStart(PWMD, &pwmcfg);
+  chThdCreateStatic(waBeepThread, sizeof(waBeepThread), NORMALPRIO, BeepThread, PWMD);
 }
+
+static void beep_stop(void * pwm) {
+  pwmDisableChannel(pwm, CHAN);
+}
+
+void beep(void) {
+  pwmEnableChannel(PWMD, CHAN, PWM_PERCENTAGE_TO_WIDTH(PWM, 5000));
+  chVTSet(&timer, chTimeS2I(1), beep_stop, PWMD);
+}
+

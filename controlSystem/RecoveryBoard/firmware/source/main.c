@@ -116,13 +116,10 @@ static void cmd_Position(BaseSequentialStream *chp, int argc, char *argv[]) {
 	}}
 
 static void cmd_Beep(BaseSequentialStream *chp, int argc, char *argv[]) {
-	chprintf(chp, "beep! \r\n");
-	chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
-    while (true) {
-        //palToggleLine(LINE_SPEAKER);
-        chprintf(chp, "slayyyyy");
-                
-    }
+	(void)argc;
+	(void)argv;
+	chprintf(chp, "slayyyyy\r\n");
+	beep();
 }
 
     
@@ -167,6 +164,9 @@ int main(void) {
     
     palSetLine(LINE_BATTREAD); //BATT_READ (shore power)
 
+    beep_init();
+    beep();
+
     // START THEM THREADS
     chThdCreateStatic(waBlinkyThread, sizeof(waBlinkyThread), NORMALPRIO, BlinkyThread, NULL);
 
@@ -175,7 +175,6 @@ int main(void) {
     chThdCreateStatic(waMainchuteThread, sizeof(waMainchuteThread), NORMALPRIO, MainchuteThread, NULL);    
     chThdCreateStatic(waShell, sizeof(waShell), NORMALPRIO, shellThread, (void *)&shell_cfg);
     chThdCreateStatic(waPositionThread, sizeof(waPositionThread), NORMALPRIO, PositionThread, NULL);
-    chThdCreateStatic(waBeepThread, sizeof(waBeepThread), NORMALPRIO, BeepThread, NULL);
     
     
     while (true) {
