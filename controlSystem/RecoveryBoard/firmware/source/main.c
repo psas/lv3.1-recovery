@@ -87,11 +87,20 @@ static void cmd_state(BaseSequentialStream *chp, int argc, char *argv[]) {
 
 
 static void cmd_lock(BaseSequentialStream *chp, int argc, char *argv[]) {
-	drive_motor(true, 10);
+	drive_motor(true, 10, false);
 }
 
 static void cmd_unlock(BaseSequentialStream *chp, int argc, char *argv[]) {
-	drive_motor(false, 10);
+	drive_motor(false, 10, false);
+}
+
+
+static void cmd_lock_full(BaseSequentialStream *chp, int argc, char *argv[]) {
+	drive_motor(true, 10, true);
+}
+
+static void cmd_unlock_full(BaseSequentialStream *chp, int argc, char *argv[]) {
+	drive_motor(false, 10, true);
 }
 
 static void cmd_stream(BaseSequentialStream *chp, int argc, char *argv[]) {
@@ -128,6 +137,8 @@ static const ShellCommand commands[] = {
     {"pos", cmd_Position},
 	{"u", cmd_unlock},//dev debug use only
 	{"l", cmd_lock},//dev debug use only
+	{"U", cmd_unlock_full},//dev debug use only
+	{"L", cmd_lock_full},//dev debug use only
 	{"stream", cmd_stream},
     {"beep", cmd_Beep},
 
