@@ -11,6 +11,7 @@ position_state_t g_position_state;
 
 bool drive_motor(const bool lock_mode, const uint16_t duration_ms, const bool check_hall_sensors) {
 	chprintf(DEBUG_SD, "Moving motor to %s position\r\n", (lock_mode ? "locked" : "unlocked"));
+	motor_current_limit(1500);
 	chThdSleepMilliseconds(100);
 	palClearLine(LINE_DEPLOY1);
 	palClearLine(LINE_DEPLOY2);
@@ -20,11 +21,13 @@ bool drive_motor(const bool lock_mode, const uint16_t duration_ms, const bool ch
 
 	const systime_t start_time = chVTGetSystemTime();
 
+	const int max_delay_ms = 500;
 	if( lock_mode ) {
 		palSetLine(LINE_DEPLOY2);
 		chThdSleepMilliseconds(duration_ms);
+		motor_current_limit(800); //Note: this need more thought out tuning to dealing with mechanical inertia and bounce
 		if( check_hall_sensors ) {
-			for(int i = 0; i < 100; i++ ) {
+			for(int i = 0; i < max_delay_ms; i++ ) {
 				chThdSleepMilliseconds(1);
 				if( g_position_state.ring_position == RING_POSITION_LOCKED ) {
 //					chprintf(DEBUG_SD, "Successfully locked ring!\r\n");
@@ -32,13 +35,18 @@ bool drive_motor(const bool lock_mode, const uint16_t duration_ms, const bool ch
 				}
 			}
 		}
+
+		motor_current_limit(500); //Note: this need more thought out tuning to dealing with mechanical inertia and bounce
+		chThdSleepMilliseconds(30); //Note: this need more thought out tuning to dealing with mechanical inertia and bounce
+
 		palClearLine(LINE_DEPLOY2);
 		chprintf(DEBUG_SD, "Ring Position: %s\r\n", ring_position_t_to_str(g_position_state.ring_position));
 	} else {
 		palSetLine(LINE_DEPLOY1);
 		chThdSleepMilliseconds(duration_ms);
+		motor_current_limit(700); //Note: this need more thought out tuning to dealing with mechanical inertia and bounce
 		if( check_hall_sensors ) {
-			for(int i = 0; i < 100; i++ ) {
+			for(int i = 0; i < max_delay_ms; i++ ) {
 				chThdSleepMilliseconds(1);
 				if( g_position_state.ring_position == RING_POSITION_UNLOCKED ) {
 //					chprintf(DEBUG_SD, "Successfully unlocked ring!\r\n");
@@ -46,6 +54,12 @@ bool drive_motor(const bool lock_mode, const uint16_t duration_ms, const bool ch
 				}
 			}
 		}
+
+		motor_current_limit(500); //Note: this need more thought out tuning to dealing with mechanical inertia and bounce
+		chThdSleepMilliseconds(5); //Note: this need more thought out tuning to dealing with mechanical inertia and bounce
+		motor_current_limit(200); //Note: this need more thought out tuning to dealing with mechanical inertia and bounce
+		chThdSleepMilliseconds(10); //Note: this need more thought out tuning to dealing with mechanical inertia and bounce
+
 		palClearLine(LINE_DEPLOY1);
 		chprintf(DEBUG_SD, "Ring Position: %s\r\n", ring_position_t_to_str(g_position_state.ring_position));
 	}
