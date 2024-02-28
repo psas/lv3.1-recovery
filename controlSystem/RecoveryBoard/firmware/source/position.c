@@ -11,7 +11,8 @@ position_state_t g_position_state;
 
 bool drive_motor(const bool lock_mode, const uint16_t duration_ms, const bool check_hall_sensors) {
 	chprintf(DEBUG_SD, "Moving motor to %s position\r\n", (lock_mode ? "locked" : "unlocked"));
-	motor_current_limit(1500);
+	int high_current_ma = 4000;
+	motor_current_limit(high_current_ma);
 	chThdSleepMilliseconds(100);
 	palClearLine(LINE_DEPLOY1);
 	palClearLine(LINE_DEPLOY2);
@@ -21,30 +22,31 @@ bool drive_motor(const bool lock_mode, const uint16_t duration_ms, const bool ch
 
 	const systime_t start_time = chVTGetSystemTime();
 
-	const int max_delay_ms = 500;
+	const int max_delay_ms = 750;
 	if( lock_mode ) {
 		palSetLine(LINE_DEPLOY2);
 		chThdSleepMilliseconds(duration_ms);
-		motor_current_limit(800); //Note: this need more thought out tuning to dealing with mechanical inertia and bounce
+		motor_current_limit(high_current_ma);
 		if( check_hall_sensors ) {
 			for(int i = 0; i < max_delay_ms; i++ ) {
 				chThdSleepMilliseconds(1);
 				if( g_position_state.ring_position == RING_POSITION_LOCKED ) {
-//					chprintf(DEBUG_SD, "Successfully locked ring!\r\n");
 					break;
 				}
 			}
 		}
 
-		motor_current_limit(500); //Note: this need more thought out tuning to dealing with mechanical inertia and bounce
-		chThdSleepMilliseconds(30); //Note: this need more thought out tuning to dealing with mechanical inertia and bounce
+		chThdSleepMilliseconds(100); //Note: this need more thought out tuning to dealing with mechanical inertia and bounce
+
+//		motor_current_limit(500); //Note: this need more thought out tuning to dealing with mechanical inertia and bounce
+//		chThdSleepMilliseconds(30); //Note: this need more thought out tuning to dealing with mechanical inertia and bounce
 
 		palClearLine(LINE_DEPLOY2);
 		chprintf(DEBUG_SD, "Ring Position: %s\r\n", ring_position_t_to_str(g_position_state.ring_position));
 	} else {
 		palSetLine(LINE_DEPLOY1);
 		chThdSleepMilliseconds(duration_ms);
-		motor_current_limit(700); //Note: this need more thought out tuning to dealing with mechanical inertia and bounce
+		motor_current_limit(3500); //Note: this need more thought out tuning to dealing with mechanical inertia and bounce
 		if( check_hall_sensors ) {
 			for(int i = 0; i < max_delay_ms; i++ ) {
 				chThdSleepMilliseconds(1);
@@ -90,6 +92,8 @@ ring_position_t determine_ring_position(const int sensor1, const int sensor2, co
 	const int sensor_2_unlock_threshold = 1000;
 	const int sensor_1_lock_threshold = 2250;
 	const int sensor_2_lock_threshold = 2250;
+//	const int sensor_1_lock_threshold = 2400;
+//	const int sensor_2_lock_threshold = 1800;
 
 	if( sensor1_status == SENSOR_VOLTAGE_STATUS_OK && sensor2_status == SENSOR_VOLTAGE_STATUS_OK ) {
 		if( sensor1 < sensor_1_unlock_threshold ) {
