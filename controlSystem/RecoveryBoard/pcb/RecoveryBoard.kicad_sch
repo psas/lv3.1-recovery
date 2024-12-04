@@ -1,98 +1,247 @@
-(kicad_sch (version 20230121) (generator eeschema)
-
-  (uuid afa1adc8-bc84-4c0f-9fc0-e23e24f4e870)
-
-  (paper "USLedger")
-
-  (title_block
-    (title "Electromechanical Recovery System Board")
-    (date "2024-03-XX")
-    (rev "3.1")
-  )
-
-  (lib_symbols
-    (symbol "psas-graphics:PSAS LOGO" (in_bom no) (on_board yes)
-      (property "Reference" "LOGO" (at 0 2.54 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Value" "PSAS LOGO" (at 0 5.08 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Footprint" "psas-graphics:PSAS_LOGO_10X10" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Datasheet" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (symbol "PSAS LOGO_0_1"
-        (rectangle (start -1.27 1.27) (end 1.27 -1.27)
-          (stroke (width 0.254) (type default))
-          (fill (type none))
-        )
-      )
-    )
-  )
-
-
-  (symbol (lib_id "psas-graphics:PSAS LOGO") (at 40.64 60.96 0) (unit 1)
-    (in_bom no) (on_board yes) (dnp no) (fields_autoplaced)
-    (uuid d460c039-35df-48c3-8b69-bd81ecb045ec)
-    (property "Reference" "LOGO1" (at 43.18 59.6899 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Value" "PSAS LOGO" (at 43.18 62.2299 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "psas-graphics:PSAS_LOGO_10X10" (at 40.64 60.96 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (at 40.64 60.96 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (instances
-      (project "RecoveryBoard"
-        (path "/afa1adc8-bc84-4c0f-9fc0-e23e24f4e870"
-          (reference "LOGO1") (unit 1)
-        )
-      )
-    )
-  )
-
-  (sheet (at 38.1 38.1) (size 34.29 8.89) (fields_autoplaced)
-    (stroke (width 0.1524) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 1e385cc4-93e7-4341-aa1b-3fb36c1da3d1)
-    (property "Sheetname" "Power" (at 38.1 37.3884 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom))
-    )
-    (property "Sheetfile" "RecoveryBoardPower.kicad_sch" (at 38.1 47.5746 0)
-      (effects (font (size 1.27 1.27)) (justify left top))
-    )
-    (instances
-      (project "RecoveryBoard"
-        (path "/afa1adc8-bc84-4c0f-9fc0-e23e24f4e870" (page "2"))
-      )
-    )
-  )
-
-  (sheet (at 77.47 38.1) (size 34.29 8.89) (fields_autoplaced)
-    (stroke (width 0.1524) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid a2be619b-613b-4397-a3ca-45ce4e9dd56c)
-    (property "Sheetname" "Microcontroller" (at 77.47 37.3884 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom))
-    )
-    (property "Sheetfile" "RecoveryBoardMicrocontroller.kicad_sch" (at 77.47 47.5746 0)
-      (effects (font (size 1.27 1.27)) (justify left top))
-    )
-    (instances
-      (project "RecoveryBoard"
-        (path "/afa1adc8-bc84-4c0f-9fc0-e23e24f4e870" (page "3"))
-      )
-    )
-  )
-
-  (sheet_instances
-    (path "/" (page "1"))
-  )
+(kicad_sch
+	(version 20231120)
+	(generator "eeschema")
+	(generator_version "8.0")
+	(uuid "afa1adc8-bc84-4c0f-9fc0-e23e24f4e870")
+	(paper "USLedger")
+	(title_block
+		(title "Electromechanical Recovery System Board")
+		(date "2024-03-XX")
+		(rev "3.1")
+	)
+	(lib_symbols
+		(symbol "psas-graphics:PSAS LOGO"
+			(exclude_from_sim no)
+			(in_bom no)
+			(on_board yes)
+			(property "Reference" "LOGO"
+				(at 0 2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "PSAS LOGO"
+				(at 0 5.08 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" "psas-graphics:PSAS_LOGO_10X10"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "PSAS LOGO_0_1"
+				(rectangle
+					(start -1.27 1.27)
+					(end 1.27 -1.27)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "psas-graphics:PSAS LOGO")
+		(at 40.64 60.96 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(dnp yes)
+		(fields_autoplaced yes)
+		(uuid "d460c039-35df-48c3-8b69-bd81ecb045ec")
+		(property "Reference" "LOGO1"
+			(at 43.18 59.6899 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "PSAS LOGO"
+			(at 43.18 62.2299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "psas-graphics:PSAS_LOGO_10X10"
+			(at 40.64 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 40.64 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 40.64 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DPN" ""
+			(at 40.64 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DST" ""
+			(at 40.64 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "MFR" ""
+			(at 40.64 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "RecoveryBoard"
+				(path "/afa1adc8-bc84-4c0f-9fc0-e23e24f4e870"
+					(reference "LOGO1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(sheet
+		(at 38.1 38.1)
+		(size 34.29 8.89)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "1e385cc4-93e7-4341-aa1b-3fb36c1da3d1")
+		(property "Sheetname" "Power"
+			(at 38.1 37.3884 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "RecoveryBoardPower.kicad_sch"
+			(at 38.1 47.5746 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "RecoveryBoard"
+				(path "/afa1adc8-bc84-4c0f-9fc0-e23e24f4e870"
+					(page "2")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 77.47 38.1)
+		(size 34.29 8.89)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "a2be619b-613b-4397-a3ca-45ce4e9dd56c")
+		(property "Sheetname" "Microcontroller"
+			(at 77.47 37.3884 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "RecoveryBoardMicrocontroller.kicad_sch"
+			(at 77.47 47.5746 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "RecoveryBoard"
+				(path "/afa1adc8-bc84-4c0f-9fc0-e23e24f4e870"
+					(page "3")
+				)
+			)
+		)
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
 )

@@ -1,3 +1,7 @@
+# Ignore local build directories
+build
+archive
+
 # jupyter checkpoints
 .ipynb_checkpoints/*
 *.s#[1-9]
