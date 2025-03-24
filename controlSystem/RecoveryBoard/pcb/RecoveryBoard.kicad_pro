@@ -247,102 +247,69 @@
       "mfg": "",
       "mpn": ""
     },
+    "layer_pairs": [],
     "layer_presets": [
       {
         "activeLayer": -2,
         "layers": [
-          31,
-          32,
-          34,
-          36,
-          38,
-          44,
-          46,
-          48
+          2,
+          3,
+          7,
+          11,
+          15,
+          25,
+          29,
+          33
         ],
         "name": "GOODBACK",
         "renderLayers": [
-          125,
-          126,
-          127,
-          128,
-          129,
-          130,
-          133,
-          134,
-          135,
-          136,
-          137,
-          138,
-          140,
-          141,
-          144,
-          145,
-          146,
-          147,
-          148,
-          149,
-          150,
-          151,
-          152,
-          153,
-          154,
-          155,
-          157,
-          158,
-          159,
-          160,
-          161,
-          164,
-          165
+          "vias",
+          "footprint_text",
+          "footprint_anchors",
+          "ratsnest",
+          "grid",
+          "footprints_front",
+          "footprints_back",
+          "tracks",
+          "drc_errors",
+          "drawing_sheet",
+          "bitmaps",
+          "pads",
+          "zones",
+          "drc_warnings",
+          "locked_item_shadows",
+          "conflict_shadows"
         ]
       },
       {
         "activeLayer": -2,
         "layers": [
           0,
-          33,
-          35,
-          37,
-          39,
-          44,
-          47,
-          49
+          1,
+          5,
+          9,
+          13,
+          25,
+          31,
+          35
         ],
         "name": "GOODFRONT",
         "renderLayers": [
-          125,
-          126,
-          127,
-          128,
-          129,
-          133,
-          134,
-          135,
-          136,
-          137,
-          138,
-          140,
-          141,
-          144,
-          145,
-          146,
-          147,
-          148,
-          149,
-          150,
-          151,
-          152,
-          153,
-          154,
-          155,
-          157,
-          158,
-          159,
-          160,
-          161,
-          164,
-          165
+          "vias",
+          "footprint_anchors",
+          "ratsnest",
+          "grid",
+          "footprints_front",
+          "footprints_back",
+          "tracks",
+          "drc_errors",
+          "drawing_sheet",
+          "bitmaps",
+          "pads",
+          "zones",
+          "drc_warnings",
+          "locked_item_shadows",
+          "conflict_shadows"
         ]
       }
     ],
@@ -354,9 +321,18 @@
   },
   "erc": {
     "erc_exclusions": [
-      "pin_to_pin|673100|1028700|d983f5ba-9ef5-41e8-ade4-0db8874442f0|0fa99bdc-f497-4582-b9ac-a59c768ae336|/afa1adc8-bc84-4c0f-9fc0-e23e24f4e870/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1|/afa1adc8-bc84-4c0f-9fc0-e23e24f4e870/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1|/afa1adc8-bc84-4c0f-9fc0-e23e24f4e870/a2be619b-613b-4397-a3ca-45ce4e9dd56c",
-      "pin_to_pin|673100|1028700|d983f5ba-9ef5-41e8-ade4-0db8874442f0|88b2f76a-c203-4af0-b359-dd47f5633ebd|/afa1adc8-bc84-4c0f-9fc0-e23e24f4e870/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1|/afa1adc8-bc84-4c0f-9fc0-e23e24f4e870/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1|/afa1adc8-bc84-4c0f-9fc0-e23e24f4e870/a2be619b-613b-4397-a3ca-45ce4e9dd56c",
-      "power_pin_not_driven|1955800|1574800|7d228372-344e-47f4-bad0-bc2bd22869df|00000000-0000-0000-0000-000000000000|||"
+      [
+        "pin_to_pin|673100|1028700|d983f5ba-9ef5-41e8-ade4-0db8874442f0|0fa99bdc-f497-4582-b9ac-a59c768ae336|/afa1adc8-bc84-4c0f-9fc0-e23e24f4e870/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1|/afa1adc8-bc84-4c0f-9fc0-e23e24f4e870/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1|/afa1adc8-bc84-4c0f-9fc0-e23e24f4e870/a2be619b-613b-4397-a3ca-45ce4e9dd56c",
+        ""
+      ],
+      [
+        "pin_to_pin|673100|1028700|d983f5ba-9ef5-41e8-ade4-0db8874442f0|88b2f76a-c203-4af0-b359-dd47f5633ebd|/afa1adc8-bc84-4c0f-9fc0-e23e24f4e870/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1|/afa1adc8-bc84-4c0f-9fc0-e23e24f4e870/1e385cc4-93e7-4341-aa1b-3fb36c1da3d1|/afa1adc8-bc84-4c0f-9fc0-e23e24f4e870/a2be619b-613b-4397-a3ca-45ce4e9dd56c",
+        ""
+      ],
+      [
+        "power_pin_not_driven|1955800|1574800|7d228372-344e-47f4-bad0-bc2bd22869df|00000000-0000-0000-0000-000000000000|||",
+        ""
+      ]
     ],
     "meta": {
       "version": 0
@@ -543,10 +519,15 @@
       "duplicate_sheet_names": "error",
       "endpoint_off_grid": "warning",
       "extra_units": "error",
+      "footprint_filter": "ignore",
+      "footprint_link_issues": "warning",
+      "four_way_junction": "ignore",
       "global_label_dangling": "warning",
       "hier_label_mismatch": "error",
       "label_dangling": "error",
+      "label_multiple_wires": "warning",
       "lib_symbol_issues": "warning",
+      "lib_symbol_mismatch": "warning",
       "missing_bidi_pin": "warning",
       "missing_input_pin": "warning",
       "missing_power_pin": "error",
@@ -559,9 +540,14 @@
       "pin_not_driven": "error",
       "pin_to_pin": "warning",
       "power_pin_not_driven": "error",
+      "same_local_global_label": "warning",
+      "similar_label_and_power": "warning",
       "similar_labels": "warning",
+      "similar_power": "warning",
       "simulation_model_issue": "error",
+      "single_global_label": "ignore",
       "unannotated": "error",
+      "unconnected_wire_endpoint": "warning",
       "unit_value_mismatch": "error",
       "unresolved_variable": "error",
       "wire_dangling": "error"
@@ -573,7 +559,7 @@
   },
   "meta": {
     "filename": "RecoveryBoard.kicad_pro",
-    "version": 1
+    "version": 3
   },
   "net_settings": {
     "classes": [
@@ -588,6 +574,7 @@
         "microvia_drill": 0.1,
         "name": "Default",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "priority": 2147483647,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
         "track_width": 0.1524,
         "via_diameter": 0.508,
@@ -596,7 +583,7 @@
       }
     ],
     "meta": {
-      "version": 3
+      "version": 4
     },
     "net_colors": null,
     "netclass_assignments": null,
@@ -708,6 +695,7 @@
       ],
       "filter_string": "",
       "group_symbols": true,
+      "include_excluded_from_bom": false,
       "name": "",
       "sort_asc": true,
       "sort_field": "Reference"
@@ -751,6 +739,7 @@
     },
     "page_layout_descr_file": "",
     "plot_directory": "",
+    "space_save_all_events": true,
     "spice_adjust_passive_values": false,
     "spice_current_sheet_as_root": false,
     "spice_external_command": "spice \"%I\"",
