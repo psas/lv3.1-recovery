@@ -1,16 +1,7 @@
-# Ignore local build directories
-build
+# Ignore local archives and build folders
 archive
+build
 
-# jupyter checkpoints
-.ipynb_checkpoints/*
-*.s#[1-9]
-*.s##
-*.b#[1-9]
-*.b##.DS_Store
-.DS_Store
-
-# ---------------------------------------------------------
 # For PCBs designed using KiCad: https://www.kicad.org/
 # Format documentation: https://kicad.org/help/file-formats/
 
@@ -18,6 +9,7 @@ archive
 *.000
 *.bak
 *.bck
+*.lck
 *.kicad_pcb-bak
 *.kicad_sch-bak
 *-backups
@@ -40,3 +32,13 @@ fp-info-cache
 # Exported BOM files
 *.xml
 *.csv
+
+
+# jupyter checkpoints
+.ipynb_checkpoints/*
+*.s#[1-9]
+*.s##
+*.b#[1-9]
+*.b##.DS_Store
+.DS_Store
+
