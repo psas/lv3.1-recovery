@@ -42,3 +42,6 @@ fp-info-cache
 *.b##.DS_Store
 .DS_Store
 
+# Rust generated files
+controlSystem/RecoveryBoard/firmware-rs/target
+controlSystem/RecoveryBoard/firmware-rs/Cargo.lock
