@@ -7,13 +7,13 @@ from typing import cast
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
-        format="%(asctime)s - [%(levelname)s]: %(message)s",
-        datefmt="%H:%M:%S",
-        level=logging.INFO,
-    )
+    format="%(asctime)s - [%(levelname)s]: %(message)s",
+    datefmt="%H:%M:%S",
+    level=logging.INFO,
+)
 
 parser = argparse.ArgumentParser(
-    prog = "VulCAN Tester",
+    prog="VulCAN Tester",
     description="Send or Receive messages via CAN using a VulCAN adapter",
 )
 
@@ -24,25 +24,34 @@ _ = group.add_argument(
     "--send", "-s", action="store_true", help="Send a basic CAN message"
 )
 _ = group.add_argument(
-    "--receive", "-r", action="store_true", help="Wait for a CAN message for n seconds"
+    "--receive", "-r", action="store_true", help="Await a CAN message"
+)
+_ = group.add_argument(
+    "--pingpong",
+    "-p",
+    action="store_true",
+    help="Await a CAN message, then echo it back to the bus",
 )
 
 args = parser.parse_args()
 
+# Ensure proper arg types
 device = cast(str, args.device)
 device = str(device)
 send = cast(bool, args.send)
 send = bool(send)
 receive = cast(bool, args.receive)
 receive = bool(receive)
+pingpong = cast(bool, args.pingpong)
+pingpong = bool(pingpong)
 
 
 def main():
     logger.info("Connecting to VulCAN")
-    bitrate = 500000
+    bitrate = 1e6
 
     # Configure the connection to the VulCAN
-    bus = can.interface.Bus(channel=device, interface="slcan", bitrate=bitrate)
+    bus = can.interface.Bus(channel="can0", interface="socketcan", bitrate=bitrate)
 
     if send:
         logger.info("Sending CAN message")
@@ -52,29 +61,25 @@ def main():
         message = can.Message(
             arbitration_id=message_id, data=data_bytes, is_extended_id=False
         )
-
-        # Send the CAN message
-        bus.send(message)
-        logger.info("Sent message: %s", message)
-
-        # Close the bus connection
-        bus.shutdown()
+        while True:
+            bus.send(message)
+            logger.info("Sent message: %s", message)
+            time.sleep(1)
 
     if receive:
-        # Set a timeout for receiving messages (in seconds)
-        timeout = 30
-        end_time = time.time() + timeout
+        logger.info("Listening for CAN messages")
+        while True:
+            message = bus.recv(timeout=None)
+            logger.info("Received message: %s", message)
 
-        logger.info("Listening for CAN messages for %s seconds", timeout)
-
-        # Receive CAN messages until timeout is reached
-        while time.time() < end_time:
-            message = bus.recv(timeout=end_time - time.time())
+    if pingpong:
+        logger.info("Listening for CAN messages")
+        while True:
+            message = bus.recv(timeout=None)
             if message:
                 logger.info("Received message: %s", message)
-
-        # Close the bus connection
-        bus.shutdown()
+                time.sleep(1)
+                bus.send(message)
 
 
 if __name__ == "__main__":
