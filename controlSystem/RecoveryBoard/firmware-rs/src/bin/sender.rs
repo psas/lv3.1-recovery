@@ -1,7 +1,6 @@
 #![no_std]
 #![no_main]
 
-mod shared;
 use defmt::*;
 use embassy_executor::Spawner;
 use embassy_stm32::bind_interrupts;
@@ -15,9 +14,9 @@ use embassy_stm32::time::Hertz;
 use embassy_stm32::timer::low_level::CountingMode;
 use embassy_stm32::timer::simple_pwm::{PwmPin, SimplePwm};
 use embassy_sync::mutex::Mutex;
-use shared::buzzer::{active_beep, play_power_on};
-use shared::can::pingpong;
-use shared::types::*;
+use firmware_rs::shared::buzzer::{active_beep, play_power_on};
+use firmware_rs::shared::can::pingpong;
+use firmware_rs::shared::types::*;
 use {defmt_rtt as _, panic_probe as _};
 
 const CAN_BITRATE: u32 = 1_000_000;

@@ -1,12 +1,9 @@
 #![no_std]
 #![no_main]
 
-mod shared;
-
 use defmt::*;
 use embassy_executor::Spawner;
 use embassy_stm32::gpio::{Input, Level, Output, Pull, Speed};
-use shared::can::pingpong;
 use {defmt_rtt as _, panic_probe as _};
 
 #[embassy_executor::main]
