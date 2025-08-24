@@ -3,23 +3,32 @@
 
 use defmt::*;
 use embassy_executor::Spawner;
-use embassy_stm32::adc::{Adc, InterruptHandler};
-use embassy_stm32::bind_interrupts;
-use embassy_stm32::can::filter::Mask32;
-use embassy_stm32::can::{
-    Can, Fifo, Rx0InterruptHandler, Rx1InterruptHandler, SceInterruptHandler, TxInterruptHandler,
+use embassy_stm32::{
+    adc::{Adc, InterruptHandler},
+    bind_interrupts,
+    can::{
+        filter::Mask32, Can, Fifo, Rx0InterruptHandler, Rx1InterruptHandler, SceInterruptHandler,
+        TxInterruptHandler,
+    },
+    gpio::OutputType,
+    peripherals::{ADC1, CAN, USART2},
+    time::Hertz,
+    timer::{
+        low_level::CountingMode,
+        simple_pwm::{PwmPin, SimplePwm},
+    },
+    usart::{
+        Config as UartConfig, DataBits, InterruptHandler as UsartInterruptHandler, Parity,
+        StopBits, Uart,
+    },
 };
-use embassy_stm32::gpio::OutputType;
-use embassy_stm32::peripherals::{ADC1, CAN};
-use embassy_stm32::time::Hertz;
-use embassy_stm32::timer::low_level::CountingMode;
-use embassy_stm32::timer::simple_pwm::{PwmPin, SimplePwm};
-use embassy_sync::mutex::Mutex;
-use embassy_sync::signal::Signal;
-use firmware_rs::shared::adc::read_battery;
-use firmware_rs::shared::buzzer::{active_beep, play_power_on};
-use firmware_rs::shared::can::pingpong;
-use firmware_rs::shared::types::*;
+use embassy_sync::{mutex::Mutex, signal::Signal};
+use firmware_rs::shared::{
+    adc::read_battery,
+    buzzer::{active_beep, play_power_on},
+    can::pingpong,
+    types::*,
+};
 use {defmt_rtt as _, panic_probe as _};
 
 const CAN_BITRATE: u32 = 1_000_000; // 1Mbps
