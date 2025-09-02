@@ -61,10 +61,8 @@ def main():
         message = can.Message(
             arbitration_id=message_id, data=data_bytes, is_extended_id=False
         )
-        while True:
-            bus.send(message)
-            logger.info("Sent message: %s", message)
-            time.sleep(1)
+        bus.send(message)
+        logger.info("Sent message: %s", message)
 
     if receive:
         logger.info("Listening for CAN messages")
