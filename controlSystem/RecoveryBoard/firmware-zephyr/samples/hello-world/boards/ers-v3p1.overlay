@@ -1,0 +1,13 @@
+// PSAS Electromechanical Recovery System (ERS) board DTS overlay
+
+&gpioa {
+        status = "okay";
+};
+
+&gpiob {
+        status = "okay";
+};
+
+&gpiof {
+        status = "okay";
+};

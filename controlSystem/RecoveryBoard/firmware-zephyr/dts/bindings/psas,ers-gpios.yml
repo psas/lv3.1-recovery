@@ -1,0 +1,14 @@
+description: Electromechanical Recovery System (ERS) GPIO parent node
+
+compatible: "psas,ers-gpios"
+
+include: base.yaml
+
+child-binding:
+  description: |
+    ERS GPIOs child node to express an individual GPIO pin.
+  properties:
+    gpios:
+      type: phandle-array
+      required: true
+      desciption: pin specifier in the format '<port-handle pin flags>'.
