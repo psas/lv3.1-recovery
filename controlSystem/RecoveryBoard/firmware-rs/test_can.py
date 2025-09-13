@@ -75,9 +75,8 @@ def main():
         while True:
             message = bus.recv(timeout=None)
             if message:
-                logger.info("Received message: %s", message)
-                time.sleep(1)
                 bus.send(message)
+                logger.info("Echoed message: %s", message)
 
 
 if __name__ == "__main__":
