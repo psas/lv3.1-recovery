@@ -49,5 +49,6 @@ def main():
         logger.info("Sent messages: %s %s", msg, msg2)
         time.sleep(2)
 
+
 if __name__ == "__main__":
     main()

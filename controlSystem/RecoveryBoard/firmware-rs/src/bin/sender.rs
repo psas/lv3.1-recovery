@@ -58,6 +58,7 @@ bind_interrupts!(struct CanIrqs {
 bind_interrupts!(struct AdcIrqs { ADC1_COMP => InterruptHandler<ADC1>; });
 bind_interrupts!(struct UsartIrqs { USART2 => BufferedInterruptHandler<USART2>; });
 
+static ROCKET_READY: AtomicBool = AtomicBool::new(false);
 static DROGUE_STATUS: AtomicBool = AtomicBool::new(false);
 static MAIN_STATUS: AtomicBool = AtomicBool::new(false);
 static DROGUE_LAST_SEEN: AtomicU64 = AtomicU64::new(0);
@@ -68,7 +69,6 @@ static ISO_DROGUE_TS: AtomicU64 = AtomicU64::new(0);
 static TX_PIPE: Pipe<CriticalSectionRawMutex, UART_READ_BUF_SIZE> = Pipe::new();
 static CAN_TX_CHANNEL: Channel<CriticalSectionRawMutex, Frame, 10> = Channel::new();
 
-static PWM_MTX: PwmType = Mutex::new(None);
 static UMB_ON_MTX: UmbOnType = Mutex::new(None);
 
 static BATT_READ_SIGNAL: BattOkSignalType = Signal::new();
@@ -87,7 +87,7 @@ async fn main(spawner: Spawner) {
     let iso_drogue = ExtiInput::new(p.PA5, p.EXTI5, Pull::Down);
     let _can_shdn = Output::new(p.PA10, Level::Low, Speed::Medium);
     let _can_silent = Output::new(p.PA9, Level::Low, Speed::Medium);
-    let rocket_ready = Output::new(p.PA7, Level::Low, Speed::Medium);
+    let rocket_ready_pin = Output::new(p.PA7, Level::Low, Speed::Medium);
 
     // Set up PWM driver
     let buzz_pin = PwmPin::new(p.PB15, OutputType::PushPull);
@@ -141,11 +141,10 @@ async fn main(spawner: Spawner) {
     {
         // Put peripherals into mutex if shared among tasks.
         // Inner scope so that mutex is unlocked when out of scope
-        *(PWM_MTX.lock().await) = Some(pwm);
         *(UMB_ON_MTX.lock().await) = Some(umb_on);
     }
 
-    // unwrap!(spawner.spawn(active_beep(&PWM_MTX)));
+    unwrap!(spawner.spawn(active_beep(pwm, &ROCKET_READY)));
     unwrap!(spawner.spawn(can_writer(can_tx, &CAN_TX_CHANNEL)));
     unwrap!(spawner.spawn(can_reader(can_rx)));
     unwrap!(spawner.spawn(uart_writer(uart_tx, &TX_PIPE)));
@@ -153,7 +152,7 @@ async fn main(spawner: Spawner) {
     unwrap!(spawner.spawn(read_battery(adc, p.PB0, &BATT_READ_SIGNAL)));
     unwrap!(spawner.spawn(read_iso(iso_drogue, &UMB_ON_MTX, DROGUE_ID)));
     unwrap!(spawner.spawn(read_iso(iso_main, &UMB_ON_MTX, MAIN_ID)));
-    unwrap!(spawner.spawn(telemetrum_heartbeat(&UMB_ON_MTX, rocket_ready)));
+    unwrap!(spawner.spawn(telemetrum_heartbeat(&UMB_ON_MTX, rocket_ready_pin)));
 
     // Keep main from returning. Needed for can_tx/can_rx or they get dropped
     core::future::pending::<u8>().await;
@@ -254,8 +253,10 @@ async fn telemetrum_heartbeat(umb_on: &'static UmbOnType, mut rr_pin: Output<'st
 
                 if rocket_ready == 1 {
                     rr_pin.set_high();
+                    ROCKET_READY.store(true, Ordering::Relaxed);
                 } else {
                     rr_pin.set_low();
+                    ROCKET_READY.store(false, Ordering::Relaxed);
                 }
 
                 let status_buf = [
