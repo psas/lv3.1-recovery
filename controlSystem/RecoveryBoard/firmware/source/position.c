@@ -191,7 +191,7 @@ THD_FUNCTION(PositionThread, arg) {
         adcConvert (&ADCD1, &adccg, &samples[0], ADC_BUF_DEPTH);
 
         const int hsensor1 = samples[0];
-        const int hsensor2 = 4096 - samples[1];//Invert the reading for sensor 2
+        const int hsensor2 = samples[1];
 
         g_position_state.sensor1 = (hsensor1 * 3300) /4096;
         g_position_state.sensor2 = (hsensor2 * 3300) /4096 ;
