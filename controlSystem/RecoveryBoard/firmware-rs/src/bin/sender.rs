@@ -2,6 +2,7 @@
 #![no_main]
 
 use core::sync::atomic::{AtomicBool, Ordering};
+use embedded_io_async::BufRead;
 use portable_atomic::AtomicU64;
 
 use defmt::*;
@@ -26,7 +27,8 @@ use embassy_stm32::{
         simple_pwm::{PwmPin, SimplePwm},
     },
     usart::{
-        BufferedInterruptHandler, BufferedUart, Config as UartConfig, DataBits, Parity, StopBits,
+        BufferedInterruptHandler, BufferedUart, BufferedUartRx, Config as UartConfig, DataBits,
+        Parity, StopBits,
     },
 };
 use embassy_sync::{
@@ -39,7 +41,7 @@ use firmware_rs::shared::{
     buzzer::active_beep,
     can::can_writer,
     types::*,
-    uart::{uart_reader, uart_writer, UART_READ_BUF_SIZE},
+    uart::{uart_writer, UART_READ_BUF_SIZE},
 };
 use static_cell::ConstStaticCell;
 use {defmt_rtt as _, panic_probe as _};
@@ -74,9 +76,9 @@ static UMB_ON_MTX: UmbOnType = Mutex::new(None);
 static BATT_READ_SIGNAL: BattOkSignalType = Signal::new();
 
 static UART_TX_BUF_CELL: ConstStaticCell<[u8; UART_READ_BUF_SIZE]> =
-    ConstStaticCell::new([0; UART_READ_BUF_SIZE]);
+    ConstStaticCell::new([0u8; UART_READ_BUF_SIZE]);
 static UART_RX_BUF_CELL: ConstStaticCell<[u8; UART_READ_BUF_SIZE]> =
-    ConstStaticCell::new([0; UART_READ_BUF_SIZE]);
+    ConstStaticCell::new([0u8; UART_READ_BUF_SIZE]);
 
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
@@ -155,7 +157,65 @@ async fn main(spawner: Spawner) {
     unwrap!(spawner.spawn(telemetrum_heartbeat(&UMB_ON_MTX, rocket_ready_pin)));
 
     // Keep main from returning. Needed for can_tx/can_rx or they get dropped
-    core::future::pending::<u8>().await;
+    core::future::pending::<()>().await;
+}
+
+async fn deploy(can_id: u16) {
+    let id = unwrap!(StandardId::new(can_id));
+    let header = Header::new(Id::Standard(id), 1, false);
+    let msg = unwrap!(Frame::new(header, &[1; 0]));
+    CAN_TX_CHANNEL.send(msg).await;
+}
+
+#[embassy_executor::task]
+async fn uart_reader(
+    mut rx: BufferedUartRx<'static>,
+    tx_pipe: &'static Pipe<CriticalSectionRawMutex, UART_READ_BUF_SIZE>,
+) {
+    loop {
+        let mut rbuf = [0u8; UART_READ_BUF_SIZE];
+        let mut pos = 0usize;
+        tx_pipe.write(b"> ").await;
+        loop {
+            match rx.fill_buf().await {
+                Ok(buf) => {
+                    info!("buf[0]: {:?}", buf[0]);
+                    let n = buf.len();
+                    rbuf[pos] = buf[0];
+                    tx_pipe.write(buf).await;
+                    rx.consume(n);
+                    if rbuf[pos] == 127 || rbuf[pos] == 27 {
+                        rbuf[pos] = 0;
+                        pos = pos.saturating_sub(1);
+                        tx_pipe.write(b"\x08 \x08").await;
+                        continue;
+                    }
+                    if rbuf[pos] == b'\r' || rbuf[pos] == b'\n' {
+                        tx_pipe.write(b"\n").await;
+                        break;
+                    }
+                    pos = pos.wrapping_add(1);
+                }
+                Err(e) => {
+                    error!("Error: {}", e);
+                    break;
+                }
+            }
+        }
+        match &rbuf[..pos] {
+            b"release drogue" => {
+                tx_pipe.write_all(b"Releasing drogue\r\n").await;
+                deploy(DROGUE_ID).await;
+            }
+            b"release main" => {
+                tx_pipe.write_all(b"Releasing main\r\n").await;
+                deploy(MAIN_ID).await;
+            }
+            _ => {
+                tx_pipe.write_all(b"Invalid command - please try again\r\n").await;
+            }
+        }
+    }
 }
 
 #[embassy_executor::task]
@@ -180,6 +240,7 @@ async fn can_reader(mut can_rx: CanRx<'static>) -> () {
             }
             Err(e) => {
                 error!("CAN Read Error: {}", e);
+                Timer::after_secs(2).await;
             }
         }
     }
@@ -195,10 +256,8 @@ async fn read_iso(mut iso: ExtiInput<'static>, umb_on: &'static UmbOnType, can_i
             let mut umb_on_unlocked = umb_on.lock().await;
             if let Some(umb_on_ref) = umb_on_unlocked.as_mut() {
                 if umb_on_ref.is_high() {
-                    let id = unwrap!(StandardId::new(can_id));
-                    let header = Header::new(Id::Standard(id), 1, false);
-                    let msg = unwrap!(Frame::new(header, &[1; 0]));
-                    CAN_TX_CHANNEL.send(msg).await;
+                    TX_PIPE.write(b"releasing").await;
+                    deploy(can_id).await;
                 }
             }
         }
@@ -269,11 +328,6 @@ async fn telemetrum_heartbeat(umb_on: &'static UmbOnType, mut rr_pin: Output<'st
                     rocket_ready,
                     0,
                 ];
-
-                // info!(
-                //     "Status: ts: {:?} ; br: {:?} ; bo: {:?} ; sps: {:?} ; cbo: {:?} ; es: {:?} ; rr: {:?} ;",
-                //     telemetrum_state, batt_read, batt_ok, shore_pow_status, can_bus_ok, ers_status, rocket_ready
-                // );
 
                 let id = StandardId::new(0x700).unwrap();
                 let header = Header::new(Standard(id), 8, false);

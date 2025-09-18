@@ -1,9 +1,8 @@
-use defmt::error;
-use embassy_stm32::usart::{BufferedUartRx, BufferedUartTx};
+use embassy_stm32::usart::BufferedUartTx;
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, pipe::Pipe};
-use embedded_io_async::{Read, Write};
+use embedded_io_async::Write;
 
-pub const UART_READ_BUF_SIZE: usize = 64;
+pub const UART_READ_BUF_SIZE: usize = 256;
 
 #[embassy_executor::task]
 pub async fn uart_writer(
@@ -18,21 +17,3 @@ pub async fn uart_writer(
     }
 }
 
-#[embassy_executor::task]
-pub async fn uart_reader(
-    mut rx: BufferedUartRx<'static>,
-    tx_pipe: &'static Pipe<CriticalSectionRawMutex, UART_READ_BUF_SIZE>,
-) {
-    let mut rbuf: [u8; UART_READ_BUF_SIZE];
-    loop {
-        rbuf = [0x00; UART_READ_BUF_SIZE];
-        match rx.read(&mut rbuf).await {
-            Ok(len) => {
-                tx_pipe.write_all(&rbuf[..len]).await;
-            }
-            Err(e) => {
-                error!("RX ERROR: {}", e);
-            }
-        };
-    }
-}
