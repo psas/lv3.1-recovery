@@ -9,7 +9,6 @@ pub async fn echo_can(mut can: Can<'static>) -> () {
     can.write(&tx_frame).await;
     loop {
         let envelope = can.read().await.unwrap();
-        info!("CAN frame: {=u8}", envelope.frame.data()[0],);
         can.write(&envelope.frame).await;
         Timer::after_millis(1000).await;
     }

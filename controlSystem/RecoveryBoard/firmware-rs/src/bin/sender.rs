@@ -87,8 +87,8 @@ async fn main(spawner: Spawner) {
     let umb_on = Input::new(p.PA8, Pull::Up);
     let iso_main = ExtiInput::new(p.PA6, p.EXTI6, Pull::Down);
     let iso_drogue = ExtiInput::new(p.PA5, p.EXTI5, Pull::Down);
-    let _can_shdn = Output::new(p.PA10, Level::Low, Speed::Medium);
-    let _can_silent = Output::new(p.PA9, Level::Low, Speed::Medium);
+    let _can_shdn = Output::new(p.PA10, Level::Low, Speed::Medium); // FIXME: use these?
+    let _can_silent = Output::new(p.PA9, Level::Low, Speed::Medium); // FIXME: check speeds too
     let rocket_ready_pin = Output::new(p.PA7, Level::Low, Speed::Medium);
 
     // Set up PWM driver
@@ -114,7 +114,7 @@ async fn main(spawner: Spawner) {
         ],
     );
     can.modify_config().set_bitrate(CAN_BITRATE).set_loopback(false).set_silent(false);
-    can.enable().await;
+    can.set_automatic_wakeup(true);
     let (can_tx, can_rx) = can.split();
 
     // Set up ADC driver
@@ -150,10 +150,10 @@ async fn main(spawner: Spawner) {
     unwrap!(spawner.spawn(can_writer(can_tx, &CAN_TX_CHANNEL)));
     unwrap!(spawner.spawn(can_reader(can_rx)));
     unwrap!(spawner.spawn(uart_writer(uart_tx, &TX_PIPE)));
-    unwrap!(spawner.spawn(uart_reader(uart_rx, &TX_PIPE)));
+    unwrap!(spawner.spawn(uart_cli(uart_rx)));
     unwrap!(spawner.spawn(read_battery(adc, p.PB0, &BATT_READ_SIGNAL)));
-    unwrap!(spawner.spawn(read_iso(iso_drogue, &UMB_ON_MTX, DROGUE_ID)));
-    unwrap!(spawner.spawn(read_iso(iso_main, &UMB_ON_MTX, MAIN_ID)));
+    unwrap!(spawner.spawn(handle_iso_rising_edge(iso_drogue, &UMB_ON_MTX, DROGUE_ID)));
+    unwrap!(spawner.spawn(handle_iso_rising_edge(iso_main, &UMB_ON_MTX, MAIN_ID)));
     unwrap!(spawner.spawn(telemetrum_heartbeat(&UMB_ON_MTX, rocket_ready_pin)));
 
     // Keep main from returning. Needed for can_tx/can_rx or they get dropped
@@ -161,6 +161,15 @@ async fn main(spawner: Spawner) {
 }
 
 async fn deploy(can_id: u16) {
+    match can_id {
+        DROGUE_ID => {
+            info!("Releasing drogue");
+        }
+        MAIN_ID => {
+            info!("Releasing main");
+        }
+        _ => {}
+    }
     let id = unwrap!(StandardId::new(can_id));
     let header = Header::new(Id::Standard(id), 1, false);
     let msg = unwrap!(Frame::new(header, &[1; 0]));
@@ -168,51 +177,58 @@ async fn deploy(can_id: u16) {
 }
 
 #[embassy_executor::task]
-async fn uart_reader(
-    mut rx: BufferedUartRx<'static>,
-    tx_pipe: &'static Pipe<CriticalSectionRawMutex, UART_READ_BUF_SIZE>,
-) {
+async fn uart_cli(mut rx: BufferedUartRx<'static>) {
     loop {
         let mut rbuf = [0u8; UART_READ_BUF_SIZE];
         let mut pos = 0usize;
-        tx_pipe.write(b"> ").await;
+        TX_PIPE.write_all(b"> ").await;
         loop {
             match rx.fill_buf().await {
                 Ok(buf) => {
-                    info!("buf[0]: {:?}", buf[0]);
                     let n = buf.len();
                     rbuf[pos] = buf[0];
-                    tx_pipe.write(buf).await;
+                    TX_PIPE.write_all(buf).await;
                     rx.consume(n);
                     if rbuf[pos] == 127 || rbuf[pos] == 27 {
+                        // handle delete or backspace
                         rbuf[pos] = 0;
                         pos = pos.saturating_sub(1);
-                        tx_pipe.write(b"\x08 \x08").await;
+                        TX_PIPE.write_all(b"\x08 \x08").await;
                         continue;
                     }
                     if rbuf[pos] == b'\r' || rbuf[pos] == b'\n' {
-                        tx_pipe.write(b"\n").await;
+                        TX_PIPE.write_all(b"\n").await;
                         break;
                     }
                     pos = pos.wrapping_add(1);
                 }
                 Err(e) => {
-                    error!("Error: {}", e);
+                    error!("{}", e);
                     break;
                 }
             }
         }
         match &rbuf[..pos] {
-            b"release drogue" => {
-                tx_pipe.write_all(b"Releasing drogue\r\n").await;
+            b"drogue" => {
                 deploy(DROGUE_ID).await;
             }
-            b"release main" => {
-                tx_pipe.write_all(b"Releasing main\r\n").await;
+            b"main" => {
                 deploy(MAIN_ID).await;
             }
+            b"help" => {
+                TX_PIPE
+                    .write_all(
+                        b"\
+                        Usage:\r\n\
+                        drogue: trigger drogue ers\r\n\
+                        main: trigger main ers\r\n\
+                        help: display this message\r\n\
+                        "
+                    )
+                    .await;
+            }
             _ => {
-                tx_pipe.write_all(b"Invalid command - please try again\r\n").await;
+                TX_PIPE.write_all(b"Invalid command - please try again\r\n").await;
             }
         }
     }
@@ -220,6 +236,8 @@ async fn uart_reader(
 
 #[embassy_executor::task]
 async fn can_reader(mut can_rx: CanRx<'static>) -> () {
+    let mut prev_main_status: u8 = 0;
+    let mut prev_drogue_status: u8 = 0;
     loop {
         match can_rx.read().await {
             Ok(envelope) => {
@@ -228,12 +246,22 @@ async fn can_reader(mut can_rx: CanRx<'static>) -> () {
 
                 match envelope.frame.id() {
                     Id::Standard(id) if *id == main_status_id => {
+                        let status = envelope.frame.data()[0];
                         MAIN_LAST_SEEN.store(envelope.ts.as_millis(), Ordering::Relaxed);
-                        MAIN_STATUS.store(envelope.frame.data()[0] > 0, Ordering::Relaxed);
+                        MAIN_STATUS.store(status > 0, Ordering::Relaxed);
+                        if status != prev_main_status {
+                            info!("Main status changed to {}", status);
+                        }
+                        prev_main_status = status;
                     }
                     Id::Standard(id) if *id == drogue_status_id => {
+                        let status = envelope.frame.data()[0];
                         DROGUE_LAST_SEEN.store(envelope.ts.as_millis(), Ordering::Relaxed);
-                        DROGUE_STATUS.store(envelope.frame.data()[0] > 0, Ordering::Relaxed);
+                        DROGUE_STATUS.store(status > 0, Ordering::Relaxed);
+                        if status != prev_drogue_status {
+                            info!("Drogue status changed to {}", status);
+                        }
+                        prev_drogue_status = status;
                     }
                     _ => {}
                 }
@@ -247,7 +275,11 @@ async fn can_reader(mut can_rx: CanRx<'static>) -> () {
 }
 
 #[embassy_executor::task(pool_size = 2)]
-async fn read_iso(mut iso: ExtiInput<'static>, umb_on: &'static UmbOnType, can_id: u16) -> () {
+async fn handle_iso_rising_edge(
+    mut iso: ExtiInput<'static>,
+    umb_on: &'static UmbOnType,
+    can_id: u16,
+) -> () {
     loop {
         iso.wait_for_rising_edge().await;
         let time_now = Instant::now().as_millis();
@@ -256,12 +288,11 @@ async fn read_iso(mut iso: ExtiInput<'static>, umb_on: &'static UmbOnType, can_i
             let mut umb_on_unlocked = umb_on.lock().await;
             if let Some(umb_on_ref) = umb_on_unlocked.as_mut() {
                 if umb_on_ref.is_high() {
-                    TX_PIPE.write(b"releasing").await;
                     deploy(can_id).await;
                 }
             }
         }
-        // record last deployment signal time
+        // record last deployment signal time and log to uart
         match can_id {
             DROGUE_ID => {
                 ISO_DROGUE_TS.store(time_now, Ordering::Relaxed);
@@ -276,6 +307,14 @@ async fn read_iso(mut iso: ExtiInput<'static>, umb_on: &'static UmbOnType, can_i
 
 #[embassy_executor::task]
 async fn telemetrum_heartbeat(umb_on: &'static UmbOnType, mut rr_pin: Output<'static>) -> () {
+    let mut prev_main_ok: bool = false;
+    let mut prev_drogue_ok: bool = false;
+    let mut prev_batt_ok: u8 = 0;
+    let mut prev_ers_status: u8 = 0;
+    let mut prev_telemetrum_state: u8 = 0;
+    let mut prev_shore_pow_status: u8 = 0;
+    let mut prev_rocket_ready: u8 = 0;
+
     loop {
         let time_now = Instant::now().as_millis();
 
@@ -334,6 +373,42 @@ async fn telemetrum_heartbeat(umb_on: &'static UmbOnType, mut rr_pin: Output<'st
                 let frame = Frame::new(header, &status_buf).unwrap();
 
                 CAN_TX_CHANNEL.send(frame).await;
+
+                if telemetrum_state != prev_telemetrum_state {
+                    info!("Telemetrum state changed to {}", telemetrum_state);
+                }
+
+                if batt_ok != prev_batt_ok {
+                    info!("Battery ok changed to {}", batt_ok);
+                }
+
+                if shore_pow_status != prev_shore_pow_status {
+                    info!("Shore power status changed to {}", shore_pow_status);
+                }
+
+                if main_ok != prev_main_ok {
+                    info!("Main ok changed to {}", main_ok);
+                }
+
+                if drogue_ok != prev_drogue_ok {
+                    info!("Drogue ok changed to {}", drogue_ok);
+                }
+
+                if ers_status != prev_ers_status {
+                    info!("Ers status changed to {}", ers_status);
+                }
+
+                if rocket_ready != prev_rocket_ready {
+                    info!("Rocket ready changed to {}", rocket_ready);
+                }
+
+                prev_telemetrum_state = telemetrum_state;
+                prev_batt_ok = batt_ok;
+                prev_shore_pow_status = shore_pow_status;
+                prev_main_ok = main_ok;
+                prev_drogue_ok = drogue_ok;
+                prev_ers_status = ers_status;
+                prev_rocket_ready = rocket_ready;
             }
         }
         Timer::after_secs(1).await;
