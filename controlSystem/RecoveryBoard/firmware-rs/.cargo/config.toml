@@ -5,4 +5,4 @@ runner = 'probe-rs run --chip STM32F091RCTX'
 target = "thumbv6m-none-eabi"
 
 [env]
-DEFMT_LOG = "trace"
+DEFMT_LOG = "debug"
