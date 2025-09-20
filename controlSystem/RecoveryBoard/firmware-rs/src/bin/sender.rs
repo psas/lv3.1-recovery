@@ -1,6 +1,9 @@
 #![no_std]
 #![no_main]
 
+// TODO: Blinky command pin B14
+// TODO: Command to print batt_read
+
 use core::sync::atomic::{AtomicBool, Ordering};
 use embedded_io_async::BufRead;
 use portable_atomic::AtomicU64;
@@ -46,7 +49,7 @@ use firmware_rs::shared::{
 use static_cell::ConstStaticCell;
 use {defmt_rtt as _, panic_probe as _};
 
-const CAN_BITRATE: u32 = 1_000_000; // 2Mbps
+const CAN_BITRATE: u32 = 1_000_000;
 const DROGUE_ID: u16 = 0x100;
 const MAIN_ID: u16 = 0x200;
 
@@ -69,7 +72,8 @@ static ISO_MAIN_TS: AtomicU64 = AtomicU64::new(0);
 static ISO_DROGUE_TS: AtomicU64 = AtomicU64::new(0);
 
 static TX_PIPE: Pipe<CriticalSectionRawMutex, UART_READ_BUF_SIZE> = Pipe::new();
-static CAN_TX_CHANNEL: Channel<CriticalSectionRawMutex, Frame, 10> = Channel::new();
+
+static CAN_TX_CHANNEL: Channel<CriticalSectionRawMutex, CanTxChannelMsg, 10> = Channel::new();
 
 static UMB_ON_MTX: UmbOnType = Mutex::new(None);
 
@@ -114,8 +118,7 @@ async fn main(spawner: Spawner) {
         ],
     );
     can.modify_config().set_bitrate(CAN_BITRATE).set_loopback(false).set_silent(false);
-    can.set_automatic_wakeup(true);
-    let (can_tx, can_rx) = can.split();
+    // can.set_automatic_wakeup(true);
 
     // Set up ADC driver
     let mut adc = Adc::new(p.ADC1, AdcIrqs);
@@ -146,15 +149,18 @@ async fn main(spawner: Spawner) {
         *(UMB_ON_MTX.lock().await) = Some(umb_on);
     }
 
-    unwrap!(spawner.spawn(active_beep(pwm, &ROCKET_READY)));
-    unwrap!(spawner.spawn(can_writer(can_tx, &CAN_TX_CHANNEL)));
-    unwrap!(spawner.spawn(can_reader(can_rx)));
+    // unwrap!(spawner.spawn(active_beep(pwm, &ROCKET_READY)));
     unwrap!(spawner.spawn(uart_writer(uart_tx, &TX_PIPE)));
     unwrap!(spawner.spawn(uart_cli(uart_rx)));
     unwrap!(spawner.spawn(read_battery(adc, p.PB0, &BATT_READ_SIGNAL)));
     unwrap!(spawner.spawn(handle_iso_rising_edge(iso_drogue, &UMB_ON_MTX, DROGUE_ID)));
     unwrap!(spawner.spawn(handle_iso_rising_edge(iso_main, &UMB_ON_MTX, MAIN_ID)));
     unwrap!(spawner.spawn(telemetrum_heartbeat(&UMB_ON_MTX, rocket_ready_pin)));
+
+    can.enable().await;
+    let (can_tx, can_rx) = can.split();
+    unwrap!(spawner.spawn(can_writer(can_tx, &CAN_TX_CHANNEL)));
+    unwrap!(spawner.spawn(can_reader(can_rx, can)));
 
     // Keep main from returning. Needed for can_tx/can_rx or they get dropped
     core::future::pending::<()>().await;
@@ -172,7 +178,9 @@ async fn deploy(can_id: u16) {
     }
     let id = unwrap!(StandardId::new(can_id));
     let header = Header::new(Id::Standard(id), 1, false);
-    let msg = unwrap!(Frame::new(header, &[1; 0]));
+    let frame = unwrap!(Frame::new(header, &[1; 0]));
+
+    let msg = CanTxChannelMsg::new(true, frame);
     CAN_TX_CHANNEL.send(msg).await;
 }
 
@@ -223,7 +231,7 @@ async fn uart_cli(mut rx: BufferedUartRx<'static>) {
                         drogue: trigger drogue ers\r\n\
                         main: trigger main ers\r\n\
                         help: display this message\r\n\
-                        "
+                        ",
                     )
                     .await;
             }
@@ -235,7 +243,7 @@ async fn uart_cli(mut rx: BufferedUartRx<'static>) {
 }
 
 #[embassy_executor::task]
-async fn can_reader(mut can_rx: CanRx<'static>) -> () {
+async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
     let mut prev_main_status: u8 = 0;
     let mut prev_drogue_status: u8 = 0;
     loop {
@@ -268,7 +276,7 @@ async fn can_reader(mut can_rx: CanRx<'static>) -> () {
             }
             Err(e) => {
                 error!("CAN Read Error: {}", e);
-                Timer::after_secs(2).await;
+                can.sleep().await;
             }
         }
     }
@@ -372,7 +380,9 @@ async fn telemetrum_heartbeat(umb_on: &'static UmbOnType, mut rr_pin: Output<'st
                 let header = Header::new(Standard(id), 8, false);
                 let frame = Frame::new(header, &status_buf).unwrap();
 
-                CAN_TX_CHANNEL.send(frame).await;
+                let msg: CanTxChannelMsg = CanTxChannelMsg::new(false, frame);
+
+                CAN_TX_CHANNEL.send(msg).await;
 
                 if telemetrum_state != prev_telemetrum_state {
                     info!("Telemetrum state changed to {}", telemetrum_state);
