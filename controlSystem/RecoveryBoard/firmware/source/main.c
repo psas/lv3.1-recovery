@@ -40,10 +40,10 @@ volatile enum mainchutecommandtype mainchuteCommand = idle_m;
 static THD_WORKING_AREA(waShell, 1024);
 
 void print_hall_sensors(void) {
-	extern position_state_t g_position_state;
-	chprintf(DEBUG_SD, "\r\nSensor 1: %d %s\r\n", g_position_state.sensor1, sensor_voltage_status_t_to_str(g_position_state.sensor1_voltage_status));
-	chprintf(DEBUG_SD, "Sensor 2: %d %s\r\n", g_position_state.sensor2, sensor_voltage_status_t_to_str(g_position_state.sensor2_voltage_status));
-	chprintf(DEBUG_SD, "Ring Position: %s\r\n", ring_position_t_to_str(g_position_state.ring_position));
+	extern position_state_t position_state;
+	chprintf(DEBUG_SD, "\r\nSensor 1: %d %s\r\n", position_state.sensor1, sensor_state_t_to_str(position_state.sensor1_state));
+	chprintf(DEBUG_SD, "Sensor 2: %d %s\r\n", position_state.sensor2, sensor_state_t_to_str(position_state.sensor2_state));
+	chprintf(DEBUG_SD, "Ring Position: %s\r\n", ring_position_t_to_str(position_state.ring_position));
 }
 
 

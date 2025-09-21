@@ -1,14 +1,31 @@
+#include "position.h"
 #include "ch.h"
 #include "chprintf.h"
 #include "hal.h"
-#include "position.h"
 #include "recovery.h"
 #include "string.h"
 
 #define DEFAULT_LOCK_UNLOCK_DURATION_MS 50
 // sensor 1 is the lock sensor
 // sensor 2 is the unlock sensor
-position_state_t g_position_state;
+position_state_t position_state;
+
+void motor_current_limit(const uint32_t mA) {
+  // MAX 2.75A or 2750mA.VREF must be < 2v, given MOTOR_ILIM is up to
+  // 3.3v and gets divided by 2, it can put at most 1.65v on VREF.
+  // See below for conversion to mA.
+  chDbgAssert(mA <= 2750, "motor_current_limit too high");
+  // Current is controlled by setting a voltage on VREF of the BD63150AFM
+  // motor driver. The current is determined by the formula VREF/3/RNF
+  // where RNF is a current sensing resister chosen by us to be 0.1Ohm.
+  // We can set VREF by the DAC on the MOTOR_ILIM pin, PA4, except it
+  // passes through a 1/2 voltage divider. So for us:
+  //    Iout = MOTOR_ILIM * 5/3
+  // The DAC stepsize is 3.3v/2^12 so:
+  //    Iout = step * 11/8192
+  // Solving for step and using mA instead of A gives:
+  dacPutChannelX(&DACD1, 0, (mA * 1024) / 1375);
+}
 
 bool drive_motor(const bool lock_mode,
                  const uint16_t duration_ms,
@@ -34,7 +51,7 @@ bool drive_motor(const bool lock_mode,
     if (check_hall_sensors) {
       for (int i = 0; i < max_delay_ms; i++) {
         chThdSleepMilliseconds(1);
-        if (g_position_state.ring_position == RING_POSITION_LOCKED) {
+        if (position_state.ring_position == RING_POSITION_LOCKED) {
           break;
         }
       }
@@ -50,7 +67,7 @@ bool drive_motor(const bool lock_mode,
 
     palClearLine(LINE_DEPLOY2);
     chprintf(DEBUG_SD, "Ring Position: %s\r\n",
-             ring_position_t_to_str(g_position_state.ring_position));
+             ring_position_t_to_str(position_state.ring_position));
   } else {
     palSetLine(LINE_DEPLOY1);
     chThdSleepMilliseconds(duration_ms);
@@ -59,7 +76,7 @@ bool drive_motor(const bool lock_mode,
     if (check_hall_sensors) {
       for (int i = 0; i < max_delay_ms; i++) {
         chThdSleepMilliseconds(1);
-        if (g_position_state.ring_position == RING_POSITION_UNLOCKED) {
+        if (position_state.ring_position == RING_POSITION_UNLOCKED) {
           //					chprintf(DEBUG_SD,
           //"Successfully unlocked ring!\r\n");
           break;
@@ -78,7 +95,7 @@ bool drive_motor(const bool lock_mode,
 
     palClearLine(LINE_DEPLOY1);
     chprintf(DEBUG_SD, "Ring Position: %s\r\n",
-             ring_position_t_to_str(g_position_state.ring_position));
+             ring_position_t_to_str(position_state.ring_position));
   }
 
   const systime_t end_time = chVTGetSystemTime();
@@ -88,30 +105,30 @@ bool drive_motor(const bool lock_mode,
   return (true);
 }
 
-struct Sensor_limits {
+struct Sensor_Limits {
   int over;
   int under;
   int active;
   int unactive;
-}
+};
 
-// values picked from testing will most likely be changed
-struct Sensor_limits sensor1_limits {
-  .over = 2750;
-  .under = 600;
-  .active = 1600;
-  .unactive = 850;
-}
+// values picked from testing, needs more testing and will most likely be
+// changed
+struct Sensor_Limits sensor1_limits = {
+    .over = 2750,
+    .under = 600,
+    .active = 1600,
+    .unactive = 850,
+};
 
-struct Sensor_Limits sensor2_limits {
-  .over = 2750;
-  .under = 600;
-  .active = 850;
-  .unactive = 2600;
-}
+struct Sensor_Limits sensor2_limits = {
+    .over = 2750,
+    .under = 600,
+    .active = 850,
+    .unactive = 2600,
+};
 
-sensor_status_t
-get_sensor_state(const int value, struct Sensor_Limits limit) {
+sensor_state_t get_sensor_state(const int value, struct Sensor_Limits limit) {
   if (value >= limit.over) {
     return SENSOR_STATE_OVER;
   }
@@ -124,60 +141,44 @@ get_sensor_state(const int value, struct Sensor_Limits limit) {
   if (value == limit.unactive) {
     return SENSOR_STATE_UNACTIVE;
   }
+  return SENSOR_STATE_INBETWEEN;
 }
 
-ring_position_t get_ring_state(const sensor_status_t sensor1_status,
-                               const sensor_status_t sensor2_status) {
+ring_position_t get_ring_position(const sensor_state_t sensor1_state,
+                                  const sensor_state_t sensor2_state) {
   // when sensor1 is active ring position is locked
   // when sensor2 is active ring position is unlocked
-  if (sensor1_status == SENSOR_STATE_ACTIVE &&
-      sensor2_status != SENSOR_STATE_ACTIVE) {
+  if (sensor1_state == SENSOR_STATE_ACTIVE &&
+      sensor2_state != SENSOR_STATE_ACTIVE) {
     return RING_POSITION_LOCKED;
   }
-  if (sensor1_status != SENSOR_STATE_UNACTIVE &&
-      sensor2_status == SENSOR_STATE_UNACTIVE) {
+  if (sensor1_state != SENSOR_STATE_UNACTIVE &&
+      sensor2_state == SENSOR_STATE_UNACTIVE) {
     return RING_POSITION_LOCKED;
   }
-  if (sensor1_status == SENSOR_STATE_UNACTIVE&& sensor2_status -=
-      SENSOR_STATE_ACTIVE) {
+  if (sensor1_state != SENSOR_STATE_ACTIVE &&
+      sensor2_state == SENSOR_STATE_ACTIVE) {
     return RING_POSITION_UNLOCKED;
   }
-  if (sensor1_status == SENSOR_STATE_UNACTIVE &&
-      sensor2_status != SENSOR_STATE_UNACTIVE) {
+  if (sensor1_state == SENSOR_STATE_UNACTIVE &&
+      sensor2_state != SENSOR_STATE_UNACTIVE) {
     return RING_POSITION_UNLOCKED;
   }
-  if (sensor1_status == SENSOR_STATE_INBETWEEN ||
-      sensor2_status == SENSOR_STATE_INBETWEEN) {
+  if (sensor1_state == SENSOR_STATE_INBETWEEN ||
+      sensor2_state == SENSOR_STATE_INBETWEEN) {
     return RING_POSITION_INBETWEEN;
   }
-  return ERROR;
+  return RING_POSITION_ERROR;
 }
 
 // in worst case scenario, overdrive motor to save rocket.
-// ring_position_t overdrivemotor(const sensor_voltage_status_t sensor1_status,
-// const sensor_voltage_status_t sensor2_status) {
+// ring_position_t overdrivemotor(const sensor_voltage_state_t sensor1_status,
+// const sensor_voltage_state_t sensor2_state) {
 //}
 
 static const DACConfig dac = {.init = 0};
 void motor_current_limit_init(void) {
   dacStart(&DACD1, &dac);
-}
-
-void motor_current_limit(const uint32_t mA) {
-  // MAX 2.75A or 2750mA.VREF must be < 2v, given MOTOR_ILIM is up to
-  // 3.3v and gets divided by 2, it can put at most 1.65v on VREF.
-  // See below for conversion to mA.
-  chDbgAssert(mA <= 2750, "motor_current_limit too high");
-  // Current is controlled by setting a voltage on VREF of the BD63150AFM
-  // motor driver. The current is determined by the formula VREF/3/RNF
-  // where RNF is a current sensing resister chosen by us to be 0.1Ohm.
-  // We can set VREF by the DAC on the MOTOR_ILIM pin, PA4, except it
-  // passes through a 1/2 voltage divider. So for us:
-  //    Iout = MOTOR_ILIM * 5/3
-  // The DAC stepsize is 3.3v/2^12 so:
-  //    Iout = step * 11/8192
-  // Solving for step and using mA instead of A gives:
-  dacPutChannelX(&DACD1, 0, (mA * 1024) / 1375);
 }
 
 //===========================================================================================
@@ -189,7 +190,7 @@ THD_WORKING_AREA(waPositionThread, 256);
 THD_FUNCTION(PositionThread, arg) {
   (void)arg;
   chRegSetThreadName("Position");
-  memset(&g_position_state, 0, sizeof(g_position_state));
+  memset(&position_state, 0, sizeof(position_state));
 
   // TODO: Better power management. Andrew had mentoned something like keep
   //  the current low (how low?) normally, but set it high (how high?) during
@@ -228,47 +229,47 @@ THD_FUNCTION(PositionThread, arg) {
 
     position_state.sensor1 = samples[0];
     position_state.sensor2 = samples[1];
-    position_state.sensor1_signal_status =
-        get_sensor_state(g_position_state.sensor1, sensor1_limits);
-    position_state.sensor2_signal_status =
-        get_sensor_state(g_position_state.sensor2, sensor1_limits);
-    position_state.ring_position =
-        determine_ring_position(position_state.sensor1, position_state.sensor2,
-                                position_state.sensor1_signal_status,
-                                position_state.sensor2_signal_status);
+    position_state.sensor1_state =
+        get_sensor_state(position_state.sensor1, sensor1_limits);
+    position_state.sensor2_state =
+        get_sensor_state(position_state.sensor2, sensor1_limits);
+    position_state.ring_position = get_ring_position(
+        position_state.sensor1_state, position_state.sensor2_state);
 
     if (PositionCommand != idle) {
-      chprintf(DEBUG_SD, "\r\nSensor 1: %d %s\r\n", g_position_state.sensor1,
-               sensor_signal_status_t_to_str(g_position_state.sensor1_status));
-      chprintf(DEBUG_SD, "Sensor 2: %d %s\r\n", g_position_state.sensor2,
-               sensor_signal_status_t_to_str(
-                   g_position_state.sensor2_voltage_status));
+      chprintf(DEBUG_SD, "\r\nSensor 1: %d %s\r\n", position_state.sensor1,
+               sensor_state_t_to_str(position_state.sensor1_state));
+      chprintf(DEBUG_SD, "Sensor 2: %d %s\r\n", position_state.sensor2,
+               sensor_state_t_to_str(position_state.sensor2_state));
       chprintf(DEBUG_SD, "Ring Position: %s\r\n",
-               ring_position_t_to_str(g_position_state.ring_position));
+               ring_position_t_to_str(position_state.ring_position));
     }
 
     if (PositionCommand == lock) {
-      switch (g_position_state.ring_position) {
+      switch (position_state.ring_position) {
         case RING_POSITION_UNLOCKED:
           chprintf(DEBUG_SD,
                    "RingPosition: LOCKING, Position = Unlocked, MOTOR ON\r\n");
           drive_motor(true, DEFAULT_LOCK_UNLOCK_DURATION_MS, true);
           break;
-        case RING_POSITION_IN_BETWEEN:
+        case RING_POSITION_INBETWEEN:
           chprintf(DEBUG_SD, "RingPosition: WAITING FOR LOCK\r\n");
           break;
         case RING_POSITION_LOCKED:
           chprintf(DEBUG_SD,
                    "RingPosition: LOCKING, Position = Locked, MOTOR OFF\r\n");
           break;
+        case RING_POSITION_ERROR:
+          chprintf(DEBUG_SD, "RingPosition: ERROR\r\n");
+          break;
 
-          chprintf(DEBUG_SD, "RingPosition: INVALID POSITION.\r\n");
-          g_position_state.ring_position = RING_POSITION_UNKNOWN;
+          /* chprintf(DEBUG_SD, "RingPosition: INVALID POSITION.\r\n"); */
+          /* position_state.ring_position = RING_POSITION_UNKNOWN; */
       }
       PositionCommand = idle;
 
     } else if (PositionCommand == unlock) {
-      switch (g_position_state.ring_position) {
+      switch (position_state.ring_position) {
         case RING_POSITION_UNLOCKED:
           chprintf(DEBUG_SD,
                    "RingPosition: Unlock; Position = UNLOCKED, MOTOR OFF\r\n");
@@ -279,9 +280,9 @@ THD_FUNCTION(PositionThread, arg) {
                    "Locked/Moving, MOTOR ON FIRING\r\n");
           drive_motor(false, DEFAULT_LOCK_UNLOCK_DURATION_MS, true);
           break;
-        default:
-          chprintf(DEBUG_SD, "RingPosition: INVALID POSITION.\r\n");
-          g_position_state.ring_position = RING_POSITION_UNKNOWN;
+        case RING_POSITION_ERROR:
+          chprintf(DEBUG_SD, "RingPosition: ERROR\r\n");
+          break; /* default: */
       }
       PositionCommand = idle;
     }
@@ -292,30 +293,32 @@ THD_FUNCTION(PositionThread, arg) {
   }
 }
 
-const char* sensor_state_t_to_str(const sensor_state_t v) {
-  switch (v) {
-    case SENSOR_SIGNAL_STATUS_UNDER:
+const char* sensor_state_t_to_str(const sensor_state_t sensor_state) {
+  switch (sensor_state) {
+    case SENSOR_STATE_UNDER:
       return ("SENSOR_STATE_UNDER");
-    case SENSOR_SIGNAL_STATUS_OVER:
+    case SENSOR_STATE_OVER:
       return ("SENSOR_STATE_OVER");
-    case SENSOR_SIGNAL_STATUS_INBETWEEN:
+    case SENSOR_STATE_INBETWEEN:
       return ("SENSOR_STATE_INBETWEEN");
-    case SENSOR_SIGNAL_STATUS_ACTIVE:
+    case SENSOR_STATE_ACTIVE:
       return ("SENSOR_STATE_ACTIVE");
-    case SENSOR_SIGNAL_STATUS_UNACTIVE:
+    case SENSOR_STATE_UNACTIVE:
       return ("SENSOR_STATE_UNACTIVE");
+    case SENSOR_STATE_ERROR:
+      return ("SENSOR_STATE_ERROR");
   }
 }
 
-const char* ring_position_t_to_str(const ring_position_t v) {
-  switch (v) {
-    case ERROR:
-      return ("RING_POSITION_UNKNOWN, ERROR");
+const char* ring_position_t_to_str(const ring_position_t ring_pos) {
+  switch (ring_pos) {
+    case RING_POSITION_LOCKED:
+      return ("RING_POSITION_LOCKED");
     case RING_POSITION_UNLOCKED:
       return ("RING_POSITION_UNLOCKED");
     case RING_POSITION_INBETWEEN:
       return ("RING_POSITION_INBETWEEN");
-    case RING_POSITION_LOCKED:
-      return ("RING_POSITION_LOCKED");
+    case RING_POSITION_ERROR:
+      return ("RING_POSITION_ERROR");
   }
 }
