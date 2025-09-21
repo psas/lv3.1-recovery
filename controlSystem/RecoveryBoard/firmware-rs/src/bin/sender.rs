@@ -42,7 +42,7 @@ use embassy_time::{Instant, Timer};
 use firmware_rs::shared::{
     adc::read_battery,
     buzzer::active_beep,
-    can::can_writer,
+    can::{can_writer, CanTxChannelMsg},
     types::*,
     uart::{uart_writer, UART_READ_BUF_SIZE},
 };
@@ -91,8 +91,8 @@ async fn main(spawner: Spawner) {
     let umb_on = Input::new(p.PA8, Pull::Up);
     let iso_main = ExtiInput::new(p.PA6, p.EXTI6, Pull::Down);
     let iso_drogue = ExtiInput::new(p.PA5, p.EXTI5, Pull::Down);
-    let _can_shdn = Output::new(p.PA10, Level::Low, Speed::Medium); // FIXME: use these?
-    let _can_silent = Output::new(p.PA9, Level::Low, Speed::Medium); // FIXME: check speeds too
+    let _can_shdn = Output::new(p.PA10, Level::Low, Speed::Medium);
+    let _can_silent = Output::new(p.PA9, Level::Low, Speed::Medium);
     let rocket_ready_pin = Output::new(p.PA7, Level::Low, Speed::Medium);
 
     // Set up PWM driver

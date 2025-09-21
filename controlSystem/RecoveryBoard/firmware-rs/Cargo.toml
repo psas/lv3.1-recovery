@@ -18,7 +18,6 @@ portable-atomic = { version = "1.11", features = ["unsafe-assume-single-core"] }
 embedded-io-async = "0.6.1"
 static_cell = "2.1.1"
 embedded-hal-nb = "1.0.0"
-menu = { version = "0.6.1", features = ["noline"] }
 noline = "0.5.1"
 
 [profile.release]

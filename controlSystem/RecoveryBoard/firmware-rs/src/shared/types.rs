@@ -1,5 +1,5 @@
 use embassy_stm32::{
-    can::{Can, Frame},
+    can::Can,
     gpio::Input,
     peripherals::TIM15,
     timer::simple_pwm::SimplePwm,
@@ -9,17 +9,6 @@ use embassy_sync::{
     mutex::Mutex,
     signal::Signal,
 };
-
-pub struct CanTxChannelMsg {
-    pub blocking: bool,
-    pub frame: Frame,
-}
-
-impl CanTxChannelMsg {
-    pub fn new(blocking: bool, frame: Frame) -> Self {
-        Self { blocking, frame }
-    }
-}
 
 pub type PwmType = Mutex<ThreadModeRawMutex, Option<SimplePwm<'static, TIM15>>>;
 pub type UmbOnType = Mutex<ThreadModeRawMutex, Option<Input<'static>>>;

@@ -3,8 +3,6 @@ use embassy_stm32::can::{Can, CanTx, Frame, StandardId};
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel};
 use embassy_time::Timer;
 
-use super::types::CanTxChannelMsg;
-
 #[embassy_executor::task]
 pub async fn echo_can(mut can: Can<'static>) -> () {
     let tx_frame = Frame::new_data(unwrap!(StandardId::new(123 as _)), &[123]).unwrap();
@@ -13,6 +11,17 @@ pub async fn echo_can(mut can: Can<'static>) -> () {
         let envelope = can.read().await.unwrap();
         can.write(&envelope.frame).await;
         Timer::after_millis(1000).await;
+    }
+}
+
+pub struct CanTxChannelMsg {
+    pub blocking: bool,
+    pub frame: Frame,
+}
+
+impl CanTxChannelMsg {
+    pub fn new(blocking: bool, frame: Frame) -> Self {
+        Self { blocking, frame }
     }
 }
 
