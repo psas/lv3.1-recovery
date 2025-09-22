@@ -85,32 +85,29 @@ static void cmd_state(BaseSequentialStream *chp, int argc, char *argv[]) {
     chThdSleepMilliseconds(10); // Wait for printout (100 char ~ 10 ms)
 }
 
+// TODO implement one function to drive the motor that takes arguments of checking sensors or not, and current values
+// drivemotor
+// l arguments [s(safe;default):f(force), c(current; int <  1750)]
+// u arguments [s(safe;default):f(force), c(current; int <  1750)]
 
 static void cmd_lock(BaseSequentialStream *chp, int argc, char *argv[]) {
-	drive_motor(true, 10, false);
+	drive_motor(true, 10, true, 1000);
 }
 
 static void cmd_unlock(BaseSequentialStream *chp, int argc, char *argv[]) {
-	drive_motor(false, 10, false);
+	drive_motor(false, 10, true, 1000);
 }
 
-
-static void cmd_lock_full(BaseSequentialStream *chp, int argc, char *argv[]) {
-	drive_motor(true, 10, true);
-}
-
-static void cmd_unlock_full(BaseSequentialStream *chp, int argc, char *argv[]) {
-	drive_motor(false, 10, true);
-}
 
 static void cmd_stream(BaseSequentialStream *chp, int argc, char *argv[]) {
 	for(;;) {
 		print_hall_sensors();
 		chThdSleepMilliseconds(1000);
 	}
+    // TODO implement interrupt
 }
 
-static void cmd_Position(BaseSequentialStream *chp, int argc, char *argv[]) {
+static void cmd_position(BaseSequentialStream *chp, int argc, char *argv[]) {
 	if (argc == 1) {
 		if (!strcmp(argv[0], "lock")) {
 			chprintf(chp, "Command: LOCKING ERS \r\n");
@@ -124,23 +121,27 @@ static void cmd_Position(BaseSequentialStream *chp, int argc, char *argv[]) {
 		}
 	}}
 
-static void cmd_Beep(BaseSequentialStream *chp, int argc, char *argv[]) {
+static void cmd_beep(BaseSequentialStream *chp, int argc, char *argv[]) {
 	(void)argc;
 	(void)argv;
 	chprintf(chp, "slayyyyy\r\n");
 	beep();
 }
 
+//  TODO implement help
+/* static void cmd_help(){ */
+/*     printf(" */
+/* ", %s); */
+/* } */
     
 static const ShellCommand commands[] = {
     {"state", cmd_state},
-    {"pos", cmd_Position},
+    {"pos", cmd_position},
 	{"u", cmd_unlock},//dev debug use only
 	{"l", cmd_lock},//dev debug use only
-	{"U", cmd_unlock_full},//dev debug use only
-	{"L", cmd_lock_full},//dev debug use only
 	{"stream", cmd_stream},
-    {"beep", cmd_Beep},
+    {"beep", cmd_beep},
+//    {"help", cmd_help},
 
     {NULL, NULL}
 };

@@ -6,6 +6,7 @@
 #include "string.h"
 
 #define DEFAULT_LOCK_UNLOCK_DURATION_MS 50
+#define DEFAULT_DRIVE_CURRENT 1000
 // sensor 1 is the lock sensor
 // sensor 2 is the unlock sensor
 position_state_t position_state;
@@ -14,10 +15,10 @@ void motor_current_limit(const uint32_t mA) {
   // MAX 2.75A or 2750mA.VREF must be < 2v, given MOTOR_ILIM is up to
   // 3.3v and gets divided by 2, it can put at most 1.65v on VREF.
   // See below for conversion to mA.
-  chDbgAssert(mA <= 2750, "motor_current_limit too high");
+  chDbgAssert(mA <= 1750, "motor_current_limit too high");
   // Current is controlled by setting a voltage on VREF of the BD63150AFM
   // motor driver. The current is determined by the formula VREF/3/RNF
-  // where RNF is a current sensing resister chosen by us to be 0.1Ohm.
+  // where RNF is a current sensing resister chosen by us to be 0.1 Ohm.
   // We can set VREF by the DAC on the MOTOR_ILIM pin, PA4, except it
   // passes through a 1/2 voltage divider. So for us:
   //    Iout = MOTOR_ILIM * 5/3
@@ -27,28 +28,26 @@ void motor_current_limit(const uint32_t mA) {
   dacPutChannelX(&DACD1, 0, (mA * 1024) / 1375);
 }
 
+// TODO rewrite/understand
 bool drive_motor(const bool lock_mode,
                  const uint16_t duration_ms,
-                 const bool check_hall_sensors) {
+                 const bool check_ring_position,
+                 const uint16_t current) {
   chprintf(DEBUG_SD, "Moving motor to %s position\r\n",
            (lock_mode ? "locked" : "unlocked"));
-  int high_current_ma = 4000;
-  motor_current_limit(high_current_ma);
-  chThdSleepMilliseconds(100);
-  palClearLine(LINE_DEPLOY1);
-  palClearLine(LINE_DEPLOY2);
-
-  palSetLine(LINE_N_MOTOR_PS);
-  chThdSleepMilliseconds(100);
+  motor_current_limit(current);
+  palClearLine(LINE_DEPLOY1);   // set line to low
+  palClearLine(LINE_DEPLOY2);   //
+  palSetLine(LINE_N_MOTOR_PS);  // set line to high
+  chThdSleepMilliseconds(50);
 
   const systime_t start_time = chVTGetSystemTime();
 
-  const int max_delay_ms = 750;
+  const int max_delay_ms = 200;
   if (lock_mode) {
     palSetLine(LINE_DEPLOY2);
     chThdSleepMilliseconds(duration_ms);
-    motor_current_limit(high_current_ma);
-    if (check_hall_sensors) {
+    if (check_ring_position) {
       for (int i = 0; i < max_delay_ms; i++) {
         chThdSleepMilliseconds(1);
         if (position_state.ring_position == RING_POSITION_LOCKED) {
@@ -57,43 +56,23 @@ bool drive_motor(const bool lock_mode,
       }
     }
 
-    chThdSleepMilliseconds(100);  // Note: this need more thought out tuning to
-                                  // dealing with mechanical inertia and bounce
-
-    //		motor_current_limit(500); //Note: this need more thought
-    // out tuning to dealing with mechanical inertia and bounce
-    //		chThdSleepMilliseconds(30); //Note: this need more
-    // thought out tuning to dealing with mechanical inertia and bounce
-
     palClearLine(LINE_DEPLOY2);
     chprintf(DEBUG_SD, "Ring Position: %s\r\n",
              ring_position_t_to_str(position_state.ring_position));
   } else {
     palSetLine(LINE_DEPLOY1);
     chThdSleepMilliseconds(duration_ms);
-    motor_current_limit(3500);  // Note: this need more thought out tuning to
-                                // dealing with mechanical inertia and bounce
-    if (check_hall_sensors) {
+    if (check_ring_position) {
       for (int i = 0; i < max_delay_ms; i++) {
         chThdSleepMilliseconds(1);
         if (position_state.ring_position == RING_POSITION_UNLOCKED) {
-          //					chprintf(DEBUG_SD,
+          // chprintf(DEBUG_SD,
           //"Successfully unlocked ring!\r\n");
           break;
         }
       }
     }
 
-    motor_current_limit(500);    // Note: this need more thought out tuning to
-                                 // dealing with mechanical inertia and bounce
-    chThdSleepMilliseconds(5);   // Note: this need more thought out tuning to
-                                 // dealing with mechanical inertia and bounce
-    motor_current_limit(200);    // Note: this need more thought out tuning to
-                                 // dealing with mechanical inertia and bounce
-    chThdSleepMilliseconds(10);  // Note: this need more thought out tuning to
-                                 // dealing with mechanical inertia and bounce
-
-    palClearLine(LINE_DEPLOY1);
     chprintf(DEBUG_SD, "Ring Position: %s\r\n",
              ring_position_t_to_str(position_state.ring_position));
   }
@@ -102,8 +81,12 @@ bool drive_motor(const bool lock_mode,
   palClearLine(LINE_N_MOTOR_PS);
   chprintf(DEBUG_SD, "Time: %u ms\r\n", end_time - start_time);
 
+  palClearLine(LINE_DEPLOY1);
+  motor_current_limit(0);
   return (true);
 }
+
+//////////////////////////////////////////////////////////////////////////////////
 
 struct Sensor_Limits {
   int over;
@@ -114,19 +97,15 @@ struct Sensor_Limits {
 
 // values picked from testing, needs more testing and will most likely be
 // changed
-struct Sensor_Limits sensor1_limits = {
-    .over = 2750,
-    .under = 600,
-    .active = 1600,
-    .unactive = 850,
-};
+const struct Sensor_Limits sensor1_limits = {.over = 3100,
+                                             .under = 600,
+                                             .active = 1600,
+                                             .unactive = 700};
 
-struct Sensor_Limits sensor2_limits = {
-    .over = 2750,
-    .under = 600,
-    .active = 850,
-    .unactive = 2600,
-};
+const struct Sensor_Limits sensor2_limits = {.over = 3100,
+                                             .under = 600,
+                                             .active = 2600,
+                                             .unactive = 700};
 
 sensor_state_t get_sensor_state(const int value, struct Sensor_Limits limit) {
   if (value >= limit.over) {
@@ -250,7 +229,8 @@ THD_FUNCTION(PositionThread, arg) {
         case RING_POSITION_UNLOCKED:
           chprintf(DEBUG_SD,
                    "RingPosition: LOCKING, Position = Unlocked, MOTOR ON\r\n");
-          drive_motor(true, DEFAULT_LOCK_UNLOCK_DURATION_MS, true);
+          drive_motor(true, DEFAULT_LOCK_UNLOCK_DURATION_MS, true,
+                      DEFAULT_DRIVE_CURRENT);
           break;
         case RING_POSITION_INBETWEEN:
           chprintf(DEBUG_SD, "RingPosition: WAITING FOR LOCK\r\n");
@@ -278,7 +258,8 @@ THD_FUNCTION(PositionThread, arg) {
         case RING_POSITION_INBETWEEN:
           chprintf(DEBUG_SD, "RingPosition: Unlock, Position = ",
                    "Locked/Moving, MOTOR ON FIRING\r\n");
-          drive_motor(false, DEFAULT_LOCK_UNLOCK_DURATION_MS, true);
+          drive_motor(false, DEFAULT_LOCK_UNLOCK_DURATION_MS, true,
+                      DEFAULT_DRIVE_CURRENT);
           break;
         case RING_POSITION_ERROR:
           chprintf(DEBUG_SD, "RingPosition: ERROR\r\n");
@@ -296,17 +277,19 @@ THD_FUNCTION(PositionThread, arg) {
 const char* sensor_state_t_to_str(const sensor_state_t sensor_state) {
   switch (sensor_state) {
     case SENSOR_STATE_UNDER:
-      return ("SENSOR_STATE_UNDER");
+      return "SENSOR_STATE_UNDER";
     case SENSOR_STATE_OVER:
-      return ("SENSOR_STATE_OVER");
+      return "SENSOR_STATE_OVER";
     case SENSOR_STATE_INBETWEEN:
-      return ("SENSOR_STATE_INBETWEEN");
+      return "SENSOR_STATE_INBETWEEN";
     case SENSOR_STATE_ACTIVE:
-      return ("SENSOR_STATE_ACTIVE");
+      return "SENSOR_STATE_ACTIVE";
     case SENSOR_STATE_UNACTIVE:
-      return ("SENSOR_STATE_UNACTIVE");
+      return "SENSOR_STATE_UNACTIVE";
     case SENSOR_STATE_ERROR:
-      return ("SENSOR_STATE_ERROR");
+      return "SENSOR_STATE_ERROR";
+    default:
+      return "good luck";
   }
 }
 
@@ -320,5 +303,7 @@ const char* ring_position_t_to_str(const ring_position_t ring_pos) {
       return ("RING_POSITION_INBETWEEN");
     case RING_POSITION_ERROR:
       return ("RING_POSITION_ERROR");
+    default:
+      return "good luck";
   }
 }

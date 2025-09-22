@@ -36,7 +36,10 @@ typedef struct {
 
 const char* sensor_state_t_to_str(const sensor_state_t sensor_state);
 const char* ring_position_t_to_str(const ring_position_t ring_pos);
-bool drive_motor(const bool lock_mode, const uint16_t duration_ms, const bool check_hall_sensors);
+bool drive_motor(const bool lock_mode,
+                 const uint16_t duration_ms,
+                 const bool check_ring_position,
+                 const uint16_t current);
 
 
 extern THD_WORKING_AREA(waPositionThread, 256);
