@@ -1,9 +1,6 @@
 #![no_std]
 #![no_main]
 
-// TODO: Blinky command pin B14
-// TODO: Command to print batt_read
-
 use core::sync::atomic::{AtomicBool, Ordering};
 use embedded_io_async::BufRead;
 use portable_atomic::AtomicU64;
@@ -26,32 +23,26 @@ use embassy_stm32::{
     peripherals::{ADC1, CAN, USART2},
     time::Hertz,
     timer::{
-        low_level::CountingMode,
-        simple_pwm::{PwmPin, SimplePwm},
+        low_level::CountingMode, simple_pwm::{PwmPin, SimplePwm}
     },
     usart::{
         BufferedInterruptHandler, BufferedUart, BufferedUartRx, Config as UartConfig, DataBits,
         Parity, StopBits,
     },
 };
-use embassy_sync::{
-    blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel, mutex::Mutex, pipe::Pipe,
-    signal::Signal,
-};
+use embassy_sync::{mutex::Mutex, signal::Signal};
 use embassy_time::{Instant, Timer};
 use firmware_rs::shared::{
     adc::read_battery,
     buzzer::active_beep,
-    can::{can_writer, CanTxChannelMsg},
+    can::{
+        can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_TX_CHANNEL, DROGUE_ID, DROGUE_STATUS_ID,
+        MAIN_ID, MAIN_STATUS_ID, TELEMETRUM_HEARTBEAT_ID,
+    },
     types::*,
-    uart::{uart_writer, UART_READ_BUF_SIZE},
+    uart::{uart_writer, TX_PIPE, UART_READ_BUF_SIZE, UART_RX_BUF_CELL, UART_TX_BUF_CELL},
 };
-use static_cell::ConstStaticCell;
 use {defmt_rtt as _, panic_probe as _};
-
-const CAN_BITRATE: u32 = 1_000_000;
-const DROGUE_ID: u16 = 0x100;
-const MAIN_ID: u16 = 0x200;
 
 bind_interrupts!(struct CanIrqs {
     CEC_CAN =>
@@ -71,18 +62,9 @@ static MAIN_LAST_SEEN: AtomicU64 = AtomicU64::new(0);
 static ISO_MAIN_TS: AtomicU64 = AtomicU64::new(0);
 static ISO_DROGUE_TS: AtomicU64 = AtomicU64::new(0);
 
-static TX_PIPE: Pipe<CriticalSectionRawMutex, UART_READ_BUF_SIZE> = Pipe::new();
-
-static CAN_TX_CHANNEL: Channel<CriticalSectionRawMutex, CanTxChannelMsg, 10> = Channel::new();
-
 static UMB_ON_MTX: UmbOnType = Mutex::new(None);
 
 static BATT_READ_SIGNAL: BattOkSignalType = Signal::new();
-
-static UART_TX_BUF_CELL: ConstStaticCell<[u8; UART_READ_BUF_SIZE]> =
-    ConstStaticCell::new([0u8; UART_READ_BUF_SIZE]);
-static UART_RX_BUF_CELL: ConstStaticCell<[u8; UART_READ_BUF_SIZE]> =
-    ConstStaticCell::new([0u8; UART_READ_BUF_SIZE]);
 
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
@@ -113,12 +95,11 @@ async fn main(spawner: Spawner) {
         0,
         Fifo::Fifo0,
         [
-            Mask16::frames_with_std_id(unwrap!(StandardId::new(0x710)), StandardId::MAX),
-            Mask16::frames_with_std_id(unwrap!(StandardId::new(0x720)), StandardId::MAX),
+            Mask16::frames_with_std_id(unwrap!(StandardId::new(DROGUE_STATUS_ID)), StandardId::MAX),
+            Mask16::frames_with_std_id(unwrap!(StandardId::new(MAIN_STATUS_ID)), StandardId::MAX),
         ],
     );
     can.modify_config().set_bitrate(CAN_BITRATE).set_loopback(false).set_silent(false);
-    // can.set_automatic_wakeup(true);
 
     // Set up ADC driver
     let mut adc = Adc::new(p.ADC1, AdcIrqs);
@@ -149,7 +130,7 @@ async fn main(spawner: Spawner) {
         *(UMB_ON_MTX.lock().await) = Some(umb_on);
     }
 
-    // unwrap!(spawner.spawn(active_beep(pwm, &ROCKET_READY)));
+    unwrap!(spawner.spawn(active_beep(pwm, Some(&ROCKET_READY))));
     unwrap!(spawner.spawn(uart_writer(uart_tx, &TX_PIPE)));
     unwrap!(spawner.spawn(uart_cli(uart_rx)));
     unwrap!(spawner.spawn(read_battery(adc, p.PB0, &BATT_READ_SIGNAL)));
@@ -157,6 +138,7 @@ async fn main(spawner: Spawner) {
     unwrap!(spawner.spawn(handle_iso_rising_edge(iso_main, &UMB_ON_MTX, MAIN_ID)));
     unwrap!(spawner.spawn(telemetrum_heartbeat(&UMB_ON_MTX, rocket_ready_pin)));
 
+    // enable at last minute so other tasks can still spawn if can bus is down
     can.enable().await;
     let (can_tx, can_rx) = can.split();
     unwrap!(spawner.spawn(can_writer(can_tx, &CAN_TX_CHANNEL)));
@@ -249,11 +231,8 @@ async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
     loop {
         match can_rx.read().await {
             Ok(envelope) => {
-                let main_status_id = unwrap!(StandardId::new(0x720));
-                let drogue_status_id = unwrap!(StandardId::new(0x710));
-
                 match envelope.frame.id() {
-                    Id::Standard(id) if *id == main_status_id => {
+                    Id::Standard(id) if id.as_raw() == MAIN_STATUS_ID => {
                         let status = envelope.frame.data()[0];
                         MAIN_LAST_SEEN.store(envelope.ts.as_millis(), Ordering::Relaxed);
                         MAIN_STATUS.store(status > 0, Ordering::Relaxed);
@@ -262,7 +241,7 @@ async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
                         }
                         prev_main_status = status;
                     }
-                    Id::Standard(id) if *id == drogue_status_id => {
+                    Id::Standard(id) if id.as_raw() == DROGUE_STATUS_ID => {
                         let status = envelope.frame.data()[0];
                         DROGUE_LAST_SEEN.store(envelope.ts.as_millis(), Ordering::Relaxed);
                         DROGUE_STATUS.store(status > 0, Ordering::Relaxed);
@@ -300,7 +279,7 @@ async fn handle_iso_rising_edge(
                 }
             }
         }
-        // record last deployment signal time and log to uart
+        // record last deployment signal time
         match can_id {
             DROGUE_ID => {
                 ISO_DROGUE_TS.store(time_now, Ordering::Relaxed);
@@ -376,7 +355,7 @@ async fn telemetrum_heartbeat(umb_on: &'static UmbOnType, mut rr_pin: Output<'st
                     0,
                 ];
 
-                let id = StandardId::new(0x700).unwrap();
+                let id = StandardId::new(TELEMETRUM_HEARTBEAT_ID).unwrap();
                 let header = Header::new(Standard(id), 8, false);
                 let frame = Frame::new(header, &status_buf).unwrap();
 

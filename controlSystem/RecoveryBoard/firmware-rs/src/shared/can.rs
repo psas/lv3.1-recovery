@@ -3,16 +3,14 @@ use embassy_stm32::can::{Can, CanTx, Frame, StandardId};
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel};
 use embassy_time::Timer;
 
-#[embassy_executor::task]
-pub async fn echo_can(mut can: Can<'static>) -> () {
-    let tx_frame = Frame::new_data(unwrap!(StandardId::new(123 as _)), &[123]).unwrap();
-    can.write(&tx_frame).await;
-    loop {
-        let envelope = can.read().await.unwrap();
-        can.write(&envelope.frame).await;
-        Timer::after_millis(1000).await;
-    }
-}
+pub const CAN_BITRATE: u32 = 1_000_000;
+pub const DROGUE_ID: u16 = 0x100;
+pub const DROGUE_STATUS_ID: u16 = 0x710;
+pub const MAIN_ID: u16 = 0x200;
+pub const MAIN_STATUS_ID: u16 = 0x720;
+pub const TELEMETRUM_HEARTBEAT_ID: u16 = 0x700;
+
+pub static CAN_TX_CHANNEL: Channel<CriticalSectionRawMutex, CanTxChannelMsg, 10> = Channel::new();
 
 pub struct CanTxChannelMsg {
     pub blocking: bool,
@@ -22,6 +20,17 @@ pub struct CanTxChannelMsg {
 impl CanTxChannelMsg {
     pub fn new(blocking: bool, frame: Frame) -> Self {
         Self { blocking, frame }
+    }
+}
+
+#[embassy_executor::task]
+pub async fn echo_can(mut can: Can<'static>) -> () {
+    let tx_frame = Frame::new_data(unwrap!(StandardId::new(123 as _)), &[123]).unwrap();
+    can.write(&tx_frame).await;
+    loop {
+        let envelope = can.read().await.unwrap();
+        can.write(&envelope.frame).await;
+        Timer::after_millis(1000).await;
     }
 }
 
