@@ -100,11 +100,12 @@ static void cmd_unlock(BaseSequentialStream *chp, int argc, char *argv[]) {
 
 
 static void cmd_stream(BaseSequentialStream *chp, int argc, char *argv[]) {
-	for(;;) {
+  uint8_t buf;
+	do {
 		print_hall_sensors();
 		chThdSleepMilliseconds(1000);
-	}
-    // TODO implement interrupt
+	} while (!sdReadTimeout((SerialDriver*)chp, &buf, sizeof(buf), 0));
+
 }
 
 static void cmd_position(BaseSequentialStream *chp, int argc, char *argv[]) {
@@ -128,20 +129,24 @@ static void cmd_beep(BaseSequentialStream *chp, int argc, char *argv[]) {
 	beep();
 }
 
-//  TODO implement help
-/* static void cmd_help(){ */
-/*     printf(" */
-/* ", %s); */
-/* } */
+static void cmd_help(BaseSequentialStream *chp, int argc, char *argv[]){ 
+  chprintf(chp, "state - print sensor state\r\n"
+  "pos - print ring position\r\n"
+  "u - unlock ring\r\n"
+  "l - lock ring\r\n"
+  "stream - continously print sensor state\r\n"
+  "beep - beep\r\n"
+  "help - print this message\r\n");
+}
     
 static const ShellCommand commands[] = {
     {"state", cmd_state},
     {"pos", cmd_position},
-	{"u", cmd_unlock},//dev debug use only
-	{"l", cmd_lock},//dev debug use only
-	{"stream", cmd_stream},
+  	{"u", cmd_unlock},//dev debug use only
+  	{"l", cmd_lock},//dev debug use only
+  	{"stream", cmd_stream},
     {"beep", cmd_beep},
-//    {"help", cmd_help},
+    {"help?", cmd_help},
 
     {NULL, NULL}
 };
@@ -190,6 +195,6 @@ int main(void) {
     
     
     while (true) {
-        chThdSleepMilliseconds(500);
-    }
+       chThdSleepMilliseconds(500);
+   }
 }

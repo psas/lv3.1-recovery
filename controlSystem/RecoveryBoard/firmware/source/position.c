@@ -28,7 +28,6 @@ void motor_current_limit(const uint32_t mA) {
   dacPutChannelX(&DACD1, 0, (mA * 1024) / 1375);
 }
 
-// TODO rewrite/understand
 bool drive_motor(const bool lock_mode,
                  const uint16_t duration_ms,
                  const bool check_ring_position,
@@ -79,7 +78,7 @@ bool drive_motor(const bool lock_mode,
 
   const systime_t end_time = chVTGetSystemTime();
   palClearLine(LINE_N_MOTOR_PS);
-  chprintf(DEBUG_SD, "Time: %u ms\r\n", end_time - start_time);
+  chprintf(DEBUG_SD, "Time: %u ms\r\n", TIME_I2MS(end_time - start_time));
 
   palClearLine(LINE_DEPLOY1);
   motor_current_limit(0);
@@ -170,14 +169,9 @@ THD_FUNCTION(PositionThread, arg) {
   (void)arg;
   chRegSetThreadName("Position");
   memset(&position_state, 0, sizeof(position_state));
-
-  // TODO: Better power management. Andrew had mentoned something like keep
-  //  the current low (how low?) normally, but set it high (how high?) during
-  //  some kind of activity (what activity?)
   motor_current_limit_init();
   motor_current_limit(1500);
 
-  // Turn on power to motor (but keep it off)
   palClearLine(LINE_DEPLOY1);
   palClearLine(LINE_DEPLOY2);
   //	palClearLine(LINE_N_MOTOR_PS);
