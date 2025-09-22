@@ -28,7 +28,6 @@
 #include "position.h"
 #include "beep.h"
 
-
 volatile enum recoverystatetype recoveryState = disarmed;
 volatile enum PositionCommandtype PositionCommand = idle;
 volatile enum mainchutecommandtype mainchuteCommand = idle_m;
@@ -128,7 +127,12 @@ static void cmd_beep(BaseSequentialStream *chp, int argc, char *argv[]) {
 	chprintf(chp, "slayyyyy\r\n");
 	beep();
 }
-
+//
+// static void cmd_teleinfo (BaseSequentialStream *chp, int argc, char *argv[]) {
+// 	(void)argc;
+// 	(void)argv;
+// 	get_telemetrum_line_status();
+// }
 static void cmd_help(BaseSequentialStream *chp, int argc, char *argv[]){ 
   chprintf(chp, "state - print sensor state\r\n"
   "pos - print ring position\r\n"
@@ -146,6 +150,7 @@ static const ShellCommand commands[] = {
   	{"l", cmd_lock},//dev debug use only
   	{"stream", cmd_stream},
     {"beep", cmd_beep},
+/*     {"teleinfo", cmd_teleinfo}, */
     {"help?", cmd_help},
 
     {NULL, NULL}
@@ -188,8 +193,8 @@ int main(void) {
     chThdCreateStatic(waBlinkyThread, sizeof(waBlinkyThread), NORMALPRIO, BlinkyThread, NULL);
 
     //chThdCreateStatic(waTelemetrumThread, sizeof(waTelemetrumThread), NORMALPRIO, TelemetrumThread, NULL);
-   // chThdCreateStatic(waDrogueThread, sizeof(waDrogueThread), NORMALPRIO, DrogueThread, NULL);
-    chThdCreateStatic(waMainchuteThread, sizeof(waMainchuteThread), NORMALPRIO, MainchuteThread, NULL);    
+   //chThdCreateStatic(waDrogueThread, sizeof(waDrogueThread), NORMALPRIO, DrogueThread, NULL);
+   //chThdCreateStatic(waMainchuteThread, sizeof(waMainchuteThread), NORMALPRIO, MainchuteThread, NULL);    
     chThdCreateStatic(waShell, sizeof(waShell), NORMALPRIO, shellThread, (void *)&shell_cfg);
     chThdCreateStatic(waPositionThread, sizeof(waPositionThread), NORMALPRIO, PositionThread, NULL);
     
