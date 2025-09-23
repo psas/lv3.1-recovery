@@ -1,10 +1,7 @@
 #![no_std]
 #![no_main]
 
-// TODO: Blinky command pin B14
-// TODO: Command to print batt_read
-
-use embassy_stm32::usart::BufferedInterruptHandler;
+use embassy_stm32::{can::filter::Mask32, dac::Dac, usart::BufferedInterruptHandler};
 use embedded_io_async::BufRead;
 
 use defmt::*;
@@ -13,8 +10,8 @@ use embassy_stm32::{
     adc::{Adc, InterruptHandler, SampleTime},
     bind_interrupts,
     can::{
-        filter::Mask16, Can, CanRx, Fifo, Rx0InterruptHandler, Rx1InterruptHandler,
-        SceInterruptHandler, StandardId, TxInterruptHandler,
+        Can, CanRx, Fifo, Rx0InterruptHandler, Rx1InterruptHandler, SceInterruptHandler,
+        TxInterruptHandler,
     },
     gpio::{Input, Level, Output, OutputType, Pull, Speed},
     peripherals::{ADC1, CAN, USART2},
@@ -27,7 +24,7 @@ use embassy_stm32::{
 };
 use embassy_sync::{mutex::Mutex, signal::Signal};
 use firmware_rs::shared::{
-    adc::read_battery,
+    adc::read_battery_from_ref,
     buzzer::active_beep,
     can::{can_writer, CAN_BITRATE, CAN_TX_CHANNEL},
     types::*,
@@ -46,6 +43,7 @@ bind_interrupts!(struct AdcIrqs { ADC1_COMP => InterruptHandler<ADC1>; });
 bind_interrupts!(struct UsartIrqs { USART2 => BufferedInterruptHandler<USART2>; });
 
 static UMB_ON_MTX: UmbOnType = Mutex::new(None);
+static ADC_MTX: AdcType = Mutex::new(None);
 
 static BATT_READ_SIGNAL: BattOkSignalType = Signal::new();
 
@@ -53,6 +51,9 @@ static BATT_READ_SIGNAL: BattOkSignalType = Signal::new();
 async fn main(spawner: Spawner) {
     let p = embassy_stm32::init(Default::default());
 
+    let _deploy_1 = Output::new(p.PB4, Level::Low, Speed::Medium);
+    let _deploy_2 = Output::new(p.PB5, Level::Low, Speed::Medium);
+    let _motor_fail = Input::new(p.PB7, Pull::Up);
     let umb_on = Input::new(p.PA8, Pull::Up);
     let _can_shdn = Output::new(p.PA10, Level::Low, Speed::Medium);
     let _can_silent = Output::new(p.PA9, Level::Low, Speed::Medium);
@@ -71,14 +72,7 @@ async fn main(spawner: Spawner) {
 
     // Set up CAN driver
     let mut can = Can::new(p.CAN, p.PA11, p.PA12, CanIrqs);
-    can.modify_filters().enable_bank(
-        0,
-        Fifo::Fifo0,
-        [
-            Mask16::frames_with_std_id(unwrap!(StandardId::new(0x710)), StandardId::MAX),
-            Mask16::frames_with_std_id(unwrap!(StandardId::new(0x720)), StandardId::MAX),
-        ],
-    );
+    can.modify_filters().enable_bank(0, Fifo::Fifo0, Mask32::accept_all());
     can.modify_config().set_bitrate(CAN_BITRATE).set_loopback(false).set_silent(false);
 
     // Set up ADC driver
@@ -86,7 +80,7 @@ async fn main(spawner: Spawner) {
     adc.set_sample_time(SampleTime::CYCLES239_5);
     adc.set_resolution(embassy_stm32::adc::Resolution::BITS12);
 
-    // Set up UART driver
+    // Set up UART driver'
     let mut uart_config = UartConfig::default();
     uart_config.baudrate = 115200;
     uart_config.parity = Parity::ParityNone;
@@ -104,16 +98,19 @@ async fn main(spawner: Spawner) {
     .expect("Uart Config Error");
     let (uart_tx, uart_rx) = uart.split();
 
+    let mut _dac = Dac::new(p.DAC1, p.DMA1_CH3, p.DMA1_CH4, p.PA4, p.PA5);
+
     {
         // Put peripherals into mutex if shared among tasks.
         // Inner scope so that mutex is unlocked when out of scope
+        *(ADC_MTX.lock().await) = Some(adc);
         *(UMB_ON_MTX.lock().await) = Some(umb_on);
     }
 
     unwrap!(spawner.spawn(active_beep(pwm, None)));
     unwrap!(spawner.spawn(uart_writer(uart_tx, &TX_PIPE)));
     unwrap!(spawner.spawn(uart_cli(uart_rx)));
-    unwrap!(spawner.spawn(read_battery(adc, p.PB0, &BATT_READ_SIGNAL)));
+    unwrap!(spawner.spawn(read_battery_from_ref(&ADC_MTX, p.PB0, &BATT_READ_SIGNAL)));
 
     // enable at last minute so other tasks can still spawn if can bus is down
     can.enable().await;
@@ -178,9 +175,7 @@ async fn uart_cli(mut rx: BufferedUartRx<'static>) {
 async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
     loop {
         match can_rx.read().await {
-            Ok(envelope) => match envelope.frame.id() {
-                _ => {}
-            },
+            Ok(_envelope) =>  {}
             Err(e) => {
                 error!("CAN Read Error: {}", e);
                 can.sleep().await;
