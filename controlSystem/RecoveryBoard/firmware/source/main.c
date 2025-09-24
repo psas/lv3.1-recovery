@@ -134,19 +134,6 @@ static void cmd_beep(BaseSequentialStream* chp, int argc, char* argv[]) {
   beep();
 }
 
-static void cmd_teleinfo(BaseSequentialStream* chp, int argc, char* argv[]) {
-  (void)argc;
-  (void)argv;
-  get_telemetrum_line_status();
-}
-
-static void cmd_pleasework(BaseSequentialStream* chp, int argc, char* argv[]) {
-  do {
-    get_telemetrum_line_status();
-    chThdSleepMilliseconds(1000);
-  } while (!sdReadTimeout((SerialDriver*)chp, &buf, sizeof(buf), 0));
-}
-
 static void cmd_help(BaseSequentialStream* chp, int argc, char* argv[]) {
   chprintf(chp,
            "state - print sensor state\r\n"
@@ -165,8 +152,6 @@ static const ShellCommand commands[] = {
     {"l", cmd_lock},    // dev debug use only
     {"stream", cmd_stream},
     {"beep", cmd_beep},
-    {"pleasework", cmd_pleasework},
-    {"teleinfo", cmd_teleinfo},
     {"help?", cmd_help},
 
     {NULL, NULL}};
