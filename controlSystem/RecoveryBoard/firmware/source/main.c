@@ -20,13 +20,13 @@
 #include "beep.h"
 #include "blinky.h"
 #include "ch.h"
+#include "drogue.h"
 #include "chprintf.h"
 #include "hal.h"
 #include "mainchute.h"
 #include "position.h"
 #include "recovery.h"
 #include "shell.h"
-#include "telemetrum.h"
 
 volatile enum recoverystatetype recoveryState = disarmed;
 volatile enum PositionCommandtype PositionCommand = idle;
@@ -127,6 +127,20 @@ static void cmd_position(BaseSequentialStream* chp, int argc, char* argv[]) {
   }
 }
 
+static void cmd_batstatus(BaseSequentialStream* chp, int argc, char* argv[]){
+  (void)argc;
+  (void)argv;
+
+  int batstatus = palReadLine(LINE_BATTREAD);
+  if (batstatus == 1) {
+    chprintf(DEBUG_SD, "Battery Signal: HIGH\r\n\n");
+  }
+  if (batstatus == 0) {
+    chprintf(DEBUG_SD, "Battery Signal: LOW\r\n\n");
+  }
+
+}
+
 static void cmd_beep(BaseSequentialStream* chp, int argc, char* argv[]) {
   (void)argc;
   (void)argv;
@@ -142,6 +156,7 @@ static void cmd_help(BaseSequentialStream* chp, int argc, char* argv[]) {
            "l - lock ring\r\n"
            "stream - continously print sensor state\r\n"
            "beep - beep\r\n"
+           "batstatus - print the battery status\r\n"
            "help - print this message\r\n");
 }
 
@@ -153,6 +168,7 @@ static const ShellCommand commands[] = {
     {"stream", cmd_stream},
     {"beep", cmd_beep},
     {"help?", cmd_help},
+    {"batstatus", cmd_batstatus},
 
     {NULL, NULL}};
 
@@ -189,11 +205,9 @@ int main(void) {
   // START THEM THREADS
   chThdCreateStatic(waBlinkyThread, sizeof(waBlinkyThread), NORMALPRIO,
                     BlinkyThread, NULL);
-
-  chThdCreateStatic(waTelemetrumThread, sizeof(waTelemetrumThread), NORMALPRIO,
-                    TelemetrumThread, NULL);
-  // chThdCreateStatic(waDrogueThread, sizeof(waDrogueThread), NORMALPRIO,
-  // DrogueThread, NULL);
+  //chThdCreateStatic(waTelemetrumThread, sizeof(waTelemetrumThread), NORMALPRIO, TelemetrumThread, NULL);
+  chThdCreateStatic(waDrogueThread, sizeof(waDrogueThread), NORMALPRIO,
+   DrogueThread, NULL);
   chThdCreateStatic(waMainchuteThread, sizeof(waMainchuteThread), NORMALPRIO,
                     MainchuteThread, NULL);
   chThdCreateStatic(waShell, sizeof(waShell), NORMALPRIO, shellThread,
