@@ -16,12 +16,12 @@
 
 // ChibiOS includes
 
-#include <string.h>
+#include "string.h"
 #include "beep.h"
 #include "blinky.h"
 #include "ch.h"
-#include "drogue.h"
 #include "chprintf.h"
+#include "drogue.h"
 #include "hal.h"
 #include "mainchute.h"
 #include "position.h"
@@ -127,7 +127,7 @@ static void cmd_position(BaseSequentialStream* chp, int argc, char* argv[]) {
   }
 }
 
-static void cmd_batstatus(BaseSequentialStream* chp, int argc, char* argv[]){
+static void cmd_batstatus(BaseSequentialStream* chp, int argc, char* argv[]) {
   (void)argc;
   (void)argv;
 
@@ -138,7 +138,6 @@ static void cmd_batstatus(BaseSequentialStream* chp, int argc, char* argv[]){
   if (batstatus == 0) {
     chprintf(DEBUG_SD, "Battery Signal: LOW\r\n\n");
   }
-
 }
 
 static void cmd_beep(BaseSequentialStream* chp, int argc, char* argv[]) {
@@ -205,9 +204,8 @@ int main(void) {
   // START THEM THREADS
   chThdCreateStatic(waBlinkyThread, sizeof(waBlinkyThread), NORMALPRIO,
                     BlinkyThread, NULL);
-  //chThdCreateStatic(waTelemetrumThread, sizeof(waTelemetrumThread), NORMALPRIO, TelemetrumThread, NULL);
   chThdCreateStatic(waDrogueThread, sizeof(waDrogueThread), NORMALPRIO,
-   DrogueThread, NULL);
+                    DrogueThread, NULL);
   chThdCreateStatic(waMainchuteThread, sizeof(waMainchuteThread), NORMALPRIO,
                     MainchuteThread, NULL);
   chThdCreateStatic(waShell, sizeof(waShell), NORMALPRIO, shellThread,
