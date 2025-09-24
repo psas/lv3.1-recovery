@@ -1,6 +1,7 @@
-#include "chprintf.h"
-#include "hal.h"
 #include "ch.h"
+#include "hal.h"
+#include "chprintf.h"
+#include "recovery.h"
 
 THD_WORKING_AREA(waMainchuteThread, 256);
 
