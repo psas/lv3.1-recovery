@@ -7,20 +7,14 @@
 THD_WORKING_AREA(waTelemetrumThread, 256);
 
 THD_FUNCTION(TelemetrumThread, arg) {
-  (void)arg;  // no arguments i guess?
-
-  // assuming these are all digital values set them all to a LOW signal
-  palClearLine(GPIOA_ISO_DROGUE);
-  palClearLine(GPIOA_ISO_MAIN);
-//palClearLine(GPIOA_N_ROCKET_READY);
-  palClearLine(GPIOB_BATTREAD);
+  (void)arg;  
 }
 
 void get_telemetrum_line_status() {
-  int droguestatus = palReadLine(GPIOA_ISO_DROGUE);
-  int mainstatus = palReadLine(GPIOA_ISO_MAIN);
- // int rrstatus = palReadLine(GPIOA_N_ROCKET_READY);
-  int batstatus = palReadLine(GPIOB_BATTREAD);
+  int droguestatus = palReadLine(LINE_ISO_DROGUE);
+  int mainstatus = palReadLine(LINE_ISO_MAIN);
+ // int rrstatus = palReadLine(LINE_ROCKETREADY);
+  int batstatus = palReadLine(LINE_BATTREAD);
   if (droguestatus == 0) {
     chprintf(DEBUG_SD, "Drogue Signal: LOW\r\n");
   }
@@ -37,14 +31,6 @@ void get_telemetrum_line_status() {
   } else {
     chprintf(DEBUG_SD,"Main Signal: UNDEF\r\n");
   }
-  // if (rrstaus == 0) {
-  //   chprintf("Rocket Ready Signal: LOW\n");
-  // }
-  // if (rrstatus == 1) {
-  //   chprintf("Rocket Ready Signal: HIGH\n");
-  // } else {
-  //   chprintf("Rocket Ready Signal: UNDEF\n");
-  // }
   if (batstatus == 0) {
     chprintf(DEBUG_SD,"Battery Signal: LOW\n");
   }
