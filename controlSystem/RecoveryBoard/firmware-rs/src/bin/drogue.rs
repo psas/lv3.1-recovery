@@ -1,9 +1,6 @@
 #![no_std]
 #![no_main]
 
-use embassy_stm32::{can::filter::Mask32, dac::Dac, usart::BufferedInterruptHandler};
-use embedded_io_async::BufRead;
-
 use defmt::*;
 use embassy_executor::Spawner;
 use embassy_stm32::{
@@ -20,16 +17,18 @@ use embassy_stm32::{
         low_level::CountingMode,
         simple_pwm::{PwmPin, SimplePwm},
     },
-    usart::{BufferedUart, BufferedUartRx, Config as UartConfig, DataBits, Parity, StopBits},
+    usart::{BufferedUart, Config as UartConfig, DataBits, Parity, StopBits},
 };
+use embassy_stm32::{can::filter::Mask32, dac::Dac, usart::BufferedInterruptHandler};
 use embassy_sync::{mutex::Mutex, signal::Signal};
+use embedded_io_async::Write;
 use firmware_rs::shared::{
     adc::read_battery_from_ref,
-    buzzer::active_beep,
     can::{can_writer, CAN_BITRATE, CAN_TX_CHANNEL},
     types::*,
-    uart::{uart_writer, TX_PIPE, UART_READ_BUF_SIZE, UART_RX_BUF_CELL, UART_TX_BUF_CELL},
+    uart::{IO, UART_BUF_SIZE, UART_RX_BUF_CELL, UART_TX_BUF_CELL},
 };
+use noline::builder::EditorBuilder;
 use {defmt_rtt as _, panic_probe as _};
 
 bind_interrupts!(struct CanIrqs {
@@ -60,7 +59,7 @@ async fn main(spawner: Spawner) {
 
     // Set up PWM driver
     let buzz_pin = PwmPin::new(p.PB15, OutputType::PushPull);
-    let pwm = SimplePwm::new(
+    let _pwm = SimplePwm::new(
         p.TIM15,
         None,
         Some(buzz_pin),
@@ -96,7 +95,6 @@ async fn main(spawner: Spawner) {
         uart_config,
     )
     .expect("Uart Config Error");
-    let (uart_tx, uart_rx) = uart.split();
 
     let mut _dac = Dac::new(p.DAC1, p.DMA1_CH3, p.DMA1_CH4, p.PA4, p.PA5);
 
@@ -107,9 +105,8 @@ async fn main(spawner: Spawner) {
         *(UMB_ON_MTX.lock().await) = Some(umb_on);
     }
 
-    unwrap!(spawner.spawn(active_beep(pwm, None)));
-    unwrap!(spawner.spawn(uart_writer(uart_tx, &TX_PIPE)));
-    unwrap!(spawner.spawn(uart_cli(uart_rx)));
+    // unwrap!(spawner.spawn(active_beep(pwm, None)));
+    unwrap!(spawner.spawn(cli(uart)));
     unwrap!(spawner.spawn(read_battery_from_ref(&ADC_MTX, p.PB0, &BATT_READ_SIGNAL)));
 
     // enable at last minute so other tasks can still spawn if can bus is down
@@ -123,49 +120,60 @@ async fn main(spawner: Spawner) {
 }
 
 #[embassy_executor::task]
-async fn uart_cli(mut rx: BufferedUartRx<'static>) {
+pub async fn cli(uart: BufferedUart<'static>) {
+    let prompt = "> ";
+    let mut io = IO::new(uart);
+    let mut buffer = [0; UART_BUF_SIZE];
+    let mut history = [0; UART_BUF_SIZE];
+
     loop {
-        let mut rbuf = [0u8; UART_READ_BUF_SIZE];
-        let mut pos = 0usize;
-        TX_PIPE.write_all(b"> ").await;
-        loop {
-            match rx.fill_buf().await {
-                Ok(buf) => {
-                    let n = buf.len();
-                    rbuf[pos] = buf[0];
-                    TX_PIPE.write_all(buf).await;
-                    rx.consume(n);
-                    if rbuf[pos] == 127 || rbuf[pos] == 27 {
-                        // handle delete or backspace
-                        rbuf[pos] = 0;
-                        pos = pos.saturating_sub(1);
-                        TX_PIPE.write_all(b"\x08 \x08").await;
-                        continue;
-                    }
-                    if rbuf[pos] == b'\r' || rbuf[pos] == b'\n' {
-                        TX_PIPE.write_all(b"\n").await;
-                        break;
-                    }
-                    pos = pos.wrapping_add(1);
-                }
-                Err(e) => {
-                    error!("{}", e);
-                    break;
-                }
+        let mut editor = EditorBuilder::from_slice(&mut buffer)
+            .with_slice_history(&mut history)
+            .build_async(&mut io)
+            .await
+            .unwrap();
+
+        while let Ok(line) = editor.readline(prompt, &mut io).await {
+            // WARN: Passing more than 5 args panics
+            let args: heapless::Vec<&str, 5> = line.split_whitespace().skip(1).collect();
+            if args.len() > 1usize {
+                error!("Only one argument allowed");
+                continue;
             }
-        }
-        match &rbuf[..pos] {
-            b"help" => {
-                TX_PIPE
-                    .write_all(
-                        b"\
-                        Usage:\r\n\
-                       ",
-                    )
-                    .await;
-            }
-            _ => {
-                TX_PIPE.write_all(b"Invalid command - please try again\r\n").await;
+            match line {
+                "help" => {
+                    let lines = [
+                        "help: Display this message.\r\n\n",
+                        "state: Print internal state.\r\n\n",
+                        "l: Move the ring towards the lock position.\r\n",
+                        " --force: Ignore sensor readings, continue until timeout.\r\n",
+                        " --pulse: Do a 100ms step instead of a full swing.\r\n\n",
+                        "u: Move the ring towards the unlocked position.\r\n",
+                        " --force: Ignore sensor readings, continue until timeout.\r\n",
+                        " --pulse: Do a 100ms step instead of a full swing.\r\n\n",
+                        "pos: Print the current sensor readings and ring state.\r\n",
+                        " --poll: Print the sensor value and ring state every second.\r\n\n",
+                    ];
+                    for line in lines {
+                        io.write(line.as_bytes()).await.unwrap();
+                    }
+                    io.flush().await.unwrap();
+                }
+                "state" => {
+                    // TODO: implement
+                }
+                "l" => {
+                    // TODO: implement
+                }
+                "u" => {
+                    // TODO: implement
+                }
+                "pos" => {
+                    // TODO: implement
+                }
+                _ => {
+                    io.write(b"Invalid command\r\n").await.unwrap();
+                }
             }
         }
     }
@@ -175,7 +183,9 @@ async fn uart_cli(mut rx: BufferedUartRx<'static>) {
 async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
     loop {
         match can_rx.read().await {
-            Ok(_envelope) =>  {}
+            Ok(_envelope) => {
+                // info!("Envelope: {}", envelope);
+            }
             Err(e) => {
                 error!("CAN Read Error: {}", e);
                 can.sleep().await;

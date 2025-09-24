@@ -19,6 +19,7 @@ embedded-io-async = "0.6.1"
 static_cell = "2.1.1"
 embedded-hal-nb = "1.0.0"
 noline = "0.5.1"
+heapless = "0.9.1"
 
 [profile.release]
 debug = 2

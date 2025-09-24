@@ -2,7 +2,8 @@
 #![no_main]
 
 use core::sync::atomic::{AtomicBool, Ordering};
-use embedded_io_async::BufRead;
+use embedded_io_async::Write;
+use noline::builder::EditorBuilder;
 use portable_atomic::AtomicU64;
 
 use defmt::*;
@@ -23,11 +24,11 @@ use embassy_stm32::{
     peripherals::{ADC1, CAN, USART2},
     time::Hertz,
     timer::{
-        low_level::CountingMode, simple_pwm::{PwmPin, SimplePwm}
+        low_level::CountingMode,
+        simple_pwm::{PwmPin, SimplePwm},
     },
     usart::{
-        BufferedInterruptHandler, BufferedUart, BufferedUartRx, Config as UartConfig, DataBits,
-        Parity, StopBits,
+        BufferedInterruptHandler, BufferedUart, Config as UartConfig, DataBits, Parity, StopBits,
     },
 };
 use embassy_sync::{mutex::Mutex, signal::Signal};
@@ -40,7 +41,7 @@ use firmware_rs::shared::{
         MAIN_ID, MAIN_STATUS_ID, TELEMETRUM_HEARTBEAT_ID,
     },
     types::*,
-    uart::{uart_writer, TX_PIPE, UART_READ_BUF_SIZE, UART_RX_BUF_CELL, UART_TX_BUF_CELL},
+    uart::{IO, UART_BUF_SIZE, UART_RX_BUF_CELL, UART_TX_BUF_CELL},
 };
 use {defmt_rtt as _, panic_probe as _};
 
@@ -122,7 +123,6 @@ async fn main(spawner: Spawner) {
         uart_config,
     )
     .expect("Uart Config Error");
-    let (uart_tx, uart_rx) = uart.split();
 
     {
         // Put peripherals into mutex if shared among tasks.
@@ -130,9 +130,8 @@ async fn main(spawner: Spawner) {
         *(UMB_ON_MTX.lock().await) = Some(umb_on);
     }
 
-    unwrap!(spawner.spawn(active_beep(pwm, Some(&ROCKET_READY))));
-    unwrap!(spawner.spawn(uart_writer(uart_tx, &TX_PIPE)));
-    unwrap!(spawner.spawn(uart_cli(uart_rx)));
+    // unwrap!(spawner.spawn(active_beep(pwm, Some(&ROCKET_READY))));
+    unwrap!(spawner.spawn(cli(uart)));
     unwrap!(spawner.spawn(read_battery(adc, p.PB0, &BATT_READ_SIGNAL)));
     unwrap!(spawner.spawn(handle_iso_rising_edge(iso_drogue, &UMB_ON_MTX, DROGUE_ID)));
     unwrap!(spawner.spawn(handle_iso_rising_edge(iso_main, &UMB_ON_MTX, MAIN_ID)));
@@ -167,58 +166,61 @@ async fn deploy(can_id: u16) {
 }
 
 #[embassy_executor::task]
-async fn uart_cli(mut rx: BufferedUartRx<'static>) {
+pub async fn cli(uart: BufferedUart<'static>) {
+    let prompt = "> ";
+    let mut io = IO::new(uart);
+    let mut buffer = [0; UART_BUF_SIZE];
+    let mut history = [0; UART_BUF_SIZE];
+
     loop {
-        let mut rbuf = [0u8; UART_READ_BUF_SIZE];
-        let mut pos = 0usize;
-        TX_PIPE.write_all(b"> ").await;
-        loop {
-            match rx.fill_buf().await {
-                Ok(buf) => {
-                    let n = buf.len();
-                    rbuf[pos] = buf[0];
-                    TX_PIPE.write_all(buf).await;
-                    rx.consume(n);
-                    if rbuf[pos] == 127 || rbuf[pos] == 27 {
-                        // handle delete or backspace
-                        rbuf[pos] = 0;
-                        pos = pos.saturating_sub(1);
-                        TX_PIPE.write_all(b"\x08 \x08").await;
-                        continue;
+        let mut editor = EditorBuilder::from_slice(&mut buffer)
+            .with_slice_history(&mut history)
+            .build_async(&mut io)
+            .await
+            .unwrap();
+
+        while let Ok(line) = editor.readline(prompt, &mut io).await {
+            match line {
+                "help" => {
+                    let lines = [
+                        "help: Display this message.\r\n\n",
+                        "state: Print internal state.\r\n\n",
+                        "drogue: Send drogue release CAN message.\r\n\n",
+                        "main: Send main release CAN message.\r\n\n",
+                        "rr: Manually toggle the Rocket Ready signal\r\n\n",
+                        "batt: print current battery voltage.\r\n\n",
+                        "beep: Toggle periodic beep.\r\n\n",
+                        "version: Print info about the current firmware version\r\n\n",
+                    ];
+                    for line in lines {
+                        io.write(line.as_bytes()).await.unwrap();
                     }
-                    if rbuf[pos] == b'\r' || rbuf[pos] == b'\n' {
-                        TX_PIPE.write_all(b"\n").await;
-                        break;
-                    }
-                    pos = pos.wrapping_add(1);
+                    io.flush().await.unwrap();
                 }
-                Err(e) => {
-                    error!("{}", e);
-                    break;
+                "state" => {
+                    // TODO: implement
                 }
-            }
-        }
-        match &rbuf[..pos] {
-            b"drogue" => {
-                deploy(DROGUE_ID).await;
-            }
-            b"main" => {
-                deploy(MAIN_ID).await;
-            }
-            b"help" => {
-                TX_PIPE
-                    .write_all(
-                        b"\
-                        Usage:\r\n\
-                        drogue: trigger drogue ers\r\n\
-                        main: trigger main ers\r\n\
-                        help: display this message\r\n\
-                        ",
-                    )
-                    .await;
-            }
-            _ => {
-                TX_PIPE.write_all(b"Invalid command - please try again\r\n").await;
+                "drogue" => {
+                    // TODO: implement
+                }
+                "main" => {
+                    // TODO: implement
+                }
+                "rr" => {
+                    // TODO: implement
+                }
+                "batt" => {
+                    // TODO: implement
+                }
+                "beep" => {
+                    // TODO: implement
+                }
+                "version" => {
+                    // TODO: implement
+                }
+                _ => {
+                    io.write(b"Invalid Command\r\n").await.unwrap();
+                }
             }
         }
     }
@@ -230,29 +232,27 @@ async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
     let mut prev_drogue_status: u8 = 0;
     loop {
         match can_rx.read().await {
-            Ok(envelope) => {
-                match envelope.frame.id() {
-                    Id::Standard(id) if id.as_raw() == MAIN_STATUS_ID => {
-                        let status = envelope.frame.data()[0];
-                        MAIN_LAST_SEEN.store(envelope.ts.as_millis(), Ordering::Relaxed);
-                        MAIN_STATUS.store(status > 0, Ordering::Relaxed);
-                        if status != prev_main_status {
-                            info!("Main status changed to {}", status);
-                        }
-                        prev_main_status = status;
+            Ok(envelope) => match envelope.frame.id() {
+                Id::Standard(id) if id.as_raw() == MAIN_STATUS_ID => {
+                    let status = envelope.frame.data()[0];
+                    MAIN_LAST_SEEN.store(envelope.ts.as_millis(), Ordering::Relaxed);
+                    MAIN_STATUS.store(status > 0, Ordering::Relaxed);
+                    if status != prev_main_status {
+                        info!("Main status changed to {}", status);
                     }
-                    Id::Standard(id) if id.as_raw() == DROGUE_STATUS_ID => {
-                        let status = envelope.frame.data()[0];
-                        DROGUE_LAST_SEEN.store(envelope.ts.as_millis(), Ordering::Relaxed);
-                        DROGUE_STATUS.store(status > 0, Ordering::Relaxed);
-                        if status != prev_drogue_status {
-                            info!("Drogue status changed to {}", status);
-                        }
-                        prev_drogue_status = status;
-                    }
-                    _ => {}
+                    prev_main_status = status;
                 }
-            }
+                Id::Standard(id) if id.as_raw() == DROGUE_STATUS_ID => {
+                    let status = envelope.frame.data()[0];
+                    DROGUE_LAST_SEEN.store(envelope.ts.as_millis(), Ordering::Relaxed);
+                    DROGUE_STATUS.store(status > 0, Ordering::Relaxed);
+                    if status != prev_drogue_status {
+                        info!("Drogue status changed to {}", status);
+                    }
+                    prev_drogue_status = status;
+                }
+                _ => {}
+            },
             Err(e) => {
                 error!("CAN Read Error: {}", e);
                 can.sleep().await;
