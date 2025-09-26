@@ -1,6 +1,8 @@
 #![no_std]
 #![no_main]
 
+use core::sync::atomic::{AtomicBool, Ordering};
+
 use defmt::*;
 use embassy_executor::Spawner;
 use embassy_stm32::{
@@ -54,6 +56,7 @@ bind_interrupts!(struct UsartIrqs { USART2 => BufferedInterruptHandler<USART2>; 
 
 static UMB_ON_MTX: UmbOnType = Mutex::new(None);
 static SYSTEM_STATE: SenderStateType = Mutex::new(None);
+static SHOULD_BEEP: AtomicBool = AtomicBool::new(false);
 
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
@@ -121,7 +124,7 @@ async fn main(spawner: Spawner) {
         *(SYSTEM_STATE.lock().await) = Some(sys_state);
     }
 
-    // unwrap!(spawner.spawn(active_beep(pwm, Some(&SYSTEM_STATE))));
+    unwrap!(spawner.spawn(active_beep(pwm, Some(&SYSTEM_STATE), &SHOULD_BEEP)));
     unwrap!(spawner.spawn(cli(uart)));
     unwrap!(spawner.spawn(read_battery(adc, p.PB0)));
     unwrap!(spawner.spawn(handle_iso_rising_edge(iso_drogue, DROGUE_ID)));
@@ -208,11 +211,8 @@ async fn cli(uart: BufferedUart<'static>) {
                     let mut state_unlocked = SYSTEM_STATE.lock().await;
                     if let Some(state) = state_unlocked.as_mut() {
                         for field in state.iter() {
-                            let s = format_no_std::show(
-                                &mut buf,
-                                format_args!("{:?}\r\n", field),
-                            )
-                            .unwrap();
+                            let s = format_no_std::show(&mut buf, format_args!("{:?}\r\n", field))
+                                .unwrap();
                             io.write(s.as_bytes()).await.unwrap();
                         }
                     }
@@ -231,11 +231,16 @@ async fn cli(uart: BufferedUart<'static>) {
                     // telemetrum heartbeat
                     let mut buf = [0u8; 16];
                     let batt_read = BATT_READ_CHANNEL.receive().await;
-                    let s = format_no_std::show(&mut buf, format_args!("{:?}\r\n", batt_read)).unwrap();
+                    let s =
+                        format_no_std::show(&mut buf, format_args!("{:?}\r\n", batt_read)).unwrap();
                     io.write(s.as_bytes()).await.unwrap();
                 }
                 "beep" => {
-                    // TODO: implement - turn off/on beeping
+                    // toggle beeping
+                    let beep_enabled = SHOULD_BEEP.load(Ordering::Relaxed);
+                    info!("be: {}", beep_enabled);
+                    SHOULD_BEEP.store(!beep_enabled, Ordering::Relaxed);
+
                 }
                 "version" => {
                     // TODO: implement - print version details

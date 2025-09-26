@@ -1,6 +1,9 @@
+use core::sync::atomic::{AtomicBool, Ordering};
+
+use crate::shared::types::SenderStateType;
+use defmt::info;
 use embassy_stm32::{peripherals::TIM15, time::Hertz, timer::simple_pwm::SimplePwm};
 use embassy_time::Timer;
-use crate::shared::types::SenderStateType;
 
 const SEMITONE: u32 = 2_u32.pow(1 / 12); // Multiplier to shift a freq by 1 semitone
 
@@ -8,6 +11,7 @@ const SEMITONE: u32 = 2_u32.pow(1 / 12); // Multiplier to shift a freq by 1 semi
 pub async fn active_beep(
     mut pwm: SimplePwm<'static, TIM15>,
     state: Option<&'static SenderStateType>,
+    should_beep: &'static AtomicBool,
 ) {
     let mut count: u8 = 0;
     pwm.ch2().enable();
@@ -25,31 +29,49 @@ pub async fn active_beep(
     Timer::after_secs(1).await;
 
     loop {
-        match state {
-            Some(state_mtx) => {
-                // state mutex was passed in
-                let mut rr = false;
+        let beep_enabled = should_beep.load(Ordering::Relaxed);
+        if beep_enabled {
+            info!("Beep enabled: {}", beep_enabled);
+            match state {
+                Some(state_mtx) => {
+                    // state mutex was passed in
+                    let mut rr = false;
 
-                {
-                    let mut state_unlocked = state_mtx.lock().await;
-                    if let Some(state_ref) = state_unlocked.as_mut() {
-                        rr = state_ref.rocket_ready;
+                    {
+                        let mut state_unlocked = state_mtx.lock().await;
+                        if let Some(state_ref) = state_unlocked.as_mut() {
+                            rr = state_ref.rocket_ready;
+                        }
+                    }
+
+                    if rr {
+                        pwm.ch2().enable();
+                        pwm.set_frequency(Hertz(440 * 2 * SEMITONE));
+                        pwm.ch2().set_duty_cycle_percent(50);
+                        Timer::after_millis(50).await;
+                        pwm.ch2().set_duty_cycle_fully_off();
+                        pwm.set_frequency(Hertz(440 * 4 * SEMITONE));
+                        pwm.ch2().set_duty_cycle_percent(50);
+                        Timer::after_millis(50).await;
+                        pwm.ch2().set_duty_cycle_fully_off();
+                        pwm.ch2().disable();
+                        Timer::after_millis(125).await;
+                    } else {
+                        pwm.ch2().enable();
+                        pwm.set_frequency(Hertz(440));
+                        pwm.ch2().set_duty_cycle_percent(50);
+                        Timer::after_millis(50).await;
+                        pwm.ch2().set_duty_cycle_fully_off();
+                        pwm.set_frequency(Hertz(440 * 3 * SEMITONE));
+                        pwm.ch2().set_duty_cycle_percent(50);
+                        Timer::after_millis(50).await;
+                        pwm.ch2().set_duty_cycle_fully_off();
+                        pwm.ch2().disable();
+                        Timer::after_secs(1).await;
                     }
                 }
-
-                if rr {
-                    pwm.ch2().enable();
-                    pwm.set_frequency(Hertz(440 * 2 * SEMITONE));
-                    pwm.ch2().set_duty_cycle_percent(50);
-                    Timer::after_millis(50).await;
-                    pwm.ch2().set_duty_cycle_fully_off();
-                    pwm.set_frequency(Hertz(440 * 4 * SEMITONE));
-                    pwm.ch2().set_duty_cycle_percent(50);
-                    Timer::after_millis(50).await;
-                    pwm.ch2().set_duty_cycle_fully_off();
-                    pwm.ch2().disable();
-                    Timer::after_millis(125).await;
-                } else {
+                _ => {
+                    // state mutex was not passed
                     pwm.ch2().enable();
                     pwm.set_frequency(Hertz(440));
                     pwm.ch2().set_duty_cycle_percent(50);
@@ -63,19 +85,7 @@ pub async fn active_beep(
                     Timer::after_secs(1).await;
                 }
             }
-            _ => {
-                pwm.ch2().enable();
-                pwm.set_frequency(Hertz(440));
-                pwm.ch2().set_duty_cycle_percent(50);
-                Timer::after_millis(50).await;
-                pwm.ch2().set_duty_cycle_fully_off();
-                pwm.set_frequency(Hertz(440 * 3 * SEMITONE));
-                pwm.ch2().set_duty_cycle_percent(50);
-                Timer::after_millis(50).await;
-                pwm.ch2().set_duty_cycle_fully_off();
-                pwm.ch2().disable();
-                Timer::after_secs(1).await;
-            }
         }
+        Timer::after_secs(1).await;
     }
 }
