@@ -1,16 +1,14 @@
-use core::sync::atomic::{AtomicBool, Ordering};
-
 use embassy_stm32::{peripherals::TIM15, time::Hertz, timer::simple_pwm::SimplePwm};
 use embassy_time::Timer;
+use crate::shared::types::SenderStateType;
 
 const SEMITONE: u32 = 2_u32.pow(1 / 12); // Multiplier to shift a freq by 1 semitone
 
 #[embassy_executor::task]
 pub async fn active_beep(
     mut pwm: SimplePwm<'static, TIM15>,
-    rocket_ready: Option<&'static AtomicBool>,
+    state: Option<&'static SenderStateType>,
 ) {
-    // Play a melody on start up
     let mut count: u8 = 0;
     pwm.ch2().enable();
     while count < 4 {
@@ -27,9 +25,19 @@ pub async fn active_beep(
     Timer::after_secs(1).await;
 
     loop {
-        match rocket_ready {
-            Some(rr) => {
-                if rr.load(Ordering::Relaxed) {
+        match state {
+            Some(state_mtx) => {
+                // state mutex was passed in
+                let mut rr = false;
+
+                {
+                    let mut state_unlocked = state_mtx.lock().await;
+                    if let Some(state_ref) = state_unlocked.as_mut() {
+                        rr = state_ref.rocket_ready;
+                    }
+                }
+
+                if rr {
                     pwm.ch2().enable();
                     pwm.set_frequency(Hertz(440 * 2 * SEMITONE));
                     pwm.ch2().set_duty_cycle_percent(50);

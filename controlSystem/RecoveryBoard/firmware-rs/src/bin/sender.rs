@@ -1,11 +1,6 @@
 #![no_std]
 #![no_main]
 
-use core::sync::atomic::{AtomicBool, Ordering};
-use embedded_io_async::Write;
-use noline::builder::EditorBuilder;
-use portable_atomic::AtomicU64;
-
 use defmt::*;
 use embassy_executor::Spawner;
 use embassy_stm32::{
@@ -31,10 +26,11 @@ use embassy_stm32::{
         BufferedInterruptHandler, BufferedUart, Config as UartConfig, DataBits, Parity, StopBits,
     },
 };
-use embassy_sync::{mutex::Mutex, signal::Signal};
+use embassy_sync::mutex::Mutex;
 use embassy_time::{Instant, Timer};
+use embedded_io_async::Write;
 use firmware_rs::shared::{
-    adc::read_battery,
+    adc::{read_battery, BATT_READ_CHANNEL},
     buzzer::active_beep,
     can::{
         can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_TX_CHANNEL, DROGUE_ID, DROGUE_STATUS_ID,
@@ -43,6 +39,7 @@ use firmware_rs::shared::{
     types::*,
     uart::{IO, UART_BUF_SIZE, UART_RX_BUF_CELL, UART_TX_BUF_CELL},
 };
+use noline::builder::EditorBuilder;
 use {defmt_rtt as _, panic_probe as _};
 
 bind_interrupts!(struct CanIrqs {
@@ -55,17 +52,8 @@ bind_interrupts!(struct CanIrqs {
 bind_interrupts!(struct AdcIrqs { ADC1_COMP => InterruptHandler<ADC1>; });
 bind_interrupts!(struct UsartIrqs { USART2 => BufferedInterruptHandler<USART2>; });
 
-static ROCKET_READY: AtomicBool = AtomicBool::new(false);
-static DROGUE_STATUS: AtomicBool = AtomicBool::new(false);
-static MAIN_STATUS: AtomicBool = AtomicBool::new(false);
-static DROGUE_LAST_SEEN: AtomicU64 = AtomicU64::new(0);
-static MAIN_LAST_SEEN: AtomicU64 = AtomicU64::new(0);
-static ISO_MAIN_TS: AtomicU64 = AtomicU64::new(0);
-static ISO_DROGUE_TS: AtomicU64 = AtomicU64::new(0);
-
 static UMB_ON_MTX: UmbOnType = Mutex::new(None);
-
-static BATT_READ_SIGNAL: BattOkSignalType = Signal::new();
+static SYSTEM_STATE: SenderStateType = Mutex::new(None);
 
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
@@ -124,18 +112,21 @@ async fn main(spawner: Spawner) {
     )
     .expect("Uart Config Error");
 
+    let sys_state: SenderState = SenderState::default();
+
     {
         // Put peripherals into mutex if shared among tasks.
         // Inner scope so that mutex is unlocked when out of scope
         *(UMB_ON_MTX.lock().await) = Some(umb_on);
+        *(SYSTEM_STATE.lock().await) = Some(sys_state);
     }
 
-    // unwrap!(spawner.spawn(active_beep(pwm, Some(&ROCKET_READY))));
+    // unwrap!(spawner.spawn(active_beep(pwm, Some(&SYSTEM_STATE))));
     unwrap!(spawner.spawn(cli(uart)));
-    unwrap!(spawner.spawn(read_battery(adc, p.PB0, &BATT_READ_SIGNAL)));
-    unwrap!(spawner.spawn(handle_iso_rising_edge(iso_drogue, &UMB_ON_MTX, DROGUE_ID)));
-    unwrap!(spawner.spawn(handle_iso_rising_edge(iso_main, &UMB_ON_MTX, MAIN_ID)));
-    unwrap!(spawner.spawn(telemetrum_heartbeat(&UMB_ON_MTX, rocket_ready_pin)));
+    unwrap!(spawner.spawn(read_battery(adc, p.PB0)));
+    unwrap!(spawner.spawn(handle_iso_rising_edge(iso_drogue, DROGUE_ID)));
+    unwrap!(spawner.spawn(handle_iso_rising_edge(iso_main, MAIN_ID)));
+    unwrap!(spawner.spawn(telemetrum_heartbeat(rocket_ready_pin)));
 
     // enable at last minute so other tasks can still spawn if can bus is down
     can.enable().await;
@@ -145,6 +136,21 @@ async fn main(spawner: Spawner) {
 
     // Keep main from returning. Needed for can_tx/can_rx or they get dropped
     core::future::pending::<()>().await;
+}
+
+async fn set_state(update: SenderStateField) {
+    let mut unlocked = SYSTEM_STATE.lock().await;
+    if let Some(state) = unlocked.as_mut() {
+        match update {
+            SenderStateField::RocketReady(val) => state.rocket_ready = val,
+            SenderStateField::DrogueStatus(val) => state.drogue_status = val,
+            SenderStateField::MainStatus(val) => state.main_status = val,
+            SenderStateField::DrogueLastSeen(val) => state.drogue_last_seen = val,
+            SenderStateField::MainLastSeen(val) => state.main_last_seen = val,
+            SenderStateField::IsoMainLastSeen(val) => state.iso_main_last_seen = val,
+            SenderStateField::IsoDrogueLastSeen(val) => state.iso_drogue_last_seen = val,
+        }
+    }
 }
 
 async fn deploy(can_id: u16) {
@@ -166,7 +172,7 @@ async fn deploy(can_id: u16) {
 }
 
 #[embassy_executor::task]
-pub async fn cli(uart: BufferedUart<'static>) {
+async fn cli(uart: BufferedUart<'static>) {
     let prompt = "> ";
     let mut io = IO::new(uart);
     let mut buffer = [0; UART_BUF_SIZE];
@@ -198,25 +204,41 @@ pub async fn cli(uart: BufferedUart<'static>) {
                     io.flush().await.unwrap();
                 }
                 "state" => {
-                    // TODO: implement
+                    let mut buf = [0u8; 64];
+                    let mut state_unlocked = SYSTEM_STATE.lock().await;
+                    if let Some(state) = state_unlocked.as_mut() {
+                        for field in state.iter() {
+                            let s = format_no_std::show(
+                                &mut buf,
+                                format_args!("{:?}\r\n", field),
+                            )
+                            .unwrap();
+                            io.write(s.as_bytes()).await.unwrap();
+                        }
+                    }
                 }
                 "drogue" => {
-                    // TODO: implement
+                    deploy(DROGUE_ID).await;
                 }
                 "main" => {
-                    // TODO: implement
+                    deploy(MAIN_ID).await;
                 }
                 "rr" => {
-                    // TODO: implement
+                    // TODO: implement - manually set rocket_ready to true
                 }
                 "batt" => {
-                    // TODO: implement
+                    // WARN: This will cause the CAN bus to wait for the next batt read to send
+                    // telemetrum heartbeat
+                    let mut buf = [0u8; 16];
+                    let batt_read = BATT_READ_CHANNEL.receive().await;
+                    let s = format_no_std::show(&mut buf, format_args!("{:?}\r\n", batt_read)).unwrap();
+                    io.write(s.as_bytes()).await.unwrap();
                 }
                 "beep" => {
-                    // TODO: implement
+                    // TODO: implement - turn off/on beeping
                 }
                 "version" => {
-                    // TODO: implement
+                    // TODO: implement - print version details
                 }
                 _ => {
                     io.write(b"Invalid Command\r\n").await.unwrap();
@@ -235,8 +257,8 @@ async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
             Ok(envelope) => match envelope.frame.id() {
                 Id::Standard(id) if id.as_raw() == MAIN_STATUS_ID => {
                     let status = envelope.frame.data()[0];
-                    MAIN_LAST_SEEN.store(envelope.ts.as_millis(), Ordering::Relaxed);
-                    MAIN_STATUS.store(status > 0, Ordering::Relaxed);
+                    set_state(SenderStateField::MainLastSeen(envelope.ts.as_millis())).await;
+                    set_state(SenderStateField::MainStatus(status > 0)).await;
                     if status != prev_main_status {
                         info!("Main status changed to {}", status);
                     }
@@ -244,8 +266,8 @@ async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
                 }
                 Id::Standard(id) if id.as_raw() == DROGUE_STATUS_ID => {
                     let status = envelope.frame.data()[0];
-                    DROGUE_LAST_SEEN.store(envelope.ts.as_millis(), Ordering::Relaxed);
-                    DROGUE_STATUS.store(status > 0, Ordering::Relaxed);
+                    set_state(SenderStateField::DrogueLastSeen(envelope.ts.as_millis())).await;
+                    set_state(SenderStateField::DrogueStatus(status > 0)).await;
                     if status != prev_drogue_status {
                         info!("Drogue status changed to {}", status);
                     }
@@ -262,17 +284,13 @@ async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
 }
 
 #[embassy_executor::task(pool_size = 2)]
-async fn handle_iso_rising_edge(
-    mut iso: ExtiInput<'static>,
-    umb_on: &'static UmbOnType,
-    can_id: u16,
-) -> () {
+async fn handle_iso_rising_edge(mut iso: ExtiInput<'static>, can_id: u16) -> () {
     loop {
         iso.wait_for_rising_edge().await;
         let time_now = Instant::now().as_millis();
         // telemetrum is signaling to deploy
         {
-            let mut umb_on_unlocked = umb_on.lock().await;
+            let mut umb_on_unlocked = UMB_ON_MTX.lock().await;
             if let Some(umb_on_ref) = umb_on_unlocked.as_mut() {
                 if umb_on_ref.is_high() {
                     deploy(can_id).await;
@@ -282,10 +300,10 @@ async fn handle_iso_rising_edge(
         // record last deployment signal time
         match can_id {
             DROGUE_ID => {
-                ISO_DROGUE_TS.store(time_now, Ordering::Relaxed);
+                set_state(SenderStateField::IsoDrogueLastSeen(time_now)).await;
             }
             MAIN_ID => {
-                ISO_MAIN_TS.store(time_now, Ordering::Relaxed);
+                set_state(SenderStateField::IsoMainLastSeen(time_now)).await;
             }
             _ => {}
         }
@@ -293,7 +311,7 @@ async fn handle_iso_rising_edge(
 }
 
 #[embassy_executor::task]
-async fn telemetrum_heartbeat(umb_on: &'static UmbOnType, mut rr_pin: Output<'static>) -> () {
+async fn telemetrum_heartbeat(mut rr_pin: Output<'static>) -> () {
     let mut prev_main_ok: bool = false;
     let mut prev_drogue_ok: bool = false;
     let mut prev_batt_ok: u8 = 0;
@@ -305,32 +323,47 @@ async fn telemetrum_heartbeat(umb_on: &'static UmbOnType, mut rr_pin: Output<'st
     loop {
         let time_now = Instant::now().as_millis();
 
-        let mut telemetrum_state: u8 = 0;
-        let iso_main_ts = ISO_MAIN_TS.load(Ordering::Relaxed);
-        let iso_drogue_ts = ISO_DROGUE_TS.load(Ordering::Relaxed);
+        let main_status: bool;
+        let drogue_status: bool;
+        let drogue_last_seen: u64;
+        let main_last_seen: u64;
+        let iso_drogue_last_seen: u64;
+        let iso_main_last_seen: u64;
 
-        if (time_now - iso_drogue_ts < 10000) && (iso_drogue_ts != 0) {
+        {
+            let mut state_unlocked = SYSTEM_STATE.lock().await;
+            if let Some(state) = state_unlocked.as_mut() {
+                main_status = state.main_status;
+                drogue_status = state.drogue_status;
+                drogue_last_seen = state.drogue_last_seen;
+                main_last_seen = state.main_last_seen;
+                iso_drogue_last_seen = state.drogue_last_seen;
+                iso_main_last_seen = state.iso_main_last_seen;
+            } else {
+                error!("Could not read state for telemetrum_heartbeat!");
+                continue;
+            }
+        }
+
+        let mut telemetrum_state: u8 = 0;
+
+        if (time_now - iso_drogue_last_seen < 10000) && (iso_drogue_last_seen != 0) {
             telemetrum_state = telemetrum_state.wrapping_add(2u8.pow(7)); // bit 0
         }
 
-        if (time_now - iso_main_ts < 10000) && (iso_main_ts != 0) {
+        if (time_now - iso_main_last_seen < 10000) && (iso_main_last_seen != 0) {
             telemetrum_state = telemetrum_state.wrapping_add(2u8.pow(6)); // bit 1
         }
 
-        let drogue_last_seen = DROGUE_LAST_SEEN.load(Ordering::Relaxed);
-        let main_last_seen = MAIN_LAST_SEEN.load(Ordering::Relaxed);
         let main_ok = time_now - main_last_seen < 2000;
         let drogue_ok = time_now - drogue_last_seen < 2000;
-
-        let batt_read = BATT_READ_SIGNAL.wait().await;
+        let batt_read = BATT_READ_CHANNEL.receive().await;
         let batt_ok = (batt_read > 99) as u8;
         let can_bus_ok = (main_ok && drogue_ok) as u8;
-        let ers_status = (can_bus_ok != 0
-            && MAIN_STATUS.load(Ordering::Relaxed)
-            && DROGUE_STATUS.load(Ordering::Relaxed)) as u8;
+        let ers_status = (can_bus_ok != 0 && main_status && drogue_status) as u8;
 
         {
-            let mut umb_on_unlocked = umb_on.lock().await;
+            let mut umb_on_unlocked = UMB_ON_MTX.lock().await;
             if let Some(umb_on_ref) = umb_on_unlocked.as_mut() {
                 let shore_pow_status = umb_on_ref.is_low() as u8;
 
@@ -338,10 +371,10 @@ async fn telemetrum_heartbeat(umb_on: &'static UmbOnType, mut rr_pin: Output<'st
 
                 if rocket_ready == 1 {
                     rr_pin.set_high();
-                    ROCKET_READY.store(true, Ordering::Relaxed);
+                    set_state(SenderStateField::RocketReady(true)).await;
                 } else {
                     rr_pin.set_low();
-                    ROCKET_READY.store(false, Ordering::Relaxed);
+                    set_state(SenderStateField::RocketReady(false)).await;
                 }
 
                 let status_buf = [

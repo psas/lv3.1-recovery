@@ -107,7 +107,7 @@ async fn main(spawner: Spawner) {
 
     // unwrap!(spawner.spawn(active_beep(pwm, None)));
     unwrap!(spawner.spawn(cli(uart)));
-    unwrap!(spawner.spawn(read_battery_from_ref(&ADC_MTX, p.PB0, &BATT_READ_SIGNAL)));
+    unwrap!(spawner.spawn(read_battery_from_ref(&ADC_MTX, p.PB0)));
 
     // enable at last minute so other tasks can still spawn if can bus is down
     can.enable().await;
