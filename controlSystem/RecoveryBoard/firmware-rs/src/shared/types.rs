@@ -14,6 +14,7 @@ use embassy_sync::{
 #[derive(Default)]
 pub struct SenderState {
     pub rocket_ready: bool,
+    pub force_rocket_ready: bool,
     pub drogue_status: bool,
     pub main_status: bool,
     pub drogue_last_seen: u64,
@@ -25,6 +26,7 @@ pub struct SenderState {
 #[derive(Debug)]
 pub enum SenderStateField {
     RocketReady(bool),
+    ForceRocketReady(bool),
     DrogueStatus(bool),
     MainStatus(bool),
     DrogueLastSeen(u64),
@@ -50,12 +52,13 @@ impl<'a> Iterator for SenderStateIter<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         let result = match self.index {
             0 => Some(SenderStateField::RocketReady(self.state_fields.rocket_ready)),
-            1 => Some(SenderStateField::DrogueStatus(self.state_fields.drogue_status)),
-            2 => Some(SenderStateField::MainStatus(self.state_fields.main_status)),
-            3 => Some(SenderStateField::DrogueLastSeen(self.state_fields.drogue_last_seen)),
-            4 => Some(SenderStateField::MainLastSeen(self.state_fields.main_last_seen)),
-            5 => Some(SenderStateField::IsoMainLastSeen(self.state_fields.iso_main_last_seen)),
-            6 => Some(SenderStateField::IsoDrogueLastSeen(self.state_fields.iso_drogue_last_seen)),
+            1 => Some(SenderStateField::ForceRocketReady(self.state_fields.force_rocket_ready)),
+            2 => Some(SenderStateField::DrogueStatus(self.state_fields.drogue_status)),
+            3 => Some(SenderStateField::MainStatus(self.state_fields.main_status)),
+            4 => Some(SenderStateField::DrogueLastSeen(self.state_fields.drogue_last_seen)),
+            5 => Some(SenderStateField::MainLastSeen(self.state_fields.main_last_seen)),
+            6 => Some(SenderStateField::IsoMainLastSeen(self.state_fields.iso_main_last_seen)),
+            7 => Some(SenderStateField::IsoDrogueLastSeen(self.state_fields.iso_drogue_last_seen)),
             _ => None,
         };
 
@@ -64,6 +67,27 @@ impl<'a> Iterator for SenderStateIter<'a> {
         }
 
         result
+    }
+}
+
+impl core::fmt::Display for SenderStateField {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            &Self::RocketReady(val) => {
+                write!(f, "Rocket Ready: {}", if val { "YES" } else { "NO" })
+            }
+            &Self::ForceRocketReady(val) => {
+                write!(f, "Force Rocket Ready: {}", if val { "YES" } else { "NO" })
+            }
+            &Self::DrogueStatus(val) => {
+                write!(f, "Drogue Status: {}", if val { "OK" } else { "ERR" })
+            }
+            &Self::MainStatus(val) => write!(f, "Main Status: {}", if val { "OK" } else { "ERR" }),
+            Self::DrogueLastSeen(val) => write!(f, "Drogue last seen: {}ms", val),
+            Self::MainLastSeen(val) => write!(f, "Main last seen: {}ms", val),
+            Self::IsoDrogueLastSeen(val) => write!(f, "Iso drogue last seen: {}ms", val),
+            Self::IsoMainLastSeen(val) => write!(f, "Iso main last seen: {}ms", val),
+        }
     }
 }
 

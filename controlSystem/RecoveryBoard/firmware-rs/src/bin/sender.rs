@@ -146,6 +146,7 @@ async fn set_state(update: SenderStateField) {
     if let Some(state) = unlocked.as_mut() {
         match update {
             SenderStateField::RocketReady(val) => state.rocket_ready = val,
+            SenderStateField::ForceRocketReady(val) => state.force_rocket_ready = val,
             SenderStateField::DrogueStatus(val) => state.drogue_status = val,
             SenderStateField::MainStatus(val) => state.main_status = val,
             SenderStateField::DrogueLastSeen(val) => state.drogue_last_seen = val,
@@ -196,7 +197,7 @@ async fn cli(uart: BufferedUart<'static>) {
                         "state: Print internal state.\r\n\n",
                         "drogue: Send drogue release CAN message.\r\n\n",
                         "main: Send main release CAN message.\r\n\n",
-                        "rr: Manually toggle the Rocket Ready signal\r\n\n",
+                        "rr: Toggle the Rocket Ready signal\r\n\n",
                         "batt: print current battery voltage.\r\n\n",
                         "beep: Toggle periodic beep.\r\n\n",
                         "version: Print info about the current firmware version\r\n\n",
@@ -210,8 +211,15 @@ async fn cli(uart: BufferedUart<'static>) {
                     let mut buf = [0u8; 64];
                     let mut state_unlocked = SYSTEM_STATE.lock().await;
                     if let Some(state) = state_unlocked.as_mut() {
+                        let time_now = Instant::now().as_millis();
+                        let ts = format_no_std::show(
+                            &mut buf,
+                            format_args!("Current time: {}ms\r\n", time_now),
+                        )
+                        .unwrap();
+                        io.write(ts.as_bytes()).await.unwrap();
                         for field in state.iter() {
-                            let s = format_no_std::show(&mut buf, format_args!("{:?}\r\n", field))
+                            let s = format_no_std::show(&mut buf, format_args!("{}\r\n", field))
                                 .unwrap();
                             io.write(s.as_bytes()).await.unwrap();
                         }
@@ -224,7 +232,16 @@ async fn cli(uart: BufferedUart<'static>) {
                     deploy(MAIN_ID).await;
                 }
                 "rr" => {
-                    // TODO: implement - manually set rocket_ready to true
+                    let toggled_rr: bool;
+                    {
+                        let mut state_unlocked = SYSTEM_STATE.lock().await;
+                        if let Some(state) = state_unlocked.as_mut() {
+                            toggled_rr = !state.force_rocket_ready;
+                        } else {
+                            toggled_rr = false;
+                        }
+                    }
+                    set_state(SenderStateField::ForceRocketReady(toggled_rr)).await;
                 }
                 "batt" => {
                     // WARN: This will cause the CAN bus to wait for the next batt read to send
@@ -232,7 +249,7 @@ async fn cli(uart: BufferedUart<'static>) {
                     let mut buf = [0u8; 16];
                     let batt_read = BATT_READ_CHANNEL.receive().await;
                     let s =
-                        format_no_std::show(&mut buf, format_args!("{:?}\r\n", batt_read)).unwrap();
+                        format_no_std::show(&mut buf, format_args!("{}\r\n", batt_read)).unwrap();
                     io.write(s.as_bytes()).await.unwrap();
                 }
                 "beep" => {
@@ -240,7 +257,6 @@ async fn cli(uart: BufferedUart<'static>) {
                     let beep_enabled = SHOULD_BEEP.load(Ordering::Relaxed);
                     info!("be: {}", beep_enabled);
                     SHOULD_BEEP.store(!beep_enabled, Ordering::Relaxed);
-
                 }
                 "version" => {
                     // TODO: implement - print version details
@@ -328,6 +344,7 @@ async fn telemetrum_heartbeat(mut rr_pin: Output<'static>) -> () {
     loop {
         let time_now = Instant::now().as_millis();
 
+        let force_rocket_ready: bool;
         let main_status: bool;
         let drogue_status: bool;
         let drogue_last_seen: u64;
@@ -338,6 +355,7 @@ async fn telemetrum_heartbeat(mut rr_pin: Output<'static>) -> () {
         {
             let mut state_unlocked = SYSTEM_STATE.lock().await;
             if let Some(state) = state_unlocked.as_mut() {
+                force_rocket_ready = state.force_rocket_ready;
                 main_status = state.main_status;
                 drogue_status = state.drogue_status;
                 drogue_last_seen = state.drogue_last_seen;
@@ -372,7 +390,10 @@ async fn telemetrum_heartbeat(mut rr_pin: Output<'static>) -> () {
             if let Some(umb_on_ref) = umb_on_unlocked.as_mut() {
                 let shore_pow_status = umb_on_ref.is_low() as u8;
 
-                let rocket_ready = (shore_pow_status == 0 && batt_ok == 1 && ers_status == 1) as u8;
+                let rocket_ready = (force_rocket_ready
+                    || (shore_pow_status == 0 && batt_ok == 1 && ers_status == 1))
+                    as u8;
+                info!("Rocket Ready: {}", rocket_ready);
 
                 if rocket_ready == 1 {
                     rr_pin.set_high();
