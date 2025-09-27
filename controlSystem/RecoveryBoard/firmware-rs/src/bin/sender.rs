@@ -1,8 +1,6 @@
 #![no_std]
 #![no_main]
 
-use core::sync::atomic::{AtomicBool, Ordering};
-
 use defmt::*;
 use embassy_executor::Spawner;
 use embassy_stm32::{
@@ -28,12 +26,12 @@ use embassy_stm32::{
         BufferedInterruptHandler, BufferedUart, Config as UartConfig, DataBits, Parity, StopBits,
     },
 };
-use embassy_sync::mutex::Mutex;
+use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex};
 use embassy_time::{Instant, Timer};
 use embedded_io_async::Write;
 use firmware_rs::shared::{
     adc::{read_battery, BATT_READ_CHANNEL},
-    buzzer::active_beep,
+    buzzer::{active_beep, BuzzerMode, BuzzerModeMtxType},
     can::{
         can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_TX_CHANNEL, DROGUE_ID, DROGUE_STATUS_ID,
         MAIN_ID, MAIN_STATUS_ID, TELEMETRUM_HEARTBEAT_ID,
@@ -55,8 +53,90 @@ bind_interrupts!(struct AdcIrqs { ADC1_COMP => InterruptHandler<ADC1>; });
 bind_interrupts!(struct UsartIrqs { USART2 => BufferedInterruptHandler<USART2>; });
 
 static UMB_ON_MTX: UmbOnType = Mutex::new(None);
-static SYSTEM_STATE: SenderStateType = Mutex::new(None);
-static SHOULD_BEEP: AtomicBool = AtomicBool::new(false);
+static SYSTEM_STATE_MTX: Mutex<ThreadModeRawMutex, Option<SenderState>> = Mutex::new(None);
+static BUZZER_MODE_MTX: BuzzerModeMtxType = Mutex::new(None);
+
+#[derive(Default)]
+pub struct SenderState {
+    pub rocket_ready: bool,
+    pub force_rocket_ready: bool,
+    pub drogue_status: bool,
+    pub main_status: bool,
+    pub drogue_last_seen: u64,
+    pub main_last_seen: u64,
+    pub iso_main_last_seen: u64,
+    pub iso_drogue_last_seen: u64,
+}
+
+#[derive(Debug)]
+pub enum SenderStateField {
+    RocketReady(bool),
+    ForceRocketReady(bool),
+    DrogueStatus(bool),
+    MainStatus(bool),
+    DrogueLastSeen(u64),
+    MainLastSeen(u64),
+    IsoMainLastSeen(u64),
+    IsoDrogueLastSeen(u64),
+}
+
+pub struct SenderStateIter<'a> {
+    state_fields: &'a SenderState,
+    index: usize,
+}
+
+impl SenderState {
+    pub fn iter(&self) -> SenderStateIter<'_> {
+        SenderStateIter { state_fields: self, index: 0 }
+    }
+}
+
+impl<'a> Iterator for SenderStateIter<'a> {
+    type Item = SenderStateField;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let result = match self.index {
+            0 => Some(SenderStateField::RocketReady(self.state_fields.rocket_ready)),
+            1 => Some(SenderStateField::ForceRocketReady(self.state_fields.force_rocket_ready)),
+            2 => Some(SenderStateField::DrogueStatus(self.state_fields.drogue_status)),
+            3 => Some(SenderStateField::MainStatus(self.state_fields.main_status)),
+            4 => Some(SenderStateField::DrogueLastSeen(self.state_fields.drogue_last_seen)),
+            5 => Some(SenderStateField::MainLastSeen(self.state_fields.main_last_seen)),
+            6 => Some(SenderStateField::IsoMainLastSeen(self.state_fields.iso_main_last_seen)),
+            7 => Some(SenderStateField::IsoDrogueLastSeen(self.state_fields.iso_drogue_last_seen)),
+            _ => None,
+        };
+
+        if result.is_some() {
+            self.index += 1;
+        }
+
+        result
+    }
+}
+
+impl core::fmt::Display for SenderStateField {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            &Self::RocketReady(val) => {
+                core::write!(f, "Rocket Ready: {}", if val { "YES" } else { "NO" })
+            }
+            &Self::ForceRocketReady(val) => {
+                core::write!(f, "Force Rocket Ready: {}", if val { "YES" } else { "NO" })
+            }
+            &Self::DrogueStatus(val) => {
+                core::write!(f, "Drogue Status: {}", if val { "OK" } else { "ERR" })
+            }
+            &Self::MainStatus(val) => {
+                core::write!(f, "Main Status: {}", if val { "OK" } else { "ERR" })
+            }
+            Self::DrogueLastSeen(val) => core::write!(f, "Drogue last seen: {}ms", val),
+            Self::MainLastSeen(val) => core::write!(f, "Main last seen: {}ms", val),
+            Self::IsoDrogueLastSeen(val) => core::write!(f, "Iso drogue last seen: {}ms", val),
+            Self::IsoMainLastSeen(val) => core::write!(f, "Iso main last seen: {}ms", val),
+        }
+    }
+}
 
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
@@ -80,6 +160,8 @@ async fn main(spawner: Spawner) {
         Hertz(440),
         CountingMode::EdgeAlignedUp,
     );
+
+    let buzzer_mode = BuzzerMode::Off;
 
     // Set up CAN driver
     let mut can = Can::new(p.CAN, p.PA11, p.PA12, CanIrqs);
@@ -120,11 +202,12 @@ async fn main(spawner: Spawner) {
     {
         // Put peripherals into mutex if shared among tasks.
         // Inner scope so that mutex is unlocked when out of scope
+        *(BUZZER_MODE_MTX.lock().await) = Some(buzzer_mode);
         *(UMB_ON_MTX.lock().await) = Some(umb_on);
-        *(SYSTEM_STATE.lock().await) = Some(sys_state);
+        *(SYSTEM_STATE_MTX.lock().await) = Some(sys_state);
     }
 
-    unwrap!(spawner.spawn(active_beep(pwm, Some(&SYSTEM_STATE), &SHOULD_BEEP)));
+    unwrap!(spawner.spawn(active_beep(pwm, &BUZZER_MODE_MTX)));
     unwrap!(spawner.spawn(cli(uart)));
     unwrap!(spawner.spawn(read_battery(adc, p.PB0)));
     unwrap!(spawner.spawn(handle_iso_rising_edge(iso_drogue, DROGUE_ID)));
@@ -142,7 +225,7 @@ async fn main(spawner: Spawner) {
 }
 
 async fn set_state(update: SenderStateField) {
-    let mut unlocked = SYSTEM_STATE.lock().await;
+    let mut unlocked = SYSTEM_STATE_MTX.lock().await;
     if let Some(state) = unlocked.as_mut() {
         match update {
             SenderStateField::RocketReady(val) => state.rocket_ready = val,
@@ -209,7 +292,7 @@ async fn cli(uart: BufferedUart<'static>) {
                 }
                 "state" => {
                     let mut buf = [0u8; 64];
-                    let mut state_unlocked = SYSTEM_STATE.lock().await;
+                    let mut state_unlocked = SYSTEM_STATE_MTX.lock().await;
                     if let Some(state) = state_unlocked.as_mut() {
                         let time_now = Instant::now().as_millis();
                         let ts = format_no_std::show(
@@ -234,7 +317,7 @@ async fn cli(uart: BufferedUart<'static>) {
                 "rr" => {
                     let toggled_rr: bool;
                     {
-                        let mut state_unlocked = SYSTEM_STATE.lock().await;
+                        let mut state_unlocked = SYSTEM_STATE_MTX.lock().await;
                         if let Some(state) = state_unlocked.as_mut() {
                             toggled_rr = !state.force_rocket_ready;
                         } else {
@@ -254,9 +337,19 @@ async fn cli(uart: BufferedUart<'static>) {
                 }
                 "beep" => {
                     // toggle beeping
-                    let beep_enabled = SHOULD_BEEP.load(Ordering::Relaxed);
-                    info!("be: {}", beep_enabled);
-                    SHOULD_BEEP.store(!beep_enabled, Ordering::Relaxed);
+                    let mut buzz_mode_unlocked = BUZZER_MODE_MTX.lock().await;
+                    if let Some(mode) = buzz_mode_unlocked.as_mut() {
+                        match mode {
+                            BuzzerMode::Off => {
+                                info!("Setting Buzzer mode to low");
+                                *mode = BuzzerMode::Low;
+                            }
+                            _ => {
+                                info!("Turning Buzzer off");
+                                *mode = BuzzerMode::Off
+                            }
+                        }
+                    }
                 }
                 "version" => {
                     // TODO: implement - print version details
@@ -353,7 +446,7 @@ async fn telemetrum_heartbeat(mut rr_pin: Output<'static>) -> () {
         let iso_main_last_seen: u64;
 
         {
-            let mut state_unlocked = SYSTEM_STATE.lock().await;
+            let mut state_unlocked = SYSTEM_STATE_MTX.lock().await;
             if let Some(state) = state_unlocked.as_mut() {
                 force_rocket_ready = state.force_rocket_ready;
                 main_status = state.main_status;
@@ -393,7 +486,6 @@ async fn telemetrum_heartbeat(mut rr_pin: Output<'static>) -> () {
                 let rocket_ready = (force_rocket_ready
                     || (shore_pow_status == 0 && batt_ok == 1 && ers_status == 1))
                     as u8;
-                info!("Rocket Ready: {}", rocket_ready);
 
                 if rocket_ready == 1 {
                     rr_pin.set_high();
@@ -401,6 +493,22 @@ async fn telemetrum_heartbeat(mut rr_pin: Output<'static>) -> () {
                 } else {
                     rr_pin.set_low();
                     set_state(SenderStateField::RocketReady(false)).await;
+                }
+
+                {
+                    let mut buzz_mode_unlocked = BUZZER_MODE_MTX.lock().await;
+                    if let Some(mode) = buzz_mode_unlocked.as_mut() {
+                        match mode {
+                            BuzzerMode::Off => {}
+                            _ => {
+                                if rocket_ready > 0 {
+                                    *mode = BuzzerMode::High;
+                                } else {
+                                    *mode = BuzzerMode::Low;
+                                }
+                            }
+                        }
+                    }
                 }
 
                 let status_buf = [
