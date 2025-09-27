@@ -35,24 +35,14 @@ use {defmt_rtt as _, panic_probe as _};
 pub struct DrogueState {
     pub rocket_ready: bool,
     pub force_rocket_ready: bool,
-    pub drogue_status: bool,
-    pub main_status: bool,
-    pub drogue_last_seen: u64,
-    pub main_last_seen: u64,
-    pub iso_main_last_seen: u64,
-    pub iso_drogue_last_seen: u64,
+    pub shore_power_status: bool,
 }
 
 #[derive(Debug)]
 pub enum DrogueStateField {
     RocketReady(bool),
     ForceRocketReady(bool),
-    DrogueStatus(bool),
-    MainStatus(bool),
-    DrogueLastSeen(u64),
-    MainLastSeen(u64),
-    IsoMainLastSeen(u64),
-    IsoDrogueLastSeen(u64),
+    ShorePowerStatus(bool),
 }
 
 pub struct DrogueStateIter<'a> {
@@ -73,12 +63,7 @@ impl<'a> Iterator for DrogueStateIter<'a> {
         let result = match self.index {
             0 => Some(DrogueStateField::RocketReady(self.state_fields.rocket_ready)),
             1 => Some(DrogueStateField::ForceRocketReady(self.state_fields.force_rocket_ready)),
-            2 => Some(DrogueStateField::DrogueStatus(self.state_fields.drogue_status)),
-            3 => Some(DrogueStateField::MainStatus(self.state_fields.main_status)),
-            4 => Some(DrogueStateField::DrogueLastSeen(self.state_fields.drogue_last_seen)),
-            5 => Some(DrogueStateField::MainLastSeen(self.state_fields.main_last_seen)),
-            6 => Some(DrogueStateField::IsoMainLastSeen(self.state_fields.iso_main_last_seen)),
-            7 => Some(DrogueStateField::IsoDrogueLastSeen(self.state_fields.iso_drogue_last_seen)),
+            2 => Some(DrogueStateField::ShorePowerStatus(self.state_fields.shore_power_status)),
             _ => None,
         };
 
@@ -92,23 +77,27 @@ impl<'a> Iterator for DrogueStateIter<'a> {
 
 impl core::fmt::Display for DrogueStateField {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        match self {
-            &Self::RocketReady(val) => {
+        match *self {
+            Self::RocketReady(val) => {
                 core::write!(f, "Rocket Ready: {}", if val { "YES" } else { "NO" })
             }
-            &Self::ForceRocketReady(val) => {
+            Self::ForceRocketReady(val) => {
                 core::write!(f, "Force Rocket Ready: {}", if val { "YES" } else { "NO" })
             }
-            &Self::DrogueStatus(val) => {
-                core::write!(f, "Drogue Status: {}", if val { "OK" } else { "ERR" })
+            Self::ShorePowerStatus(val) => {
+                core::write!(f, "Shore Power: {}", if val { "ON" } else { "OFF" })
             }
-            &Self::MainStatus(val) => {
-                core::write!(f, "Main Status: {}", if val { "OK" } else { "ERR" })
-            }
-            Self::DrogueLastSeen(val) => core::write!(f, "Drogue last seen: {}ms", val),
-            Self::MainLastSeen(val) => core::write!(f, "Main last seen: {}ms", val),
-            Self::IsoDrogueLastSeen(val) => core::write!(f, "Iso drogue last seen: {}ms", val),
-            Self::IsoMainLastSeen(val) => core::write!(f, "Iso main last seen: {}ms", val),
+        }
+    }
+}
+
+async fn set_state(update: DrogueStateField) {
+    let mut unlocked = SYSTEM_STATE_MTX.lock().await;
+    if let Some(state) = unlocked.as_mut() {
+        match update {
+            DrogueStateField::RocketReady(val) => state.rocket_ready = val,
+            DrogueStateField::ForceRocketReady(val) => state.force_rocket_ready = val,
+            DrogueStateField::ShorePowerStatus(val) => state.shore_power_status = val,
         }
     }
 }

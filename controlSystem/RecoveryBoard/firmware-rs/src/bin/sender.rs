@@ -67,6 +67,7 @@ pub struct SenderState {
     pub force_rocket_ready: bool,
     pub drogue_status: bool,
     pub main_status: bool,
+    pub shore_power_status: bool, 
     pub drogue_last_seen: u64,
     pub main_last_seen: u64,
     pub iso_main_last_seen: u64,
@@ -79,6 +80,7 @@ pub enum SenderStateField {
     ForceRocketReady(bool),
     DrogueStatus(bool),
     MainStatus(bool),
+    ShorePowerStatus(bool),
     DrogueLastSeen(u64),
     MainLastSeen(u64),
     IsoMainLastSeen(u64),
@@ -105,10 +107,11 @@ impl<'a> Iterator for SenderStateIter<'a> {
             1 => Some(SenderStateField::ForceRocketReady(self.state_fields.force_rocket_ready)),
             2 => Some(SenderStateField::DrogueStatus(self.state_fields.drogue_status)),
             3 => Some(SenderStateField::MainStatus(self.state_fields.main_status)),
-            4 => Some(SenderStateField::DrogueLastSeen(self.state_fields.drogue_last_seen)),
-            5 => Some(SenderStateField::MainLastSeen(self.state_fields.main_last_seen)),
-            6 => Some(SenderStateField::IsoMainLastSeen(self.state_fields.iso_main_last_seen)),
-            7 => Some(SenderStateField::IsoDrogueLastSeen(self.state_fields.iso_drogue_last_seen)),
+            4 => Some(SenderStateField::ShorePowerStatus(self.state_fields.shore_power_status)),
+            5 => Some(SenderStateField::DrogueLastSeen(self.state_fields.drogue_last_seen)),
+            6 => Some(SenderStateField::MainLastSeen(self.state_fields.main_last_seen)),
+            7 => Some(SenderStateField::IsoMainLastSeen(self.state_fields.iso_main_last_seen)),
+            8 => Some(SenderStateField::IsoDrogueLastSeen(self.state_fields.iso_drogue_last_seen)),
             _ => None,
         };
 
@@ -122,23 +125,43 @@ impl<'a> Iterator for SenderStateIter<'a> {
 
 impl core::fmt::Display for SenderStateField {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        match self {
-            &Self::RocketReady(val) => {
+        match *self {
+            Self::RocketReady(val) => {
                 core::write!(f, "Rocket Ready: {}", if val { "YES" } else { "NO" })
             }
-            &Self::ForceRocketReady(val) => {
+            Self::ForceRocketReady(val) => {
                 core::write!(f, "Force Rocket Ready: {}", if val { "YES" } else { "NO" })
             }
-            &Self::DrogueStatus(val) => {
+            Self::DrogueStatus(val) => {
                 core::write!(f, "Drogue Status: {}", if val { "OK" } else { "ERR" })
             }
-            &Self::MainStatus(val) => {
+            Self::MainStatus(val) => {
                 core::write!(f, "Main Status: {}", if val { "OK" } else { "ERR" })
+            }
+            Self::ShorePowerStatus(val) => {
+                core::write!(f, "Shore Power: {}", if val { "ON" } else { "OFF" })
             }
             Self::DrogueLastSeen(val) => core::write!(f, "Drogue last seen: {}ms", val),
             Self::MainLastSeen(val) => core::write!(f, "Main last seen: {}ms", val),
             Self::IsoDrogueLastSeen(val) => core::write!(f, "Iso drogue last seen: {}ms", val),
             Self::IsoMainLastSeen(val) => core::write!(f, "Iso main last seen: {}ms", val),
+        }
+    }
+}
+
+async fn set_state(update: SenderStateField) {
+    let mut unlocked = SYSTEM_STATE_MTX.lock().await;
+    if let Some(state) = unlocked.as_mut() {
+        match update {
+            SenderStateField::RocketReady(val) => state.rocket_ready = val,
+            SenderStateField::ForceRocketReady(val) => state.force_rocket_ready = val,
+            SenderStateField::DrogueStatus(val) => state.drogue_status = val,
+            SenderStateField::MainStatus(val) => state.main_status = val,
+            SenderStateField::ShorePowerStatus(val) => state.shore_power_status = val,
+            SenderStateField::DrogueLastSeen(val) => state.drogue_last_seen = val,
+            SenderStateField::MainLastSeen(val) => state.main_last_seen = val,
+            SenderStateField::IsoMainLastSeen(val) => state.iso_main_last_seen = val,
+            SenderStateField::IsoDrogueLastSeen(val) => state.iso_drogue_last_seen = val,
         }
     }
 }
@@ -220,22 +243,6 @@ async fn main(spawner: Spawner) {
 
     // Keep main from returning. Needed for can_tx/can_rx or they get dropped
     core::future::pending::<()>().await;
-}
-
-async fn set_state(update: SenderStateField) {
-    let mut unlocked = SYSTEM_STATE_MTX.lock().await;
-    if let Some(state) = unlocked.as_mut() {
-        match update {
-            SenderStateField::RocketReady(val) => state.rocket_ready = val,
-            SenderStateField::ForceRocketReady(val) => state.force_rocket_ready = val,
-            SenderStateField::DrogueStatus(val) => state.drogue_status = val,
-            SenderStateField::MainStatus(val) => state.main_status = val,
-            SenderStateField::DrogueLastSeen(val) => state.drogue_last_seen = val,
-            SenderStateField::MainLastSeen(val) => state.main_last_seen = val,
-            SenderStateField::IsoMainLastSeen(val) => state.iso_main_last_seen = val,
-            SenderStateField::IsoDrogueLastSeen(val) => state.iso_drogue_last_seen = val,
-        }
-    }
 }
 
 async fn deploy(can_id: u16) {
