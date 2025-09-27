@@ -1,13 +1,15 @@
 #![no_std]
 #![no_main]
 
+use core::sync::atomic::AtomicBool;
+
 use defmt::*;
 use embassy_executor::Spawner;
 use embassy_stm32::{
     adc::{Adc, InterruptHandler, SampleTime},
     bind_interrupts,
     can::{
-        filter::Mask16,
+        filter::Mask32,
         frame::Header,
         Can, CanRx, Fifo, Frame,
         Id::{self, Standard},
@@ -33,8 +35,8 @@ use firmware_rs::shared::{
     adc::{read_battery, BATT_READ_CHANNEL},
     buzzer::{active_beep, BuzzerMode, BuzzerModeMtxType},
     can::{
-        can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_TX_CHANNEL, DROGUE_ID, DROGUE_STATUS_ID,
-        MAIN_ID, MAIN_STATUS_ID, TELEMETRUM_HEARTBEAT_ID,
+        can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_TX_CHANNEL, DROGUE_ACKNOWLEDGE_ID, DROGUE_ID,
+        DROGUE_STATUS_ID, MAIN_ACKNOWLEDGE_ID, MAIN_ID, MAIN_STATUS_ID, TELEMETRUM_HEARTBEAT_ID,
     },
     types::*,
     uart::{IO, UART_BUF_SIZE, UART_RX_BUF_CELL, UART_TX_BUF_CELL},
@@ -55,6 +57,9 @@ bind_interrupts!(struct UsartIrqs { USART2 => BufferedInterruptHandler<USART2>; 
 static UMB_ON_MTX: UmbOnType = Mutex::new(None);
 static SYSTEM_STATE_MTX: Mutex<ThreadModeRawMutex, Option<SenderState>> = Mutex::new(None);
 static BUZZER_MODE_MTX: BuzzerModeMtxType = Mutex::new(None);
+
+static MAIN_ACKNOWLEDGE: AtomicBool = AtomicBool::new(false);
+static DROGUE_ACKNOWLEDGE: AtomicBool = AtomicBool::new(false);
 
 #[derive(Default)]
 pub struct SenderState {
@@ -165,14 +170,7 @@ async fn main(spawner: Spawner) {
 
     // Set up CAN driver
     let mut can = Can::new(p.CAN, p.PA11, p.PA12, CanIrqs);
-    can.modify_filters().enable_bank(
-        0,
-        Fifo::Fifo0,
-        [
-            Mask16::frames_with_std_id(unwrap!(StandardId::new(DROGUE_STATUS_ID)), StandardId::MAX),
-            Mask16::frames_with_std_id(unwrap!(StandardId::new(MAIN_STATUS_ID)), StandardId::MAX),
-        ],
-    );
+    can.modify_filters().enable_bank(0, Fifo::Fifo0, Mask32::accept_all());
     can.modify_config().set_bitrate(CAN_BITRATE).set_loopback(false).set_silent(false);
 
     // Set up ADC driver
@@ -241,21 +239,33 @@ async fn set_state(update: SenderStateField) {
 }
 
 async fn deploy(can_id: u16) {
-    match can_id {
-        DROGUE_ID => {
-            info!("Releasing drogue");
-        }
-        MAIN_ID => {
-            info!("Releasing main");
-        }
-        _ => {}
-    }
     let id = unwrap!(StandardId::new(can_id));
     let header = Header::new(Id::Standard(id), 1, false);
     let frame = unwrap!(Frame::new(header, &[1; 0]));
 
-    let msg = CanTxChannelMsg::new(true, frame);
-    CAN_TX_CHANNEL.send(msg).await;
+    match can_id {
+        DROGUE_ID => {
+            info!("Releasing drogue");
+            while !DROGUE_ACKNOWLEDGE.load(core::sync::atomic::Ordering::Relaxed) {
+                let msg = CanTxChannelMsg::new(true, frame);
+                CAN_TX_CHANNEL.send(msg).await;
+                Timer::after_millis(100).await;
+            }
+            info!("Drogue release acknowledged");
+            DROGUE_ACKNOWLEDGE.store(false, core::sync::atomic::Ordering::Relaxed);
+        }
+        MAIN_ID => {
+            info!("Releasing main");
+            while !MAIN_ACKNOWLEDGE.load(core::sync::atomic::Ordering::Relaxed) {
+                let msg = CanTxChannelMsg::new(true, frame);
+                CAN_TX_CHANNEL.send(msg).await;
+                Timer::after_millis(100).await;
+            }
+            info!("Main release acknowledged");
+            MAIN_ACKNOWLEDGE.store(false, core::sync::atomic::Ordering::Relaxed);
+        }
+        _ => {}
+    }
 }
 
 #[embassy_executor::task]
@@ -378,6 +388,9 @@ async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
                     }
                     prev_main_status = status;
                 }
+                Id::Standard(id) if id.as_raw() == MAIN_ACKNOWLEDGE_ID => {
+                    MAIN_ACKNOWLEDGE.store(true, core::sync::atomic::Ordering::Relaxed);
+                }
                 Id::Standard(id) if id.as_raw() == DROGUE_STATUS_ID => {
                     let status = envelope.frame.data()[0];
                     set_state(SenderStateField::DrogueLastSeen(envelope.ts.as_millis())).await;
@@ -386,6 +399,9 @@ async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
                         info!("Drogue status changed to {}", status);
                     }
                     prev_drogue_status = status;
+                }
+                Id::Standard(id) if id.as_raw() == DROGUE_ACKNOWLEDGE_ID => {
+                    DROGUE_ACKNOWLEDGE.store(true, core::sync::atomic::Ordering::Relaxed);
                 }
                 _ => {}
             },
