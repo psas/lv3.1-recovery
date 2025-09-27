@@ -1,6 +1,5 @@
 # Requires python-can v4.5, pySerial v3.5
 import can
-import time
 import argparse
 import logging
 from typing import cast
@@ -56,7 +55,14 @@ def main():
     if send:
         logger.info("Sending CAN message")
         # Define a CAN message with an arbitrary ID and data bytes
-        message_id = 0x123
+        message_id = 0x101
+        data_bytes = [0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88]
+        message = can.Message(
+            arbitration_id=message_id, data=data_bytes, is_extended_id=False
+        )
+        bus.send(message)
+        logger.info("Sent message: %s", message)
+        message_id = 0x201
         data_bytes = [0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88]
         message = can.Message(
             arbitration_id=message_id, data=data_bytes, is_extended_id=False
@@ -71,7 +77,7 @@ def main():
             logger.info("Received message: %s", message)
 
     if pingpong:
-        logger.info("Listening for CAN messages")
+        logger.info("Echoing CAN messages")
         while True:
             message = bus.recv(timeout=None)
             if message:
