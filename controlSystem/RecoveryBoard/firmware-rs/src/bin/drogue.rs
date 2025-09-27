@@ -20,10 +20,12 @@ use embassy_stm32::{
     usart::{BufferedUart, Config as UartConfig, DataBits, Parity, StopBits},
 };
 use embassy_stm32::{can::filter::Mask32, dac::Dac, usart::BufferedInterruptHandler};
-use embassy_sync::{mutex::Mutex, signal::Signal};
+use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex};
+use embassy_time::Instant;
 use embedded_io_async::Write;
 use firmware_rs::shared::{
     adc::read_battery_from_ref,
+    buzzer::{BuzzerMode, BuzzerModeMtxType},
     can::{can_writer, CAN_BITRATE, CAN_TX_CHANNEL},
     types::*,
     uart::{IO, UART_BUF_SIZE, UART_RX_BUF_CELL, UART_TX_BUF_CELL},
@@ -114,8 +116,8 @@ bind_interrupts!(struct UsartIrqs { USART2 => BufferedInterruptHandler<USART2>; 
 
 static UMB_ON_MTX: UmbOnType = Mutex::new(None);
 static ADC_MTX: AdcType = Mutex::new(None);
-
-static BATT_READ_SIGNAL: BattOkSignalType = Signal::new();
+static BUZZER_MODE_MTX: BuzzerModeMtxType = Mutex::new(None);
+static SYSTEM_STATE_MTX: Mutex<ThreadModeRawMutex, Option<DrogueState>> = Mutex::new(None);
 
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
@@ -139,6 +141,8 @@ async fn main(spawner: Spawner) {
         Hertz(440),
         CountingMode::EdgeAlignedUp,
     );
+
+    let buzzer_mode = BuzzerMode::Off;
 
     // Set up CAN driver
     let mut can = Can::new(p.CAN, p.PA11, p.PA12, CanIrqs);
@@ -169,11 +173,15 @@ async fn main(spawner: Spawner) {
 
     let mut _dac = Dac::new(p.DAC1, p.DMA1_CH3, p.DMA1_CH4, p.PA4, p.PA5);
 
+    let sys_state = DrogueState::default();
+
     {
         // Put peripherals into mutex if shared among tasks.
         // Inner scope so that mutex is unlocked when out of scope
+        *(BUZZER_MODE_MTX.lock().await) = Some(buzzer_mode);
         *(ADC_MTX.lock().await) = Some(adc);
         *(UMB_ON_MTX.lock().await) = Some(umb_on);
+        *(SYSTEM_STATE_MTX.lock().await) = Some(sys_state);
     }
 
     // unwrap!(spawner.spawn(active_beep(pwm, None)));
@@ -231,7 +239,22 @@ pub async fn cli(uart: BufferedUart<'static>) {
                     io.flush().await.unwrap();
                 }
                 "state" => {
-                    // TODO: implement
+                    let mut buf = [0u8; 64];
+                    let mut state_unlocked = SYSTEM_STATE_MTX.lock().await;
+                    if let Some(state) = state_unlocked.as_mut() {
+                        let time_now = Instant::now().as_millis();
+                        let ts = format_no_std::show(
+                            &mut buf,
+                            format_args!("Current time: {}ms\r\n", time_now),
+                        )
+                        .unwrap();
+                        io.write(ts.as_bytes()).await.unwrap();
+                        for field in state.iter() {
+                            let s = format_no_std::show(&mut buf, format_args!("{}\r\n", field))
+                                .unwrap();
+                            io.write(s.as_bytes()).await.unwrap();
+                        }
+                    }
                 }
                 "l" => {
                     // TODO: implement
