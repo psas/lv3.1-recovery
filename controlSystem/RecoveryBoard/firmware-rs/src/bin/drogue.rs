@@ -10,18 +10,21 @@ use embassy_stm32::{
         Can, CanRx, Fifo, Rx0InterruptHandler, Rx1InterruptHandler, SceInterruptHandler,
         TxInterruptHandler,
     },
+    dac::Value,
     gpio::{Input, Level, Output, OutputType, Pull, Speed},
-    peripherals::{ADC1, CAN, USART2},
+    mode::Async,
+    peripherals::{ADC1, CAN, DAC1, PA0, PA1, USART2},
     time::Hertz,
     timer::{
         low_level::CountingMode,
         simple_pwm::{PwmPin, SimplePwm},
     },
     usart::{BufferedUart, Config as UartConfig, DataBits, Parity, StopBits},
+    Peri,
 };
 use embassy_stm32::{can::filter::Mask32, dac::Dac, usart::BufferedInterruptHandler};
-use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex};
-use embassy_time::Instant;
+use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, channel::Channel, mutex::Mutex};
+use embassy_time::{Instant, Timer};
 use embedded_io_async::Write;
 use firmware_rs::shared::{
     adc::read_battery_from_ref,
@@ -38,6 +41,8 @@ pub struct DrogueState {
     pub rocket_ready: bool,
     pub force_rocket_ready: bool,
     pub shore_power_status: bool,
+    pub gear_pos: u8,
+    pub sensor_state: u8,
 }
 
 #[derive(Debug)]
@@ -119,12 +124,15 @@ static ADC_MTX: AdcType = Mutex::new(None);
 static BUZZER_MODE_MTX: BuzzerModeMtxType = Mutex::new(None);
 static SYSTEM_STATE_MTX: Mutex<ThreadModeRawMutex, Option<DrogueState>> = Mutex::new(None);
 
+static RING_POSITION_CHANNEL: Channel<ThreadModeRawMutex, RingPosition, 5> = Channel::new();
+
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
     let p = embassy_stm32::init(Default::default());
 
-    let _deploy_1 = Output::new(p.PB4, Level::Low, Speed::Medium);
-    let _deploy_2 = Output::new(p.PB5, Level::Low, Speed::Medium);
+    let deploy_1 = Output::new(p.PB4, Level::Low, Speed::Medium);
+    let deploy_2 = Output::new(p.PB5, Level::Low, Speed::Medium);
+    let motor_ps = Output::new(p.PB6, Level::High, Speed::Medium);
     let _motor_fail = Input::new(p.PB7, Pull::Up);
     let umb_on = Input::new(p.PA8, Pull::Up);
     let _can_shdn = Output::new(p.PA10, Level::Low, Speed::Medium);
@@ -171,7 +179,7 @@ async fn main(spawner: Spawner) {
     )
     .expect("Uart Config Error");
 
-    let mut _dac = Dac::new(p.DAC1, p.DMA1_CH3, p.DMA1_CH4, p.PA4, p.PA5);
+    let mut dac = Dac::new(p.DAC1, p.DMA1_CH3, p.DMA1_CH4, p.PA4, p.PA5);
 
     let sys_state = DrogueState::default();
 
@@ -193,6 +201,7 @@ async fn main(spawner: Spawner) {
     let (can_tx, can_rx) = can.split();
     unwrap!(spawner.spawn(can_writer(can_tx, &CAN_TX_CHANNEL)));
     unwrap!(spawner.spawn(can_reader(can_rx, can)));
+    unwrap!(spawner.spawn(read_hall_sensor(&ADC_MTX, p.PA0, p.PA1)));
 
     // Keep main from returning. Needed for can_tx/can_rx or they get dropped
     core::future::pending::<()>().await;
@@ -259,9 +268,7 @@ pub async fn cli(uart: BufferedUart<'static>) {
                 "l" => {
                     // TODO: implement
                 }
-                "u" => {
-                    // TODO: implement
-                }
+                "u" => {}
                 "pos" => {
                     // TODO: implement
                 }
@@ -269,6 +276,151 @@ pub async fn cli(uart: BufferedUart<'static>) {
                     io.write(b"Invalid command\r\n").await.unwrap();
                 }
             }
+        }
+    }
+}
+
+#[derive(Debug)]
+enum RingPosition {
+    Locked,
+    Unlocked,
+    Inbetween,
+    Error,
+}
+
+#[derive(Default)]
+struct SensorLimits {
+    over: u16,
+    under: u16,
+    active: u16,
+    unactive: u16,
+}
+
+impl SensorLimits {
+    fn new(over: u16, under: u16, active: u16, unactive: u16) -> Self {
+        Self { over, under, active, unactive }
+    }
+}
+
+#[derive(PartialEq)]
+enum SensorState {
+    Active,
+    Unactive,
+    Under,
+    Over,
+    Inbetween,
+}
+
+fn get_sensor_state(adc_val: u16, limit: SensorLimits) -> SensorState {
+    if adc_val >= limit.over {
+        SensorState::Over
+    } else if adc_val <= limit.under {
+        SensorState::Under
+    } else if adc_val == limit.active {
+        SensorState::Active
+    } else if adc_val == limit.unactive {
+        SensorState::Unactive
+    } else {
+        SensorState::Inbetween
+    }
+}
+
+fn get_ring_position(sensor1_state: SensorState, sensor2_state: SensorState) -> RingPosition {
+    if sensor1_state == SensorState::Active && sensor2_state != SensorState::Active {
+        return RingPosition::Locked;
+    }
+    if sensor1_state != SensorState::Unactive && sensor2_state == SensorState::Unactive {
+        return RingPosition::Locked;
+    }
+    if sensor1_state != SensorState::Active && sensor2_state == SensorState::Active {
+        return RingPosition::Unlocked;
+    }
+    if sensor1_state == SensorState::Unactive && sensor2_state != SensorState::Unactive {
+        return RingPosition::Unlocked;
+    }
+    if sensor1_state == SensorState::Inbetween || sensor2_state == SensorState::Inbetween {
+        RingPosition::Inbetween
+    } else {
+        RingPosition::Error
+    }
+}
+
+async fn limit_motor_current(mut dac: Dac<'static, DAC1, Async>, ma: u16) {
+    // TODO: Mutex for dac
+    // TODO: Check if this is actually setting dac to the desired mA
+    let val = Value::Bit12Right(ma * 1024 / 1375);
+    dac.ch1().set(val);
+}
+
+async fn drive_motor(
+    mut deploy1: Output<'static>,
+    mut deploy2: Output<'static>,
+    mut motor_ps: Output<'static>,
+    lock_mode: bool,
+    duration_ms: u64,
+    force: bool,
+    _current: u16,
+    ring_position: RingPosition,
+    dac: Dac<'static, DAC1, Async>,
+) {
+    // TODO: Mutex for dac
+    deploy1.set_low();
+    deploy2.set_low();
+    motor_ps.set_high();
+    Timer::after_millis(50).await;
+    let time_now = Instant::now();
+    let max_delay: u16 = 200;
+
+    if lock_mode {
+        deploy2.set_high();
+        limit_motor_current(dac, 1000).await;
+        Timer::after_millis(duration_ms).await;
+        if force {
+            for _i in 0..max_delay {
+                Timer::after_millis(1).await;
+                if let RingPosition::Locked = ring_position {
+                    deploy2.set_low();
+                    motor_ps.set_high();
+                }
+            }
+        }
+    } else {
+        deploy1.set_high();
+        limit_motor_current(dac, 1000).await;
+        Timer::after_millis(duration_ms).await;
+        if force {
+            for _i in 0..max_delay {
+                Timer::after_millis(1).await;
+                if let RingPosition::Unlocked = ring_position {
+                    deploy1.set_low();
+                    motor_ps.set_high();
+                }
+            }
+        }
+    }
+}
+
+#[embassy_executor::task]
+pub async fn read_hall_sensor(
+    adc: &'static AdcType,
+    mut sensor1: Peri<'static, PA0>,
+    mut sensor2: Peri<'static, PA1>,
+) {
+    loop {
+        let sensor1_limits = SensorLimits::new(3100, 600, 1600, 700);
+        let sensor2_limits = SensorLimits::new(3100, 600, 2600, 700);
+
+        let mut adc_unlocked = adc.lock().await;
+        if let Some(adc) = adc_unlocked.as_mut() {
+            let sensor1_read = adc.read(&mut sensor1).await;
+            let sensor2_read = adc.read(&mut sensor2).await;
+            debug!("Sensor 1: {}, Sensor 2: {}", sensor1_read, sensor2_read);
+
+            let sensor1_state = get_sensor_state(sensor1_read, sensor1_limits);
+            let sensor2_state = get_sensor_state(sensor2_read, sensor2_limits);
+
+            let ring_position = get_ring_position(sensor1_state, sensor2_state);
+            RING_POSITION_CHANNEL.send(ring_position).await;
         }
     }
 }
