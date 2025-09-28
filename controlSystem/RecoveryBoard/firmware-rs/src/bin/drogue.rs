@@ -178,9 +178,8 @@ async fn main(spawner: Spawner) {
         uart_config,
     )
     .expect("Uart Config Error");
-    // do we need to get rid of this dac instance?
-    let mut dac = Dac::new(p.DAC1, p.DMA1_CH3, p.DMA1_CH4, p.PA4, p.PA5);
 
+    let mut dac = Dac::new(p.DAC1, p.DMA1_CH3, p.DMA1_CH4, p.PA4, p.PA5);
     let sys_state = DrogueState::default();
 
     {
@@ -194,14 +193,14 @@ async fn main(spawner: Spawner) {
     }
 
     // unwrap!(spawner.spawn(active_beep(pwm, None)));
-    unwrap!(spawner.spawn(cli(uart)));
+    unwrap!(spawner.spawn(cli(uart, deploy_1, deploy_2, motor_ps, &DAC_MTX)));
     unwrap!(spawner.spawn(read_battery_from_ref(&ADC_MTX, p.PB0)));
 
     // enable at last minute so other tasks can still spawn if can bus is down
     can.enable().await;
     let (can_tx, can_rx) = can.split();
     unwrap!(spawner.spawn(can_writer(can_tx, &CAN_TX_CHANNEL)));
-    unwrap!(spawner.spawn(can_reader(can_rx, can)));
+    unwrap!(spawner.spawn(can_reader(can_rx, can, deploy_1, deploy_2, motor_ps, &DAC_MTX)));
     unwrap!(spawner.spawn(read_hall_sensor(&ADC_MTX, p.PA0, p.PA1)));
 
     // Keep main from returning. Needed for can_tx/can_rx or they get dropped
@@ -209,12 +208,17 @@ async fn main(spawner: Spawner) {
 }
 
 #[embassy_executor::task]
-pub async fn cli(uart: BufferedUart<'static>) {
+pub async fn cli(
+    uart: BufferedUart<'static>,
+    mut deploy_1: Output<'static>,
+    mut deploy_2: Output<'static>,
+    mut motor_ps: Output<'static>,
+    dac: &'static DacType,
+) {
     let prompt = "> ";
     let mut io = IO::new(uart);
     let mut buffer = [0; UART_BUF_SIZE];
     let mut history = [0; UART_BUF_SIZE];
-
     loop {
         let mut editor = EditorBuilder::from_slice(&mut buffer)
             .with_slice_history(&mut history)
@@ -266,17 +270,18 @@ pub async fn cli(uart: BufferedUart<'static>) {
                         }
                     }
                 }
-                "l" => {drive_motor(
-                    deploy_1,
-                    deploy_2,
-                    motor_ps,
-                    false,
-                    50,
-                    false,
-                    1000,
-                    RingPosition,
-                    &DAC1,
-                );
+                "l" => {
+                    drive_motor(
+                        deploy_1,
+                        deploy_2,
+                        motor_ps,
+                        false,
+                        50,
+                        false,
+                        1000,
+                        RingPosition,
+                        &dac,
+                    );
                 }
                 "u" => {
                     drive_motor(
@@ -288,7 +293,7 @@ pub async fn cli(uart: BufferedUart<'static>) {
                         false,
                         1000,
                         RingPosition,
-                        &DAC1,
+                        &dac,
                     );
                 }
                 "pos" => {
@@ -452,40 +457,49 @@ pub async fn read_hall_sensor(
 }
 
 #[embassy_executor::task]
-async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
+async fn can_reader(
+    mut can_rx: CanRx<'static>,
+    mut can: Can<'static>,
+    deploy_1: Output<'static>,
+    deploy_2: Output<'static>,
+    motor_ps: Output<'static>,
+    dac: &'static DacType,
+) -> () {
     loop {
         match can_rx.read().await {
             Ok(_envelope) => {
                 // info!("Envelope: {}", envelope);
+            }
+            Ok(DROGUE_ID) => {
+                drive_motor(
+                    deploy_1,
+                    deploy_2,
+                    motor_ps,
+                    false,
+                    50,
+                    false,
+                    1000,
+                    RingPosition,
+                    &dac,
+                );
+            }
+            Ok(MAIN_ID) => {
+                drive_motor(
+                    deploy_1,
+                    deploy_2,
+                    motor_ps,
+                    false,
+                    50,
+                    false,
+                    1000,
+                    RingPosition,
+                    &dac,
+                );
             }
             Err(e) => {
                 error!("CAN Read Error: {}", e);
                 can.sleep().await;
             }
         }
-        match can_id {
-            DROGUE_ID => drive_motor(
-                deploy_1,
-                deploy_2,
-                motor_ps,
-                false,
-                50,
-                false,
-                1000,
-                RingPosition,
-                &DAC1,
-            ),
-            MAIN_ID => drive_motor(
-                deploy_1,
-                deploy_2,
-                motor_ps,
-                false,
-                50,
-                false,
-                1000,
-                RingPosition,
-                &DAC1,
-            ),
-        };
     }
 }
