@@ -124,7 +124,7 @@ static ADC_MTX: AdcType = Mutex::new(None);
 static BUZZER_MODE_MTX: BuzzerModeMtxType = Mutex::new(None);
 static SYSTEM_STATE_MTX: Mutex<ThreadModeRawMutex, Option<DrogueState>> = Mutex::new(None);
 static RING_POSITION_CHANNEL: Channel<ThreadModeRawMutex, RingPosition, 5> = Channel::new();
-static DAC_MTX: Channel<ThreadModeRawMutex, Option<Dac<'static, DAC1,Async>>, 5> = Channel::new();
+static DAC_MTX: Mutex<ThreadModeRawMutex, Option<Dac<'static, DAC1,Async>>, 5> = Mutex::new(None);
 
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
@@ -190,6 +190,7 @@ async fn main(spawner: Spawner) {
         *(ADC_MTX.lock().await) = Some(adc);
         *(UMB_ON_MTX.lock().await) = Some(umb_on);
         *(SYSTEM_STATE_MTX.lock().await) = Some(sys_state);
+        *(DAC_MTX.lock().await = Some(dac));
     }
 
     // unwrap!(spawner.spawn(active_beep(pwm, None)));
@@ -214,7 +215,6 @@ pub async fn cli(uart: BufferedUart<'static>) {
     let mut io = IO::new(uart);
     let mut buffer = [0; UART_BUF_SIZE];
     let mut history = [0; UART_BUF_SIZE];
-    let p = embassy_stm32::init(Default::default());
 
     loop {
         let mut editor = EditorBuilder::from_slice(&mut buffer)
@@ -375,7 +375,7 @@ async fn drive_motor(
 
     if lock_mode {
         deploy2.set_high();
-        limit_motor_current(dac, 1000).await;
+        limit_motor_current(dac, _current).await;
         Timer::after_millis(duration_ms).await;
         if force {
             for _i in 0..max_delay {
@@ -388,7 +388,7 @@ async fn drive_motor(
         }
     } else {
         deploy1.set_high();
-        limit_motor_current(dac, 1000).await;
+        limit_motor_current(dac, _current).await;
         Timer::after_millis(duration_ms).await;
         if force {
             for _i in 0..max_delay {
