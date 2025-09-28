@@ -361,12 +361,7 @@ async fn limit_motor_current(ma: u16) {
     }
 }
 
-async fn drive_motor(
-    lock_mode: bool,
-    duration_ms: u64,
-    force: bool,
-    current: u16,
-) {
+async fn drive_motor(lock_mode: bool, duration_ms: u64, force: bool, current: u16) {
     debug!("Doing thing - drive_motor fn");
     let mut deploy1_unlocked = DEPLOY_1_MTX.lock().await;
     let mut deploy2_unlocked = DEPLOY_2_MTX.lock().await;
@@ -381,11 +376,17 @@ async fn drive_motor(
 
                 let ring_position = RING_POSITION_CHANNEL.receive().await;
                 debug!("Doing thing - drive_motor fn 2");
+
+                match ring_position {
+                    RingPosition::Locked => info!("locked"),
+                    RingPosition::Unlocked => info!("unlocked"),
+                    RingPosition::Inbetween => info!("inbetween"),
+                    RingPosition::Error => error!("error"),
+                }
+
                 limit_motor_current(current).await;
                 Timer::after_millis(50).await;
                 let max_delay: u16 = 200;
-
-                // debug!("Doing thing - Ring_Position:{}", ring_position);
 
                 debug!("Doing thing - drive_motor fn 3");
 
