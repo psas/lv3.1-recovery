@@ -1,0 +1,30 @@
+[package]
+name = "firmware-rs"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+embassy-stm32 = { version = "0.4.0", features = [ "defmt", "memory-x", "stm32f091rc", "time-driver-tim2", "exti", "unstable-pac"] }
+cortex-m = { version = "0.7.7", features = ["inline-asm", "critical-section-single-core"] }
+cortex-m-rt = "0.7.5"
+defmt = "1.0.1"
+defmt-rtt = "1.0.0"
+panic-probe = { version = "1.0.0", features = ["print-defmt"] }
+embassy-sync = { version = "0.7.2", features = ["defmt"] }
+embassy-executor = { version = "0.9.1", features = ["arch-cortex-m", "executor-thread", "executor-interrupt", "defmt"] }
+embassy-time = { version = "0.5.0", features = ["defmt", "defmt-timestamp-uptime", "tick-hz-32_768"] }
+portable-atomic = { version = "1.11", features = ["unsafe-assume-single-core"] }
+embedded-io-async = "0.6.1"
+static_cell = "2.1.1"
+embedded-hal-nb = "1.0.0"
+noline = "0.5.1"
+heapless = "0.9.1"
+format_no_std = "1.2.0"
+
+[profile.release]
+debug = 2
+
+[features]
+main = []
+drogue = []
