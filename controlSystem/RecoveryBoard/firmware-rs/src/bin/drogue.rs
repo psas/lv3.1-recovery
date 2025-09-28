@@ -129,8 +129,6 @@ static MOTOR_PS_MTX: Mutex<ThreadModeRawMutex, Option<Output<'static>>> = Mutex:
 
 static RING_POSITION_CHANNEL: Channel<ThreadModeRawMutex, RingPosition, 5> = Channel::new();
 
-static RING_POSITION_CHANNEL: Channel<ThreadModeRawMutex, RingPosition, 5> = Channel::new();
-
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
     let p = embassy_stm32::init(Default::default());
