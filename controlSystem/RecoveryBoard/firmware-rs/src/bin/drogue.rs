@@ -129,6 +129,8 @@ static MOTOR_PS_MTX: Mutex<ThreadModeRawMutex, Option<Output<'static>>> = Mutex:
 
 static RING_POSITION_CHANNEL: Channel<ThreadModeRawMutex, RingPosition, 5> = Channel::new();
 
+static RING_POSITION_CHANNEL: Channel<ThreadModeRawMutex, RingPosition, 5> = Channel::new();
+
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
     let p = embassy_stm32::init(Default::default());
@@ -414,6 +416,7 @@ async fn drive_motor(
 
 #[embassy_executor::task]
 pub async fn read_hall_sensor(mut sensor1: Peri<'static, PA0>, mut sensor2: Peri<'static, PA1>) {
+
     loop {
         let sensor1_limits = SensorLimits::new(3100, 600, 1600, 700);
         let sensor2_limits = SensorLimits::new(3100, 600, 2600, 700);
