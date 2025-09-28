@@ -24,3 +24,7 @@ format_no_std = "1.2.0"
 
 [profile.release]
 debug = 2
+
+[features]
+main = []
+drogue = []
