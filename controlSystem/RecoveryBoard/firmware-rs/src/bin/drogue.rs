@@ -8,12 +8,12 @@ use embassy_stm32::{
     bind_interrupts,
     can::{
         Can, CanRx, Fifo, Rx0InterruptHandler, Rx1InterruptHandler, SceInterruptHandler,
-        TxInterruptHandler,
+        TxInterruptHandler, StandardId,
     },
     dac::Value,
     gpio::{Input, Level, Output, OutputType, Pull, Speed},
     mode::Async,
-    peripherals::{ADC1, CAN, DAC1, PA0, PA1, USART2},
+    peripherals::{ADC1, CAN, DAC1, PA0, PA1, PB4, PB5, PB6, USART2},
     time::Hertz,
     timer::{
         low_level::CountingMode,
@@ -123,12 +123,12 @@ static UMB_ON_MTX: UmbOnType = Mutex::new(None);
 static ADC_MTX: AdcType = Mutex::new(None);
 static BUZZER_MODE_MTX: BuzzerModeMtxType = Mutex::new(None);
 static SYSTEM_STATE_MTX: Mutex<ThreadModeRawMutex, Option<DrogueState>> = Mutex::new(None);
-
 static RING_POSITION_CHANNEL: Channel<ThreadModeRawMutex, RingPosition, 5> = Channel::new();
+static DAC_MTX: Channel<ThreadModeRawMutex, Option<Dac<'static, DAC1,Async>>, 5> = Channel::new();
 
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
-    let p = embassy_stm32::init(Default::default());
+   let p = embassy_stm32::init(Default::default());
 
     let deploy_1 = Output::new(p.PB4, Level::Low, Speed::Medium);
     let deploy_2 = Output::new(p.PB5, Level::Low, Speed::Medium);
@@ -209,10 +209,12 @@ async fn main(spawner: Spawner) {
 
 #[embassy_executor::task]
 pub async fn cli(uart: BufferedUart<'static>) {
+
     let prompt = "> ";
     let mut io = IO::new(uart);
     let mut buffer = [0; UART_BUF_SIZE];
     let mut history = [0; UART_BUF_SIZE];
+    let p = embassy_stm32::init(Default::default());
 
     loop {
         let mut editor = EditorBuilder::from_slice(&mut buffer)
@@ -266,9 +268,11 @@ pub async fn cli(uart: BufferedUart<'static>) {
                     }
                 }
                 "l" => {
-                    // TODO: implement
+                    drive_motor(PB4, PB5, &PB6, true, 50, false, 1000, RingPosition, &DAC1);
                 }
-                "u" => {}
+                "u" => {
+                    drive_motor(PB4, PB5, PB6, false, 50, false, 1000, RingPosition, &DAC1);
+                }
                 "pos" => {
                     // TODO: implement
                 }
@@ -346,7 +350,6 @@ fn get_ring_position(sensor1_state: SensorState, sensor2_state: SensorState) -> 
 }
 
 async fn limit_motor_current(mut dac: Dac<'static, DAC1, Async>, ma: u16) {
-    // TODO: Mutex for dac
     // TODO: Check if this is actually setting dac to the desired mA
     let val = Value::Bit12Right(ma * 1024 / 1375);
     dac.ch1().set(val);
@@ -363,7 +366,6 @@ async fn drive_motor(
     ring_position: RingPosition,
     dac: Dac<'static, DAC1, Async>,
 ) {
-    // TODO: Mutex for dac
     deploy1.set_low();
     deploy2.set_low();
     motor_ps.set_high();
@@ -426,7 +428,8 @@ pub async fn read_hall_sensor(
 }
 
 #[embassy_executor::task]
-async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
+async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>, can_id: u16) -> () {
+    let id = unwrap!(StandardId::new(can_id));
     loop {
         match can_rx.read().await {
             Ok(_envelope) => {
@@ -435,6 +438,14 @@ async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
             Err(e) => {
                 error!("CAN Read Error: {}", e);
                 can.sleep().await;
+            }
+        }
+        match can_id {
+            DROGUE_ID => {
+                drive_motor(PB4, PB5, PB6, false , 50, false, 1000, RingPosition, &DAC1);
+            }
+            MAIN_ID => {
+                drive_motor(PB4, PB5, PB6, false , 50, false, 1000, RingPosition, &DAC1);
             }
         }
     }
