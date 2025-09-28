@@ -126,7 +126,6 @@ static DAC_MTX: DacType = Mutex::new(None);
 static DEPLOY_1_MTX: Mutex<ThreadModeRawMutex, Option<Output<'static>>> = Mutex::new(None);
 static DEPLOY_2_MTX: Mutex<ThreadModeRawMutex, Option<Output<'static>>> = Mutex::new(None);
 static MOTOR_PS_MTX: Mutex<ThreadModeRawMutex, Option<Output<'static>>> = Mutex::new(None);
-
 static RING_POSITION_CHANNEL: Channel<ThreadModeRawMutex, RingPosition, 5> = Channel::new();
 
 #[embassy_executor::main]
@@ -197,24 +196,25 @@ async fn main(spawner: Spawner) {
         *(DEPLOY_2_MTX.lock().await) = Some(deploy_2);
         *(MOTOR_PS_MTX.lock().await) = Some(motor_ps);
     }
-
+    debug!("Doing thing");
     // unwrap!(spawner.spawn(active_beep(pwm, None)));
     unwrap!(spawner.spawn(cli(uart)));
     unwrap!(spawner.spawn(read_battery_from_ref(&ADC_MTX, p.PB0)));
     unwrap!(spawner.spawn(read_hall_sensor(p.PA0, p.PA1)));
-
+    debug!("Doing thing2");
     // enable at last minute so other tasks can still spawn if can bus is down
     can.enable().await;
     let (can_tx, can_rx) = can.split();
     unwrap!(spawner.spawn(can_writer(can_tx, &CAN_TX_CHANNEL)));
     unwrap!(spawner.spawn(can_reader(can_rx, can,)));
-
+    debug!("Doing thing3");
     // Keep main from returning. Needed for can_tx/can_rx or they get dropped
     core::future::pending::<()>().await;
 }
 
 #[embassy_executor::task]
 pub async fn cli(uart: BufferedUart<'static>) {
+    debug!("Doing thing - cli func");
     let prompt = "> ";
     let mut io = IO::new(uart);
     let mut buffer = [0; UART_BUF_SIZE];
@@ -271,10 +271,10 @@ pub async fn cli(uart: BufferedUart<'static>) {
                     }
                 }
                 "l" => {
-                    drive_motor(false, 50, false, 1000, RingPosition::Locked).await;
+                    drive_motor(true, 50, false, 1000).await;
                 }
                 "u" => {
-                    drive_motor(true, 50, false, 1000, RingPosition::Unlocked).await;
+                    drive_motor(false, 50, false, 1000).await;
                 }
                 "pos" => {
                     // TODO: implement
@@ -361,30 +361,42 @@ async fn limit_motor_current(ma: u16) {
     }
 }
 
-async fn drive_motor(
-    lock_mode: bool,
-    duration_ms: u64,
-    force: bool,
-    current: u16,
-    ring_position: RingPosition,
-) {
+async fn drive_motor(lock_mode: bool, duration_ms: u64, force: bool, current: u16) {
+    debug!("Doing thing - drive_motor fn");
     let mut deploy1_unlocked = DEPLOY_1_MTX.lock().await;
     let mut deploy2_unlocked = DEPLOY_2_MTX.lock().await;
     let mut motor_ps_unlocked = MOTOR_PS_MTX.lock().await;
+
     if let Some(deploy1) = deploy1_unlocked.as_mut() {
         if let Some(deploy2) = deploy2_unlocked.as_mut() {
             if let Some(motor_ps) = motor_ps_unlocked.as_mut() {
                 deploy1.set_low();
                 deploy2.set_low();
                 motor_ps.set_high();
+
+                let ring_position = RING_POSITION_CHANNEL.receive().await;
+
+                match ring_position {
+                    RingPosition::Locked => info!("locked"),
+                    RingPosition::Unlocked => info!("unlocked"),
+                    RingPosition::Inbetween => info!("inbetween"),
+                    RingPosition::Error => error!("error"),
+                }
+
+                limit_motor_current(current).await;
                 Timer::after_millis(50).await;
                 let max_delay: u16 = 200;
 
+                // debug!("Doing thing - Ring_Position:{}", ring_position);
+
+                debug!("Doing thing - drive_motor fn 3");
+
+                motor_ps.set_low();
                 if lock_mode {
+                    debug!("Doing thing - drive_motor fn lock");
                     deploy2.set_high();
-                    limit_motor_current(current).await;
                     Timer::after_millis(duration_ms).await;
-                    if force {
+                    if !force {
                         for _i in 0..max_delay {
                             Timer::after_millis(1).await;
                             if let RingPosition::Locked = ring_position {
@@ -394,10 +406,10 @@ async fn drive_motor(
                         }
                     }
                 } else {
+                    debug!("Doing thing - drive_motor fn unlock");
                     deploy1.set_high();
-                    limit_motor_current(current).await;
                     Timer::after_millis(duration_ms).await;
-                    if force {
+                    if !force {
                         for _i in 0..max_delay {
                             Timer::after_millis(1).await;
                             if let RingPosition::Unlocked = ring_position {
@@ -414,8 +426,8 @@ async fn drive_motor(
 
 #[embassy_executor::task]
 pub async fn read_hall_sensor(mut sensor1: Peri<'static, PA0>, mut sensor2: Peri<'static, PA1>) {
-
     loop {
+        debug!("Doing thing - hall sensors");
         let sensor1_limits = SensorLimits::new(3100, 600, 1600, 700);
         let sensor2_limits = SensorLimits::new(3100, 600, 2600, 700);
 
@@ -429,7 +441,10 @@ pub async fn read_hall_sensor(mut sensor1: Peri<'static, PA0>, mut sensor2: Peri
             let sensor2_state = get_sensor_state(sensor2_read, sensor2_limits);
 
             let ring_position = get_ring_position(sensor1_state, sensor2_state);
+
             RING_POSITION_CHANNEL.send(ring_position).await;
+
+            Timer::after_millis(50).await;
         }
     }
 }
@@ -440,10 +455,10 @@ async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
         match can_rx.read().await {
             Ok(envelope) => match envelope.frame.id() {
                 Id::Standard(id) if id.as_raw() == DROGUE_ID => {
-                    drive_motor(false, 50, false, 1000, RingPosition::Unlocked).await;
+                    drive_motor(false, 50, false, 1000).await;
                 }
                 Id::Standard(id) if id.as_raw() == MAIN_ID => {
-                    drive_motor(false, 50, false, 1000, RingPosition::Unlocked).await;
+                    drive_motor(false, 50, false, 1000).await;
                 }
                 _ => {}
             },
