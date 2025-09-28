@@ -440,9 +440,11 @@ async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
         match can_rx.read().await {
             Ok(envelope) => match envelope.frame.id() {
                 Id::Standard(id) if id.as_raw() == DROGUE_ID => {
+                    #[cfg(feature = "main")]
                     drive_motor(false, 50, false, 1000, RingPosition::Unlocked).await;
                 }
                 Id::Standard(id) if id.as_raw() == MAIN_ID => {
+                    #[cfg(feature = "drogue")]
                     drive_motor(false, 50, false, 1000, RingPosition::Unlocked).await;
                 }
                 _ => {}
