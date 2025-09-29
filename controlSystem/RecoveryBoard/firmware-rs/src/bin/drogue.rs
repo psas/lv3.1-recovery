@@ -279,6 +279,9 @@ pub async fn cli(uart: BufferedUart<'static>) {
                 "pos" => {
                     // TODO: implement
                 }
+                "mv" => {
+                    limit_motor_current(5100).await;
+                }
                 _ => {
                     io.write(b"Invalid command\r\n").await.unwrap();
                 }
@@ -323,9 +326,9 @@ fn get_sensor_state(adc_val: u16, limit: SensorLimits) -> SensorState {
         SensorState::Over
     } else if adc_val <= limit.under {
         SensorState::Under
-    } else if adc_val == limit.active {
+    } else if adc_val >= limit.active && adc_val < limit.over {
         SensorState::Active
-    } else if adc_val == limit.unactive {
+    } else if adc_val <= limit.unactive && adc_val > limit.under {
         SensorState::Unactive
     } else {
         SensorState::Inbetween
@@ -334,16 +337,16 @@ fn get_sensor_state(adc_val: u16, limit: SensorLimits) -> SensorState {
 
 fn get_ring_position(sensor1_state: SensorState, sensor2_state: SensorState) -> RingPosition {
     if sensor1_state == SensorState::Active && sensor2_state != SensorState::Active {
-        return RingPosition::Locked;
+        return RingPosition::Unlocked;
     }
     if sensor1_state != SensorState::Unactive && sensor2_state == SensorState::Unactive {
-        return RingPosition::Locked;
+        return RingPosition::Unlocked;
     }
     if sensor1_state != SensorState::Active && sensor2_state == SensorState::Active {
-        return RingPosition::Unlocked;
+        return RingPosition::Locked;
     }
     if sensor1_state == SensorState::Unactive && sensor2_state != SensorState::Unactive {
-        return RingPosition::Unlocked;
+        return RingPosition::Locked;
     }
     if sensor1_state == SensorState::Inbetween || sensor2_state == SensorState::Inbetween {
         RingPosition::Inbetween
@@ -353,8 +356,18 @@ fn get_ring_position(sensor1_state: SensorState, sensor2_state: SensorState) -> 
 }
 
 async fn limit_motor_current(ma: u16) {
-    // TODO: Check if this is actually setting dac to the desired mA
-    let val = Value::Bit12Right(ma * 1024 / 1375);
+    if ma >= 4500 {
+        error!("Current too high!");
+        return;
+    };
+    // math is calculating the dac value from circuit analysis going backwards from motor current.
+    // First we do mA*3/10, which gives us MOTOR_VREF, then multiply by 2 to get MOTOR_ILIM and
+    // then lastly the dac takes in a 11 bit value which represents a scalar of the max voltage
+    // (3.3V). Which we use mV*3300/4096 to get the step size from the output voltage.
+    // Combining all the numerators and denominators to avoid overflow we get 1024/1375
+    let scale = ((ma as u32) * 1024 / 1375) as u16;
+    debug!("step = {}", scale);
+    let val = Value::Bit12Right(scale);
     let mut dac_unlocked = DAC_MTX.lock().await;
     if let Some(dac) = dac_unlocked.as_mut() {
         dac.ch1().set(val);
@@ -370,12 +383,21 @@ async fn drive_motor(lock_mode: bool, duration_ms: u64, force: bool, current: u1
     if let Some(deploy1) = deploy1_unlocked.as_mut() {
         if let Some(deploy2) = deploy2_unlocked.as_mut() {
             if let Some(motor_ps) = motor_ps_unlocked.as_mut() {
+                limit_motor_current(current).await;
                 deploy1.set_low();
                 deploy2.set_low();
                 motor_ps.set_high();
 
                 let ring_position = RING_POSITION_CHANNEL.receive().await;
                 debug!("Doing thing - drive_motor fn 2");
+
+                let deploy1_lvl = deploy1.get_output_level();
+                let deploy2_lvl = deploy2.get_output_level();
+                let motor_ps_lvl = motor_ps.get_output_level();
+                debug!(
+                    "Deploy 1: {}, Deploy 2: {}, Motor_PS: {}",
+                    deploy1_lvl, deploy2_lvl, motor_ps_lvl
+                );
 
                 match ring_position {
                     RingPosition::Locked => info!("locked"),
@@ -384,23 +406,25 @@ async fn drive_motor(lock_mode: bool, duration_ms: u64, force: bool, current: u1
                     RingPosition::Error => error!("error"),
                 }
 
-                limit_motor_current(current).await;
                 Timer::after_millis(50).await;
                 let max_delay: u16 = 200;
 
                 debug!("Doing thing - drive_motor fn 3");
 
-                motor_ps.set_low();
+                // how do we continuously receive the ringposition without panics!!
                 if lock_mode {
                     debug!("Doing thing - drive_motor fn lock");
                     deploy2.set_high();
                     Timer::after_millis(duration_ms).await;
                     if !force {
+                        debug!("Doing thing - drive_motor fn lock - 2");
                         for _i in 0..max_delay {
                             Timer::after_millis(1).await;
+                            let ring_position = RING_POSITION_CHANNEL.receive().await;
                             if let RingPosition::Locked = ring_position {
                                 deploy2.set_low();
-                                motor_ps.set_high();
+                                motor_ps.set_low();
+                                debug!("Doing thing - drive_motor fn lock - 3");
                             }
                         }
                     }
@@ -409,11 +433,14 @@ async fn drive_motor(lock_mode: bool, duration_ms: u64, force: bool, current: u1
                     deploy1.set_high();
                     Timer::after_millis(duration_ms).await;
                     if !force {
+                        debug!("Doing thing - drive_motor fn unlock - 2");
                         for _i in 0..max_delay {
                             Timer::after_millis(1).await;
+                            let ring_position = RING_POSITION_CHANNEL.receive().await;
                             if let RingPosition::Unlocked = ring_position {
                                 deploy1.set_low();
-                                motor_ps.set_high();
+                                motor_ps.set_low();
+                                debug!("Doing thing - drive_motor fn unlock - 3");
                             }
                         }
                     }
@@ -427,8 +454,8 @@ async fn drive_motor(lock_mode: bool, duration_ms: u64, force: bool, current: u1
 pub async fn read_hall_sensor(mut sensor1: Peri<'static, PA0>, mut sensor2: Peri<'static, PA1>) {
     loop {
         debug!("Doing thing - hall sensors");
-        let sensor1_limits = SensorLimits::new(3100, 600, 1600, 700);
-        let sensor2_limits = SensorLimits::new(3100, 600, 2600, 700);
+        let sensor1_limits = SensorLimits::new(3200, 600, 2600, 1000);
+        let sensor2_limits = SensorLimits::new(3200, 600, 1600, 1000);
 
         let mut adc_unlocked = ADC_MTX.lock().await;
         if let Some(adc) = adc_unlocked.as_mut() {
@@ -443,7 +470,7 @@ pub async fn read_hall_sensor(mut sensor1: Peri<'static, PA0>, mut sensor2: Peri
 
             RING_POSITION_CHANNEL.send(ring_position).await;
 
-            Timer::after_millis(50).await;
+            Timer::after_millis(250).await;
         }
     }
 }
