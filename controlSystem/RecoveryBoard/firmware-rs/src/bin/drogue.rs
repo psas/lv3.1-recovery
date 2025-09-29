@@ -23,7 +23,7 @@ use embassy_stm32::{
 };
 use embassy_stm32::{can::filter::Mask32, dac::Dac, usart::BufferedInterruptHandler};
 use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, channel::Channel, mutex::Mutex};
-use embassy_time::{Instant, Timer};
+use embassy_time::{with_timeout, Duration, Instant, Timer};
 use embedded_io_async::Write;
 use firmware_rs::shared::{
     adc::read_battery_from_ref,
@@ -290,7 +290,7 @@ pub async fn cli(uart: BufferedUart<'static>) {
     }
 }
 
-#[derive(Debug)]
+#[derive(defmt::Format, PartialEq)]
 enum RingPosition {
     Locked,
     Unlocked,
@@ -374,6 +374,23 @@ async fn limit_motor_current(ma: u16) {
     }
 }
 
+async fn motor_limit(
+    position: RingPosition,
+    deploy1: &mut Output<'static>,
+    deploy2: &mut Output<'static>,
+    motor_ps: &mut Output<'static>,
+) {
+    loop {
+        //let ring_pos = RING_POSITION_CHANNEL.receive().await
+        //debug!("Ring Pos: {}", position);
+        if RING_POSITION_CHANNEL.receive().await == position {
+            deploy1.set_low();
+            deploy2.set_low();
+            motor_ps.set_low();
+        }
+    }
+}
+
 async fn drive_motor(lock_mode: bool, duration_ms: u64, force: bool, current: u16) {
     debug!("Doing thing - drive_motor fn");
     let mut deploy1_unlocked = DEPLOY_1_MTX.lock().await;
@@ -407,7 +424,7 @@ async fn drive_motor(lock_mode: bool, duration_ms: u64, force: bool, current: u1
                 }
 
                 Timer::after_millis(50).await;
-                let max_delay: u16 = 200;
+                let max_delay = Duration::from_millis(200);
 
                 debug!("Doing thing - drive_motor fn 3");
 
@@ -416,33 +433,22 @@ async fn drive_motor(lock_mode: bool, duration_ms: u64, force: bool, current: u1
                     debug!("Doing thing - drive_motor fn lock");
                     deploy2.set_high();
                     Timer::after_millis(duration_ms).await;
-                    if !force {
-                        debug!("Doing thing - drive_motor fn lock - 2");
-                        for _i in 0..max_delay {
-                            Timer::after_millis(1).await;
-                            let ring_position = RING_POSITION_CHANNEL.receive().await;
-                            if let RingPosition::Locked = ring_position {
-                                deploy2.set_low();
-                                motor_ps.set_low();
-                                debug!("Doing thing - drive_motor fn lock - 3");
-                            }
-                        }
-                    }
+                    debug!("Doing thing - drive_motor fn lock - 2");
+                    let _ = with_timeout(
+                        max_delay,
+                        motor_limit(ring_position, deploy1, deploy2, motor_ps),
+                    )
+                    .await;
                 } else {
                     debug!("Doing thing - drive_motor fn unlock");
                     deploy1.set_high();
-                    Timer::after_millis(duration_ms).await;
                     if !force {
                         debug!("Doing thing - drive_motor fn unlock - 2");
-                        for _i in 0..max_delay {
-                            Timer::after_millis(1).await;
-                            let ring_position = RING_POSITION_CHANNEL.receive().await;
-                            if let RingPosition::Unlocked = ring_position {
-                                deploy1.set_low();
-                                motor_ps.set_low();
-                                debug!("Doing thing - drive_motor fn unlock - 3");
-                            }
-                        }
+                        let _ = with_timeout(
+                            max_delay,
+                            motor_limit(ring_position, deploy1, deploy2, motor_ps),
+                        )
+                        .await;
                     }
                 }
             }
