@@ -12,7 +12,8 @@ use embassy_stm32::{
     },
     dac::Value,
     gpio::{Input, Level, Output, OutputType, Pull, Speed},
-    peripherals::{ADC1, CAN, PA0, PA1, USART2},
+    mode::Async,
+    peripherals::{ADC1, CAN, DAC1, PA0, PA1, USART2},
     time::Hertz,
     timer::{
         low_level::CountingMode,
@@ -122,11 +123,67 @@ static UMB_ON_MTX: UmbOnType = Mutex::new(None);
 static ADC_MTX: AdcType = Mutex::new(None);
 static BUZZER_MODE_MTX: BuzzerModeMtxType = Mutex::new(None);
 static SYSTEM_STATE_MTX: Mutex<ThreadModeRawMutex, Option<DrogueState>> = Mutex::new(None);
-static DAC_MTX: DacType = Mutex::new(None);
-static DEPLOY_1_MTX: Mutex<ThreadModeRawMutex, Option<Output<'static>>> = Mutex::new(None);
-static DEPLOY_2_MTX: Mutex<ThreadModeRawMutex, Option<Output<'static>>> = Mutex::new(None);
-static MOTOR_PS_MTX: Mutex<ThreadModeRawMutex, Option<Output<'static>>> = Mutex::new(None);
+
 static RING_POSITION_CHANNEL: Channel<ThreadModeRawMutex, RingPosition, 1> = Channel::new();
+
+struct Motor {
+    deploy1: Output<'static>,
+    deploy2: Output<'static>,
+    ps: Output<'static>,
+    dac: Dac<'static, DAC1, Async>,
+}
+
+enum MotorMode {
+    PowerSave,
+    Stop,
+    Forward,
+    Reverse,
+    Brake,
+}
+
+impl Motor {
+    fn new(
+        deploy1: Output<'static>,
+        deploy2: Output<'static>,
+        ps: Output<'static>,
+        dac: Dac<'static, DAC1, Async>,
+    ) -> Self {
+        Self { deploy1, deploy2, ps, dac }
+    }
+    fn set_mode(mut self, mode: MotorMode) {
+        match mode {
+            MotorMode::PowerSave => {
+                self.ps.set_low();
+                self.deploy1.set_low();
+                self.deploy2.set_low();
+            }
+            MotorMode::Stop => {
+                self.ps.set_high();
+                self.deploy1.set_low();
+                self.deploy2.set_low();
+            }
+            MotorMode::Forward => {
+                self.ps.set_high();
+                self.deploy1.set_high();
+                self.deploy2.set_low();
+            }
+            MotorMode::Reverse => {
+                self.ps.set_high();
+                self.deploy1.set_low();
+                self.deploy2.set_high();
+            }
+            MotorMode::Brake => {
+                self.ps.set_high();
+                self.deploy1.set_high();
+                self.deploy2.set_high();
+            }
+        }
+    }
+}
+
+type MotorType = Mutex<ThreadModeRawMutex, Option<Motor>>;
+
+static MOTOR_MTX: MotorType = Mutex::new(None);
 
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
@@ -134,7 +191,7 @@ async fn main(spawner: Spawner) {
 
     let deploy_1 = Output::new(p.PB4, Level::Low, Speed::Medium);
     let deploy_2 = Output::new(p.PB5, Level::Low, Speed::Medium);
-    let motor_ps = Output::new(p.PB6, Level::High, Speed::Medium);
+    let ps = Output::new(p.PB6, Level::High, Speed::Medium);
     let _motor_fail = Input::new(p.PB7, Pull::Up);
     let umb_on = Input::new(p.PA8, Pull::Up);
     let _can_shdn = Output::new(p.PA10, Level::Low, Speed::Medium);
@@ -182,8 +239,10 @@ async fn main(spawner: Spawner) {
     .expect("Uart Config Error");
 
     let dac = Dac::new(p.DAC1, p.DMA1_CH3, p.DMA1_CH4, p.PA4, p.PA5);
+
     let sys_state = DrogueState::default();
 
+    let motor = Motor::new(deploy_1, deploy_2, ps, dac);
     {
         // Put peripherals into mutex if shared among tasks.
         // Inner scope so that mutex is unlocked when out of scope
@@ -191,18 +250,16 @@ async fn main(spawner: Spawner) {
         *(ADC_MTX.lock().await) = Some(adc);
         *(UMB_ON_MTX.lock().await) = Some(umb_on);
         *(SYSTEM_STATE_MTX.lock().await) = Some(sys_state);
-        *(DAC_MTX.lock().await) = Some(dac);
-        *(DEPLOY_1_MTX.lock().await) = Some(deploy_1);
-        *(DEPLOY_2_MTX.lock().await) = Some(deploy_2);
-        *(MOTOR_PS_MTX.lock().await) = Some(motor_ps);
+        *(MOTOR_MTX.lock().await) = Some(motor);
     }
+
     debug!("Doing thing");
     // unwrap!(spawner.spawn(active_beep(pwm, None)));
     unwrap!(spawner.spawn(cli(uart)));
     unwrap!(spawner.spawn(read_battery_from_ref(&ADC_MTX, p.PB0)));
     unwrap!(spawner.spawn(read_hall_sensor(p.PA0, p.PA1)));
     debug!("Doing thing2");
-    // enable at last minute so other tasks can still spawn if can bus is down
+    // enable can at last minute so other tasks can still spawn if can bus is down
     can.enable().await;
     let (can_tx, can_rx) = can.split();
     unwrap!(spawner.spawn(can_writer(can_tx, &CAN_TX_CHANNEL)));
@@ -280,7 +337,10 @@ pub async fn cli(uart: BufferedUart<'static>) {
                     // TODO: implement
                 }
                 "mv" => {
-                    limit_motor_current(5100).await;
+                    let mut motor_unlocked = MOTOR_MTX.lock().await;
+                    if let Some(motor) = motor_unlocked.as_mut() {
+                        limit_motor_current(5100, &mut motor.dac).await;
+                    }
                 }
                 _ => {
                     io.write(b"Invalid command\r\n").await.unwrap();
@@ -355,7 +415,7 @@ fn get_ring_position(sensor1_state: SensorState, sensor2_state: SensorState) -> 
     }
 }
 
-async fn limit_motor_current(ma: u16) {
+async fn limit_motor_current(ma: u16, dac: &mut Dac<'static, DAC1, Async>) {
     if ma >= 4500 {
         error!("Current too high!");
         return;
@@ -368,17 +428,14 @@ async fn limit_motor_current(ma: u16) {
     let scale = ((ma as u32) * 1024 / 1375) as u16;
     debug!("step = {}", scale);
     let val = Value::Bit12Right(scale);
-    let mut dac_unlocked = DAC_MTX.lock().await;
-    if let Some(dac) = dac_unlocked.as_mut() {
-        dac.ch1().set(val);
-    }
+    dac.ch1().set(val);
 }
 
 async fn motor_limit(
     position: RingPosition,
     deploy1: &mut Output<'static>,
     deploy2: &mut Output<'static>,
-    motor_ps: &mut Output<'static>,
+    ps: &mut Output<'static>,
 ) {
     loop {
         //let ring_pos = RING_POSITION_CHANNEL.receive().await
@@ -386,71 +443,66 @@ async fn motor_limit(
         if RING_POSITION_CHANNEL.receive().await == position {
             deploy1.set_low();
             deploy2.set_low();
-            motor_ps.set_low();
+            ps.set_low();
         }
     }
 }
 
 async fn drive_motor(lock_mode: bool, duration_ms: u64, force: bool, current: u16) {
     debug!("Doing thing - drive_motor fn");
-    let mut deploy1_unlocked = DEPLOY_1_MTX.lock().await;
-    let mut deploy2_unlocked = DEPLOY_2_MTX.lock().await;
-    let mut motor_ps_unlocked = MOTOR_PS_MTX.lock().await;
+    let mut motor_unlocked = MOTOR_MTX.lock().await;
+    if let Some(motor) = motor_unlocked.as_mut() {
+        limit_motor_current(current, &mut motor.dac).await;
+        motor.deploy1.set_low();
+        motor.deploy2.set_low();
+        motor.ps.set_high();
 
-    if let Some(deploy1) = deploy1_unlocked.as_mut() {
-        if let Some(deploy2) = deploy2_unlocked.as_mut() {
-            if let Some(motor_ps) = motor_ps_unlocked.as_mut() {
-                limit_motor_current(current).await;
-                deploy1.set_low();
-                deploy2.set_low();
-                motor_ps.set_high();
+        let ring_position = RING_POSITION_CHANNEL.receive().await;
+        debug!("Doing thing - drive_motor fn 2");
 
-                let ring_position = RING_POSITION_CHANNEL.receive().await;
-                debug!("Doing thing - drive_motor fn 2");
+        let deploy1_lvl = motor.deploy1.get_output_level();
+        let deploy2_lvl = motor.deploy2.get_output_level();
+        let motor_ps_lvl = motor.ps.get_output_level();
+        debug!("Deploy 1: {}, Deploy 2: {}, ps: {}", deploy1_lvl, deploy2_lvl, motor_ps_lvl);
 
-                let deploy1_lvl = deploy1.get_output_level();
-                let deploy2_lvl = deploy2.get_output_level();
-                let motor_ps_lvl = motor_ps.get_output_level();
-                debug!(
-                    "Deploy 1: {}, Deploy 2: {}, Motor_PS: {}",
-                    deploy1_lvl, deploy2_lvl, motor_ps_lvl
-                );
+        match ring_position {
+            RingPosition::Locked => info!("locked"),
+            RingPosition::Unlocked => info!("unlocked"),
+            RingPosition::Inbetween => info!("inbetween"),
+            RingPosition::Error => error!("error"),
+        }
 
-                match ring_position {
-                    RingPosition::Locked => info!("locked"),
-                    RingPosition::Unlocked => info!("unlocked"),
-                    RingPosition::Inbetween => info!("inbetween"),
-                    RingPosition::Error => error!("error"),
-                }
+        Timer::after_millis(50).await;
+        let max_delay = Duration::from_millis(200);
 
-                Timer::after_millis(50).await;
-                let max_delay = Duration::from_millis(200);
+        debug!("Doing thing - drive_motor fn 3");
 
-                debug!("Doing thing - drive_motor fn 3");
-
-                // how do we continuously receive the ringposition without panics!!
-                if lock_mode {
-                    debug!("Doing thing - drive_motor fn lock");
-                    deploy2.set_high();
-                    Timer::after_millis(duration_ms).await;
-                    debug!("Doing thing - drive_motor fn lock - 2");
-                    let _ = with_timeout(
-                        max_delay,
-                        motor_limit(ring_position, deploy1, deploy2, motor_ps),
-                    )
-                    .await;
-                } else {
-                    debug!("Doing thing - drive_motor fn unlock");
-                    deploy1.set_high();
-                    if !force {
-                        debug!("Doing thing - drive_motor fn unlock - 2");
-                        let _ = with_timeout(
-                            max_delay,
-                            motor_limit(ring_position, deploy1, deploy2, motor_ps),
-                        )
-                        .await;
-                    }
-                }
+        // FIXME: how do we continuously receive the ringposition without panics!!
+        if lock_mode {
+            debug!("Doing thing - drive_motor fn lock");
+            motor.deploy2.set_high();
+            Timer::after_millis(duration_ms).await;
+            debug!("Doing thing - drive_motor fn lock - 2");
+            let _ = with_timeout(
+                max_delay,
+                motor_limit(ring_position, &mut motor.deploy1, &mut motor.deploy2, &mut motor.ps),
+            )
+            .await;
+        } else {
+            debug!("Doing thing - drive_motor fn unlock");
+            motor.deploy1.set_high();
+            if !force {
+                debug!("Doing thing - drive_motor fn unlock - 2");
+                let _ = with_timeout(
+                    max_delay,
+                    motor_limit(
+                        ring_position,
+                        &mut motor.deploy1,
+                        &mut motor.deploy2,
+                        &mut motor.ps,
+                    ),
+                )
+                .await;
             }
         }
     }
