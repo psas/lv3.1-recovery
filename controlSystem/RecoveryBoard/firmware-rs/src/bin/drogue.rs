@@ -253,25 +253,21 @@ async fn main(spawner: Spawner) {
         *(MOTOR_MTX.lock().await) = Some(motor);
     }
 
-    debug!("Doing thing");
     // unwrap!(spawner.spawn(active_beep(pwm, None)));
     unwrap!(spawner.spawn(cli(uart)));
     unwrap!(spawner.spawn(read_battery_from_ref(&ADC_MTX, p.PB0)));
     unwrap!(spawner.spawn(read_hall_sensor(p.PA0, p.PA1)));
-    debug!("Doing thing2");
     // enable can at last minute so other tasks can still spawn if can bus is down
     can.enable().await;
     let (can_tx, can_rx) = can.split();
     unwrap!(spawner.spawn(can_writer(can_tx, &CAN_TX_CHANNEL)));
     unwrap!(spawner.spawn(can_reader(can_rx, can,)));
-    debug!("Doing thing3");
     // Keep main from returning. Needed for can_tx/can_rx or they get dropped
     core::future::pending::<()>().await;
 }
 
 #[embassy_executor::task]
 pub async fn cli(uart: BufferedUart<'static>) {
-    debug!("Doing thing - cli func");
     let prompt = "> ";
     let mut io = IO::new(uart);
     let mut buffer = [0; UART_BUF_SIZE];
@@ -449,7 +445,6 @@ async fn motor_limit(
 }
 
 async fn drive_motor(lock_mode: bool, duration_ms: u64, force: bool, current: u16) {
-    debug!("Doing thing - drive_motor fn");
     let mut motor_unlocked = MOTOR_MTX.lock().await;
     if let Some(motor) = motor_unlocked.as_mut() {
         limit_motor_current(current, &mut motor.dac).await;
@@ -458,7 +453,6 @@ async fn drive_motor(lock_mode: bool, duration_ms: u64, force: bool, current: u1
         motor.ps.set_high();
 
         let ring_position = RING_POSITION_CHANNEL.receive().await;
-        debug!("Doing thing - drive_motor fn 2");
 
         let deploy1_lvl = motor.deploy1.get_output_level();
         let deploy2_lvl = motor.deploy2.get_output_level();
@@ -475,25 +469,22 @@ async fn drive_motor(lock_mode: bool, duration_ms: u64, force: bool, current: u1
         Timer::after_millis(50).await;
         let max_delay = Duration::from_millis(200);
 
-        debug!("Doing thing - drive_motor fn 3");
-
         // FIXME: how do we continuously receive the ringposition without panics!!
         if lock_mode {
-            debug!("Doing thing - drive_motor fn lock");
             motor.deploy2.set_high();
             Timer::after_millis(duration_ms).await;
-            debug!("Doing thing - drive_motor fn lock - 2");
-            let _ = with_timeout(
+            if let Err(e) = with_timeout(
                 max_delay,
                 motor_limit(ring_position, &mut motor.deploy1, &mut motor.deploy2, &mut motor.ps),
             )
-            .await;
+            .await
+            {
+                error!("Motor limit timed out: {}", e);
+            }
         } else {
-            debug!("Doing thing - drive_motor fn unlock");
             motor.deploy1.set_high();
             if !force {
-                debug!("Doing thing - drive_motor fn unlock - 2");
-                let _ = with_timeout(
+                if let Err(e) = with_timeout(
                     max_delay,
                     motor_limit(
                         ring_position,
@@ -502,7 +493,10 @@ async fn drive_motor(lock_mode: bool, duration_ms: u64, force: bool, current: u1
                         &mut motor.ps,
                     ),
                 )
-                .await;
+                .await
+                {
+                    error!("Motor limit timed out: {}", e);
+                }
             }
         }
     }
@@ -511,7 +505,6 @@ async fn drive_motor(lock_mode: bool, duration_ms: u64, force: bool, current: u1
 #[embassy_executor::task]
 pub async fn read_hall_sensor(mut sensor1: Peri<'static, PA0>, mut sensor2: Peri<'static, PA1>) {
     loop {
-        debug!("Doing thing - hall sensors");
         let sensor1_limits = SensorLimits::new(3200, 600, 2600, 1000);
         let sensor2_limits = SensorLimits::new(3200, 600, 1600, 1000);
 
@@ -527,9 +520,8 @@ pub async fn read_hall_sensor(mut sensor1: Peri<'static, PA0>, mut sensor2: Peri
             let ring_position = get_ring_position(sensor1_state, sensor2_state);
 
             RING_POSITION_CHANNEL.send(ring_position).await;
-
-            Timer::after_millis(250).await;
         }
+        Timer::after_millis(250).await;
     }
 }
 
