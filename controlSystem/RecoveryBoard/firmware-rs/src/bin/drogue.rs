@@ -23,7 +23,9 @@ use embassy_stm32::{
     Peri,
 };
 use embassy_stm32::{can::filter::Mask32, dac::Dac, usart::BufferedInterruptHandler};
-use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, channel::Channel, mutex::Mutex};
+use embassy_sync::{
+    blocking_mutex::raw::ThreadModeRawMutex, channel::Channel, mutex::Mutex, watch::Watch,
+};
 use embassy_time::{with_timeout, Duration, Instant, Timer};
 use embedded_io_async::Write;
 use firmware_rs::shared::{
@@ -124,7 +126,7 @@ static ADC_MTX: AdcType = Mutex::new(None);
 static BUZZER_MODE_MTX: BuzzerModeMtxType = Mutex::new(None);
 static SYSTEM_STATE_MTX: Mutex<ThreadModeRawMutex, Option<DrogueState>> = Mutex::new(None);
 
-static RING_POSITION_CHANNEL: Channel<ThreadModeRawMutex, RingPosition, 1> = Channel::new();
+static RING_POSITION_WATCH: Watch<ThreadModeRawMutex, RingPosition, 1> = Watch::new();
 
 struct Motor {
     deploy1: Output<'static>,
@@ -346,7 +348,7 @@ pub async fn cli(uart: BufferedUart<'static>) {
     }
 }
 
-#[derive(defmt::Format, PartialEq)]
+#[derive(defmt::Format, PartialEq, Clone)]
 enum RingPosition {
     Locked,
     Unlocked,
@@ -427,26 +429,18 @@ async fn limit_motor_current(ma: u16, dac: &mut Dac<'static, DAC1, Async>) {
     dac.ch1().set(val);
 }
 
-async fn motor_limit(
-    position: RingPosition,
-    deploy1: &mut Output<'static>,
-    deploy2: &mut Output<'static>,
-    ps: &mut Output<'static>,
-) {
+async fn motor_limit(position: RingPosition, motor: &mut Motor) {
+    let mut rcv = RING_POSITION_WATCH.receiver().expect("Failed to create receiver");
     loop {
-        //let ring_pos = RING_POSITION_CHANNEL.receive().await
-        //debug!("Ring Pos: {}", position);
-        let ring_position = RING_POSITION_CHANNEL.receive().await;
+        let ring_position = rcv.changed().await;
         match ring_position {
             RingPosition::Locked => info!("locked"),
             RingPosition::Unlocked => info!("unlocked"),
             RingPosition::Inbetween => info!("inbetween"),
             RingPosition::Error => error!("error"),
         }
-        if  ring_position == position {
-            deploy1.set_low();
-            deploy2.set_low();
-            ps.set_low();
+        if ring_position == position {
+            motor.set_mode(MotorMode::PowerSave);
         }
     }
 }
@@ -455,54 +449,38 @@ async fn drive_motor(lock_mode: bool, duration_ms: u64, force: bool, current: u1
     let mut motor_unlocked = MOTOR_MTX.lock().await;
     if let Some(motor) = motor_unlocked.as_mut() {
         limit_motor_current(current, &mut motor.dac).await;
+
         motor.deploy1.set_low();
         motor.deploy2.set_low();
         motor.ps.set_high();
 
-        let deploy1_lvl = motor.deploy1.get_output_level();
-        let deploy2_lvl = motor.deploy2.get_output_level();
-        let motor_ps_lvl = motor.ps.get_output_level();
-        debug!("Deploy 1: {}, Deploy 2: {}, ps: {}", deploy1_lvl, deploy2_lvl, motor_ps_lvl);
+        // let deploy1_lvl = motor.deploy1.get_output_level();
+        // let deploy2_lvl = motor.deploy2.get_output_level();
+        // let motor_ps_lvl = motor.ps.get_output_level();
+        // debug!("Deploy 1: {}, Deploy 2: {}, ps: {}", deploy1_lvl, deploy2_lvl, motor_ps_lvl);
 
         let max_delay = Duration::from_millis(500);
 
         if lock_mode {
             motor.set_mode(MotorMode::Reverse);
             Timer::after_millis(duration_ms).await;
-            if let Err(e) = with_timeout(
-                max_delay,
-                motor_limit(
-                    RingPosition::Locked,
-                    &mut motor.deploy1,
-                    &mut motor.deploy2,
-                    &mut motor.ps,
-                ),
-            )
-            .await
+            if let Err(e) = with_timeout(max_delay, motor_limit(RingPosition::Locked, motor)).await
             {
                 error!("Motor limit timed out: {}", e);
                 motor.set_mode(MotorMode::PowerSave);
             }
         } else {
-            motor.deploy1.set_high();
+            motor.set_mode(MotorMode::Forward);
             if !force {
-                if let Err(e) = with_timeout(
-                    max_delay,
-                    motor_limit(
-                        RingPosition::Unlocked,
-                        &mut motor.deploy1,
-                        &mut motor.deploy2,
-                        &mut motor.ps,
-                    ),
-                )
-                .await
+                if let Err(e) =
+                    with_timeout(max_delay, motor_limit(RingPosition::Unlocked, motor)).await
                 {
                     error!("Motor limit timed out: {}", e);
                     motor.set_mode(MotorMode::PowerSave);
                 }
             }
         }
-    motor.set_mode(MotorMode::PowerSave);
+        motor.set_mode(MotorMode::PowerSave);
     }
 }
 
@@ -512,6 +490,7 @@ pub async fn read_hall_sensor(mut sensor1: Peri<'static, PA0>, mut sensor2: Peri
         let sensor1_limits = SensorLimits::new(3200, 600, 1200, 700);
         let sensor2_limits = SensorLimits::new(3200, 600, 1200, 700);
         let mut ring_position: RingPosition = RingPosition::Locked;
+        let snd = RING_POSITION_WATCH.sender();
 
         {
             let mut adc_unlocked = ADC_MTX.lock().await;
@@ -526,7 +505,8 @@ pub async fn read_hall_sensor(mut sensor1: Peri<'static, PA0>, mut sensor2: Peri
                 ring_position = get_ring_position(sensor1_state, sensor2_state);
             }
         }
-        RING_POSITION_CHANNEL.send(ring_position).await;
+        snd.send(ring_position);
+        Timer::after_millis(100).await;
     }
 }
 
