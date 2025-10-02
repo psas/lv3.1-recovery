@@ -150,7 +150,7 @@ impl Motor {
     ) -> Self {
         Self { deploy1, deploy2, ps, dac }
     }
-    fn set_mode(mut self, mode: MotorMode) {
+    fn set_mode(&mut self, mode: MotorMode) {
         match mode {
             MotorMode::PowerSave => {
                 self.ps.set_low();
@@ -436,7 +436,14 @@ async fn motor_limit(
     loop {
         //let ring_pos = RING_POSITION_CHANNEL.receive().await
         //debug!("Ring Pos: {}", position);
-        if RING_POSITION_CHANNEL.receive().await == position {
+        let ring_position = RING_POSITION_CHANNEL.receive().await;
+        match ring_position {
+            RingPosition::Locked => info!("locked"),
+            RingPosition::Unlocked => info!("unlocked"),
+            RingPosition::Inbetween => info!("inbetween"),
+            RingPosition::Error => error!("error"),
+        }
+        if  ring_position == position {
             deploy1.set_low();
             deploy2.set_low();
             ps.set_low();
@@ -452,30 +459,26 @@ async fn drive_motor(lock_mode: bool, duration_ms: u64, force: bool, current: u1
         motor.deploy2.set_low();
         motor.ps.set_high();
 
-        let ring_position = RING_POSITION_CHANNEL.receive().await;
-
         let deploy1_lvl = motor.deploy1.get_output_level();
         let deploy2_lvl = motor.deploy2.get_output_level();
         let motor_ps_lvl = motor.ps.get_output_level();
         debug!("Deploy 1: {}, Deploy 2: {}, ps: {}", deploy1_lvl, deploy2_lvl, motor_ps_lvl);
-
-        match ring_position {
-            RingPosition::Locked => info!("locked"),
-            RingPosition::Unlocked => info!("unlocked"),
-            RingPosition::Inbetween => info!("inbetween"),
-            RingPosition::Error => error!("error"),
-        }
 
         Timer::after_millis(50).await;
         let max_delay = Duration::from_millis(200);
 
         // FIXME: how do we continuously receive the ringposition without panics!!
         if lock_mode {
-            motor.deploy2.set_high();
+            motor.set_mode(MotorMode::Reverse);
             Timer::after_millis(duration_ms).await;
             if let Err(e) = with_timeout(
                 max_delay,
-                motor_limit(ring_position, &mut motor.deploy1, &mut motor.deploy2, &mut motor.ps),
+                motor_limit(
+                    RingPosition::Locked,
+                    &mut motor.deploy1,
+                    &mut motor.deploy2,
+                    &mut motor.ps,
+                ),
             )
             .await
             {
@@ -487,7 +490,7 @@ async fn drive_motor(lock_mode: bool, duration_ms: u64, force: bool, current: u1
                 if let Err(e) = with_timeout(
                     max_delay,
                     motor_limit(
-                        ring_position,
+                        RingPosition::Unlocked,
                         &mut motor.deploy1,
                         &mut motor.deploy2,
                         &mut motor.ps,
@@ -507,21 +510,22 @@ pub async fn read_hall_sensor(mut sensor1: Peri<'static, PA0>, mut sensor2: Peri
     loop {
         let sensor1_limits = SensorLimits::new(3200, 600, 2600, 1000);
         let sensor2_limits = SensorLimits::new(3200, 600, 1600, 1000);
+        let mut ring_position: RingPosition = RingPosition::Locked;
 
-        let mut adc_unlocked = ADC_MTX.lock().await;
-        if let Some(adc) = adc_unlocked.as_mut() {
-            let sensor1_read = adc.read(&mut sensor1).await;
-            let sensor2_read = adc.read(&mut sensor2).await;
-            debug!("Sensor 1: {}, Sensor 2: {}", sensor1_read, sensor2_read);
+        {
+            let mut adc_unlocked = ADC_MTX.lock().await;
+            if let Some(adc) = adc_unlocked.as_mut() {
+                let sensor1_read = adc.read(&mut sensor1).await;
+                let sensor2_read = adc.read(&mut sensor2).await;
+                debug!("Sensor 1: {}, Sensor 2: {}", sensor1_read, sensor2_read);
 
-            let sensor1_state = get_sensor_state(sensor1_read, sensor1_limits);
-            let sensor2_state = get_sensor_state(sensor2_read, sensor2_limits);
+                let sensor1_state = get_sensor_state(sensor1_read, sensor1_limits);
+                let sensor2_state = get_sensor_state(sensor2_read, sensor2_limits);
 
-            let ring_position = get_ring_position(sensor1_state, sensor2_state);
-
-            RING_POSITION_CHANNEL.send(ring_position).await;
+                ring_position = get_ring_position(sensor1_state, sensor2_state);
+            }
         }
-        Timer::after_millis(250).await;
+        RING_POSITION_CHANNEL.send(ring_position).await;
     }
 }
 
