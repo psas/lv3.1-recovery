@@ -464,10 +464,8 @@ async fn drive_motor(lock_mode: bool, duration_ms: u64, force: bool, current: u1
         let motor_ps_lvl = motor.ps.get_output_level();
         debug!("Deploy 1: {}, Deploy 2: {}, ps: {}", deploy1_lvl, deploy2_lvl, motor_ps_lvl);
 
-        Timer::after_millis(50).await;
-        let max_delay = Duration::from_millis(200);
+        let max_delay = Duration::from_millis(500);
 
-        // FIXME: how do we continuously receive the ringposition without panics!!
         if lock_mode {
             motor.set_mode(MotorMode::Reverse);
             Timer::after_millis(duration_ms).await;
@@ -483,6 +481,7 @@ async fn drive_motor(lock_mode: bool, duration_ms: u64, force: bool, current: u1
             .await
             {
                 error!("Motor limit timed out: {}", e);
+                motor.set_mode(MotorMode::PowerSave);
             }
         } else {
             motor.deploy1.set_high();
@@ -499,17 +498,19 @@ async fn drive_motor(lock_mode: bool, duration_ms: u64, force: bool, current: u1
                 .await
                 {
                     error!("Motor limit timed out: {}", e);
+                    motor.set_mode(MotorMode::PowerSave);
                 }
             }
         }
+    motor.set_mode(MotorMode::PowerSave);
     }
 }
 
 #[embassy_executor::task]
 pub async fn read_hall_sensor(mut sensor1: Peri<'static, PA0>, mut sensor2: Peri<'static, PA1>) {
     loop {
-        let sensor1_limits = SensorLimits::new(3200, 600, 2600, 1000);
-        let sensor2_limits = SensorLimits::new(3200, 600, 1600, 1000);
+        let sensor1_limits = SensorLimits::new(3200, 600, 1200, 700);
+        let sensor2_limits = SensorLimits::new(3200, 600, 1200, 700);
         let mut ring_position: RingPosition = RingPosition::Locked;
 
         {
