@@ -31,7 +31,7 @@ use embassy_stm32::{
 use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex};
 use embassy_time::{Instant, Timer};
 use embedded_io_async::Write;
-use firmware_rs::shared::{
+use firmware_rs::{
     adc::{read_battery, BATT_READ_CHANNEL},
     buzzer::{active_beep, BuzzerMode, BuzzerModeMtxType},
     can::{

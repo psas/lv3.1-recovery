@@ -10,33 +10,42 @@ use embassy_stm32::{
         Can, CanRx, Fifo, Id, Rx0InterruptHandler, Rx1InterruptHandler, SceInterruptHandler,
         TxInterruptHandler,
     },
-    dac::Value,
     gpio::{Input, Level, Output, OutputType, Pull, Speed},
-    mode::Async,
-    peripherals::{ADC1, CAN, DAC1, PA0, PA1, USART2},
+    peripherals::{ADC1, CAN, USART2},
     time::Hertz,
     timer::{
         low_level::CountingMode,
         simple_pwm::{PwmPin, SimplePwm},
     },
     usart::{BufferedUart, Config as UartConfig, DataBits, Parity, StopBits},
-    Peri,
 };
 use embassy_stm32::{can::filter::Mask32, dac::Dac, usart::BufferedInterruptHandler};
-use embassy_sync::{
-    blocking_mutex::raw::ThreadModeRawMutex, channel::Channel, mutex::Mutex, watch::Watch,
-};
-use embassy_time::{with_timeout, Duration, Instant, Timer};
+use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex, watch::Watch};
+use embassy_time::Instant;
 use embedded_io_async::Write;
-use firmware_rs::shared::{
+use firmware_rs::{
     adc::read_battery_from_ref,
     buzzer::{BuzzerMode, BuzzerModeMtxType},
     can::{can_writer, CAN_BITRATE, CAN_TX_CHANNEL, DROGUE_ID, MAIN_ID},
+    motor::{Motor, MotorType},
+    ring::{read_pos_sensor, Ring, RingPosition, RingType},
     types::*,
     uart::{IO, UART_BUF_SIZE, UART_RX_BUF_CELL, UART_TX_BUF_CELL},
 };
 use noline::builder::EditorBuilder;
 use {defmt_rtt as _, panic_probe as _};
+
+const MOTOR_DRIVE_DUR_MS: u64 = 500;
+
+bind_interrupts!(struct CanIrqs {
+    CEC_CAN =>
+    Rx0InterruptHandler<CAN>,
+    Rx1InterruptHandler<CAN>,
+    SceInterruptHandler<CAN>,
+    TxInterruptHandler<CAN>;
+});
+bind_interrupts!(struct AdcIrqs { ADC1_COMP => InterruptHandler<ADC1>; });
+bind_interrupts!(struct UsartIrqs { USART2 => BufferedInterruptHandler<USART2>; });
 
 #[derive(Default)]
 pub struct DrogueState {
@@ -111,90 +120,18 @@ async fn set_state(update: DrogueStateField) {
     }
 }
 
-bind_interrupts!(struct CanIrqs {
-    CEC_CAN =>
-    Rx0InterruptHandler<CAN>,
-    Rx1InterruptHandler<CAN>,
-    SceInterruptHandler<CAN>,
-    TxInterruptHandler<CAN>;
-});
-bind_interrupts!(struct AdcIrqs { ADC1_COMP => InterruptHandler<ADC1>; });
-bind_interrupts!(struct UsartIrqs { USART2 => BufferedInterruptHandler<USART2>; });
-
 static UMB_ON_MTX: UmbOnType = Mutex::new(None);
 static ADC_MTX: AdcType = Mutex::new(None);
 static BUZZER_MODE_MTX: BuzzerModeMtxType = Mutex::new(None);
 static SYSTEM_STATE_MTX: Mutex<ThreadModeRawMutex, Option<DrogueState>> = Mutex::new(None);
-
 static RING_POSITION_WATCH: Watch<ThreadModeRawMutex, RingPosition, 1> = Watch::new();
-
-struct Motor {
-    deploy1: Output<'static>,
-    deploy2: Output<'static>,
-    ps: Output<'static>,
-    dac: Dac<'static, DAC1, Async>,
-}
-
-enum MotorMode {
-    PowerSave,
-    Stop,
-    Forward,
-    Reverse,
-    Brake,
-}
-
-impl Motor {
-    fn new(
-        deploy1: Output<'static>,
-        deploy2: Output<'static>,
-        ps: Output<'static>,
-        dac: Dac<'static, DAC1, Async>,
-    ) -> Self {
-        Self { deploy1, deploy2, ps, dac }
-    }
-    fn set_mode(&mut self, mode: MotorMode) {
-        match mode {
-            MotorMode::PowerSave => {
-                self.ps.set_low();
-                self.deploy1.set_low();
-                self.deploy2.set_low();
-            }
-            MotorMode::Stop => {
-                self.ps.set_high();
-                self.deploy1.set_low();
-                self.deploy2.set_low();
-            }
-            MotorMode::Forward => {
-                self.ps.set_high();
-                self.deploy1.set_high();
-                self.deploy2.set_low();
-            }
-            MotorMode::Reverse => {
-                self.ps.set_high();
-                self.deploy1.set_low();
-                self.deploy2.set_high();
-            }
-            MotorMode::Brake => {
-                self.ps.set_high();
-                self.deploy1.set_high();
-                self.deploy2.set_high();
-            }
-        }
-    }
-}
-
-type MotorType = Mutex<ThreadModeRawMutex, Option<Motor>>;
-
+static RING_MTX: RingType = Mutex::new(None);
 static MOTOR_MTX: MotorType = Mutex::new(None);
 
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
     let p = embassy_stm32::init(Default::default());
 
-    let deploy_1 = Output::new(p.PB4, Level::Low, Speed::Medium);
-    let deploy_2 = Output::new(p.PB5, Level::Low, Speed::Medium);
-    let ps = Output::new(p.PB6, Level::High, Speed::Medium);
-    let _motor_fail = Input::new(p.PB7, Pull::Up);
     let umb_on = Input::new(p.PA8, Pull::Up);
     let _can_shdn = Output::new(p.PA10, Level::Low, Speed::Medium);
     let _can_silent = Output::new(p.PA9, Level::Low, Speed::Medium);
@@ -223,7 +160,7 @@ async fn main(spawner: Spawner) {
     adc.set_sample_time(SampleTime::CYCLES239_5);
     adc.set_resolution(embassy_stm32::adc::Resolution::BITS12);
 
-    // Set up UART driver'
+    // Set up UART driver
     let mut uart_config = UartConfig::default();
     uart_config.baudrate = 115200;
     uart_config.parity = Parity::ParityNone;
@@ -241,10 +178,10 @@ async fn main(spawner: Spawner) {
     .expect("Uart Config Error");
 
     let dac = Dac::new(p.DAC1, p.DMA1_CH3, p.DMA1_CH4, p.PA4, p.PA5);
-
     let sys_state = DrogueState::default();
+    let motor = Motor::new(p.PB4, p.PB5, p.PB6, p.PB7, dac, &RING_POSITION_WATCH);
+    let ring = Ring::new(&RING_POSITION_WATCH, p.PA0, p.PA1, &ADC_MTX);
 
-    let motor = Motor::new(deploy_1, deploy_2, ps, dac);
     {
         // Put peripherals into mutex if shared among tasks.
         // Inner scope so that mutex is unlocked when out of scope
@@ -252,18 +189,21 @@ async fn main(spawner: Spawner) {
         *(ADC_MTX.lock().await) = Some(adc);
         *(UMB_ON_MTX.lock().await) = Some(umb_on);
         *(SYSTEM_STATE_MTX.lock().await) = Some(sys_state);
+        *(RING_MTX.lock().await) = Some(ring);
         *(MOTOR_MTX.lock().await) = Some(motor);
     }
 
     // unwrap!(spawner.spawn(active_beep(pwm, None)));
     unwrap!(spawner.spawn(cli(uart)));
     unwrap!(spawner.spawn(read_battery_from_ref(&ADC_MTX, p.PB0)));
-    unwrap!(spawner.spawn(read_hall_sensor(p.PA0, p.PA1)));
+    unwrap!(spawner.spawn(read_pos_sensor(&RING_MTX)));
+
     // enable can at last minute so other tasks can still spawn if can bus is down
     can.enable().await;
     let (can_tx, can_rx) = can.split();
     unwrap!(spawner.spawn(can_writer(can_tx, &CAN_TX_CHANNEL)));
     unwrap!(spawner.spawn(can_reader(can_rx, can,)));
+
     // Keep main from returning. Needed for can_tx/can_rx or they get dropped
     core::future::pending::<()>().await;
 }
@@ -283,12 +223,12 @@ pub async fn cli(uart: BufferedUart<'static>) {
 
         while let Ok(line) = editor.readline(prompt, &mut io).await {
             // WARN: Passing more than 5 args panics
-            let args: heapless::Vec<&str, 5> = line.split_whitespace().skip(1).collect();
-            if args.len() > 1usize {
-                error!("Only one argument allowed");
+            let args: heapless::Vec<&str, 5> = line.split_whitespace().collect();
+            if args.len() > 3usize {
+                error!("Only two arguments allowed");
                 continue;
             }
-            match line {
+            match args[0] {
                 "help" => {
                     let lines = [
                         "help: Display this message.\r\n\n",
@@ -326,187 +266,47 @@ pub async fn cli(uart: BufferedUart<'static>) {
                     }
                 }
                 "l" => {
-                    drive_motor(true, 50, false, 1000).await;
+                    let mut motor_unlocked = MOTOR_MTX.lock().await;
+                    if let Some(motor) = motor_unlocked.as_mut() {
+                        motor
+                            .drive(
+                                RingPosition::Locked,
+                                if args.contains(&"--pulse") {
+                                    100
+                                } else {
+                                    MOTOR_DRIVE_DUR_MS
+                                },
+                                args.contains(&"--force"),
+                                1000,
+                            )
+                            .await;
+                    }
                 }
                 "u" => {
-                    drive_motor(false, 50, false, 1000).await;
+                    let mut motor_unlocked = MOTOR_MTX.lock().await;
+                    if let Some(motor) = motor_unlocked.as_mut() {
+                        motor
+                            .drive(
+                                RingPosition::Unlocked,
+                                if args.contains(&"--pulse") {
+                                    100
+                                } else {
+                                    MOTOR_DRIVE_DUR_MS
+                                },
+                                args.contains(&"--force"),
+                                1000,
+                            )
+                            .await;
+                    }
                 }
                 "pos" => {
                     // TODO: implement
-                }
-                "mv" => {
-                    let mut motor_unlocked = MOTOR_MTX.lock().await;
-                    if let Some(motor) = motor_unlocked.as_mut() {
-                        limit_motor_current(5100, &mut motor.dac).await;
-                    }
                 }
                 _ => {
                     io.write(b"Invalid command\r\n").await.unwrap();
                 }
             }
         }
-    }
-}
-
-#[derive(defmt::Format, PartialEq, Clone)]
-enum RingPosition {
-    Locked,
-    Unlocked,
-    Inbetween,
-    Error,
-}
-
-#[derive(Default)]
-struct SensorLimits {
-    over: u16,
-    under: u16,
-    active: u16,
-    unactive: u16,
-}
-
-impl SensorLimits {
-    fn new(over: u16, under: u16, active: u16, unactive: u16) -> Self {
-        Self { over, under, active, unactive }
-    }
-}
-
-#[derive(PartialEq)]
-enum SensorState {
-    Active,
-    Unactive,
-    Under,
-    Over,
-    Inbetween,
-}
-
-fn get_sensor_state(adc_val: u16, limit: SensorLimits) -> SensorState {
-    if adc_val >= limit.over {
-        SensorState::Over
-    } else if adc_val <= limit.under {
-        SensorState::Under
-    } else if adc_val >= limit.active && adc_val < limit.over {
-        SensorState::Active
-    } else if adc_val <= limit.unactive && adc_val > limit.under {
-        SensorState::Unactive
-    } else {
-        SensorState::Inbetween
-    }
-}
-
-fn get_ring_position(sensor1_state: SensorState, sensor2_state: SensorState) -> RingPosition {
-    if sensor1_state == SensorState::Active && sensor2_state != SensorState::Active {
-        return RingPosition::Unlocked;
-    }
-    if sensor1_state != SensorState::Unactive && sensor2_state == SensorState::Unactive {
-        return RingPosition::Unlocked;
-    }
-    if sensor1_state != SensorState::Active && sensor2_state == SensorState::Active {
-        return RingPosition::Locked;
-    }
-    if sensor1_state == SensorState::Unactive && sensor2_state != SensorState::Unactive {
-        return RingPosition::Locked;
-    }
-    if sensor1_state == SensorState::Inbetween || sensor2_state == SensorState::Inbetween {
-        RingPosition::Inbetween
-    } else {
-        RingPosition::Error
-    }
-}
-
-async fn limit_motor_current(ma: u16, dac: &mut Dac<'static, DAC1, Async>) {
-    if ma >= 4500 {
-        error!("Current too high!");
-        return;
-    };
-    // math is calculating the dac value from circuit analysis going backwards from motor current.
-    // First we do mA*3/10, which gives us MOTOR_VREF, then multiply by 2 to get MOTOR_ILIM and
-    // then lastly the dac takes in a 11 bit value which represents a scalar of the max voltage
-    // (3.3V). Which we use mV*3300/4096 to get the step size from the output voltage.
-    // Combining all the numerators and denominators to avoid overflow we get 1024/1375
-    let scale = ((ma as u32) * 1024 / 1375) as u16;
-    debug!("step = {}", scale);
-    let val = Value::Bit12Right(scale);
-    dac.ch1().set(val);
-}
-
-async fn motor_limit(position: RingPosition, motor: &mut Motor) {
-    let mut rcv = RING_POSITION_WATCH.receiver().expect("Failed to create receiver");
-    loop {
-        let ring_position = rcv.changed().await;
-        match ring_position {
-            RingPosition::Locked => info!("locked"),
-            RingPosition::Unlocked => info!("unlocked"),
-            RingPosition::Inbetween => info!("inbetween"),
-            RingPosition::Error => error!("error"),
-        }
-        if ring_position == position {
-            motor.set_mode(MotorMode::PowerSave);
-        }
-    }
-}
-
-async fn drive_motor(lock_mode: bool, duration_ms: u64, force: bool, current: u16) {
-    let mut motor_unlocked = MOTOR_MTX.lock().await;
-    if let Some(motor) = motor_unlocked.as_mut() {
-        limit_motor_current(current, &mut motor.dac).await;
-
-        motor.deploy1.set_low();
-        motor.deploy2.set_low();
-        motor.ps.set_high();
-
-        // let deploy1_lvl = motor.deploy1.get_output_level();
-        // let deploy2_lvl = motor.deploy2.get_output_level();
-        // let motor_ps_lvl = motor.ps.get_output_level();
-        // debug!("Deploy 1: {}, Deploy 2: {}, ps: {}", deploy1_lvl, deploy2_lvl, motor_ps_lvl);
-
-        let max_delay = Duration::from_millis(500);
-
-        if lock_mode {
-            motor.set_mode(MotorMode::Reverse);
-            Timer::after_millis(duration_ms).await;
-            if let Err(e) = with_timeout(max_delay, motor_limit(RingPosition::Locked, motor)).await
-            {
-                error!("Motor limit timed out: {}", e);
-                motor.set_mode(MotorMode::PowerSave);
-            }
-        } else {
-            motor.set_mode(MotorMode::Forward);
-            if !force {
-                if let Err(e) =
-                    with_timeout(max_delay, motor_limit(RingPosition::Unlocked, motor)).await
-                {
-                    error!("Motor limit timed out: {}", e);
-                    motor.set_mode(MotorMode::PowerSave);
-                }
-            }
-        }
-        motor.set_mode(MotorMode::PowerSave);
-    }
-}
-
-#[embassy_executor::task]
-pub async fn read_hall_sensor(mut sensor1: Peri<'static, PA0>, mut sensor2: Peri<'static, PA1>) {
-    loop {
-        let sensor1_limits = SensorLimits::new(3200, 600, 1200, 700);
-        let sensor2_limits = SensorLimits::new(3200, 600, 1200, 700);
-        let mut ring_position: RingPosition = RingPosition::Locked;
-        let snd = RING_POSITION_WATCH.sender();
-
-        {
-            let mut adc_unlocked = ADC_MTX.lock().await;
-            if let Some(adc) = adc_unlocked.as_mut() {
-                let sensor1_read = adc.read(&mut sensor1).await;
-                let sensor2_read = adc.read(&mut sensor2).await;
-                debug!("Sensor 1: {}, Sensor 2: {}", sensor1_read, sensor2_read);
-
-                let sensor1_state = get_sensor_state(sensor1_read, sensor1_limits);
-                let sensor2_state = get_sensor_state(sensor2_read, sensor2_limits);
-
-                ring_position = get_ring_position(sensor1_state, sensor2_state);
-            }
-        }
-        snd.send(ring_position);
-        Timer::after_millis(100).await;
     }
 }
 
@@ -517,11 +317,25 @@ async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
             Ok(envelope) => match envelope.frame.id() {
                 Id::Standard(id) if id.as_raw() == DROGUE_ID => {
                     #[cfg(feature = "main")]
-                    drive_motor(false, 50, false, 1000, RingPosition::Unlocked).await;
+                    {
+                        let mut motor_unlocked = MOTOR_MTX.lock().await;
+                        if let Some(motor) = motor_unlocked.as_mut() {
+                            motor
+                                .drive(RingPosition::Unlocked, MOTOR_DRIVE_DUR_MS, false, 1000)
+                                .await;
+                        }
+                    }
                 }
                 Id::Standard(id) if id.as_raw() == MAIN_ID => {
                     #[cfg(feature = "drogue")]
-                    drive_motor(false, 50, false, 1000, RingPosition::Unlocked).await;
+                    {
+                        let mut motor_unlocked = MOTOR_MTX.lock().await;
+                        if let Some(motor) = motor_unlocked.as_mut() {
+                            motor
+                                .drive(RingPosition::Unlocked, MOTOR_DRIVE_DUR_MS, false, 1000)
+                                .await;
+                        }
+                    }
                 }
                 _ => {}
             },
