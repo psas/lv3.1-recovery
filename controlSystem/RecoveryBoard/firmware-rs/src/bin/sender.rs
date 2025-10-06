@@ -32,7 +32,7 @@ use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex};
 use embassy_time::{Instant, Timer};
 use embedded_io_async::Write;
 use firmware_rs::{
-    adc::{read_battery, BATT_READ_CHANNEL},
+    adc::{read_battery, BATT_READ_WATCH},
     buzzer::{active_beep, BuzzerMode, BuzzerModeMtxType},
     can::{
         can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_TX_CHANNEL, DROGUE_ACKNOWLEDGE_ID, DROGUE_ID,
@@ -67,7 +67,7 @@ pub struct SenderState {
     pub force_rocket_ready: bool,
     pub drogue_status: bool,
     pub main_status: bool,
-    pub shore_power_status: bool, 
+    pub shore_power_status: bool,
     pub drogue_last_seen: u64,
     pub main_last_seen: u64,
     pub iso_main_last_seen: u64,
@@ -344,12 +344,17 @@ async fn cli(uart: BufferedUart<'static>) {
                     set_state(SenderStateField::ForceRocketReady(toggled_rr)).await;
                 }
                 "batt" => {
-                    // WARN: This will cause the CAN bus to wait for the next batt read to send
-                    // telemetrum heartbeat
                     let mut buf = [0u8; 16];
-                    let batt_read = BATT_READ_CHANNEL.receive().await;
+
+                    let batt_read = BATT_READ_WATCH
+                        .receiver()
+                        .expect("Could not get batt_read receiver")
+                        .changed()
+                        .await;
+
                     let s =
                         format_no_std::show(&mut buf, format_args!("{}\r\n", batt_read)).unwrap();
+
                     io.write(s.as_bytes()).await.unwrap();
                 }
                 "beep" => {
@@ -496,7 +501,10 @@ async fn telemetrum_heartbeat(mut rr_pin: Output<'static>) -> () {
 
         let main_ok = time_now - main_last_seen < 2000;
         let drogue_ok = time_now - drogue_last_seen < 2000;
-        let batt_read = BATT_READ_CHANNEL.receive().await;
+
+        let batt_read =
+            BATT_READ_WATCH.receiver().expect("Could not get batt_read receiver").changed().await;
+
         let batt_ok = (batt_read > 99) as u8;
         let can_bus_ok = (main_ok && drogue_ok) as u8;
         let ers_status = (can_bus_ok != 0 && main_status && drogue_status) as u8;

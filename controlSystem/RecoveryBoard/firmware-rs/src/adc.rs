@@ -4,10 +4,10 @@ use embassy_stm32::{
     peripherals::{ADC1, PB0},
     Peri,
 };
-use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel};
+use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, watch::Watch};
 use embassy_time::Timer;
 
-pub static BATT_READ_CHANNEL: Channel<CriticalSectionRawMutex, u8, 10> = Channel::new();
+pub static BATT_READ_WATCH: Watch<CriticalSectionRawMutex, u8, 2> = Watch::new();
 
 #[embassy_executor::task]
 pub async fn read_battery(mut adc: Adc<'static, ADC1>, mut pb0: Peri<'static, PB0>) {
@@ -15,7 +15,7 @@ pub async fn read_battery(mut adc: Adc<'static, ADC1>, mut pb0: Peri<'static, PB
         let adc_read = adc.read(&mut pb0).await;
         let v_batt = ((adc_read as f32) / 4096.0 * 3.3) / 0.2326;
         let batt_sig = (v_batt / 0.1) as u8;
-        BATT_READ_CHANNEL.send(batt_sig).await;
+        BATT_READ_WATCH.sender().send(batt_sig);
         Timer::after_secs(1).await;
     }
 }
@@ -34,7 +34,7 @@ pub async fn read_battery_from_ref(adc: &'static AdcType, mut pb0: Peri<'static,
             }
         }
 
-        BATT_READ_CHANNEL.send(batt_sig).await;
+        BATT_READ_WATCH.sender().send(batt_sig);
         Timer::after_secs(1).await;
     }
 }
