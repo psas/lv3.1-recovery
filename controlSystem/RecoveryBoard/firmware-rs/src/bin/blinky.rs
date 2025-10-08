@@ -12,9 +12,11 @@ use {defmt_rtt as _, panic_probe as _};
 async fn main(_spawner: Spawner) {
     let p = embassy_stm32::init(Default::default());
     info!("Hello World!");
-    // FIXME: Add a feature flag to flash onto ers boards or nucleo
-    //PA5 is the onboard LED on the Nucleo F091RC
+
     let mut led = Output::new(p.PA5, Level::High, Speed::Low);
+
+    #[cfg(feature = "main")]
+    let mut led = Output::new(p.PB14, Level::High, Speed::Low);
 
     loop {
         info!("high");
