@@ -26,7 +26,7 @@ use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex, watch:
 use embassy_time::Instant;
 use embedded_io_async::Write;
 use firmware_rs::{
-    adc::read_battery_from_ref,
+    adc::{read_battery_from_ref, BATT_READ_WATCH},
     buzzer::{BuzzerMode, BuzzerModeMtxType},
     can::{can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_TX_CHANNEL, DROGUE_ID, MAIN_ID},
     motor::{Motor, MotorType},
@@ -267,6 +267,20 @@ pub async fn cli(uart: BufferedUart<'static>) {
                         }
                     }
                 }
+                "batt" => {
+                    let mut buf = [0u8; 16];
+
+                    let batt_read = BATT_READ_WATCH
+                        .receiver()
+                        .expect("Could not get batt_read receiver")
+                        .changed()
+                        .await;
+
+                    let s =
+                        format_no_std::show(&mut buf, format_args!("{}\r\n", batt_read)).unwrap();
+
+                    io.write(s.as_bytes()).await.unwrap();
+                }
                 "l" => {
                     let mut motor_unlocked = MOTOR_MTX.lock().await;
                     if let Some(motor) = motor_unlocked.as_mut() {
@@ -318,12 +332,12 @@ async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
         match can_rx.read().await {
             Ok(envelope) => match envelope.frame.id() {
                 Id::Standard(id) if id.as_raw() == DROGUE_ID => {
-                    #[cfg(feature = "drogue")]
-                    let frame =
+                    let d_frame =
                         Frame::new_data(StandardId::new(101 as _).unwrap(), &[1]).unwrap();
-                    let acknowledge_msg = CanTxChannelMsg::new(true, frame);
-                    CAN_TX_CHANNEL.send(acknowledge_msg ).await;
+                    let acknowledge_msg = CanTxChannelMsg::new(true, d_frame);
+                    CAN_TX_CHANNEL.send(acknowledge_msg).await;
 
+                    #[cfg(feature = "drogue")]
                     {
                         let mut motor_unlocked = MOTOR_MTX.lock().await;
                         if let Some(motor) = motor_unlocked.as_mut() {
@@ -335,9 +349,9 @@ async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
                 }
                 Id::Standard(id) if id.as_raw() == MAIN_ID => {
                     #[cfg(feature = "main")]
-                    let frame =
+                    let m_frame =
                         Frame::new_data(StandardId::new(201 as _).unwrap(), &[1]).unwrap();
-                    let acknowledge_msg  = CanTxChannelMsg::new(true, frame);
+                    let acknowledge_msg = CanTxChannelMsg::new(true, m_frame);
                     CAN_TX_CHANNEL.send(acknowledge_msg).await;
                     {
                         let mut motor_unlocked = MOTOR_MTX.lock().await;
