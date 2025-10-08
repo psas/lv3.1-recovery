@@ -3,6 +3,8 @@
 
 use defmt::*;
 use embassy_executor::Spawner;
+#[cfg(feature = "main")]
+use embassy_stm32::can::{Frame, StandardId};
 use embassy_stm32::{
     adc::{Adc, InterruptHandler, SampleTime},
     bind_interrupts,
@@ -26,7 +28,7 @@ use embedded_io_async::Write;
 use firmware_rs::{
     adc::read_battery_from_ref,
     buzzer::{BuzzerMode, BuzzerModeMtxType},
-    can::{can_writer, CAN_BITRATE, CAN_TX_CHANNEL, DROGUE_ID, MAIN_ID},
+    can::{can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_TX_CHANNEL, DROGUE_ID, MAIN_ID},
     motor::{Motor, MotorType},
     ring::{read_pos_sensor, Ring, RingPosition, RingType},
     types::*,
@@ -316,7 +318,12 @@ async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
         match can_rx.read().await {
             Ok(envelope) => match envelope.frame.id() {
                 Id::Standard(id) if id.as_raw() == DROGUE_ID => {
-                    #[cfg(feature = "main")]
+                    #[cfg(feature = "drogue")]
+                    let frame =
+                        Frame::new_data(StandardId::new(101 as _).unwrap(), &[1]).unwrap();
+                    let acknowledge_msg = CanTxChannelMsg::new(true, frame);
+                    CAN_TX_CHANNEL.send(acknowledge_msg ).await;
+
                     {
                         let mut motor_unlocked = MOTOR_MTX.lock().await;
                         if let Some(motor) = motor_unlocked.as_mut() {
@@ -327,7 +334,11 @@ async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
                     }
                 }
                 Id::Standard(id) if id.as_raw() == MAIN_ID => {
-                    #[cfg(feature = "drogue")]
+                    #[cfg(feature = "main")]
+                    let frame =
+                        Frame::new_data(StandardId::new(201 as _).unwrap(), &[1]).unwrap();
+                    let acknowledge_msg  = CanTxChannelMsg::new(true, frame);
+                    CAN_TX_CHANNEL.send(acknowledge_msg).await;
                     {
                         let mut motor_unlocked = MOTOR_MTX.lock().await;
                         if let Some(motor) = motor_unlocked.as_mut() {
