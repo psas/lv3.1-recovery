@@ -7,7 +7,7 @@ use embassy_stm32::{
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex, watch::Watch};
 use embassy_time::Timer;
 
-pub static BATT_READ_WATCH: Watch<CriticalSectionRawMutex, u8, 2> = Watch::new();
+pub static BATT_READ_WATCH: Watch<CriticalSectionRawMutex, u8, 5> = Watch::new();
 
 pub static ADC_MTX: AdcType = Mutex::new(None);
 

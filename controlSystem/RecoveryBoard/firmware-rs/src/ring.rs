@@ -12,7 +12,7 @@ use crate::types::AdcType;
 
 pub type RingType = Mutex<ThreadModeRawMutex, Option<Ring>>;
 
-pub static RING_POSITION_WATCH: Watch<ThreadModeRawMutex, RingPosition, 1> = Watch::new();
+pub static RING_POSITION_WATCH: Watch<ThreadModeRawMutex, RingPosition, 5> = Watch::new();
 
 #[derive(defmt::Format, PartialEq, Clone)]
 pub enum RingPosition {
@@ -46,7 +46,6 @@ enum SensorState {
 }
 
 pub struct Ring {
-    pub ring_pos_watch: &'static Watch<ThreadModeRawMutex, RingPosition, 1>,
     pa0: Peri<'static, PA0>,
     pa1: Peri<'static, PA1>,
     sensor1_limits: SensorLimits,
@@ -56,7 +55,6 @@ pub struct Ring {
 
 impl Ring {
     pub fn new(
-        ring_pos_watch: &'static Watch<ThreadModeRawMutex, RingPosition, 1>,
         pa0: Peri<'static, PA0>,
         pa1: Peri<'static, PA1>,
         adc_mtx: &'static AdcType,
@@ -65,7 +63,6 @@ impl Ring {
         let sensor2_limits = SensorLimits::new(3200, 600, 1300, 700);
 
         Self {
-            ring_pos_watch,
             pa0,
             pa1,
             sensor1_limits,
@@ -75,7 +72,7 @@ impl Ring {
     }
 
     pub async fn broadcast_ring_position(&mut self) {
-        let sender = self.ring_pos_watch.sender();
+        let sender = RING_POSITION_WATCH.sender();
 
         fn get_sensor_state(adc_val: u16, limit: &SensorLimits) -> SensorState {
             if adc_val >= limit.over {

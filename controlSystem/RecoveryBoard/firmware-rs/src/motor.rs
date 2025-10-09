@@ -19,7 +19,7 @@ pub struct Motor {
     pub ps: Output<'static>,
     pub motor_fail: Input<'static>,
     pub dac: Dac<'static, DAC1, Async>,
-    ring_pos_watch: &'static Watch<ThreadModeRawMutex, RingPosition, 1>,
+    ring_pos_watch: &'static Watch<ThreadModeRawMutex, RingPosition, 5>,
 }
 
 pub enum MotorMode {
@@ -37,7 +37,7 @@ impl Motor {
         pb6: Peri<'static, PB6>,
         pb7: Peri<'static, PB7>,
         dac: Dac<'static, DAC1, Async>,
-        ring_pos_watch: &'static Watch<ThreadModeRawMutex, RingPosition, 1>,
+        ring_pos_watch: &'static Watch<ThreadModeRawMutex, RingPosition, 5>,
     ) -> Self {
         let deploy1 = Output::new(pb4, Level::Low, Speed::Medium);
         let deploy2 = Output::new(pb5, Level::Low, Speed::Medium);
