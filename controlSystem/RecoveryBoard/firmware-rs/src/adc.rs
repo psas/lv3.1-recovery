@@ -4,10 +4,12 @@ use embassy_stm32::{
     peripherals::{ADC1, PB0},
     Peri,
 };
-use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, watch::Watch};
+use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex, watch::Watch};
 use embassy_time::Timer;
 
 pub static BATT_READ_WATCH: Watch<CriticalSectionRawMutex, u8, 2> = Watch::new();
+
+pub static ADC_MTX: AdcType = Mutex::new(None);
 
 #[embassy_executor::task]
 pub async fn read_battery(mut adc: Adc<'static, ADC1>, mut pb0: Peri<'static, PB0>) {

@@ -33,7 +33,7 @@ use embassy_time::{Instant, Timer};
 use embedded_io_async::Write;
 use firmware_rs::{
     adc::{read_battery, BATT_READ_WATCH},
-    buzzer::{active_beep, BuzzerMode, BuzzerModeMtxType},
+    buzzer::{active_beep, BuzzerMode, BUZZER_MODE_MTX},
     can::{
         can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_TX_CHANNEL, DROGUE_ACKNOWLEDGE_ID, DROGUE_ID,
         DROGUE_STATUS_ID, MAIN_ACKNOWLEDGE_ID, MAIN_ID, MAIN_STATUS_ID, TELEMETRUM_HEARTBEAT_ID,
@@ -56,7 +56,6 @@ bind_interrupts!(struct UsartIrqs { USART2 => BufferedInterruptHandler<USART2>; 
 
 static UMB_ON_MTX: UmbOnType = Mutex::new(None);
 static SYSTEM_STATE_MTX: Mutex<ThreadModeRawMutex, Option<SenderState>> = Mutex::new(None);
-static BUZZER_MODE_MTX: BuzzerModeMtxType = Mutex::new(None);
 
 static MAIN_ACKNOWLEDGE: AtomicBool = AtomicBool::new(false);
 static DROGUE_ACKNOWLEDGE: AtomicBool = AtomicBool::new(false);

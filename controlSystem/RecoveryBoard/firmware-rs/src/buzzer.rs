@@ -10,6 +10,8 @@ pub enum BuzzerMode {
 
 pub type BuzzerModeMtxType = Mutex<CriticalSectionRawMutex, Option<BuzzerMode>>;
 
+pub static BUZZER_MODE_MTX: BuzzerModeMtxType = Mutex::new(None);
+
 #[embassy_executor::task]
 pub async fn active_beep(mut pwm: SimplePwm<'static, TIM15>, mode: &'static BuzzerModeMtxType) {
 

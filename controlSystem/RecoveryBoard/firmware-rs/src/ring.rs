@@ -12,6 +12,8 @@ use crate::types::AdcType;
 
 pub type RingType = Mutex<ThreadModeRawMutex, Option<Ring>>;
 
+pub static RING_POSITION_WATCH: Watch<ThreadModeRawMutex, RingPosition, 1> = Watch::new();
+
 #[derive(defmt::Format, PartialEq, Clone)]
 pub enum RingPosition {
     Locked,
