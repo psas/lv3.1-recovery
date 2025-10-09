@@ -38,7 +38,8 @@ use firmware_rs::{
 use noline::builder::EditorBuilder;
 use {defmt_rtt as _, panic_probe as _};
 
-const MOTOR_DRIVE_DUR_MS: u64 = 500;
+const MOTOR_DRIVE_DUR_MS: u64 = 1000;
+const MOTOR_DRIVE_CURR_MA: u16 = 1000;
 
 bind_interrupts!(struct CanIrqs {
     CEC_CAN =>
@@ -288,7 +289,7 @@ pub async fn cli(uart: BufferedUart<'static>) {
                                     MOTOR_DRIVE_DUR_MS
                                 },
                                 args.contains(&"--force"),
-                                1000,
+                                MOTOR_DRIVE_CURR_MA,
                             )
                             .await;
                     }
@@ -305,7 +306,7 @@ pub async fn cli(uart: BufferedUart<'static>) {
                                     MOTOR_DRIVE_DUR_MS
                                 },
                                 args.contains(&"--force"),
-                                1000,
+                                MOTOR_DRIVE_CURR_MA,
                             )
                             .await;
                     }
@@ -338,7 +339,12 @@ async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
                         let mut motor_unlocked = MOTOR_MTX.lock().await;
                         if let Some(motor) = motor_unlocked.as_mut() {
                             motor
-                                .drive(RingPosition::Unlocked, MOTOR_DRIVE_DUR_MS, false, 1000)
+                                .drive(
+                                    RingPosition::Unlocked,
+                                    MOTOR_DRIVE_DUR_MS,
+                                    false,
+                                    MOTOR_DRIVE_CURR_MA,
+                                )
                                 .await;
                         }
                     }
@@ -353,7 +359,12 @@ async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
                         let mut motor_unlocked = MOTOR_MTX.lock().await;
                         if let Some(motor) = motor_unlocked.as_mut() {
                             motor
-                                .drive(RingPosition::Unlocked, MOTOR_DRIVE_DUR_MS, false, 1000)
+                                .drive(
+                                    RingPosition::Unlocked,
+                                    MOTOR_DRIVE_DUR_MS,
+                                    false,
+                                    MOTOR_DRIVE_CURR_MA,
+                                )
                                 .await;
                         }
                     }
