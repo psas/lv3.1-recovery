@@ -26,7 +26,6 @@ use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex};
 
 use embassy_time::{Instant, Timer};
 use embedded_io_async::Write;
-use firmware_rs::can::CAN_MTX;
 #[cfg(feature = "main")]
 use firmware_rs::{
     adc::{read_battery_from_ref, ADC_MTX, BATT_READ_WATCH},
@@ -40,6 +39,7 @@ use firmware_rs::{
     types::*,
     uart::{IO, UART_BUF_SIZE, UART_RX_BUF_CELL, UART_TX_BUF_CELL},
 };
+use firmware_rs::{blink::blink_led, can::CAN_MTX};
 use noline::builder::EditorBuilder;
 use {defmt_rtt as _, panic_probe as _};
 
@@ -188,6 +188,7 @@ async fn main(spawner: Spawner) {
         *(MOTOR_MTX.lock().await) = Some(motor);
     }
 
+    unwrap!(spawner.spawn(blink_led(p.PB14)));
     // unwrap!(spawner.spawn(active_beep(pwm, None)));
     unwrap!(spawner.spawn(cli(uart)));
     unwrap!(spawner.spawn(read_battery_from_ref(&ADC_MTX, p.PB0)));

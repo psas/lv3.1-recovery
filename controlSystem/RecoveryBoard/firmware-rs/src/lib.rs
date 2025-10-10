@@ -8,3 +8,4 @@ pub mod buzzer;
 pub mod types;
 pub mod adc;
 pub mod uart;
+pub mod blink;

@@ -32,15 +32,11 @@ use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex};
 use embassy_time::{Instant, Timer};
 use embedded_io_async::Write;
 use firmware_rs::{
-    adc::{read_battery, BATT_READ_WATCH},
-    buzzer::{active_beep, BuzzerMode, BUZZER_MODE_MTX},
-    can::{
+    adc::{read_battery, BATT_READ_WATCH}, blink::blink_led, buzzer::{active_beep, BuzzerMode, BUZZER_MODE_MTX}, can::{
         can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_MTX, CAN_TX_CHANNEL, DROGUE_ACKNOWLEDGE_ID,
         DROGUE_DEPLOY_ID, DROGUE_STATUS_ID, MAIN_ACKNOWLEDGE_ID, MAIN_DEPLOY_ID, MAIN_STATUS_ID,
         TELEMETRUM_HEARTBEAT_ID,
-    },
-    types::*,
-    uart::{IO, UART_BUF_SIZE, UART_RX_BUF_CELL, UART_TX_BUF_CELL},
+    }, types::*, uart::{IO, UART_BUF_SIZE, UART_RX_BUF_CELL, UART_TX_BUF_CELL}
 };
 use noline::builder::EditorBuilder;
 use {defmt_rtt as _, panic_probe as _};
@@ -228,6 +224,7 @@ async fn main(spawner: Spawner) {
         *(SYSTEM_STATE_MTX.lock().await) = Some(sys_state);
     }
 
+    unwrap!(spawner.spawn(blink_led(p.PB14)));
     unwrap!(spawner.spawn(active_beep(pwm, &BUZZER_MODE_MTX)));
     unwrap!(spawner.spawn(cli(uart)));
     unwrap!(spawner.spawn(read_battery(adc, p.PB0)));
