@@ -59,8 +59,8 @@ impl Ring {
         pa1: Peri<'static, PA1>,
         adc_mtx: &'static AdcType,
     ) -> Self {
-        let sensor1_limits = SensorLimits::new(3200, 600, 2100, 700);
-        let sensor2_limits = SensorLimits::new(3200, 600, 1300, 700);
+        let sensor1_limits = SensorLimits::new(3700, 600, 2100, 900);
+        let sensor2_limits = SensorLimits::new(3700, 600, 1300, 900);
 
         Self {
             pa0,
