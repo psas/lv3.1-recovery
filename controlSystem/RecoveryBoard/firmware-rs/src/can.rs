@@ -4,10 +4,10 @@ use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channe
 use embassy_time::Timer;
 
 pub const CAN_BITRATE: u32 = 1_000_000;
-pub const DROGUE_ID: u16 = 0x100;
+pub const DROGUE_DEPLOY_ID: u16 = 0x100;
 pub const DROGUE_STATUS_ID: u16 = 0x710;
 pub const DROGUE_ACKNOWLEDGE_ID: u16 = 0x101;
-pub const MAIN_ID: u16 = 0x200;
+pub const MAIN_DEPLOY_ID: u16 = 0x200;
 pub const MAIN_STATUS_ID: u16 = 0x720;
 pub const MAIN_ACKNOWLEDGE_ID: u16 = 0x201;
 pub const TELEMETRUM_HEARTBEAT_ID: u16 = 0x700;

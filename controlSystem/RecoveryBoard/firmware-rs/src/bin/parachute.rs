@@ -26,10 +26,14 @@ use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex};
 
 use embassy_time::{Instant, Timer};
 use embedded_io_async::Write;
+#[cfg(feature = "main")]
 use firmware_rs::{
     adc::{read_battery_from_ref, ADC_MTX, BATT_READ_WATCH},
     buzzer::{BuzzerMode, BUZZER_MODE_MTX},
-    can::{can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_TX_CHANNEL, DROGUE_ID, MAIN_ID},
+    can::{
+        can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_TX_CHANNEL, DROGUE_ACKNOWLEDGE_ID,
+        DROGUE_DEPLOY_ID, MAIN_ACKNOWLEDGE_ID, MAIN_DEPLOY_ID,
+    },
     motor::{Motor, MotorType},
     ring::{read_pos_sensor, Ring, RingPosition, RingType, RING_POSITION_WATCH},
     types::*,
@@ -328,10 +332,11 @@ async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
     loop {
         match can_rx.read().await {
             Ok(envelope) => match envelope.frame.id() {
-                Id::Standard(id) if id.as_raw() == DROGUE_ID => {
-                    let d_frame =
-                        Frame::new_data(StandardId::new(101 as _).unwrap(), &[1]).unwrap();
-                    let acknowledge_msg = CanTxChannelMsg::new(true, d_frame);
+                Id::Standard(id) if id.as_raw() == DROGUE_DEPLOY_ID => {
+                    let frame =
+                        Frame::new_data(StandardId::new(DROGUE_ACKNOWLEDGE_ID).unwrap(), &[1])
+                            .unwrap();
+                    let acknowledge_msg = CanTxChannelMsg::new(true, frame);
                     CAN_TX_CHANNEL.send(acknowledge_msg).await;
 
                     #[cfg(feature = "drogue")]
@@ -349,11 +354,12 @@ async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
                         }
                     }
                 }
-                Id::Standard(id) if id.as_raw() == MAIN_ID => {
+                Id::Standard(id) if id.as_raw() == MAIN_DEPLOY_ID => {
                     #[cfg(feature = "main")]
-                    let m_frame =
-                        Frame::new_data(StandardId::new(201 as _).unwrap(), &[1]).unwrap();
-                    let acknowledge_msg = CanTxChannelMsg::new(true, m_frame);
+                    let frame =
+                        Frame::new_data(StandardId::new(MAIN_ACKNOWLEDGE_ID).unwrap(), &[1])
+                            .unwrap();
+                    let acknowledge_msg = CanTxChannelMsg::new(true, frame);
                     CAN_TX_CHANNEL.send(acknowledge_msg).await;
                     {
                         let mut motor_unlocked = MOTOR_MTX.lock().await;

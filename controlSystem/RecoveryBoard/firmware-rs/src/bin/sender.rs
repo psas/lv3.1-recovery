@@ -35,8 +35,9 @@ use firmware_rs::{
     adc::{read_battery, BATT_READ_WATCH},
     buzzer::{active_beep, BuzzerMode, BUZZER_MODE_MTX},
     can::{
-        can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_TX_CHANNEL, DROGUE_ACKNOWLEDGE_ID, DROGUE_ID,
-        DROGUE_STATUS_ID, MAIN_ACKNOWLEDGE_ID, MAIN_ID, MAIN_STATUS_ID, TELEMETRUM_HEARTBEAT_ID,
+        can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_TX_CHANNEL, DROGUE_ACKNOWLEDGE_ID,
+        DROGUE_DEPLOY_ID, DROGUE_STATUS_ID, MAIN_ACKNOWLEDGE_ID, MAIN_DEPLOY_ID, MAIN_STATUS_ID,
+        TELEMETRUM_HEARTBEAT_ID,
     },
     types::*,
     uart::{IO, UART_BUF_SIZE, UART_RX_BUF_CELL, UART_TX_BUF_CELL},
@@ -230,8 +231,8 @@ async fn main(spawner: Spawner) {
     unwrap!(spawner.spawn(active_beep(pwm, &BUZZER_MODE_MTX)));
     unwrap!(spawner.spawn(cli(uart)));
     unwrap!(spawner.spawn(read_battery(adc, p.PB0)));
-    unwrap!(spawner.spawn(handle_iso_rising_edge(iso_drogue, DROGUE_ID)));
-    unwrap!(spawner.spawn(handle_iso_rising_edge(iso_main, MAIN_ID)));
+    unwrap!(spawner.spawn(handle_iso_rising_edge(iso_drogue, DROGUE_DEPLOY_ID)));
+    unwrap!(spawner.spawn(handle_iso_rising_edge(iso_main, MAIN_DEPLOY_ID)));
     unwrap!(spawner.spawn(telemetrum_heartbeat(rocket_ready_pin)));
 
     // enable at last minute so other tasks can still spawn if can bus is down
@@ -250,7 +251,7 @@ async fn deploy(can_id: u16) {
     let frame = unwrap!(Frame::new(header, &[1; 0]));
 
     match can_id {
-        DROGUE_ID => {
+        DROGUE_DEPLOY_ID => {
             info!("Releasing drogue");
             while !DROGUE_ACKNOWLEDGE.load(core::sync::atomic::Ordering::Relaxed) {
                 let msg = CanTxChannelMsg::new(true, frame);
@@ -260,7 +261,7 @@ async fn deploy(can_id: u16) {
             info!("Drogue release acknowledged");
             DROGUE_ACKNOWLEDGE.store(false, core::sync::atomic::Ordering::Relaxed);
         }
-        MAIN_ID => {
+        MAIN_DEPLOY_ID => {
             info!("Releasing main");
             while !MAIN_ACKNOWLEDGE.load(core::sync::atomic::Ordering::Relaxed) {
                 let msg = CanTxChannelMsg::new(true, frame);
@@ -325,10 +326,10 @@ async fn cli(uart: BufferedUart<'static>) {
                     }
                 }
                 "drogue" => {
-                    deploy(DROGUE_ID).await;
+                    deploy(DROGUE_DEPLOY_ID).await;
                 }
                 "main" => {
-                    deploy(MAIN_ID).await;
+                    deploy(MAIN_DEPLOY_ID).await;
                 }
                 "rr" => {
                     let toggled_rr: bool;
@@ -440,10 +441,10 @@ async fn handle_iso_rising_edge(mut iso: ExtiInput<'static>, can_id: u16) -> () 
         }
         // record last deployment signal time
         match can_id {
-            DROGUE_ID => {
+            DROGUE_DEPLOY_ID => {
                 set_state(SenderStateField::IsoDrogueLastSeen(time_now)).await;
             }
-            MAIN_ID => {
+            MAIN_DEPLOY_ID => {
                 set_state(SenderStateField::IsoMainLastSeen(time_now)).await;
             }
             _ => {}
