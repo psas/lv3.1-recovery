@@ -39,7 +39,7 @@ use firmware_rs::{
     types::*,
     uart::{IO, UART_BUF_SIZE, UART_RX_BUF_CELL, UART_TX_BUF_CELL},
 };
-use firmware_rs::{blink::blink_led, can::CAN_MTX};
+use firmware_rs::{blink::blink_led, buzzer::active_beep, can::CAN_MTX};
 use noline::builder::EditorBuilder;
 use {defmt_rtt as _, panic_probe as _};
 
@@ -133,7 +133,7 @@ async fn main(spawner: Spawner) {
 
     // Set up PWM driver
     let buzz_pin = PwmPin::new(p.PB15, OutputType::PushPull);
-    let _pwm = SimplePwm::new(
+    let pwm = SimplePwm::new(
         p.TIM15,
         None,
         Some(buzz_pin),
@@ -189,7 +189,7 @@ async fn main(spawner: Spawner) {
     }
 
     unwrap!(spawner.spawn(blink_led(p.PB14)));
-    // unwrap!(spawner.spawn(active_beep(pwm, None)));
+    unwrap!(spawner.spawn(active_beep(pwm, &BUZZER_MODE_MTX)));
     unwrap!(spawner.spawn(cli(uart)));
     unwrap!(spawner.spawn(read_battery_from_ref(&ADC_MTX, p.PB0)));
     unwrap!(spawner.spawn(read_pos_sensor(&RING_MTX)));

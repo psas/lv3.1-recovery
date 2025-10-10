@@ -185,7 +185,7 @@ async fn main(spawner: Spawner) {
         CountingMode::EdgeAlignedUp,
     );
 
-    let buzzer_mode = BuzzerMode::Low;
+    let buzzer_mode = BuzzerMode::Off;
 
     // Set up CAN driver
     let mut can = Can::new(p.CAN, p.PA11, p.PA12, CanIrqs);
