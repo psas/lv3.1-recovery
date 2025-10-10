@@ -26,6 +26,7 @@ use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex};
 
 use embassy_time::{Instant, Timer};
 use embedded_io_async::Write;
+use firmware_rs::can::CAN_MTX;
 #[cfg(feature = "main")]
 use firmware_rs::{
     adc::{read_battery_from_ref, ADC_MTX, BATT_READ_WATCH},
@@ -195,8 +196,13 @@ async fn main(spawner: Spawner) {
     // enable can at last minute so other tasks can still spawn if can bus is down
     can.enable().await;
     let (can_tx, can_rx) = can.split();
+
+    {
+        *(CAN_MTX.lock().await) = Some(can);
+    }
+
     unwrap!(spawner.spawn(can_writer(can_tx, &CAN_TX_CHANNEL)));
-    unwrap!(spawner.spawn(can_reader(can_rx, can)));
+    unwrap!(spawner.spawn(can_reader(can_rx)));
     unwrap!(spawner.spawn(parachute_heartbeat()));
 
     // Keep main from returning. Needed for can_tx/can_rx or they get dropped
@@ -328,7 +334,7 @@ pub async fn cli(uart: BufferedUart<'static>) {
 }
 
 #[embassy_executor::task]
-async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
+async fn can_reader(mut can_rx: CanRx<'static>) -> () {
     loop {
         match can_rx.read().await {
             Ok(envelope) => match envelope.frame.id() {
@@ -380,7 +386,10 @@ async fn can_reader(mut can_rx: CanRx<'static>, mut can: Can<'static>) -> () {
 
             Err(e) => {
                 error!("CAN Read Error: {}", e);
-                can.sleep().await;
+                let mut can_unlocked = CAN_MTX.lock().await;
+                if let Some(can) = can_unlocked.as_mut() {
+                    can.sleep().await;
+                }
             }
         }
     }
