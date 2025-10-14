@@ -376,7 +376,8 @@ async fn cli(uart: BufferedUart<'static>) {
                     }
                 }
                 "version" => {
-                    // TODO: implement - print version details
+                    let version_details = env!("CARGO_PKG_VERSION").as_bytes();
+                    io.write(version_details).await.unwrap();
                 }
                 _ => {
                     io.write(b"Invalid Command\r\n").await.unwrap();

@@ -380,6 +380,10 @@ pub async fn cli(uart: BufferedUart<'static>) {
                         }
                     }
                 }
+                "version" => {
+                    let version_details = env!("CARGO_PKG_VERSION").as_bytes();
+                    io.write(version_details).await.unwrap();
+                }
                 _ => {
                     io.write(b"Invalid command\r\n").await.unwrap();
                 }
