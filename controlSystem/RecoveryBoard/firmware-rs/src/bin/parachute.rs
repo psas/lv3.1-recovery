@@ -326,6 +326,19 @@ pub async fn cli(uart: BufferedUart<'static>) {
                     // TODO: implement
                     io.write(b"Not yet implemented\r\n").await.unwrap();
                 }
+                "beep" => {
+                    let mut buzzer_mode_unlocked = BUZZER_MODE_MTX.lock().await;
+                    if let Some(mode) = buzzer_mode_unlocked.as_mut() {
+                        match mode {
+                            BuzzerMode::Off => {
+                                *mode = BuzzerMode::Low;
+                            }
+                            _ => {
+                                *mode = BuzzerMode::Off;
+                            }
+                        }
+                    }
+                }
                 _ => {
                     io.write(b"Invalid command\r\n").await.unwrap();
                 }
