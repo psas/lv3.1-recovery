@@ -26,7 +26,6 @@ use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex};
 
 use embassy_time::{Instant, Timer};
 use embedded_io_async::Write;
-#[cfg(feature = "main")]
 use firmware_rs::{
     adc::{read_battery_from_ref, ADC_MTX, BATT_READ_WATCH},
     buzzer::{BuzzerMode, BUZZER_MODE_MTX},
