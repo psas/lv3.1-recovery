@@ -13,6 +13,7 @@ use crate::types::AdcType;
 pub type RingType = Mutex<ThreadModeRawMutex, Option<Ring>>;
 
 pub static RING_POSITION_WATCH: Watch<ThreadModeRawMutex, RingPosition, 5> = Watch::new();
+pub static SENSOR_READ_WATCH: Watch<ThreadModeRawMutex, SensorReadings, 5> = Watch::new();
 
 #[derive(defmt::Format, PartialEq, Clone)]
 pub enum RingPosition {
@@ -20,6 +21,18 @@ pub enum RingPosition {
     Unlocked,
     Inbetween,
     Error,
+}
+
+#[derive(Clone)]
+pub struct SensorReadings {
+    pub sensor1: u16,
+    pub sensor2: u16,
+}
+
+impl SensorReadings {
+    pub fn new(sensor1: u16, sensor2: u16) -> Self {
+        Self { sensor1, sensor2 }
+    }
 }
 
 #[derive(Default)]
@@ -72,7 +85,8 @@ impl Ring {
     }
 
     pub async fn broadcast_ring_position(&mut self) {
-        let sender = RING_POSITION_WATCH.sender();
+        let ring_position_sender = RING_POSITION_WATCH.sender();
+        let sensor_reading_sender = SENSOR_READ_WATCH.sender();
 
         fn get_sensor_state(adc_val: u16, limit: &SensorLimits) -> SensorState {
             if adc_val >= limit.over {
@@ -122,6 +136,10 @@ impl Ring {
             }
         }
 
+        let readings = SensorReadings::new(sensor1_read, sensor2_read);
+
+        sensor_reading_sender.send(readings);
+
         let sensor1_state = get_sensor_state(sensor1_read, &self.sensor1_limits);
         let sensor2_state = get_sensor_state(sensor2_read, &self.sensor2_limits);
 
@@ -138,7 +156,7 @@ impl Ring {
             RingPosition::Error => error!("1: {} 2: {} - Ring Error", sensor1_read, sensor2_read),
         }
 
-        sender.send(ring_position);
+        ring_position_sender.send(ring_position);
     }
 }
 

@@ -43,6 +43,7 @@ use firmware_rs::{
     blink::blink_led,
     buzzer::active_beep,
     can::{CAN_MTX, TELEMETRUM_HEARTBEAT_ID},
+    ring::SENSOR_READ_WATCH,
 };
 use noline::builder::EditorBuilder;
 use {defmt_rtt as _, panic_probe as _};
@@ -327,8 +328,45 @@ pub async fn cli(uart: BufferedUart<'static>) {
                     }
                 }
                 "pos" => {
-                    // TODO: implement
-                    io.write(b"Not yet implemented\r\n").await.unwrap();
+                    let mut wbuf = [0u8; 64];
+
+                    let mut ring_pos_rcvr = RING_POSITION_WATCH
+                        .receiver()
+                        .expect("Could not get ring_pos receiver for pos cmd");
+                    let mut sensor_readings_rcvr = SENSOR_READ_WATCH
+                        .receiver()
+                        .expect("Could not get sensor readings receiver for pos cmd");
+
+                    let ring_pos = ring_pos_rcvr.changed().await;
+                    let sensor_readings = sensor_readings_rcvr.changed().await;
+
+                    match ring_pos {
+                        RingPosition::Locked => {
+                            io.write(b"Ring Locked").await.unwrap();
+                        }
+                        RingPosition::Unlocked => {
+                            io.write(b"Ring Unlocked").await.unwrap();
+                        }
+                        RingPosition::Inbetween => {
+                            io.write(b"Ring Inbetween").await.unwrap();
+                        }
+                        RingPosition::Error => {
+                            io.write(b"Ring Error").await.unwrap();
+                        }
+                    }
+
+                    let s = format_no_std::show(
+                        &mut wbuf,
+                        format_args!(
+                            "Sensor 1: {} Sensor 2: {}\r\n",
+                            sensor_readings.sensor1, sensor_readings.sensor2
+                        ),
+                    )
+                    .unwrap();
+
+                    io.write(s.as_bytes()).await.unwrap();
+
+                    // TODO: implement --poll flag
                 }
                 "beep" => {
                     let mut buzzer_mode_unlocked = BUZZER_MODE_MTX.lock().await;
