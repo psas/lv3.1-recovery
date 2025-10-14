@@ -39,7 +39,11 @@ use firmware_rs::{
     types::*,
     uart::{IO, UART_BUF_SIZE, UART_RX_BUF_CELL, UART_TX_BUF_CELL},
 };
-use firmware_rs::{blink::blink_led, buzzer::active_beep, can::CAN_MTX};
+use firmware_rs::{
+    blink::blink_led,
+    buzzer::active_beep,
+    can::{CAN_MTX, TELEMETRUM_HEARTBEAT_ID},
+};
 use noline::builder::EditorBuilder;
 use {defmt_rtt as _, panic_probe as _};
 
@@ -395,6 +399,9 @@ async fn can_reader(mut can_rx: CanRx<'static>) -> () {
                         }
                     }
                 }
+                Id::Standard(id) if id.as_raw() == TELEMETRUM_HEARTBEAT_ID => {
+                    set_state(ChuteStateField::SenderLastSeen(envelope.ts.as_millis())).await;
+                }
                 _ => {}
             },
 
@@ -453,6 +460,8 @@ async fn parachute_heartbeat() -> () {
             let mut umb_on_unlocked = UMB_ON_MTX.lock().await;
             if let Some(umb_on_ref) = umb_on_unlocked.as_mut() {
                 let shore_pow_status = umb_on_ref.is_low() as u8;
+
+                set_state(ChuteStateField::ShorePowerStatus(shore_pow_status == 1)).await;
 
                 let ready = (ring_pos_u8 == 2
                     && shore_pow_status == 0
