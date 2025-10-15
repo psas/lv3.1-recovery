@@ -1,0 +1,4 @@
+
+# west build -b ers-v3p1 -p -- -DBOARD_ROOT=..
+# ../flash-manually.sh w --conf-dir ../scripts
+
