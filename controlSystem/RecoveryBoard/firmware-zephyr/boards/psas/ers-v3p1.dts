@@ -28,7 +28,7 @@
 // [x] CAN_RX (PA11 = CAN_RX)
 // [ ] CAN_SHDN (PA10 = GPIO output low)
 // [ ] CAN_SLIENT (PA9 = GPIO output low)
-// [ ] !MOTOR_PS (PB6 = GPIO output low)
+// [x] !MOTOR_PS (PB6 = GPIO output low)
 // Everything else
 // [ ] GPIO input with pulldown enabled
 
@@ -38,10 +38,10 @@
 // [x] ROCKET_READY (PA7 = GPIO output low)
 
 // ERS PCBs
-// [ ] DEPLOY1 (PB4 = GPIO output low)
-// [ ] DEPLOY2 (PB5 = GPIO output low)
+// [x] DEPLOY1 (PB4 = GPIO output low)
+// [x] DEPLOY2 (PB5 = GPIO output low)
 // [ ] !MOTOR_FAILA (PB7 = GPIO input)
-// [ ] MOTOR_ILIM (PA4 = DAC output)
+// [x] MOTOR_ILIM (PA4 = DAC output)
 // [?] MOTOR_ISENSE (PB1 = Analog input ADC_IN9)       . . . analog input PB1
 // [x] HALL1 (PA0 = Analog input ADC_IN0)              . . . analog input PA0
 // [x] HALL2 (PA1 = Analog input ADC_IN1)              . . . analog input PA1
@@ -61,45 +61,69 @@
                 zephyr,shell-uart = &usart2;
                 zephyr,sram = &sram0;
                 zephyr,flash = &flash0;
+                zephyr,canbus = &can1;
 	};
 
+// Return to https://michaelangerer.dev/zephyr/2021/12/21/zephyr-basics-gpio.html
 	ers-gpios {
-		compatible = "psas,ers-gpios";
+		compatible = "psas,ers-gpios", "gpio-keys";
 
-		led_orange: led_orange {
-			gpios = <&gpiob 14 0>;
+		rocket_ready: rocket_ready {
+			gpios = <&gpioa 7 0>;
 		};
 
 		not_umb_on: not_umb_on {
 			gpios = <&gpioa 8 0>;
 		};
 
-		batt_read: batt_read {
-			gpios = <&gpiob 6 0>;
+		can_silent: can_silent {
+			gpios = <&gpioa 9 0>;
 		};
 
 		can_shdn: can_shdn {
 			gpios = <&gpioa 10 0>;
 		};
 
-		can_silent: can_silent {
-			gpios = <&gpioa 9 0>;
+		batt_read: batt_read {
+			gpios = <&gpiob 0 0>;
+		};
+
+		deploy1: deploy1 {
+			gpios = <&gpiob 4 0>;
+		};
+
+		deploy2: deploy2 {
+			gpios = <&gpiob 5 0>;
 		};
 
 		not_motor_ps: not_motor_ps {
 			gpios = <&gpiob 6 0>;
 		};
 
+		not_motor_faila: not_motor_faila {
+			gpios = <&gpiob 7 0>;
+		};
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		led_orange: led_orange {
+			gpios = <&gpiob 14 0>;
+		};
+	};
+
+	gpio_keys {
+		compatible = "gpio-keys";
 		iso_drogue: iso_drogue {
-			gpios = <&gpioa 5 0>;
+			label = "isolated_drogue_chute";
+			gpios = <&gpioa 5 GPIO_ACTIVE_HIGH>;
+			zephyr,code = <INPUT_KEY_0>;
 		};
 
 		iso_main: iso_main {
+			label = "isolated_main_chute";
 			gpios = <&gpioa 6 0>;
-		};
-
-		rocket_ready: rocket_ready {
-			gpios = <&gpioa 7 0>;
+			zephyr,code = <INPUT_KEY_1>;
 		};
 	};
 
@@ -114,13 +138,18 @@
         };
 
 	aliases {
-                led0 = &led_orange;
-                pwm-led0 = &pwm_led_orange;
+        	led0 = &led_orange;
+		pwm-led0 = &pwm_led_orange;
+		sw0 = &iso_drogue;
+		sw1 = &iso_main;
+		sw2 = &not_umb_on;
+		sw3 = &not_motor_faila;
+		dout1 = &deploy1;
+		dout2 = &deploy2;
+		dout3 = &not_motor_ps;
 	};
 };
 
-/*
-*/
 &clk_hse {
         /delete-property/ hse-bypass;
         clock-frequency = <DT_FREQ_M(16)>; // ERS board 16MHz crystal
@@ -185,6 +214,12 @@
         st,adc-clock-source = <SYNC>;
         st,adc-prescaler = <4>;
         status = "okay";
+};
+
+&dac1 {
+        status = "okay";
+        pinctrl-0 = <&dac_out1_pa4>;
+        pinctrl-names = "default";
 };
 
 &timers15 {

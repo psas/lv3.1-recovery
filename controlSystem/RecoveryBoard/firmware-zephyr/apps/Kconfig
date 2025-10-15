@@ -1,0 +1,14 @@
+module = ADC
+module-str = ADC module for ERS firemware
+source "subsys/logging/Kconfig.template.log_config"
+
+module = ERS_ADC
+module-str = ADC module for ERS firemware
+source "subsys/logging/Kconfig.template.log_config"
+
+# Following Kconfig inclusion needed to support Zephyr logging template macros
+source "Kconfig.zephyr"
+# rsource "Kconfig.zephyr"
+
+# ERS application specific
+rsource "Kconfig.can"

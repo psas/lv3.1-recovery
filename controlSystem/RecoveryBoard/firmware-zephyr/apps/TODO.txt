@@ -1,0 +1,70 @@
+2025-09-27 SAT
+--------------
+
+ERS firmware TODO list:
+
+[ ] Implement correct CAN messages, both RX and TX messages.
+    Note RX CAN message ids are 0x700, 0x100, 0x200
+    [x] RX messages:
+          [x] 0x700 Telemetrum heartbeat
+          [x] 0x100 unlock drogue chute,
+          [x] 0x200 unlock main chute
+    [ ] TX messages:
+          [x] 0x710 drogue board status plus heartbeat
+          [ ] 0x720 main board status plus heartbeat
+          [ ] 0x101 acknowledge receipt of message with id 0x100
+          [ ] 0x201 acknowledge receipt of message with id 0x200
+
+[x] In CAN module configure a timer and workqueue task, where this task clears
+     an application state flash for "CAN bus ok" when the timer reaches its
+     two second timeout.
+
+[x] Create an API function to send the ERS board variant's heart CAN frame, one of
+     0x700 Sender/Telemetrum ERS board
+     0x710 Drogue parachute ERS board
+     0x720 Main parachute ERS board
+
+     Note each ERS variant CAN "heartbeat" contains the same seven values, each
+     stored as a byte, with an extra byte added to create a CAN frame with data
+     length of eight.
+
+[x] Add DAC module to provide motor current regulation.
+
+[x] Amend gpio_in module to save latest input values in the keeper module.
+
+[x] Amend ADC module to save latest input values in the keeper module.
+
+[ ] Implement an arbiter to act upon current state and gathered data.
+    [x] create an arbiter thread with stub code.
+    [ ] add logic to arbiter to determine and store ring state.
+    [ ] add logic to arbiter to determine and store battery state.
+    [ ] add logic to arbiter to determine and store shore power state.
+    [ ] add logic to arbiter to determine and store ready state.
+
+[x] Implement a local way to toggle periodic diagnostics on and off at run time.
+
+[ ] Implement off-chip and system status checking routines
+    [ ] ring status    . . . one of 2 = locked, 1 = between, 0 = unlocked
+    [x] batt_voltage   . . . among analog inputs
+    [ ] batt_ok        . . . a threshold based state
+    [ ] shore_power_ok . . . 1 = shore power detected, 0 = no shore power
+    [x] can_bus_ok     . . . telemetrum heartbeat received within last two seconds
+    [ ] ready_state    . . . true when (1) battery ok (2) ring locked (3) CAN bus ok
+    [ ] reserved
+    [ ] reserved
+
+[ ] Implement APIs to control GPIO output signals
+    [x] deploy1
+    [x] deploy1
+    [x] motor_ps (not tested)
+
+[ ] Add APIs to lock and to unlock rocket parachute section ring.
+
+[ ] Add following shell commands from Google doc by Andrew, Theo, Hessah:
+    [x] help
+    [ ] state - ERS system state
+    [ ] l - lock ring
+    [ ] u - unlock ring
+    [ ] pos [poll] - report locking ring position
+
+
