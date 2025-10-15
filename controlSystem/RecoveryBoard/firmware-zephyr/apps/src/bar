@@ -1,6 +1,0 @@
-	if (rc != 0)
-	{
-		LOG_ERR("Failed to lock ADC read channels mutex, error %d", rc);
-		return rc;
-	}
-
