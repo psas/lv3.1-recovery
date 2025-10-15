@@ -24,8 +24,8 @@ use embassy_stm32::{
 use embassy_stm32::{can::filter::Mask32, dac::Dac, usart::BufferedInterruptHandler};
 use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex};
 
-use embassy_time::{Instant, Timer};
-use embedded_io_async::Write;
+use embassy_time::{with_timeout, Duration, Instant, TimeoutError, Timer};
+use embedded_io_async::{Read, Write};
 use firmware_rs::{
     adc::{read_battery_from_ref, ADC_MTX, BATT_READ_WATCH},
     buzzer::{BuzzerMode, BUZZER_MODE_MTX},
@@ -336,36 +336,70 @@ pub async fn cli(uart: BufferedUart<'static>) {
                         .receiver()
                         .expect("Could not get sensor readings receiver for pos cmd");
 
-                    let ring_pos = ring_pos_rcvr.changed().await;
-                    let sensor_readings = sensor_readings_rcvr.changed().await;
+                    if args.contains(&"--poll") {
+                        let mut buf = [0u8; 1];
+                        while let Err(TimeoutError) =
+                            with_timeout(Duration::from_secs(1), io.read(&mut buf)).await
+                        {
+                            let ring_pos = ring_pos_rcvr.changed().await;
+                            let sensor_readings = sensor_readings_rcvr.changed().await;
 
-                    match ring_pos {
-                        RingPosition::Locked => {
-                            io.write(b"Ring Locked").await.unwrap();
+                            match ring_pos {
+                                RingPosition::Locked => {
+                                    io.write(b"Ring Locked").await.unwrap();
+                                }
+                                RingPosition::Unlocked => {
+                                    io.write(b"Ring Unlocked").await.unwrap();
+                                }
+                                RingPosition::Inbetween => {
+                                    io.write(b"Ring Inbetween").await.unwrap();
+                                }
+                                RingPosition::Error => {
+                                    io.write(b"Ring Error").await.unwrap();
+                                }
+                            }
+
+                            let s = format_no_std::show(
+                                &mut wbuf,
+                                format_args!(
+                                    "Sensor 1: {} Sensor 2: {}\r\n",
+                                    sensor_readings.sensor1, sensor_readings.sensor2
+                                ),
+                            )
+                            .unwrap();
+
+                            io.write(s.as_bytes()).await.unwrap();
                         }
-                        RingPosition::Unlocked => {
-                            io.write(b"Ring Unlocked").await.unwrap();
+                    } else {
+                        let ring_pos = ring_pos_rcvr.changed().await;
+                        let sensor_readings = sensor_readings_rcvr.changed().await;
+
+                        match ring_pos {
+                            RingPosition::Locked => {
+                                io.write(b"Ring Locked").await.unwrap();
+                            }
+                            RingPosition::Unlocked => {
+                                io.write(b"Ring Unlocked").await.unwrap();
+                            }
+                            RingPosition::Inbetween => {
+                                io.write(b"Ring Inbetween").await.unwrap();
+                            }
+                            RingPosition::Error => {
+                                io.write(b"Ring Error").await.unwrap();
+                            }
                         }
-                        RingPosition::Inbetween => {
-                            io.write(b"Ring Inbetween").await.unwrap();
-                        }
-                        RingPosition::Error => {
-                            io.write(b"Ring Error").await.unwrap();
-                        }
+
+                        let s = format_no_std::show(
+                            &mut wbuf,
+                            format_args!(
+                                "Sensor 1: {} Sensor 2: {}\r\n",
+                                sensor_readings.sensor1, sensor_readings.sensor2
+                            ),
+                        )
+                        .unwrap();
+
+                        io.write(s.as_bytes()).await.unwrap();
                     }
-
-                    let s = format_no_std::show(
-                        &mut wbuf,
-                        format_args!(
-                            "Sensor 1: {} Sensor 2: {}\r\n",
-                            sensor_readings.sensor1, sensor_readings.sensor2
-                        ),
-                    )
-                    .unwrap();
-
-                    io.write(s.as_bytes()).await.unwrap();
-
-                    // TODO: implement --poll flag
                 }
                 "beep" => {
                     let mut buzzer_mode_unlocked = BUZZER_MODE_MTX.lock().await;
@@ -382,7 +416,7 @@ pub async fn cli(uart: BufferedUart<'static>) {
                 }
                 "version" => {
                     let version_details = env!("CARGO_PKG_VERSION").as_bytes();
-                    io.write(version_details).await.unwrap();
+                    io.write(version_details).await;
                 }
                 _ => {
                     io.write(b"Invalid command\r\n").await.unwrap();
