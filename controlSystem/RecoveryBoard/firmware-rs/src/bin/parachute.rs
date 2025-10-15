@@ -346,16 +346,16 @@ pub async fn cli(uart: BufferedUart<'static>) {
 
                             match ring_pos {
                                 RingPosition::Locked => {
-                                    io.write(b"Ring Locked").await.unwrap();
+                                    io.write(b"Ring Locked - ").await.unwrap();
                                 }
                                 RingPosition::Unlocked => {
-                                    io.write(b"Ring Unlocked").await.unwrap();
+                                    io.write(b"Ring Unlocked - ").await.unwrap();
                                 }
                                 RingPosition::Inbetween => {
-                                    io.write(b"Ring Inbetween").await.unwrap();
+                                    io.write(b"Ring Inbetween - ").await.unwrap();
                                 }
                                 RingPosition::Error => {
-                                    io.write(b"Ring Error").await.unwrap();
+                                    io.write(b"Ring Error - ").await.unwrap();
                                 }
                             }
 
@@ -376,16 +376,16 @@ pub async fn cli(uart: BufferedUart<'static>) {
 
                         match ring_pos {
                             RingPosition::Locked => {
-                                io.write(b"Ring Locked").await.unwrap();
+                                io.write(b"Ring Locked\r\n").await.unwrap();
                             }
                             RingPosition::Unlocked => {
-                                io.write(b"Ring Unlocked").await.unwrap();
+                                io.write(b"Ring Unlocked\r\n").await.unwrap();
                             }
                             RingPosition::Inbetween => {
-                                io.write(b"Ring Inbetween").await.unwrap();
+                                io.write(b"Ring Inbetween\r\n").await.unwrap();
                             }
                             RingPosition::Error => {
-                                io.write(b"Ring Error").await.unwrap();
+                                io.write(b"Ring Error\r\n").await.unwrap();
                             }
                         }
 
@@ -416,7 +416,7 @@ pub async fn cli(uart: BufferedUart<'static>) {
                 }
                 "version" => {
                     let version_details = env!("CARGO_PKG_VERSION").as_bytes();
-                    io.write(version_details).await;
+                    io.write(version_details).await.unwrap();
                 }
                 _ => {
                     io.write(b"Invalid command\r\n").await.unwrap();
