@@ -415,8 +415,13 @@ pub async fn cli(uart: BufferedUart<'static>) {
                     }
                 }
                 "version" => {
-                    let version_details = env!("CARGO_PKG_VERSION").as_bytes();
-                    io.write(version_details).await.unwrap();
+                    let mut buf = [0u8; 8];
+                    let version_details = env!("CARGO_PKG_VERSION");
+
+                    let s =
+                        format_no_std::show(&mut buf, format_args!("{}\r\n", version_details)).unwrap();
+
+                    io.write(s.as_bytes()).await.unwrap();
                 }
                 _ => {
                     io.write(b"Invalid command\r\n").await.unwrap();
