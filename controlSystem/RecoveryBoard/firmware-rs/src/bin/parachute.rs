@@ -179,7 +179,7 @@ async fn main(spawner: Spawner) {
     let dac = Dac::new(p.DAC1, p.DMA1_CH3, p.DMA1_CH4, p.PA4, p.PA5);
     let sys_state = ChuteState::default();
     let motor = Motor::new(p.PB4, p.PB5, p.PB6, p.PB7, dac, &RING_POSITION_WATCH);
-    let ring = Ring::new(p.PA0, p.PA1, &ADC_MTX);
+    let ring = Ring::new(p.PA0, p.PA1, p.PB1, &ADC_MTX);
 
     {
         // Put peripherals into mutex if shared among tasks.

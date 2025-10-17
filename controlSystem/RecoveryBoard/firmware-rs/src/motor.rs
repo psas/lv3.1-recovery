@@ -9,9 +9,7 @@ use embassy_stm32::{
 use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex, watch::Watch};
 use embassy_time::{with_timeout, Duration};
 
-use crate::ring::RingPosition;
-
-// TODO: set up adc channel to read motor_isense while driving the motor in order to plot data.
+use crate::ring::{RingPosition, MOTOR_ISENSE_WATCH};
 
 pub struct Motor {
     pub deploy1: Output<'static>,
@@ -88,19 +86,25 @@ impl Motor {
         // (3.3V). Which we use mV*3300/4096 to get the step size from the output voltage.
         // Combining all the numerators and denominators to avoid overflow we get 1024/1375
         let scale = ((ma as u32) * 1024 / 1375) as u16;
-        debug!("step = {}", scale);
         let val = Value::Bit12Right(scale);
         self.dac.ch1().set(val);
     }
 
     async fn read_ring_pos_until_condition(&mut self, position: RingPosition) {
-        let mut receiver = self.ring_pos_watch.receiver().expect("Could not get receiver");
+        let mut ring_pos_receiver =
+            self.ring_pos_watch.receiver().expect("Could not get ring_pos rcvr");
+        let mut isense_receiver = MOTOR_ISENSE_WATCH.receiver().expect("Could not get isense rcvr");
+        let mut buf = [0u16; 16];
+        let mut count = 0usize;
         loop {
-            let ring_position = receiver.changed().await;
+            buf[count] = isense_receiver.changed().await;
+            let ring_position = ring_pos_receiver.changed().await;
+            count = count.wrapping_add(1);
             if ring_position == position {
                 break;
             }
         }
+        debug!("Motor_isense: {}", buf[..count]);
     }
 
     pub async fn drive(&mut self, mode: RingPosition, duration_ms: u64, force: bool, current: u16) {

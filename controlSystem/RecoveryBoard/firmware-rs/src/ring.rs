@@ -1,7 +1,6 @@
-use defmt::debug;
-use defmt::error;
 use embassy_stm32::peripherals::PA0;
 use embassy_stm32::peripherals::PA1;
+use embassy_stm32::peripherals::PB1;
 use embassy_stm32::Peri;
 use embassy_sync::blocking_mutex::raw::ThreadModeRawMutex;
 use embassy_sync::mutex::Mutex;
@@ -14,6 +13,7 @@ pub type RingType = Mutex<ThreadModeRawMutex, Option<Ring>>;
 
 pub static RING_POSITION_WATCH: Watch<ThreadModeRawMutex, RingPosition, 5> = Watch::new();
 pub static SENSOR_READ_WATCH: Watch<ThreadModeRawMutex, SensorReadings, 5> = Watch::new();
+pub static MOTOR_ISENSE_WATCH: Watch<ThreadModeRawMutex, u16, 1> = Watch::new();
 
 #[derive(defmt::Format, PartialEq, Clone)]
 pub enum RingPosition {
@@ -61,6 +61,7 @@ enum SensorState {
 pub struct Ring {
     pa0: Peri<'static, PA0>,
     pa1: Peri<'static, PA1>,
+    pb1: Peri<'static, PB1>,
     sensor1_limits: SensorLimits,
     sensor2_limits: SensorLimits,
     adc_mtx: &'static AdcType,
@@ -70,23 +71,19 @@ impl Ring {
     pub fn new(
         pa0: Peri<'static, PA0>,
         pa1: Peri<'static, PA1>,
+        pb1: Peri<'static, PB1>,
         adc_mtx: &'static AdcType,
     ) -> Self {
         let sensor1_limits = SensorLimits::new(3700, 600, 2100, 900);
         let sensor2_limits = SensorLimits::new(3700, 600, 1300, 900);
 
-        Self {
-            pa0,
-            pa1,
-            sensor1_limits,
-            sensor2_limits,
-            adc_mtx,
-        }
+        Self { pa0, pa1, pb1, sensor1_limits, sensor2_limits, adc_mtx }
     }
 
     pub async fn broadcast_ring_position(&mut self) {
         let ring_position_sender = RING_POSITION_WATCH.sender();
         let sensor_reading_sender = SENSOR_READ_WATCH.sender();
+        let motor_isense_sender = MOTOR_ISENSE_WATCH.sender();
 
         fn get_sensor_state(adc_val: u16, limit: &SensorLimits) -> SensorState {
             if adc_val >= limit.over {
@@ -127,34 +124,26 @@ impl Ring {
 
         let mut sensor1_read = 0u16;
         let mut sensor2_read = 0u16;
+        let mut motor_isense_read = 0u16;
 
         {
             let mut adc_unlocked = self.adc_mtx.lock().await;
             if let Some(adc) = adc_unlocked.as_mut() {
                 sensor1_read = adc.read(&mut self.pa0).await;
                 sensor2_read = adc.read(&mut self.pa1).await;
+                motor_isense_read = adc.read(&mut self.pb1).await;
             }
         }
 
         let readings = SensorReadings::new(sensor1_read, sensor2_read);
 
         sensor_reading_sender.send(readings);
+        motor_isense_sender.send(motor_isense_read);
 
         let sensor1_state = get_sensor_state(sensor1_read, &self.sensor1_limits);
         let sensor2_state = get_sensor_state(sensor2_read, &self.sensor2_limits);
 
         let ring_position = get_ring_position(sensor1_state, sensor2_state);
-
-        match ring_position {
-            RingPosition::Locked => debug!("1: {} 2: {} - Ring Locked", sensor1_read, sensor2_read),
-            RingPosition::Unlocked => {
-                debug!("1: {} 2: {} - Ring Unlocked", sensor1_read, sensor2_read)
-            }
-            RingPosition::Inbetween => {
-                debug!("1: {} 2: {} - Ring Inbetween", sensor1_read, sensor2_read)
-            }
-            RingPosition::Error => error!("1: {} 2: {} - Ring Error", sensor1_read, sensor2_read),
-        }
 
         ring_position_sender.send(ring_position);
     }
@@ -169,6 +158,6 @@ pub async fn read_pos_sensor(ring: &'static RingType) {
                 ring.broadcast_ring_position().await;
             }
         }
-        Timer::after_millis(100).await;
+        Timer::after_millis(50).await;
     }
 }
