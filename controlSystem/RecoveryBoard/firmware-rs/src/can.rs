@@ -1,5 +1,5 @@
 use defmt::*;
-use embassy_stm32::can::{Can, CanTx, Frame, StandardId, TryWriteError};
+use embassy_stm32::can::{Can, CanTx, Frame, StandardId};
 use embassy_sync::{
     blocking_mutex::raw::{CriticalSectionRawMutex, ThreadModeRawMutex},
     channel::Channel,
@@ -48,7 +48,6 @@ pub async fn can_writer(
 ) -> () {
     loop {
         let frame = can_tx_ch.receive().await;
-        debug!("Sending CAN frame: {}", frame.frame);
         if frame.blocking {
             can_tx.write(&frame.frame).await;
         }
