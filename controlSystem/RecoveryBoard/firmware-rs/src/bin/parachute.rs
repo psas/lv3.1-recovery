@@ -3,7 +3,6 @@
 
 use defmt::*;
 use embassy_executor::Spawner;
-#[cfg(feature = "main")]
 use embassy_stm32::can::{Frame, StandardId};
 use embassy_stm32::{
     adc::{Adc, InterruptHandler, SampleTime},
@@ -418,8 +417,8 @@ pub async fn cli(uart: BufferedUart<'static>) {
                     let mut buf = [0u8; 8];
                     let version_details = env!("CARGO_PKG_VERSION");
 
-                    let s =
-                        format_no_std::show(&mut buf, format_args!("{}\r\n", version_details)).unwrap();
+                    let s = format_no_std::show(&mut buf, format_args!("{}\r\n", version_details))
+                        .unwrap();
 
                     io.write(s.as_bytes()).await.unwrap();
                 }
@@ -460,22 +459,24 @@ async fn can_reader(mut can_rx: CanRx<'static>) -> () {
                 }
                 Id::Standard(id) if id.as_raw() == MAIN_DEPLOY_ID => {
                     #[cfg(feature = "main")]
-                    let frame =
-                        Frame::new_data(StandardId::new(MAIN_ACKNOWLEDGE_ID).unwrap(), &[1])
-                            .unwrap();
-                    let acknowledge_msg = CanTxChannelMsg::new(true, frame);
-                    CAN_TX_CHANNEL.send(acknowledge_msg).await;
                     {
-                        let mut motor_unlocked = MOTOR_MTX.lock().await;
-                        if let Some(motor) = motor_unlocked.as_mut() {
-                            motor
-                                .drive(
-                                    RingPosition::Unlocked,
-                                    MOTOR_DRIVE_DUR_MS,
-                                    false,
-                                    MOTOR_DRIVE_CURR_MA,
-                                )
-                                .await;
+                        let frame =
+                            Frame::new_data(StandardId::new(MAIN_ACKNOWLEDGE_ID).unwrap(), &[1])
+                                .unwrap();
+                        let acknowledge_msg = CanTxChannelMsg::new(true, frame);
+                        CAN_TX_CHANNEL.send(acknowledge_msg).await;
+                        {
+                            let mut motor_unlocked = MOTOR_MTX.lock().await;
+                            if let Some(motor) = motor_unlocked.as_mut() {
+                                motor
+                                    .drive(
+                                        RingPosition::Unlocked,
+                                        MOTOR_DRIVE_DUR_MS,
+                                        false,
+                                        MOTOR_DRIVE_CURR_MA,
+                                    )
+                                    .await;
+                            }
                         }
                     }
                 }
