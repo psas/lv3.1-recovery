@@ -88,6 +88,17 @@
 			gpios = <&gpiob 0 0>;
 		};
 
+		not_motor_faila: not_motor_faila {
+			gpios = <&gpiob 7 0>;
+		};
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		led_orange: led_orange {
+			gpios = <&gpiob 14 GPIO_ACTIVE_LOW>;
+		};
+
 		deploy1: deploy1 {
 			gpios = <&gpiob 4 0>;
 		};
@@ -97,19 +108,9 @@
 		};
 
 		not_motor_ps: not_motor_ps {
-			gpios = <&gpiob 6 0>;
+			gpios = <&gpiob 6 GPIO_ACTIVE_LOW>;
 		};
 
-		not_motor_faila: not_motor_faila {
-			gpios = <&gpiob 7 0>;
-		};
-	};
-
-	leds {
-		compatible = "gpio-leds";
-		led_orange: led_orange {
-			gpios = <&gpiob 14 0>;
-		};
 	};
 
 	gpio_keys {

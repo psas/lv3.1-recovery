@@ -15,6 +15,7 @@
 #include <ers-dac.h>
 #include <gpio-in.h>
 #include <keeper.h>
+#include <motor-control.h>
 #include <shell-support.h>
 
 LOG_MODULE_REGISTER(ers_main, LOG_LEVEL_INF);
@@ -23,7 +24,7 @@ LOG_MODULE_REGISTER(ers_main, LOG_LEVEL_INF);
 // - SECTION - pound defines
 //----------------------------------------------------------------------
 
-#define ERS_MAIN_LOOP_PERIOD_MS 500
+#define ERS_MAIN_LOOP_PERIOD_MS 1000
 
 //----------------------------------------------------------------------
 // - SECTION - routines
@@ -36,6 +37,9 @@ int main(void)
 
         rc = ers_init_gpio_in();
 	LOG_INF("GPIO input pin initialization returns %d", rc);
+
+        rc = ers_init_motor_ctrl();
+	LOG_INF("motor control module init returns %d", rc);
 
 	rc = adc_init();
 	LOG_INF("ADC init code returns %d", rc);
@@ -74,6 +78,36 @@ int main(void)
 			ekget_hall_2(&d);
 			LOG_INF("batt, motor, hall1, hall2: %u, %u, %u, %u", a, b, c, d);
 		}
+
+		if (loop_count % 2)
+		{
+			rc = ers_set_dac_output(4080);
+ 			// LOG_INF("1015 - set DAC output call returns %d", rc);
+
+			rc = motor_ctrl_drive_deploy1_high();
+ 			LOG_INF("1015 - driving deploy1 high, deploy2 low returns %d", rc);
+		}
+		else
+		{
+			rc = ers_set_dac_output(2040);
+ 			// LOG_INF("1015 - set DAC output call returns %d", rc);
+
+			rc = motor_ctrl_drive_deploy2_high();
+ 			LOG_INF("1015 - driving deploy2 high, deploy1 low returns %d", rc);
+		}
+
+		rc = motor_ctrl_set_led0((loop_count / 2) & 0x1);
+		rc = motor_ctrl_set_not_motor_ps((loop_count / 2) & 0x1);
+		if (rc != 0)
+		{
+			LOG_ERR("Failed to set not_motor_ps pin to %u, error %d",
+			  ((loop_count / 2) & 0x1), rc);
+		}
+		else
+		{
+			LOG_INF("Set not_motor_ps pin to %d", ((loop_count / 2) & 0x1));
+		}
+
 		k_msleep(ERS_MAIN_LOOP_PERIOD_MS);
 	}
 
