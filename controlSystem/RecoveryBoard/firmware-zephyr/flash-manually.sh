@@ -75,6 +75,10 @@ OPENOCD_CONFIG_FILE=oocd.cfg
 echo "Zephyr openocd flash wrapper starting"
 echo "current dir is $PWD"
 
+if [ $# -eq 3 ]; then
+    OPENOCD_CONFIG_PATH=$3
+fi
+
 if [ "$1" == "w" ]; then
 #    echo "Calling openocd with options to flash and then exit openocd . . ."
 #    flash_only
