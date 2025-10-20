@@ -61,12 +61,16 @@ bind_interrupts!(struct UsartIrqs { USART2 => BufferedInterruptHandler<USART2>; 
 
 #[derive(Default)]
 pub struct ChuteState {
+    pub id: u8,
+    pub ready: bool,
     pub shore_power_status: bool,
     pub sender_last_seen: u64,
 }
 
 #[derive(Debug)]
 pub enum ChuteStateField {
+    Id(u8),
+    Ready(bool),
     ShorePowerStatus(bool),
     SenderLastSeen(u64),
 }
@@ -87,8 +91,10 @@ impl<'a> Iterator for ChuteStateIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let result = match self.index {
-            0 => Some(ChuteStateField::ShorePowerStatus(self.state_fields.shore_power_status)),
-            1 => Some(ChuteStateField::SenderLastSeen(self.state_fields.sender_last_seen)),
+            0 => Some(ChuteStateField::Id(self.state_fields.id)),
+            1 => Some(ChuteStateField::Ready(self.state_fields.ready)),
+            2 => Some(ChuteStateField::ShorePowerStatus(self.state_fields.shore_power_status)),
+            3 => Some(ChuteStateField::SenderLastSeen(self.state_fields.sender_last_seen)),
             _ => None,
         };
 
@@ -103,6 +109,12 @@ impl<'a> Iterator for ChuteStateIter<'a> {
 impl core::fmt::Display for ChuteStateField {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match *self {
+            Self::Id(val) => {
+                core::write!(f, "Id: {}", val)
+            }
+            Self::Ready(val) => {
+                core::write!(f, "Ready: {}", if val { "YES" } else { "NO" })
+            }
             Self::ShorePowerStatus(val) => {
                 core::write!(f, "Shore Power: {}", if val { "ON" } else { "OFF" })
             }
@@ -115,6 +127,8 @@ async fn set_state(update: ChuteStateField) {
     let mut unlocked = SYSTEM_STATE_MTX.lock().await;
     if let Some(state) = unlocked.as_mut() {
         match update {
+            ChuteStateField::Id(val) => state.id = val,
+            ChuteStateField::Ready(val) => state.ready = val,
             ChuteStateField::ShorePowerStatus(val) => state.shore_power_status = val,
             ChuteStateField::SenderLastSeen(val) => state.sender_last_seen = val,
         }
@@ -176,7 +190,18 @@ async fn main(spawner: Spawner) {
     .expect("Uart Config Error");
 
     let dac = Dac::new(p.DAC1, p.DMA1_CH3, p.DMA1_CH4, p.PA4, p.PA5);
-    let sys_state = ChuteState::default();
+    let mut sys_state = ChuteState::default();
+
+    #[cfg(feature = "drogue")]
+    {
+        sys_state.id = 1;
+    }
+
+    #[cfg(feature = "main")]
+    {
+        sys_state.id = 2;
+    }
+
     let motor = Motor::new(p.PB4, p.PB5, p.PB6, p.PB7, dac, &RING_POSITION_WATCH);
     let ring = Ring::new(p.PA0, p.PA1, p.PB1, &ADC_MTX);
 
@@ -548,6 +573,8 @@ async fn parachute_heartbeat() -> () {
                     && shore_pow_status == 0
                     && batt_ok == 1
                     && sender_status == 1) as u8;
+
+                set_state(ChuteStateField::Ready(ready == 1)).await;
 
                 {
                     let mut buzz_mode_unlocked = BUZZER_MODE_MTX.lock().await;
