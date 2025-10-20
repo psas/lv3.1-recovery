@@ -48,26 +48,6 @@ static const struct gpio_dt_spec not_umb_on = GPIO_DT_SPEC_GET_OR(SW2_NODE, gpio
 #endif
 static const struct gpio_dt_spec not_motor_faila = GPIO_DT_SPEC_GET_OR(SW3_NODE, gpios, {0});
 
-// - DEV 0928 BEGIN -
-#define DOUT1_NODE DT_ALIAS(dout1)
-#if !DT_NODE_HAS_STATUS(DOUT1_NODE, okay)
-#error "Unsupported board: 'dout1' devicetree alias is not defined"
-#endif
-static const struct gpio_dt_spec deploy1 = GPIO_DT_SPEC_GET_OR(DOUT1_NODE, gpios, {0});
-
-#define DOUT2_NODE DT_ALIAS(dout2)
-#if !DT_NODE_HAS_STATUS(DOUT2_NODE, okay)
-#error "Unsupported board: 'dout2' devicetree alias is not defined"
-#endif
-static const struct gpio_dt_spec deploy2 = GPIO_DT_SPEC_GET_OR(DOUT2_NODE, gpios, {0});
-
-#define DOUT3_NODE DT_ALIAS(dout3)
-#if !DT_NODE_HAS_STATUS(DOUT3_NODE, okay)
-#error "Unsupported board: 'dout3' devicetree alias is not defined"
-#endif
-static const struct gpio_dt_spec not_motor_ps = GPIO_DT_SPEC_GET_OR(DOUT3_NODE, gpios, {0});
-// - DEV 0928 END -
-
 // TODO [ ] Figure out how best to utilize GPIO event driven interrupts,
 //   since we'll be starting out with a thread to periodically read GPIOs
 //   Maybe we can do away with such a thread, or have it at least not poll?
@@ -210,85 +190,7 @@ int32_t gpio_in_configure_not_motor_faila(void)
         return rc;
 }
 
-// GPIOs used as outputs
-
-int32_t gpio_in_configure_deploy1(void)
-{
-        if (!gpio_is_ready_dt(&deploy1)) {
-                LOG_ERR("Error: deploy1 device %s is not ready",
-                       deploy1.port->name);
-                return -EIO;
-        }
-
-	// Configure GPIO as output and initialize output state to high:
-        int32_t rc = gpio_pin_configure_dt(&deploy1, GPIO_OUTPUT_HIGH);
-        if (rc != 0) {
-                printk("Error %d: failed to configure %s pin %d\n",
-                       rc, deploy1.port->name, deploy1.pin);
-                return -EINVAL;
-        }
-
-	return rc;
-}
-
-int32_t gpio_in_configure_deploy2(void)
-{
-        if (!gpio_is_ready_dt(&deploy2)) {
-                LOG_ERR("Error: deploy2 device %s is not ready",
-                       deploy2.port->name);
-                return -EIO;
-        }
-
-	// Configure GPIO as output and initialize output state to high:
-        int32_t rc = gpio_pin_configure_dt(&deploy2, GPIO_OUTPUT_HIGH);
-        if (rc != 0) {
-                printk("Error %d: failed to configure %s pin %d\n",
-                       rc, deploy2.port->name, deploy2.pin);
-                return -EINVAL;
-        }
-
-	return rc;
-}
-
-int32_t gpio_in_configure_not_motor_ps(void)
-{
-        if (!gpio_is_ready_dt(&not_motor_ps)) {
-                LOG_ERR("Error: not_motor_ps device %s is not ready",
-                       not_motor_ps.port->name);
-                return -EIO;
-        }
-
-	// Configure GPIO as output and initialize output state to high:
-        int32_t rc = gpio_pin_configure_dt(&not_motor_ps, GPIO_OUTPUT_HIGH);
-        if (rc != 0) {
-                printk("Error %d: failed to configure %s pin %d\n",
-                       rc, not_motor_ps.port->name, not_motor_ps.pin);
-                return -EINVAL;
-        }
-
-	return rc;
-}
-
 // TODO [ ] Add check for ERS GPIO module initialized.
-
-int32_t ers_gpios_set_deploy1(const uint32_t value)
-{
-	int32_t rc = gpio_pin_set(deploy1.port, deploy1.pin, value);
-	return rc;
-}
-
-int32_t ers_gpios_set_deploy2(const uint32_t value)
-{
-	int32_t rc = gpio_pin_set(deploy2.port, deploy2.pin, value);
-	return rc;
-}
-
-int32_t ers_gpios_set_not_motor_ps(const uint32_t value)
-{
-	int32_t rc = gpio_pin_set(not_motor_ps.port, not_motor_ps.pin, value);
-	return rc;
-}
-
 
 void gpio_in_thread_entry(void *arg1, void *arg2, void *arg3)
 {
@@ -352,29 +254,6 @@ int32_t ers_init_gpio_in(void)
 	if (rc)
 	{
 		LOG_ERR("Failed to configure GPIO for not_motor_faila signal in, err %d", rc);
-		return rc;
-	}
-
-// ERS GPIOs used for output:
-
-	rc = gpio_in_configure_deploy1();
-	if (rc)
-	{
-		LOG_ERR("Configure deploy1 signal out, err %d", rc);
-		return rc;
-	}
-
-	rc = gpio_in_configure_deploy2();
-	if (rc)
-	{
-		LOG_ERR("Configure deploy2 signal out, err %d", rc);
-		return rc;
-	}
-
-	rc = gpio_in_configure_not_motor_ps();
-	if (rc)
-	{
-		LOG_ERR("Configure not_motor_ps signal out, err %d", rc);
 		return rc;
 	}
 

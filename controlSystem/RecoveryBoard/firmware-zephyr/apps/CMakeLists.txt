@@ -30,5 +30,6 @@ target_sources(app PRIVATE
     src/gpio-in.c
     src/keeper.c
     src/main.c
+    src/motor-control.c
     src/shell-support.c
 )
