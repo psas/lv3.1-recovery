@@ -302,16 +302,19 @@ SHELL_CMD_REGISTER(ring, &sub_section_ring, "ERS show ring position, (lock and u
 static int cmd_dac_show_range(const struct shell *shell, size_t argc, char *argv[])
 {
 	LOG_INF("stub command to show DAC range");
+	return 0;
 }
 
 static int cmd_dac_show_dac_setting(const struct shell *shell, size_t argc, char *argv[])
 {
 	LOG_INF("stub command to show present DAC setting");
+	return 0;
 }
 
 static int cmd_dac_set_output(const struct shell *shell, size_t argc, char *argv[])
 {
 	LOG_INF("stub command to set DAC output");
+	return 0;
 }
 
 // The following creates commands:
