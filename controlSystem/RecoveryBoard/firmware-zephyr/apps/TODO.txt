@@ -67,4 +67,18 @@ ERS firmware TODO list:
     [ ] u - unlock ring
     [ ] pos [poll] - report locking ring position
 
+2025-10-21 TUE
 
+[ ] Add commands:
+    [ ] to enable/disable lock ring position reporting
+    [ ] to set lock ring position (hall sensor reading) interval in milliseconds
+    [ ] to show lock ring position detection interval
+    [ ] to restore Hall sensor cutoff value defaults
+
+[ ] To arbiter add:
+    [ ] a kernel timer for developing ring lock and ring unlock routines (in absence
+         of lock ring assembly)
+
+[ ] To ADC module
+    [ ] add a timer and Zephyr work queue submission to read motor current channel
+    [ ] add a command to show motor current and current reading interval
