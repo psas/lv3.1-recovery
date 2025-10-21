@@ -240,15 +240,17 @@ SHELL_SUBCMD_SET_CREATE(sub_section_hall, (hall));
 /* Create a set of one subcommands for 'hall' command */
 SHELL_SUBCMD_SET_CREATE(sub_section_hall_set, (hall, set));
 
-SHELL_SUBCMD_ADD((hall), v_under_cutoff, &sub_section_hall_set, "set Hall state voltage under cutoff", sw_set_v_under_cutoff, 2, 0);
+SHELL_SUBCMD_ADD((hall), show_cutoffs, &sub_section_hall, "(1) show Hall state cutoff values", arbiter_show_hall_state_cutoffs, 1, 0);
 
-SHELL_SUBCMD_ADD((hall), inactive_cutoff, &sub_section_hall_set, "set Hall state inactive cutoff", sw_set_inactive_cutoff, 2, 0);
+SHELL_SUBCMD_ADD((hall), v_under_cutoff, &sub_section_hall_set, "(2) set Hall state voltage under cutoff", sw_set_v_under_cutoff, 2, 0);
 
-SHELL_SUBCMD_ADD((hall), between_cutoff, &sub_section_hall_set, "set Hall state between cutoff", sw_set_between_cutoff, 2, 0);
+SHELL_SUBCMD_ADD((hall), inactive_cutoff, &sub_section_hall_set, "(3) set Hall state inactive cutoff", sw_set_inactive_cutoff, 2, 0);
 
-SHELL_SUBCMD_ADD((hall), active_cutoff, &sub_section_hall_set, "set Hall state active cutoff", sw_set_active_cutoff, 2, 0);
+SHELL_SUBCMD_ADD((hall), between_cutoff, &sub_section_hall_set, "(4) set Hall state between cutoff", sw_set_between_cutoff, 2, 0);
 
-SHELL_SUBCMD_ADD((hall), show_cutoffs, &sub_section_hall, "show Hall state cutoff values", arbiter_show_hall_state_cutoffs, 1, 0);
+SHELL_SUBCMD_ADD((hall), active_cutoff, &sub_section_hall_set, "(5) set Hall state active cutoff", sw_set_active_cutoff, 2, 0);
+
+SHELL_SUBCMD_ADD((hall), defaults, &sub_section_hall, "(6) set Hall cutoff default values", sw_set_default_cutoffs, 1, 0);
 
 SHELL_CMD_REGISTER(hall, &sub_section_hall, "- ERS - set and show Hall state cutoff values (in ADC counts)", NULL);
 

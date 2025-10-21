@@ -380,6 +380,13 @@ void arbiter_set_hall_state_cutoff_defaults(void)
 	arbiter_set_active_cutoff(HALL_READING_ACTIVE_CUTOFF);
 }
 
+void sw_set_default_cutoffs(const struct shell *shell, size_t argc, char **argv)
+{
+	LOG_INF("Setting Hall cutoffs to default values . . .");
+	arbiter_set_hall_state_cutoff_defaults();
+	arbiter_show_hall_state_cutoffs(shell);
+}
+
 int32_t ers_init_arbiter(void)
 {
 	int32_t rc = 0;

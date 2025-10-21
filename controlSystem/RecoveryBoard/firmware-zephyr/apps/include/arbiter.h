@@ -39,6 +39,8 @@ void sw_set_inactive_cutoff(const struct shell *shell, size_t argc, char **argv)
 void sw_set_between_cutoff(const struct shell *shell, size_t argc, char **argv);
 void sw_set_active_cutoff(const struct shell *shell, size_t argc, char **argv);
 
+void sw_set_default_cutoffs(const struct shell *shell, size_t argc, char **argv);
+
 void arbiter_show_hall_state_cutoffs(const struct shell *shell);
 
 // TODO [ ] add API to restore default Hall state cutoff values
