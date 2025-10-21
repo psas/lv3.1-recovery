@@ -65,15 +65,12 @@ int32_t motor_ctrl_set_not_motor_ps(const uint32_t value)
 	return rc;
 }
 
-// 1019
 int32_t motor_ctrl_set_led0(const uint32_t value)
 {
 	int32_t rc = gpio_pin_set(led0.port, led0.pin, value);
-	LOG_INF("- 1019 - setting LED0 output pin to %u", value);
+	// LOG_INF("- 1019 - setting LED0 output pin to %u", value);
 	return rc;
 }
-// 1019
-
 
 // GPIOs used as outputs
 
