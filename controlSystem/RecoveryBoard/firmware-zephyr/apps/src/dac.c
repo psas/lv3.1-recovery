@@ -12,6 +12,10 @@
 
 LOG_MODULE_REGISTER(ers_dac, LOG_LEVEL_INF);
 
+//----------------------------------------------------------------------
+// - SECTION - defines
+//----------------------------------------------------------------------
+
 #define ZEPHYR_USER_NODE DT_PATH(zephyr_user)
 
 #if (DT_NODE_HAS_PROP(ZEPHYR_USER_NODE, dac) && \
@@ -27,6 +31,12 @@ LOG_MODULE_REGISTER(ers_dac, LOG_LEVEL_INF);
 #define DAC_RESOLUTION 0
 #endif
 
+#define DAC_COUNT_HIGHEST_VAL ((1 << DAC_RESOLUTION) - 1)
+
+//----------------------------------------------------------------------
+// - SECTION - file scoped
+//----------------------------------------------------------------------
+
 static const struct device *const dac_dev = DEVICE_DT_GET(DAC_NODE);
 
 static const struct dac_channel_cfg dac_ch_cfg = { 
@@ -37,12 +47,18 @@ static const struct dac_channel_cfg dac_ch_cfg = {
 
 static uint32_t dac_initialized_fs = 0;
 
+static atomic_t dac_value_fs = ATOMIC_INIT(0);
+
 // TODO [ ] Implement a mutex for "set DAC" API.  It has a system sleep call
 //   which while brief, is recommended by Zephyr's DAC sample.  While ERS
 //   app is unlikely to have more than one calling point to the DAC set output
 //   API, a mutex would assure that the delay after setting is honored.
 
-int32_t ers_set_dac_output(const uint32_t value)
+//----------------------------------------------------------------------
+// - SECTION - routines
+//----------------------------------------------------------------------
+
+int32_t dac_set_output(const uint32_t value)
 {
 // Following two const variables from Zephyr 3.7.1 DAC sample app:
 	const int32_t dac_values = 1U << DAC_RESOLUTION;
@@ -55,7 +71,6 @@ int32_t ers_set_dac_output(const uint32_t value)
 		return -ENODEV;
 	}
 
-#define DAC_COUNT_HIGHEST_VAL ((1 << DAC_RESOLUTION) - 1)
 	if (value > DAC_COUNT_HIGHEST_VAL)
 	{
 		LOG_ERR("DAC value %u to write too large, 0..%u possible",
@@ -64,8 +79,30 @@ int32_t ers_set_dac_output(const uint32_t value)
 	}
 
 	rc = dac_write_value(dac_dev, DAC_CHANNEL_ID, value);
+	atomic_set(&dac_value_fs, (atomic_val_t)value);
 	k_sleep(K_MSEC(sleep_time));
 	return rc;
+}
+
+int32_t dac_present_value(uint32_t *dac_setting)
+{
+	if (dac_initialized_fs)
+	{
+		*dac_setting = atomic_get(&dac_value_fs);
+		return 0;
+	}
+	else
+	{
+		return -EINVAL;
+	}
+}
+
+int32_t dac_range(int32_t *bound_low, int32_t *bound_high)
+{
+	// LOG_INF("DAC range is %u..%u", 0, DAC_COUNT_HIGHEST_VAL);
+	*bound_low = 0;
+	*bound_high = DAC_COUNT_HIGHEST_VAL;
+	return 0;
 }
 
 int32_t ers_init_dac(void)

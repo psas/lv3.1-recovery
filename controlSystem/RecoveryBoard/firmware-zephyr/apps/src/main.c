@@ -81,7 +81,7 @@ int main(void)
 
 		if (loop_count % 2)
 		{
-			rc = ers_set_dac_output(4080);
+			rc = dac_set_output(4080);
  			// LOG_INF("1015 - set DAC output call returns %d", rc);
 
 			rc = motor_ctrl_drive_deploy1_high();
@@ -89,7 +89,7 @@ int main(void)
 		}
 		else
 		{
-			rc = ers_set_dac_output(2040);
+			rc = dac_set_output(2040);
  			// LOG_INF("1015 - set DAC output call returns %d", rc);
 
 			rc = motor_ctrl_drive_deploy2_high();
