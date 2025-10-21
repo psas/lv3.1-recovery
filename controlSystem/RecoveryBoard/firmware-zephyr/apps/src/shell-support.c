@@ -24,6 +24,7 @@ LOG_MODULE_REGISTER(shell_support, LOG_LEVEL_INF);
 
 #include <arbiter.h>
 #include <ers-adc.h>
+#include <ers-dac.h>
 #include <ers-util.h>
 #include <keeper.h>
 
@@ -301,19 +302,42 @@ SHELL_CMD_REGISTER(ring, &sub_section_ring, "ERS show ring position, (lock and u
 
 static int cmd_dac_show_range(const struct shell *shell, size_t argc, char *argv[])
 {
-	LOG_INF("stub command to show DAC range");
+	// LOG_INF("stub command to show DAC range");
+	uint32_t bound_low = 0;
+	uint32_t bound_high = 0;
+	int32_t rc = dac_range(&bound_low, &bound_high);
+	LOG_INF("DAC range is %u..%u", bound_low, bound_high);
 	return 0;
 }
 
 static int cmd_dac_show_dac_setting(const struct shell *shell, size_t argc, char *argv[])
 {
-	LOG_INF("stub command to show present DAC setting");
+	// LOG_INF("stub command to show present DAC setting");
+	uint32_t dac_setting = 0;
+	int32_t rc = dac_present_value(&dac_setting);
+	if (rc == 0)
+	{
+		LOG_INF("present DAC setting is %u", dac_setting);
+	}
+	else
+	{
+		LOG_ERR("Failed to get present DAC setting, error %d", rc);
+	}
+
 	return 0;
 }
 
 static int cmd_dac_set_output(const struct shell *shell, size_t argc, char *argv[])
 {
 	LOG_INF("stub command to set DAC output");
+
+        uint32_t value = 0;
+        char *endptr, *str;
+        str = argv[1];
+        value = strtol(str, &endptr, 10);  // TODO [ ] factor BASE_10 symbol to ers-utils.h header and use it here
+	int32_t rc = 0;
+
+	rc = dac_set_output(value);
 	return 0;
 }
 
@@ -337,7 +361,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
         SHELL_SUBCMD_SET_END
 );
 
-SHELL_CMD_REGISTER(dac, &cmds_dac, "DAC info and set commands", NULL);
+SHELL_CMD_REGISTER(dac, &cmds_dac, "ERS - DAC info and set commands", NULL);
 
 int32_t ers_init_shell_support(void)
 {
