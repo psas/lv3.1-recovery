@@ -5,13 +5,15 @@
  */
 
 /**
- * @brief ERS shell support module provides a dedicated thread from which to
- *   start Zephyr shell.
+ * @brief ERS drogue and main app uses Zephyr shell facility and adds custom
+ *   commands to it.
  *
- * @note Macros to set up Zephyr shell expand to code which does not appear to
- *   return.  This module implementing a thread permits the application's
- *   default thread "main" to execute beyond the calls to set up and begin
- *   executing Zephyr shell facility.
+ * @note The code in this module is a mix of Zephyr "command set up" macros
+ *   and wrapper functions.  Those wrappers often call more detailed functions
+ *   in their respective ERS application modules.
+ *
+ * @note Zephyr shell commands execute in whichever thread or workqueue Zephyr
+ *   RTOS is configured to run its shell facility.
  */
 
 #include <stdlib.h>
@@ -35,12 +37,6 @@ LOG_MODULE_REGISTER(shell_support, LOG_LEVEL_INF);
 // - SECTION - file scoped
 //----------------------------------------------------------------------
 
-#if 0
-K_THREAD_STACK_DEFINE(shell_support_thread_stack, SHELL_SUPPORT_THREAD_STACK_SIZE);
-
-struct k_thread shell_support_thread_data;
-#endif
-
 static const struct shell *shell_ptr_fs = NULL;
 
 static uint32_t dev_test_calls_fs = 0;
@@ -48,13 +44,6 @@ static uint32_t dev_test_calls_fs = 0;
 //----------------------------------------------------------------------
 // - SECTION - routines
 //----------------------------------------------------------------------
-
-/**
- * @brief ERS app incorporates Zephyr shell and adds custom commands to
- *   this facility.
- *
- * @note
- */
 
 #if 0
 static int ers_cmd_wrapper_read_adc_all(const struct shell *shell, size_t argc, char *argv[])
@@ -87,25 +76,9 @@ static int ers_cmd_print_shell_addr(const struct shell *shell, size_t argc, char
 	return 0;
 }
 
-/**
- * @brief A development test looking at how and whether possible to get
- *   reference to Zephyr shell structure at run time.
- */
-
-int32_t dev_test_of_shell_printing_from_app(const char* message)
-{
-	int32_t rc = 0;
-	dev_test_calls_fs++;
-
-	if (shell_ptr_fs == NULL)
-	{
-		return -EINVAL;
-	}
-
-	shell_fprintf(shell_ptr_fs, SHELL_NORMAL, "%s", message);
-	shell_fprintf(shell_ptr_fs, SHELL_NORMAL, "- M1 -\n");
-	return rc;
-}
+//----------------------------------------------------------------------
+// - SECTION - ERS diagnotics
+//----------------------------------------------------------------------
 
 static int ers_cmd_diag_periodic_on(const struct shell *shell, size_t argc, char *argv[])
 {
@@ -126,6 +99,23 @@ static int ers_cmd_diag_periodic_off(const struct shell *shell, size_t argc, cha
 	ek_sys_diag_quiet();
 	return 0;
 }
+
+SHELL_STATIC_SUBCMD_SET_CREATE(
+	ers_cmds_diag,
+	SHELL_CMD_ARG(on, NULL,
+		"enable ERS periodic diagnostics",
+		ers_cmd_diag_periodic_on, 0, 0),
+	SHELL_CMD_ARG(off, NULL,
+		"disable ERS periodic diagnostics",
+		ers_cmd_diag_periodic_off, 0, 0),
+	SHELL_SUBCMD_SET_END
+	);
+
+SHELL_CMD_REGISTER(diag, &ers_cmds_diag, "- ERS - diagnostics", NULL);
+
+//----------------------------------------------------------------------
+// - SECTION - ERS ADC commands
+//----------------------------------------------------------------------
 
 static int ers_cmd_wrapper_read_adc_all(const struct shell *shell, size_t argc, char *argv[])
 {
@@ -153,31 +143,8 @@ static int ers_cmd_wrapper_read_adc_all(const struct shell *shell, size_t argc, 
 	return rc;
 }
 
-static int shell_wrapper_show_lock_ring_pos(const struct shell *shell, size_t argc, char *argv[])
-{
-        ARG_UNUSED(shell);
-        ARG_UNUSED(argc);
-        ARG_UNUSED(argv);
-	enum lock_ring_position ring_position = RING_POSITION_UNKNOWN;
-	int32_t rc = arbiter_determine_ring_state(&ring_position);
-	if (rc == 0)
-	{
-		char lbuf[SIZE_SHORT_ERS_MESSAGE] = {0};
-		char *ring_pos_as_str = lbuf;
-		ring_pos_as_str = ring_pos_to_str(ring_position);
-		LOG_INF("Current lock ring position:  %d %s", ring_position, ring_pos_as_str);
-	}
-	else
-	{
-		LOG_INF("Failed lock ring position query, error %d", rc);
-	}
-
-	return rc;
-}
-
-//----------------------------------------------------------------------
-// - SECTION - Zephyr shell command set up
-//----------------------------------------------------------------------
+// TODO [ ] move all command routines referenced by this Zephyr macro to this
+//   in-file section.
 
 SHELL_STATIC_SUBCMD_SET_CREATE(
 	ers_cmds,
@@ -202,102 +169,91 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 	SHELL_SUBCMD_SET_END
 	);
 
-SHELL_CMD_REGISTER(ers, &ers_cmds, "ERS commands", NULL);
+SHELL_CMD_REGISTER(ers, &ers_cmds, "- ERS - development commands", NULL);
 
-SHELL_STATIC_SUBCMD_SET_CREATE(
-	ers_cmds_diag,
-	SHELL_CMD_ARG(on, NULL,
-		"enable ERS periodic diagnostics",
-		ers_cmd_diag_periodic_on, 0, 0),
-	SHELL_CMD_ARG(off, NULL,
-		"disable ERS periodic diagnostics",
-		ers_cmd_diag_periodic_off, 0, 0),
-	SHELL_SUBCMD_SET_END
-	);
+//----------------------------------------------------------------------
+// - SECTION - ERS lock ring commands (IN PROGRESS)
+//----------------------------------------------------------------------
 
-SHELL_CMD_REGISTER(diag, &ers_cmds_diag, "ERS diagnostics", NULL);
-
-//======================================================================
-// DEV CODE BEGIN
-//
-// This code added to see if we can define commands beyond a depth of
-// two.  Maybe not important, less easy to type such commands, but we
-// also face something of a flat command name space with only two levels
-// of command depth.  This so given Zephyr shell's default commands
-// which are present in its shell module and don't have an obvious way
-// to be disabled.
-
-static int cmd1_handler(const struct shell *sh, size_t argc, char **argv)
+static int sw_show_locking_ring_pos(const struct shell *shell, size_t argc, char *argv[])
 {
-        shell_print(sh, "cmd1 executed");
-        return 0;
+        ARG_UNUSED(shell);
+        ARG_UNUSED(argc);
+        ARG_UNUSED(argv);
+	enum lock_ring_position ring_position = RING_POSITION_UNKNOWN;
+	int32_t rc = arbiter_determine_ring_state(&ring_position);
+	if (rc == 0)
+	{
+		char lbuf[SIZE_SHORT_ERS_MESSAGE] = {0};
+		char *ring_pos_as_str = lbuf;
+		ring_pos_as_str = ring_pos_to_str(ring_position);
+		LOG_INF("Current lock ring position:  %d %s", ring_position, ring_pos_as_str);
+	}
+	else
+	{
+		LOG_INF("Failed lock ring position query, error %d", rc);
+	}
+
+	return rc;
 }
 
-static int cmd2_handler(const struct shell *sh, size_t argc, char **argv)
+static int sw_lock_ring(const struct shell *shell, size_t argc, char *argv[])
 {
-        shell_print(sh, "cmd2 executed");
-        return 0;
+        ARG_UNUSED(shell);
+        ARG_UNUSED(argc);
+        ARG_UNUSED(argv);
+	LOG_INF("- STUB - for command to lock parachute locking ring");
+	return 0;
 }
 
-// (1)
-SHELL_SUBCMD_SET_CREATE(sub_section_cmd, (section_cmd));
+static int sw_unlock_ring(const struct shell *shell, size_t argc, char *argv[])
+{
+        ARG_UNUSED(shell);
+        ARG_UNUSED(argc);
+        ARG_UNUSED(argv);
+	LOG_INF("- STUB - for command to lock parachute locking ring");
+	return 0;
+}
 
-// (2)
-/* Create a set of subcommands for "section_cmd cm1". */
-// SHELL_SUBCMD_SET_CREATE(sub_section_cmd1, (section_cmd, cmd1));
-SHELL_SUBCMD_SET_CREATE(sub_section_cmd1, (section_cmd, cmd1, cmd2));
+SHELL_SUBCMD_SET_CREATE(sub_section_ring, (ring));
 
-// (3)
-/* Add command to the set. Subcommand set is identify by parent shell command. */
-SHELL_SUBCMD_ADD((section_cmd), cmd1, &sub_section_cmd1, "help for cmd1", cmd1_handler, 1, 0); 
+SHELL_SUBCMD_ADD((ring), show_position, &sub_section_ring, "show locking ring position", sw_show_locking_ring_pos, 1, 0);
+// TODO [ ] add command to lock ring
+// TODO [ ] add command to unlock ring
+SHELL_SUBCMD_ADD((ring), lock, &sub_section_ring, "lock ring", sw_lock_ring, 1, 0);
 
-SHELL_SUBCMD_ADD((section_cmd), cmd2, &sub_section_cmd1, "help for cmd2", cmd2_handler, 1, 0); 
+SHELL_SUBCMD_ADD((ring), unlock, &sub_section_ring, "unlock ring", sw_unlock_ring, 1, 0);
 
-// (4)
-SHELL_CMD_REGISTER(section_cmd, &sub_section_cmd,
-                   "Demo command using section for subcommand registration", NULL);
+SHELL_CMD_REGISTER(ring, &sub_section_ring, "- ERS - lock ring commands", NULL);
 
-// DEV CODE END
-//======================================================================
+//----------------------------------------------------------------------
+// - SECTION - ERS Hall sensor commands
+//----------------------------------------------------------------------
 
-
-// ERS set Hall state cutoff values
+/**
+ * @note Hall sensor commands referenced in this section are implemented in a
+ *   separate ERS source file.
+ */
 
 SHELL_SUBCMD_SET_CREATE(sub_section_hall, (hall));
 
 /* Create a set of one subcommands for 'hall' command */
 SHELL_SUBCMD_SET_CREATE(sub_section_hall_set, (hall, set));
 
-SHELL_SUBCMD_ADD((hall), v_under_cutoff, &sub_section_hall_set, "set Hall state voltage under cutoff", shell_wrapper_set_v_under_cutoff, 2, 0);
+SHELL_SUBCMD_ADD((hall), v_under_cutoff, &sub_section_hall_set, "set Hall state voltage under cutoff", sw_set_v_under_cutoff, 2, 0);
 
-SHELL_SUBCMD_ADD((hall), inactive_cutoff, &sub_section_hall_set, "set Hall state inactive cutoff", shell_wrapper_set_inactive_cutoff, 2, 0);
+SHELL_SUBCMD_ADD((hall), inactive_cutoff, &sub_section_hall_set, "set Hall state inactive cutoff", sw_set_inactive_cutoff, 2, 0);
 
-SHELL_SUBCMD_ADD((hall), between_cutoff, &sub_section_hall_set, "set Hall state between cutoff", shell_wrapper_set_between_cutoff, 2, 0);
+SHELL_SUBCMD_ADD((hall), between_cutoff, &sub_section_hall_set, "set Hall state between cutoff", sw_set_between_cutoff, 2, 0);
 
-SHELL_SUBCMD_ADD((hall), active_cutoff, &sub_section_hall_set, "set Hall state active cutoff", shell_wrapper_set_active_cutoff, 2, 0);
+SHELL_SUBCMD_ADD((hall), active_cutoff, &sub_section_hall_set, "set Hall state active cutoff", sw_set_active_cutoff, 2, 0);
 
 SHELL_SUBCMD_ADD((hall), show_cutoffs, &sub_section_hall, "show Hall state cutoff values", arbiter_show_hall_state_cutoffs, 1, 0);
 
-SHELL_CMD_REGISTER(hall, &sub_section_hall, "ERS set and show Hall state cutoff values (in ADC counts)", NULL);
-
-// - DEV 1005 BEGIN -
-SHELL_SUBCMD_SET_CREATE(sub_section_ring, (ring));
-
-/* Create a set of one subcommands for 'hall' command */
-SHELL_SUBCMD_SET_CREATE(sub_section_ring_set, (ring, set));
-
-SHELL_SUBCMD_ADD((ring), show_position, &sub_section_ring_set, "show lock ring position", shell_wrapper_show_lock_ring_pos, 1, 0);
-
-// TODO [ ] add command to lock ring
-// TODO [ ] add command to unlock ring
-
-SHELL_CMD_REGISTER(ring, &sub_section_ring, "ERS show ring position, (lock and unlock coming)", NULL);
-
-// - DEV 1005 END -
-
+SHELL_CMD_REGISTER(hall, &sub_section_hall, "- ERS - set and show Hall state cutoff values (in ADC counts)", NULL);
 
 //----------------------------------------------------------------------
-// DAC related commands:
+// - SECTION - DAC commands
 //----------------------------------------------------------------------
 
 static int cmd_dac_show_range(const struct shell *shell, size_t argc, char *argv[])
@@ -361,10 +317,56 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
         SHELL_SUBCMD_SET_END
 );
 
-SHELL_CMD_REGISTER(dac, &cmds_dac, "ERS - DAC info and set commands", NULL);
+SHELL_CMD_REGISTER(dac, &cmds_dac, "- ERS - DAC info and set commands", NULL);
 
 int32_t ers_init_shell_support(void)
 {
 	int32_t rc = 0;
 	return rc;
 }
+
+#if 0
+//======================================================================
+// DEV CODE BEGIN
+//
+// This code added to see if we can define commands beyond a depth of
+// two.  Maybe not important, less easy to type such commands, but we
+// also face something of a flat command name space with only two levels
+// of command depth.  This so given Zephyr shell's default commands
+// which are present in its shell module and don't have an obvious way
+// to be disabled.
+
+static int cmd1_handler(const struct shell *sh, size_t argc, char **argv)
+{
+        shell_print(sh, "cmd1 executed");
+        return 0;
+}
+
+static int cmd2_handler(const struct shell *sh, size_t argc, char **argv)
+{
+        shell_print(sh, "cmd2 executed");
+        return 0;
+}
+
+// (1)
+SHELL_SUBCMD_SET_CREATE(sub_section_cmd, (section_cmd));
+
+// (2)
+/* Create a set of subcommands for "section_cmd cm1". */
+// SHELL_SUBCMD_SET_CREATE(sub_section_cmd1, (section_cmd, cmd1));
+SHELL_SUBCMD_SET_CREATE(sub_section_cmd1, (section_cmd, cmd1, cmd2));
+
+// (3)
+/* Add command to the set. Subcommand set is identify by parent shell command. */
+SHELL_SUBCMD_ADD((section_cmd), cmd1, &sub_section_cmd1, "help for cmd1", cmd1_handler, 1, 0); 
+
+SHELL_SUBCMD_ADD((section_cmd), cmd2, &sub_section_cmd1, "help for cmd2", cmd2_handler, 1, 0); 
+
+// (4)
+SHELL_CMD_REGISTER(section_cmd, &sub_section_cmd,
+                   "Demo command using section for subcommand registration", NULL);
+
+// DEV CODE END
+//======================================================================
+#endif // 0
+

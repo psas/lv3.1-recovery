@@ -97,7 +97,7 @@ void arbiter_set_active_cutoff(const uint32_t value)
 // TODO [ ] Add check of 'endptr' to determine whether we got valid numeric input,
 //  in all routines which call strtol():
 
-void shell_wrapper_set_v_under_cutoff(const struct shell *shell, size_t argc, char **argv)
+void sw_set_v_under_cutoff(const struct shell *shell, size_t argc, char **argv)
 {
 	uint32_t value = 0;
 	char *endptr, *str;
@@ -108,7 +108,7 @@ void shell_wrapper_set_v_under_cutoff(const struct shell *shell, size_t argc, ch
 	arbiter_set_v_under_cutoff(value);
 }
 
-void shell_wrapper_set_inactive_cutoff(const struct shell *shell, size_t argc, char **argv)
+void sw_set_inactive_cutoff(const struct shell *shell, size_t argc, char **argv)
 {
 	uint32_t value = 0;
 	char *endptr, *str;
@@ -117,7 +117,7 @@ void shell_wrapper_set_inactive_cutoff(const struct shell *shell, size_t argc, c
 	arbiter_set_inactive_cutoff(value);
 }
 
-void shell_wrapper_set_between_cutoff(const struct shell *shell, size_t argc, char **argv)
+void sw_set_between_cutoff(const struct shell *shell, size_t argc, char **argv)
 {
 	uint32_t value = 0;
 	char *endptr, *str;
@@ -126,7 +126,7 @@ void shell_wrapper_set_between_cutoff(const struct shell *shell, size_t argc, ch
 	arbiter_set_between_cutoff(value);
 }
 
-void shell_wrapper_set_active_cutoff(const struct shell *shell, size_t argc, char **argv)
+void sw_set_active_cutoff(const struct shell *shell, size_t argc, char **argv)
 {
 	uint32_t value = 0;
 	char *endptr, *str;
