@@ -291,7 +291,50 @@ SHELL_SUBCMD_ADD((ring), show_position, &sub_section_ring_set, "show lock ring p
 // TODO [ ] add command to unlock ring
 
 SHELL_CMD_REGISTER(ring, &sub_section_ring, "ERS show ring position, (lock and unlock coming)", NULL);
+
 // - DEV 1005 END -
+
+
+//----------------------------------------------------------------------
+// DAC related commands:
+//----------------------------------------------------------------------
+
+static int cmd_dac_show_range(const struct shell *shell, size_t argc, char *argv[])
+{
+	LOG_INF("stub command to show DAC range");
+}
+
+static int cmd_dac_show_dac_setting(const struct shell *shell, size_t argc, char *argv[])
+{
+	LOG_INF("stub command to show present DAC setting");
+}
+
+static int cmd_dac_set_output(const struct shell *shell, size_t argc, char *argv[])
+{
+	LOG_INF("stub command to set DAC output");
+}
+
+// The following creates commands:
+//
+//   uart$ dac range
+//   uart$ dac show_present_value
+//   uart$ dac set <value>
+
+SHELL_STATIC_SUBCMD_SET_CREATE(
+        cmds_dac,
+        SHELL_CMD_ARG(range, NULL,
+                "show microcontroller DAC range",
+                cmd_dac_show_range, 0, 0),
+        SHELL_CMD_ARG(show_present_value, NULL,
+                "show present DAC setting",
+                cmd_dac_show_dac_setting, 0, 0),
+        SHELL_CMD_ARG(set, NULL,
+                "set DAC output",
+                cmd_dac_set_output, 0, 0),
+        SHELL_SUBCMD_SET_END
+);
+
+SHELL_CMD_REGISTER(dac, &cmds_dac, "DAC info and set commands", NULL);
 
 int32_t ers_init_shell_support(void)
 {
