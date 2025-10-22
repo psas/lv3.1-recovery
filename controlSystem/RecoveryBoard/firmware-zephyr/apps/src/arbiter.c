@@ -50,6 +50,8 @@ ADC channels are 12-bit, hence ADC counts range 0..4095.  Define
 
 #define ERS_ARBITER_SLEEP_PER_MS 2000
 
+#define RING_POS_PERIOD_MS 10
+
 //----------------------------------------------------------------------
 // - SECTION - file scoped
 //----------------------------------------------------------------------
@@ -64,6 +66,8 @@ static atomic_t hall_reading_inactive_cutoff_fs = ATOMIC_INIT(HALL_READING_INACT
 static atomic_t hall_reading_between_cutoff_fs = ATOMIC_INIT(HALL_READING_BETWEEN_CUTOFF);
 static atomic_t hall_reading_active_cutoff_fs = ATOMIC_INIT(HALL_READING_ACTIVE_CUTOFF);
 
+static enum lock_ring_position ring_position_fs = RING_POSITION_UNKNOWN;
+
 void arbiter_set_hall_state_cutoff_defaults(void);
 
 //----------------------------------------------------------------------
@@ -72,7 +76,7 @@ void arbiter_set_hall_state_cutoff_defaults(void);
 
 // Routines to accept and store Hall sensor threasholds, such as under voltage.
 
-// Setter functions for hall state cutuffs:
+// - SECTION - setter functions for hall state cutuffs
 
 void arbiter_set_v_under_cutoff(const uint32_t value)
 {
@@ -135,7 +139,24 @@ void sw_set_active_cutoff(const struct shell *shell, size_t argc, char **argv)
 	arbiter_set_active_cutoff(value);
 }
 
-// Getter functions for hall state cutuffs:
+// TODO [ ] make following routine name match local naming convention 
+
+void arbiter_set_hall_state_cutoff_defaults(void)
+{
+	arbiter_set_v_under_cutoff(HALL_READING_V_UNDER_CUTOFF);
+	arbiter_set_inactive_cutoff(HALL_READING_INACTIVE_CUTOFF);
+	arbiter_set_between_cutoff(HALL_READING_BETWEEN_CUTOFF);
+	arbiter_set_active_cutoff(HALL_READING_ACTIVE_CUTOFF);
+}
+
+void sw_set_default_cutoffs(const struct shell *shell, size_t argc, char **argv)
+{
+	LOG_INF("Setting Hall cutoffs to default values . . .");
+	arbiter_set_hall_state_cutoff_defaults();
+	arbiter_show_hall_state_cutoffs(shell);
+}
+
+// - SECTION - getter functions for hall state cutuffs:
 
 void arbiter_get_v_under_cutoff(uint32_t *value)
 {
@@ -340,6 +361,47 @@ char *ring_pos_to_str(enum lock_ring_position pos)
         }
 }
 
+//----------------------------------------------------------------------
+// - SECTION - arbiter scheduled elements
+//----------------------------------------------------------------------
+
+// Here define a routine to submit to Zephyr's work queue, followed
+// by a kernel time which calls the API to submit that work:
+
+void determine_ring_pos_work_handler(struct k_work *work)
+{
+	static uint32_t call_count = 0;
+
+	// call arbiter_determine_ring_state(enum lock_ring_position *ring_position)
+	call_count++;
+	int32_t rc = arbiter_determine_ring_state(&ring_position_fs);
+	if (rc != 0)
+	{
+		LOG_ERR("Failed to figure lock ring position, error %d", rc);
+	}
+	// TODO [ ] remove following LOG_INF() call in production code:
+	// TODO [ ] convert ring_position_fs to atomic type.
+#if 1
+	else
+	{
+		// LOG_INF("Lock ring position is %d", ring_position_fs);
+		if ((call_count % 200) == 0)
+		{
+			LOG_INF("arbiter determine ring position called %u times", call_count);
+		}
+	}
+#endif // 0
+}
+
+K_WORK_DEFINE(determine_ring_pos_work, determine_ring_pos_work_handler);
+
+void ring_position_timer_handler(struct k_timer *dummy)
+{
+        k_work_submit(&determine_ring_pos_work);
+}
+
+K_TIMER_DEFINE(ring_position_timer, ring_position_timer_handler, NULL);
+
 void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 {
         ARG_UNUSED(arg1);
@@ -372,20 +434,9 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 	}
 }
 
-void arbiter_set_hall_state_cutoff_defaults(void)
-{
-	arbiter_set_v_under_cutoff(HALL_READING_V_UNDER_CUTOFF);
-	arbiter_set_inactive_cutoff(HALL_READING_INACTIVE_CUTOFF);
-	arbiter_set_between_cutoff(HALL_READING_BETWEEN_CUTOFF);
-	arbiter_set_active_cutoff(HALL_READING_ACTIVE_CUTOFF);
-}
-
-void sw_set_default_cutoffs(const struct shell *shell, size_t argc, char **argv)
-{
-	LOG_INF("Setting Hall cutoffs to default values . . .");
-	arbiter_set_hall_state_cutoff_defaults();
-	arbiter_show_hall_state_cutoffs(shell);
-}
+//----------------------------------------------------------------------
+// - SECTION - init code
+//----------------------------------------------------------------------
 
 int32_t ers_init_arbiter(void)
 {
@@ -402,6 +453,8 @@ int32_t ers_init_arbiter(void)
 	if (!arbiter_tid) {
 		LOG_ERR("ERROR spawning arbiter thread\n");
 	}
+
+	k_timer_start(&ring_position_timer, K_MSEC(RING_POS_PERIOD_MS), K_MSEC(RING_POS_PERIOD_MS));
 
 	return rc;
 }
