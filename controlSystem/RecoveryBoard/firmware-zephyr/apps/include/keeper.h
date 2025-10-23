@@ -1,6 +1,69 @@
 #ifndef ERS_KEEPER_H
 #define ERS_KEEPER_H
 
+/**
+ * @note ERS "Keeper" module, to hold and share most ERS board run time data.
+ *
+ * @note This module categorizes ERS data into three general kinds:
+ *
+ *   (1) configuration data
+ *
+ *   (2) readings (direct and derived)
+ *
+ *   (3) state data
+ *
+ *   Some examples of ERS config data include Hall sensor limits, diagnostic
+ *   development message settings, and sensor reading intervals.  Some
+ *   example readings include digital GPIO pins and readings of on-chip ADC
+ *   channels.
+ *
+ *   Some examples of ERS board state include CAN bus run time health,
+ *   identified by the presence of certain message packets from the larger
+ *   rocket avionics system.
+ */
+
+// Module init API
+
+/**
+ * @warning Keeper module initialization routine must be called before use
+ *   of this module.
+ *
+ * @return 0 without condition.
+ */
+
+int32_t ers_init_keeper(void);
+
+//----------------------------------------------------------------------
+// - SECTION - ERS configuration
+//----------------------------------------------------------------------
+
+enum hall_sensor_limit_ids {
+        HL_V_UNDER,
+        HL_INACTIVE,
+        HL_BETWEEN,
+        HL_ACTIVE,
+        HALL_SENSOR_LIMIT_COUNT
+};
+
+enum hall_sensor_ids {
+        HALL_SENSOR_1,
+        HALL_SENSOR_2,
+        HALL_SENSOR_COUNT
+};
+
+/**
+ * @brief Routine to set a given Hall sensor limit, a cutoff value
+ *   measured in ADC counts, for each hall sensor in an ERS board.
+ */
+
+int32_t ekset_hall_sensor_limit(const enum hall_sensor_ids sensor_idx,
+                                const enum hall_sensor_limit_ids limit_idx,
+                                const uint32_t val);
+
+//----------------------------------------------------------------------
+// - SECTION - ERS readings
+//----------------------------------------------------------------------
+
 // Note, next two enumeration names refer to ADC values and not channels, as
 // two values per active channel are stored:  (1) ADC counts and (2) reading
 // converted to millivolts.
@@ -25,10 +88,6 @@ enum ers_adc_values_in_mv {
 
 #define IDX_START_MV_READINGS ADC_CHANNEL_COUNT
 
-// Module init API
-
-int32_t ers_init_keeper(void);
-
 // Digital inputs
 
 void ekset_iso_drogue(const uint32_t value);
@@ -52,6 +111,8 @@ void ekset_batt_read_mv(const uint32_t value);
 void ekset_motor_isense_mv(const uint32_t value);
 void ekset_hall_1_mv(const uint32_t value);
 void ekset_hall_2_mv(const uint32_t value);
+
+
 
 void ekset_batt_read_dv(const uint32_t value);
 

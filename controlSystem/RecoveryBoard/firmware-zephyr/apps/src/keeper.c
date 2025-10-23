@@ -4,17 +4,61 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/**
- * @brief ERS "keeper" module, acts like a bulletin board to hold shared data
- *   across the app.
- */
-
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(keeper, LOG_LEVEL_INF);
 
 #include <keeper.h>
+
+/**
+ * @brief ERS "keeper" module, acts like a bulletin board to hold shared data
+ *   across the app.
+ *
+ * @note ERS keeper module tracks and shares most ERS board condition and state
+ *   information.  State info is organized in this module in the following
+ *   sets of config settings, readings and "programmatic" conditions:
+ *
+ * (1) battery (for recovery system)
+ *    +  voltage reading
+ *    +  battery "ok" minimum limit
+ *
+ * (2) simple digital inputs
+ *    +  umbilical (shore) power connected
+ *    +  ISO_DROGUE input on "Sender" ERS board only
+ *    +  ISO_MAIN input on "Sender" ERS board only
+ *
+ * (3) motor related (motor for lock ring)
+ *    +  Hall sensors 1
+ *       o  reading
+ *       o  v_under ADC count limit
+ *       o  inactive ADC count limit
+ *       o  between ADC count limit
+ *       o  active ADC count limit
+ *    +  Hall sensors 2
+ *       o  reading
+ *       o  v_under ADC count limit
+ *       o  inactive ADC count limit
+ *       o  between ADC count limit
+ *       o  active ADC count limit
+ *    +  Motor
+ *       o  MOTOR_ISENSE analog input for current reading
+ *       o  NOT_MOTOR_FAILA digital input
+ *       o  NOT_MOTOR_PS output to enable H-bridge
+ *       o  DAC output to control current to motor
+ *       o  DEPLOY1 one of two H-bridge control signals
+ *       o  DEPLOY2 two of two H-bridge control signals
+ *
+ * (4) CAN bus related
+ *    +  CAN ok flag
+ *    +  ERS summary state data (sent out via periodic CAN message)
+ *       o  ring_status
+ *       o  battery_voltage (in decivolts)
+ *       o  battery_ok
+ *       o  shore_power_ok
+ *       o  can_bus_ok
+ *       o  ready_state
+ */
 
 /*
 ------------------------------------------------------------------------
@@ -42,26 +86,65 @@ Message based inputs:
 ------------------------------------------------------------------------
 */ 
 
-// GPIO inputs, effectively Boolean
+// some GPIO inputs, effectively Boolean
+
+/**
+ * @defgroup digital_inputs
+ */
+
 static atomic_t iso_drogue = ATOMIC_INIT(0);
 static atomic_t iso_main = ATOMIC_INIT(0);
 static atomic_t not_umb_on = ATOMIC_INIT(0);
-static atomic_t not_motor_faila = ATOMIC_INIT(0);
 
 // analog inputs, typically 12-bit or 16-bit values
+
+/**
+ * @defgroup battery
+ */
+
 static atomic_t batt_read = ATOMIC_INIT(0);
+static atomic_t batt_read_mv = ATOMIC_INIT(0);
+// TODO [ ] Refactor battery millivolt to decivolt conversion to occur
+//   after calls to get batter voltage:
+static atomic_t batt_read_dv = ATOMIC_INIT(0);
+
+/**
+ * @defgroup motor_related
+ */
+
+static atomic_t not_motor_faila = ATOMIC_INIT(0);
+
 static atomic_t motor_isense = ATOMIC_INIT(0);
 static atomic_t hall_1 = ATOMIC_INIT(0);
 static atomic_t hall_2 = ATOMIC_INIT(0);
 
-static atomic_t batt_read_mv = ATOMIC_INIT(0);
 static atomic_t motor_isense_mv = ATOMIC_INIT(0);
 static atomic_t hall_1_mv = ATOMIC_INIT(0);
 static atomic_t hall_2_mv = ATOMIC_INIT(0);
 
-// TODO [ ] Refactor battery millivolt to decivolt conversion to occur
-//   after calls to get batter voltage:
-static atomic_t batt_read_dv = ATOMIC_INIT(0);
+/**
+ * @defgroup sensors
+ *
+ * @note Hall sensor limits are empirically determined readings, in this case
+ *   ADC counts, above which or below which the firmware is written to
+ *   treat such crossing as a physical state change in the lock ring.
+ *   Further there are two limits which we / firmware treat as sensor error
+ *   conditions.  Those values we should never see from an intact, working
+ *   sensor.
+ */
+
+struct hall_sensor_limits {
+	atomic_t v_under;
+	atomic_t inactive;
+	atomic_t between;
+	atomic_t active;
+};
+
+static struct hall_sensor_limits hall_sensor_fs[HALL_SENSOR_COUNT];
+
+/**
+ * @defgroup system_state
+ */
 
 // Off-chip peripherals and system statae
 //
@@ -74,18 +157,46 @@ static atomic_t batt_read_dv = ATOMIC_INIT(0);
 // [ ] reserved
 // [ ] reserved
 
+// TODO [ ] remove these individual file scoped variables in favor of
+//          struct to organize them:
+
 static atomic_t ring_status = ATOMIC_INIT(0);
+// QUESTION - put battery voltage in struct of ERS states?
 static atomic_t batt_ok = ATOMIC_INIT(0);
 static atomic_t shore_power_ok = ATOMIC_INIT(0);
 static atomic_t can_bus_ok = ATOMIC_INIT(0);
 static atomic_t ready_state = ATOMIC_INIT(0);
+
+// TODO [ ] create public API getter for CAN module to access ERS summary state.
+
+struct ers_summary_state {
+	atomic_t ring_position;
+	atomic_t battery_voltage;
+	atomic_t battery_ok;
+	atomic_t shore_power_ok;
+	atomic_t can_bus_ok;
+	atomic_t ready_flag;
+};
+
+static struct ers_summary_state summary_state;
+
+/**
+ * @brief Struct of structs, gathers most ERS board state, configuration, 
+ *   and sensor readings in one data structure.
+ */
+ 
+struct ers_config_and_state {
+	struct hall_sensor_limits *hall_1_limit;
+	struct hall_sensor_limits *hall_2_limit;
+	struct ers_summary_state *summary_state;
+};
 
 // Support run time toggling of diagnostics which share UART with Zephyr shell:
 static atomic_t ers_diag_flag_fs = ATOMIC_INIT(0);
 
 struct k_mutex hall_sensors_mtx;
 
-static bool keeper_init_yes_fs = false;
+static bool keeper_initialized_fs = false;
 
 //----------------------------------------------------------------------
 // - SECTION - routines
@@ -202,7 +313,7 @@ void ekset_hall_2_mv(const uint32_t value)
 int32_t ekset_both_hall_sensors(const uint32_t value_1, const uint32_t value_2)
 {
 	int32_t rc = 0;
-	if (!keeper_init_yes_fs)
+	if (!keeper_initialized_fs)
 	{
 		LOG_ERR("Data keeper module not initialized!");
 		return -ESRCH;
@@ -333,7 +444,7 @@ int32_t ekget_both_hall_sensors(uint32_t *value_1, uint32_t *value_2)
 {
 	int32_t rc = 0;
 
-	if (!keeper_init_yes_fs)
+	if (!keeper_initialized_fs)
 	{
 		LOG_ERR("Data keeper module not initialized!");
 		*value_1 = atomic_get(&hall_1);
@@ -355,6 +466,43 @@ int32_t ekget_both_hall_sensors(uint32_t *value_1, uint32_t *value_2)
 	{
 		LOG_ERR("Failed to unlock mutex for \"store hall sensors values\", error %d", rc);
 		return rc;
+	}
+
+	return 0;
+}
+
+//----------------------------------------------------------------------
+// - SECTION - motor related
+//----------------------------------------------------------------------
+
+int32_t ekset_hall_sensor_limit(const enum hall_sensor_ids sensor_idx,
+				const enum hall_sensor_limit_ids limit_idx,
+				const uint32_t value)
+{
+	if ((sensor_idx < 0) || (sensor_idx >= HALL_SENSOR_COUNT))
+	{
+		return -EINVAL;
+	}
+
+	if ((limit_idx < 0) || (limit_idx >= HALL_SENSOR_LIMIT_COUNT))
+	{
+		return -EINVAL;
+	}
+
+	switch (limit_idx) {
+	case HL_V_UNDER:
+		atomic_set(&hall_sensor_fs[sensor_idx].v_under, value);
+		break;
+        case HL_INACTIVE:
+		atomic_set(&hall_sensor_fs[sensor_idx].inactive, value);
+		break;
+        case HL_BETWEEN:
+		atomic_set(&hall_sensor_fs[sensor_idx].between, value);
+		break;
+        case HL_ACTIVE:
+		atomic_set(&hall_sensor_fs[sensor_idx].active, value);
+		break;
+	default:
 	}
 
 	return 0;
@@ -442,9 +590,25 @@ void ek_get_sys_diag_mode(uint32_t* value)
 	*value = atomic_get(&ers_diag_flag_fs);
 }
 
+//----------------------------------------------------------------------
+// - SECTION - initialization
+//----------------------------------------------------------------------
+
+static void initialize_system_state_vars(void)
+{
+	summary_state.ring_position = ATOMIC_INIT(0); // TODO [ ] assign RING_POSITION_UNKNOWN
+	summary_state.battery_voltage =  ATOMIC_INIT(0); 
+	summary_state.battery_ok = ATOMIC_INIT(0); 
+	summary_state.shore_power_ok = ATOMIC_INIT(0);
+	summary_state.can_bus_ok = ATOMIC_INIT(0);
+	summary_state.ready_flag = ATOMIC_INIT(0);
+	LOG_INF("M2");
+}
+
 int32_t ers_init_keeper(void)
 {
 	k_mutex_init(&hall_sensors_mtx);
-	keeper_init_yes_fs = true;
+	initialize_system_state_vars();
+	keeper_initialized_fs = true;
 	return 0;
 }

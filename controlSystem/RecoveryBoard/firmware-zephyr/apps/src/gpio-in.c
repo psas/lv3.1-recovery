@@ -53,10 +53,12 @@ static const struct gpio_dt_spec not_motor_faila = GPIO_DT_SPEC_GET_OR(SW3_NODE,
 //   Maybe we can do away with such a thread, or have it at least not poll?
 //   Going to try both ways to see what is most simple sufficient solution.
 
+#if 0
 static struct gpio_callback pin_iso_drogue_cb_data;
 static struct gpio_callback pin_iso_main_cb_data;
 static struct gpio_callback pin_not_umb_on_cb_data;
 static struct gpio_callback pin_not_motor_faila_cb_data;
+#endif // 0
 
 #define GPIO_IN_THREAD_STACK_SIZE 512
 #define GPIO_IN_THREAD_PRIORITY 5
