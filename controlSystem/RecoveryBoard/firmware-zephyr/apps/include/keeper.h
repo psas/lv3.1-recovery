@@ -54,11 +54,31 @@ enum hall_sensor_ids {
 /**
  * @brief Routine to set a given Hall sensor limit, a cutoff value
  *   measured in ADC counts, for each hall sensor in an ERS board.
+ *
+ * @return 0 status code when sensor id, limit id in bounds.
+ * @return -EINVAL otherwise.
  */
 
-int32_t ekset_hall_sensor_limit(const enum hall_sensor_ids sensor_idx,
+int32_t set_hall_sensor_limit(const enum hall_sensor_ids sensor_idx,
                                 const enum hall_sensor_limit_ids limit_idx,
                                 const uint32_t val);
+
+/**
+ * @brief Routine to return a Hall sensor limit for given sensor.
+ *
+ * @return 0 status code and limit value when sensor id, limit id in bounds.
+ * @return -EINVAL otherwise.
+ */
+
+int32_t get_hall_sensor_limit(const enum hall_sensor_ids sensor_idx,
+                                const enum hall_sensor_limit_ids limit_idx,
+                                uint32_t *value);
+
+/**
+ * @brief Routine to restore hall sensor limits to default values.
+ */
+
+int32_t set_hall_sensor_default_limits(void);
 
 //----------------------------------------------------------------------
 // - SECTION - ERS readings

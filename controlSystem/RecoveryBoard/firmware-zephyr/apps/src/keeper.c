@@ -9,6 +9,7 @@
 
 LOG_MODULE_REGISTER(keeper, LOG_LEVEL_INF);
 
+#include <ers-config-defaults.h>
 #include <keeper.h>
 
 /**
@@ -475,7 +476,7 @@ int32_t ekget_both_hall_sensors(uint32_t *value_1, uint32_t *value_2)
 // - SECTION - motor related
 //----------------------------------------------------------------------
 
-int32_t ekset_hall_sensor_limit(const enum hall_sensor_ids sensor_idx,
+int32_t set_hall_sensor_limit(const enum hall_sensor_ids sensor_idx,
 				const enum hall_sensor_limit_ids limit_idx,
 				const uint32_t value)
 {
@@ -501,6 +502,39 @@ int32_t ekset_hall_sensor_limit(const enum hall_sensor_ids sensor_idx,
 		break;
         case HL_ACTIVE:
 		atomic_set(&hall_sensor_fs[sensor_idx].active, value);
+		break;
+	default:
+	}
+
+	return 0;
+}
+
+int32_t get_hall_sensor_limit(const enum hall_sensor_ids sensor_idx,
+				const enum hall_sensor_limit_ids limit_idx,
+				uint32_t *value)
+{
+	if ((sensor_idx < 0) || (sensor_idx >= HALL_SENSOR_COUNT))
+	{
+		return -EINVAL;
+	}
+
+	if ((limit_idx < 0) || (limit_idx >= HALL_SENSOR_LIMIT_COUNT))
+	{
+		return -EINVAL;
+	}
+
+	switch (limit_idx) {
+	case HL_V_UNDER:
+		*value = atomic_get(&hall_sensor_fs[sensor_idx].v_under);
+		break;
+        case HL_INACTIVE:
+		*value = atomic_get(&hall_sensor_fs[sensor_idx].inactive);
+		break;
+        case HL_BETWEEN:
+		*value = atomic_get(&hall_sensor_fs[sensor_idx].between);
+		break;
+        case HL_ACTIVE:
+		*value = atomic_get(&hall_sensor_fs[sensor_idx].active);
 		break;
 	default:
 	}
@@ -594,15 +628,42 @@ void ek_get_sys_diag_mode(uint32_t* value)
 // - SECTION - initialization
 //----------------------------------------------------------------------
 
-static void initialize_system_state_vars(void)
+int32_t set_hall_sensor_default_limits(void)
 {
+	int32_t rc = set_hall_sensor_limit(HALL_SENSOR_1, HL_V_UNDER, HALL_1_LIMIT_V_UNDER);
+	rc |= set_hall_sensor_limit(HALL_SENSOR_1, HL_INACTIVE, HALL_1_LIMIT_INACTIVE);
+	rc |= set_hall_sensor_limit(HALL_SENSOR_1, HL_BETWEEN, HALL_1_LIMIT_BETWEEN);
+	rc |= set_hall_sensor_limit(HALL_SENSOR_1, HL_ACTIVE, HALL_1_LIMIT_ACTIVE);
+
+	rc |= set_hall_sensor_limit(HALL_SENSOR_2, HL_V_UNDER, HALL_2_LIMIT_V_UNDER);
+	rc |= set_hall_sensor_limit(HALL_SENSOR_2, HL_INACTIVE, HALL_2_LIMIT_INACTIVE);
+	rc |= set_hall_sensor_limit(HALL_SENSOR_2, HL_BETWEEN, HALL_2_LIMIT_BETWEEN);
+	rc |= set_hall_sensor_limit(HALL_SENSOR_2, HL_ACTIVE, HALL_2_LIMIT_ACTIVE);
+
+	return rc;
+}
+
+static int32_t initialize_system_state_vars(void)
+{
+	int32_t rc = 0;
+
 	summary_state.ring_position = ATOMIC_INIT(0); // TODO [ ] assign RING_POSITION_UNKNOWN
 	summary_state.battery_voltage =  ATOMIC_INIT(0); 
 	summary_state.battery_ok = ATOMIC_INIT(0); 
 	summary_state.shore_power_ok = ATOMIC_INIT(0);
 	summary_state.can_bus_ok = ATOMIC_INIT(0);
 	summary_state.ready_flag = ATOMIC_INIT(0);
+
+	rc = set_hall_sensor_default_limits();
+
+	if (rc != 0)
+	{
+		LOG_ERR("Failed to set one or more of Hall limit default values, error %d", rc);
+		rc = -EINVAL;
+	}
+
 	LOG_INF("M2");
+	return rc;
 }
 
 int32_t ers_init_keeper(void)
