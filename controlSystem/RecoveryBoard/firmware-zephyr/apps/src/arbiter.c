@@ -27,7 +27,7 @@ LOG_MODULE_REGISTER(arbiter, LOG_LEVEL_INF);
 
 #define ERS_ARBITER_SLEEP_PER_MS 2000
 
-#define RING_POS_PERIOD_MS 10
+#define RING_POS_PERIOD_MS 1000
 
 //----------------------------------------------------------------------
 // - SECTION - file scoped
@@ -238,18 +238,15 @@ int32_t adc_reading_to_hall_state(const enum hall_sensor_ids sensor_idx,
 	{
 		*state = HALL_OUTPUT_UNDER_VOLTAGE;
 	}
-
-	if (adc_reading < limit_inactive)
+	else if (adc_reading < limit_inactive)
 	{
 		*state = HALL_OUTPUT_INACTIVE;
 	}
-
-	if (adc_reading < limit_between)
+	else if (adc_reading < limit_between)
 	{
 		*state = HALL_OUTPUT_BETWEEN;
 	}
-
-	if (adc_reading < limit_active)
+	else if (adc_reading < limit_active)
 	{
 		*state = HALL_OUTPUT_ACTIVE;
 	}
@@ -279,9 +276,6 @@ int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 		goto done;
 	}
 
-	// hall_1_state = adc_reading_to_hall_state(hall_1_reading);
-	// hall_2_state = adc_reading_to_hall_state(hall_2_reading);
-
 	rc = adc_reading_to_hall_state(HALL_SENSOR_1, hall_1_reading, &hall_1_state);
 	if (rc != 0)
 	{
@@ -295,6 +289,9 @@ int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 		LOG_ERR("Failed to get hall sensor 2 state from reading comparison, err %d", rc);
 		return rc;
 	}
+
+LOG_INF("hall readings, states: %u %u  %d %d", hall_1_reading, hall_2_reading, hall_1_state, hall_2_state);
+// LOG_INF("state1, state2: %d %d", hall_1_state, hall_2_state);
 
 /*
    Hall2   Vun   Ina   Bet   Act   Ovr 
@@ -363,16 +360,19 @@ determinations.
 qualify_validity:
 	if ((hall_1_state == HALL_OUTPUT_BETWEEN) && (hall_2_state == HALL_OUTPUT_BETWEEN))
 	{
+		LOG_INF("both hall in between");
 		*ring_position = RING_BETWEEN_FULLY_QUALIFIED;
 	}
 
 	if ((hall_1_state == HALL_OUTPUT_ACTIVE) && (hall_2_state == HALL_OUTPUT_INACTIVE))
 	{
+		LOG_INF("M4");
 		*ring_position = RING_UNLOCKED_FULLY_QUALIFIED;
 	}
 
 	if ((hall_1_state == HALL_OUTPUT_INACTIVE) && (hall_2_state == HALL_OUTPUT_ACTIVE))
 	{
+		LOG_INF("M5");
 		*ring_position = RING_LOCKED_FULLY_QUALIFIED;
 	}
 
@@ -421,11 +421,12 @@ void determine_ring_pos_work_handler(struct k_work *work)
 	}
 	// TODO [ ] remove following LOG_INF() call in production code:
 	// TODO [ ] convert ring_position_fs to atomic type.
-#if 1
+#if 0
 	else
 	{
 		// LOG_INF("Lock ring position is %d", ring_position_fs);
-		if ((call_count % 200) == 0)
+		// if ((call_count % 200) == 0)
+		if (1)
 		{
 			LOG_INF("arbiter determine ring position called %u times", call_count);
 		}
@@ -490,7 +491,7 @@ int32_t ers_init_arbiter(void)
 		LOG_ERR("ERROR spawning arbiter thread\n");
 	}
 
-	k_timer_start(&ring_position_timer, K_MSEC(RING_POS_PERIOD_MS), K_MSEC(RING_POS_PERIOD_MS));
+	// k_timer_start(&ring_position_timer, K_MSEC(RING_POS_PERIOD_MS), K_MSEC(RING_POS_PERIOD_MS));
 
 	return rc;
 }
