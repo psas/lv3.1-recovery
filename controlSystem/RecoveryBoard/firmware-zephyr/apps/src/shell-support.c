@@ -240,19 +240,26 @@ SHELL_SUBCMD_SET_CREATE(sub_section_hall, (hall));
 /* Create a set of one subcommands for 'hall' command */
 SHELL_SUBCMD_SET_CREATE(sub_section_hall_set, (hall, set));
 
-SHELL_SUBCMD_ADD((hall), show_cutoffs, &sub_section_hall, "(1) show Hall state cutoff values", arbiter_show_hall_state_cutoffs, 1, 0);
+SHELL_SUBCMD_ADD((hall), show_limits, &sub_section_hall,
+  "show Hall sensor limit values (ADC counts 0..4095)", arbiter_show_hall_state_limits, 1, 0);
 
-SHELL_SUBCMD_ADD((hall), v_under_cutoff, &sub_section_hall_set, "(2) set Hall state voltage under cutoff", sw_set_v_under_cutoff, 2, 0);
+SHELL_SUBCMD_ADD((hall), v_under_limit, &sub_section_hall_set,
+  "set Hall limit 'voltage under':  hall v_under [s1|s2] [value]", sw_set_limit_v_under, 3, 0);
 
-SHELL_SUBCMD_ADD((hall), inactive_cutoff, &sub_section_hall_set, "(3) set Hall state inactive cutoff", sw_set_inactive_cutoff, 2, 0);
+SHELL_SUBCMD_ADD((hall), inactive_limit, &sub_section_hall_set,
+  "set Hall state inactive limit:  hall inactive [s1|s2] [value]", sw_set_limit_inactive, 3, 0);
 
-SHELL_SUBCMD_ADD((hall), between_cutoff, &sub_section_hall_set, "(4) set Hall state between cutoff", sw_set_between_cutoff, 2, 0);
+SHELL_SUBCMD_ADD((hall), between_limit, &sub_section_hall_set,
+  "set Hall state between limit:  hall between [s1|s2] [value]", sw_set_limit_between, 3, 0);
 
-SHELL_SUBCMD_ADD((hall), active_cutoff, &sub_section_hall_set, "(5) set Hall state active cutoff", sw_set_active_cutoff, 2, 0);
+SHELL_SUBCMD_ADD((hall), active_limit, &sub_section_hall_set,
+  "set Hall state active limit:  hall active [s1|s2] [value]", sw_set_limit_active, 3, 0);
 
-SHELL_SUBCMD_ADD((hall), defaults, &sub_section_hall, "(6) set Hall cutoff default values", sw_set_default_cutoffs, 1, 0);
+SHELL_SUBCMD_ADD((hall), defaults, &sub_section_hall, "restore Hall sensor limit defaults",
+  sw_set_default_limits, 1, 0);
 
-SHELL_CMD_REGISTER(hall, &sub_section_hall, "- ERS - set and show Hall state cutoff values (in ADC counts)", NULL);
+SHELL_CMD_REGISTER(hall, &sub_section_hall,
+  "- ERS - show and set Hall sensor limit values (in ADC counts)", NULL);
 
 //----------------------------------------------------------------------
 // - SECTION - DAC commands
@@ -260,17 +267,22 @@ SHELL_CMD_REGISTER(hall, &sub_section_hall, "- ERS - set and show Hall state cut
 
 static int cmd_dac_show_range(const struct shell *shell, size_t argc, char *argv[])
 {
-	// LOG_INF("stub command to show DAC range");
 	uint32_t bound_low = 0;
 	uint32_t bound_high = 0;
 	int32_t rc = dac_range(&bound_low, &bound_high);
-	LOG_INF("DAC range is %u..%u", bound_low, bound_high);
+	if (rc != 0)
+	{
+		LOG_ERR("Failed to read DAC range values, err %d", rc);
+	}
+	else
+	{
+		LOG_INF("DAC range is %u..%u", bound_low, bound_high);
+	}
 	return 0;
 }
 
 static int cmd_dac_show_dac_setting(const struct shell *shell, size_t argc, char *argv[])
 {
-	// LOG_INF("stub command to show present DAC setting");
 	uint32_t dac_setting = 0;
 	int32_t rc = dac_present_value(&dac_setting);
 	if (rc == 0)
@@ -326,49 +338,3 @@ int32_t ers_init_shell_support(void)
 	int32_t rc = 0;
 	return rc;
 }
-
-#if 0
-//======================================================================
-// DEV CODE BEGIN
-//
-// This code added to see if we can define commands beyond a depth of
-// two.  Maybe not important, less easy to type such commands, but we
-// also face something of a flat command name space with only two levels
-// of command depth.  This so given Zephyr shell's default commands
-// which are present in its shell module and don't have an obvious way
-// to be disabled.
-
-static int cmd1_handler(const struct shell *sh, size_t argc, char **argv)
-{
-        shell_print(sh, "cmd1 executed");
-        return 0;
-}
-
-static int cmd2_handler(const struct shell *sh, size_t argc, char **argv)
-{
-        shell_print(sh, "cmd2 executed");
-        return 0;
-}
-
-// (1)
-SHELL_SUBCMD_SET_CREATE(sub_section_cmd, (section_cmd));
-
-// (2)
-/* Create a set of subcommands for "section_cmd cm1". */
-// SHELL_SUBCMD_SET_CREATE(sub_section_cmd1, (section_cmd, cmd1));
-SHELL_SUBCMD_SET_CREATE(sub_section_cmd1, (section_cmd, cmd1, cmd2));
-
-// (3)
-/* Add command to the set. Subcommand set is identify by parent shell command. */
-SHELL_SUBCMD_ADD((section_cmd), cmd1, &sub_section_cmd1, "help for cmd1", cmd1_handler, 1, 0); 
-
-SHELL_SUBCMD_ADD((section_cmd), cmd2, &sub_section_cmd1, "help for cmd2", cmd2_handler, 1, 0); 
-
-// (4)
-SHELL_CMD_REGISTER(section_cmd, &sub_section_cmd,
-                   "Demo command using section for subcommand registration", NULL);
-
-// DEV CODE END
-//======================================================================
-#endif // 0
-

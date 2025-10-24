@@ -13,6 +13,7 @@
 LOG_MODULE_REGISTER(arbiter, LOG_LEVEL_INF);
 
 #include <ers-can.h>
+#include <ers-config-defaults.h>
 #include <ers-dac.h>
 #include <gpio-in.h>
 #include <keeper.h>
@@ -21,30 +22,6 @@ LOG_MODULE_REGISTER(arbiter, LOG_LEVEL_INF);
 //----------------------------------------------------------------------
 // - SECTION - defines
 //----------------------------------------------------------------------
-
-/*
-        Hall2 |
- Hall1        |   Over     Active    Between   Inactive    Under
---------------+------------------------------------------------------
-Over          |   error    locked    betwen    unlocked    error
-Active        |  unlocked   error    between   UNLOCKED   unlocked
-Between       |   between  between   BETWEEN    between    between
-Unactive      |   locked    LOCKED   between     error     locked
-Under         |   error     locked   between   unlocked     error
-
-ADC channels are 12-bit, hence ADC counts range 0..4095.  Define
-"Under" through "Over" subranges:
-*/
-
-// clang-format off
-// Note these values from Hessah of PSAS, cerca 2025-09-25.  Set of like data
-// points from a second tested ERS board differ.
-#define HALL_READING_V_UNDER_CUTOFF   600
-#define HALL_READING_INACTIVE_CUTOFF  700
-#define HALL_READING_BETWEEN_CUTOFF  1600
-#define HALL_READING_ACTIVE_CUTOFF   3100
-// ADC Hall sensor readings above HALL_READING_ACTIVE_CUTOFF considered "Over".
-// clang-format on
 
 #define BASE_10 10
 
@@ -61,11 +38,6 @@ ADC channels are 12-bit, hence ADC counts range 0..4095.  Define
 K_THREAD_STACK_DEFINE(arbiter_thread_stack, ARBITER_THREAD_STACK_SIZE);
 struct k_thread arbiter_thread_data;
 
-static atomic_t hall_reading_v_under_cutoff_fs = ATOMIC_INIT(HALL_READING_V_UNDER_CUTOFF);
-static atomic_t hall_reading_inactive_cutoff_fs = ATOMIC_INIT(HALL_READING_INACTIVE_CUTOFF);
-static atomic_t hall_reading_between_cutoff_fs = ATOMIC_INIT(HALL_READING_BETWEEN_CUTOFF);
-static atomic_t hall_reading_active_cutoff_fs = ATOMIC_INIT(HALL_READING_ACTIVE_CUTOFF);
-
 static enum lock_ring_position ring_position_fs = RING_POSITION_UNKNOWN;
 
 void arbiter_set_hall_state_cutoff_defaults(void);
@@ -74,129 +46,169 @@ void arbiter_set_hall_state_cutoff_defaults(void);
 // - SECTION - routines
 //----------------------------------------------------------------------
 
-// Routines to accept and store Hall sensor threasholds, such as under voltage.
-
-// - SECTION - setter functions for hall state cutuffs
-
-void arbiter_set_v_under_cutoff(const uint32_t value)
-{
-	atomic_set(&hall_reading_v_under_cutoff_fs, (atomic_val_t)value);
-}
-
-void arbiter_set_inactive_cutoff(const uint32_t value)
-{
-	atomic_set(&hall_reading_inactive_cutoff_fs, (atomic_val_t)value);
-}
-
-void arbiter_set_between_cutoff(const uint32_t value)
-{
-	atomic_set(&hall_reading_between_cutoff_fs, (atomic_val_t)value);
-}
-
-void arbiter_set_active_cutoff(const uint32_t value)
-{
-	atomic_set(&hall_reading_active_cutoff_fs, (atomic_val_t)value);
-}
+// Routines to accept and store Hall sensor limits
 
 // TODO [ ] Add check of 'endptr' to determine whether we got valid numeric input,
 //  in all routines which call strtol():
 
-void sw_set_v_under_cutoff(const struct shell *shell, size_t argc, char **argv)
+int32_t sw_set_limit_v_under(const struct shell *shell, size_t argc, char **argv)
 {
 	uint32_t value = 0;
 	char *endptr, *str;
-	str = argv[1];
+	enum hall_sensor_ids sensor_idx;
+
+	if (strncmp("s1", argv[1], sizeof("s1")) == 0)
+	{
+		sensor_idx = HALL_SENSOR_1;
+	}
+	else if (strncmp("s2", argv[1], sizeof("s2")) == 0)
+	{
+		sensor_idx = HALL_SENSOR_2;
+	}
+	else
+	{
+		return -EINVAL;
+	}
+
+	str = argv[2];
 	value = strtol(str, &endptr, BASE_10);
-	shell_fprintf(shell, SHELL_NORMAL, "from user got v_under_cutoff of %u\n",
-		      value);
-	arbiter_set_v_under_cutoff(value);
+	shell_fprintf(shell, SHELL_NORMAL, "setting Hall sensor %d limit 'v_under' to %u\n",
+		      (sensor_idx + 1), value);
+	set_hall_sensor_limit(sensor_idx, HL_V_UNDER, value);
+
+	return 0;
 }
 
-void sw_set_inactive_cutoff(const struct shell *shell, size_t argc, char **argv)
+int32_t sw_set_limit_inactive(const struct shell *shell, size_t argc, char **argv)
 {
 	uint32_t value = 0;
 	char *endptr, *str;
-	str = argv[1];
+	enum hall_sensor_ids sensor_idx;
+
+	if (strncmp("s1", argv[1], sizeof("s1")) == 0)
+	{
+		sensor_idx = HALL_SENSOR_1;
+	}
+	else if (strncmp("s2", argv[1], sizeof("s2")) == 0)
+	{
+		sensor_idx = HALL_SENSOR_2;
+	}
+	else
+	{
+		return -EINVAL;
+	}
+
+	str = argv[2];
 	value = strtol(str, &endptr, BASE_10);
-	arbiter_set_inactive_cutoff(value);
+	shell_fprintf(shell, SHELL_NORMAL, "setting Hall sensor %d limit 'inactive' to %u\n",
+		      (sensor_idx + 1), value);
+	set_hall_sensor_limit(sensor_idx, HL_INACTIVE, value);
+
+	return 0;
 }
 
-void sw_set_between_cutoff(const struct shell *shell, size_t argc, char **argv)
+int32_t sw_set_limit_between(const struct shell *shell, size_t argc, char **argv)
 {
 	uint32_t value = 0;
 	char *endptr, *str;
-	str = argv[1];
+	enum hall_sensor_ids sensor_idx;
+
+	if (strncmp("s1", argv[1], sizeof("s1")) == 0)
+	{
+		sensor_idx = HALL_SENSOR_1;
+	}
+	else if (strncmp("s2", argv[1], sizeof("s2")) == 0)
+	{
+		sensor_idx = HALL_SENSOR_2;
+	}
+	else
+	{
+		return -EINVAL;
+	}
+
+	str = argv[2];
 	value = strtol(str, &endptr, BASE_10);
-	arbiter_set_between_cutoff(value);
+	shell_fprintf(shell, SHELL_NORMAL, "setting Hall sensor %d limit 'between' to %u\n",
+		      (sensor_idx + 1), value);
+	set_hall_sensor_limit(sensor_idx, HL_BETWEEN, value);
+
+	return 0;
 }
 
-void sw_set_active_cutoff(const struct shell *shell, size_t argc, char **argv)
+int32_t sw_set_limit_active(const struct shell *shell, size_t argc, char **argv)
 {
 	uint32_t value = 0;
 	char *endptr, *str;
-	str = argv[1];
+	enum hall_sensor_ids sensor_idx;
+
+	if (strncmp("s1", argv[1], sizeof("s1")) == 0)
+	{
+		sensor_idx = HALL_SENSOR_1;
+	}
+	else if (strncmp("s2", argv[1], sizeof("s2")) == 0)
+	{
+		sensor_idx = HALL_SENSOR_2;
+	}
+	else
+	{
+		return -EINVAL;
+	}
+
+	str = argv[2];
 	value = strtol(str, &endptr, BASE_10);
-	arbiter_set_active_cutoff(value);
-}
-
-// TODO [ ] make following routine name match local naming convention 
-
-void arbiter_set_hall_state_cutoff_defaults(void)
-{
-	arbiter_set_v_under_cutoff(HALL_READING_V_UNDER_CUTOFF);
-	arbiter_set_inactive_cutoff(HALL_READING_INACTIVE_CUTOFF);
-	arbiter_set_between_cutoff(HALL_READING_BETWEEN_CUTOFF);
-	arbiter_set_active_cutoff(HALL_READING_ACTIVE_CUTOFF);
-}
-
-void sw_set_default_cutoffs(const struct shell *shell, size_t argc, char **argv)
-{
-	LOG_INF("Setting Hall cutoffs to default values . . .");
-	arbiter_set_hall_state_cutoff_defaults();
-	arbiter_show_hall_state_cutoffs(shell);
-}
-
-// - SECTION - getter functions for hall state cutuffs:
-
-void arbiter_get_v_under_cutoff(uint32_t *value)
-{
-	*value = atomic_get(&hall_reading_v_under_cutoff_fs);
-}
-
-void arbiter_get_inactive_cutoff(uint32_t *value)
-{
-	*value = atomic_get(&hall_reading_inactive_cutoff_fs);
-}
-
-void arbiter_get_between_cutoff(uint32_t *value)
-{
-	*value = atomic_get(&hall_reading_between_cutoff_fs);
-}
-
-void arbiter_get_active_cutoff(uint32_t *value)
-{
-	*value = atomic_get(&hall_reading_active_cutoff_fs);
+	shell_fprintf(shell, SHELL_NORMAL, "setting Hall sensor %d limit 'active' to %u\n",
+		      (sensor_idx + 1), value);
+	set_hall_sensor_limit(sensor_idx, HL_ACTIVE, value);
+	return 0;
 }
 
 /**
  * @brief Routine to report Hall sensor state cutoff values (in ADC counts).
  */
 
-void arbiter_show_hall_state_cutoffs(const struct shell *shell)
+void arbiter_show_hall_state_limits(const struct shell *shell)
 {
-	uint32_t v_under_cutoff, inactive_cutoff, between_cutoff, active_cutoff;
+	uint32_t v_under_limit, inactive_limit, between_limit, active_limit;
 
-	arbiter_get_v_under_cutoff(&v_under_cutoff);
-	arbiter_get_inactive_cutoff(&inactive_cutoff);
-	arbiter_get_between_cutoff(&between_cutoff);
-	arbiter_get_active_cutoff(&active_cutoff);
+	get_hall_sensor_limit(HALL_SENSOR_1, HL_V_UNDER, &v_under_limit);
+	get_hall_sensor_limit(HALL_SENSOR_1, HL_INACTIVE, &inactive_limit);
+	get_hall_sensor_limit(HALL_SENSOR_1, HL_BETWEEN, &between_limit);
+	get_hall_sensor_limit(HALL_SENSOR_1, HL_ACTIVE, &active_limit);
 
-	shell_fprintf(shell, SHELL_NORMAL, "Hall sensor state cutoff values (in ADC "
+	shell_fprintf(shell, SHELL_NORMAL, "Hall sensor state limit values (in ADC "
 	  "counts):\n");
-	shell_fprintf(shell, SHELL_NORMAL, "  v under cutoff: %u\n", v_under_cutoff);
-	shell_fprintf(shell, SHELL_NORMAL, " inactive cutoff: %u\n", inactive_cutoff);
-	shell_fprintf(shell, SHELL_NORMAL, "  between cutoff: %u\n", between_cutoff);
-	shell_fprintf(shell, SHELL_NORMAL, "   active cutoff: %u\n", active_cutoff);
+	shell_fprintf(shell, SHELL_NORMAL, "  v under limit sensor 1: %u\n", v_under_limit);
+	shell_fprintf(shell, SHELL_NORMAL, " inactive limit sensor 1: %u\n", inactive_limit);
+	shell_fprintf(shell, SHELL_NORMAL, "  between limit sensor 1: %u\n", between_limit);
+	shell_fprintf(shell, SHELL_NORMAL, "   active limit sensor 1: %u\n", active_limit);
+
+	get_hall_sensor_limit(HALL_SENSOR_2, HL_V_UNDER, &v_under_limit);
+	get_hall_sensor_limit(HALL_SENSOR_2, HL_INACTIVE, &inactive_limit);
+	get_hall_sensor_limit(HALL_SENSOR_2, HL_BETWEEN, &between_limit);
+	get_hall_sensor_limit(HALL_SENSOR_2, HL_ACTIVE, &active_limit);
+
+	shell_fprintf(shell, SHELL_NORMAL, "  v under limit sensor 2: %u\n", v_under_limit);
+	shell_fprintf(shell, SHELL_NORMAL, " inactive limit sensor 2: %u\n", inactive_limit);
+	shell_fprintf(shell, SHELL_NORMAL, "  between limit sensor 2: %u\n", between_limit);
+	shell_fprintf(shell, SHELL_NORMAL, "   active limit sensor 2: %u\n", active_limit);
+}
+
+/**
+ * @brief Shell wrapper function to restore default Hall sensor limit values.
+ */
+
+void sw_set_default_limits(const struct shell *shell, size_t argc, char **argv)
+{
+	LOG_INF("Setting Hall sensor limit default values . . .");
+	int32_t rc = set_hall_sensor_default_limits();
+	if (rc != 0)
+	{
+		LOG_ERR("Failed to set hall limit default values, err %d", rc);
+	}
+	else
+	{
+		arbiter_show_hall_state_limits(shell);
+	}
 }
 
 /**
@@ -204,31 +216,45 @@ void arbiter_show_hall_state_cutoffs(const struct shell *shell)
  *   of five states.
  */
 
-enum hall_sensor_state adc_reading_to_hall_state(const uint32_t adc_reading)
+// TODO [ ] determine whether this routine should be private:
+
+int32_t adc_reading_to_hall_state(const enum hall_sensor_ids sensor_idx,
+				  const uint32_t adc_reading,
+				  enum hall_sensor_state *state)
 {
-	enum hall_sensor_state sensor_state = HALL_OUTPUT_OVER_VOLTAGE;
+	uint32_t limit_v_under, limit_inactive, limit_between, limit_active;
 
-	if (adc_reading < HALL_READING_V_UNDER_CUTOFF)
+	if ((sensor_idx < 0) || (sensor_idx >= HALL_SENSOR_COUNT))
 	{
-		sensor_state = HALL_OUTPUT_UNDER_VOLTAGE;
+		return -EINVAL;
 	}
 
-	if (adc_reading < HALL_READING_INACTIVE_CUTOFF)
+	get_hall_sensor_limit(sensor_idx, HL_V_UNDER, &limit_v_under);
+	get_hall_sensor_limit(sensor_idx, HL_INACTIVE, &limit_inactive);
+	get_hall_sensor_limit(sensor_idx, HL_BETWEEN, &limit_between);
+	get_hall_sensor_limit(sensor_idx, HL_ACTIVE, &limit_active);
+
+	if (adc_reading < limit_v_under)
 	{
-		sensor_state = HALL_OUTPUT_INACTIVE;
+		*state = HALL_OUTPUT_UNDER_VOLTAGE;
 	}
 
-	if (adc_reading < HALL_READING_BETWEEN_CUTOFF)
+	if (adc_reading < limit_inactive)
 	{
-		sensor_state = HALL_OUTPUT_BETWEEN;
+		*state = HALL_OUTPUT_INACTIVE;
 	}
 
-	if (adc_reading < HALL_READING_ACTIVE_CUTOFF)
+	if (adc_reading < limit_between)
 	{
-		sensor_state = HALL_OUTPUT_ACTIVE;
+		*state = HALL_OUTPUT_BETWEEN;
 	}
 
-	return sensor_state;
+	if (adc_reading < limit_active)
+	{
+		*state = HALL_OUTPUT_ACTIVE;
+	}
+
+	return 0;
 }
 
 /**
@@ -249,12 +275,26 @@ int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 	rc = ekget_both_hall_sensors(&hall_1_reading, &hall_2_reading);
 	if (rc != 0)
 	{
-		LOG_ERR("determine ring position could not get hall readings, error %d", rc);
+		LOG_ERR("determine ring position could not get hall readings, err %d", rc);
 		goto done;
 	}
 
-	hall_1_state = adc_reading_to_hall_state(hall_1_reading);
-	hall_2_state = adc_reading_to_hall_state(hall_2_reading);
+	// hall_1_state = adc_reading_to_hall_state(hall_1_reading);
+	// hall_2_state = adc_reading_to_hall_state(hall_2_reading);
+
+	rc = adc_reading_to_hall_state(HALL_SENSOR_1, hall_1_reading, &hall_1_state);
+	if (rc != 0)
+	{
+		LOG_ERR("Failed to get hall sensor 1 state from reading comparison, err %d", rc);
+		return rc;
+	}
+
+	rc = adc_reading_to_hall_state(HALL_SENSOR_2, hall_2_reading, &hall_2_state);
+	if (rc != 0)
+	{
+		LOG_ERR("Failed to get hall sensor 2 state from reading comparison, err %d", rc);
+		return rc;
+	}
 
 /*
    Hall2   Vun   Ina   Bet   Act   Ovr 
@@ -390,7 +430,7 @@ void determine_ring_pos_work_handler(struct k_work *work)
 			LOG_INF("arbiter determine ring position called %u times", call_count);
 		}
 	}
-#endif // 0
+#endif // development block
 }
 
 K_WORK_DEFINE(determine_ring_pos_work, determine_ring_pos_work_handler);
@@ -441,10 +481,6 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 int32_t ers_init_arbiter(void)
 {
 	int32_t rc = 0;
-
-	// Initialize Hall sensor ADC count threshold values:
-	// (These values used to determine practical Hall sensor states)
-	arbiter_set_hall_state_cutoff_defaults();
 
 	k_tid_t arbiter_tid = k_thread_create(&arbiter_thread_data, arbiter_thread_stack,
 					K_THREAD_STACK_SIZEOF(arbiter_thread_stack),

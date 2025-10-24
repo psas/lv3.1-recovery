@@ -60,8 +60,8 @@ K_THREAD_STACK_DEFINE(adc_thread_stack, ADC_THREAD_STACK_SIZE);
 
 struct k_mutex adc_mtx;
 
-static uint32_t hall_adc_count_1_fs = 0;
-static uint32_t hall_adc_count_2_fs = 0;
+// static uint32_t hall_adc_count_1_fs = 0;
+// static uint32_t hall_adc_count_2_fs = 0;
 
 //----------------------------------------------------------------------
 // - SECTION - routines
@@ -99,7 +99,7 @@ int32_t adc_read_channels(const enum ers_adc_values idx_begin,
 		return -EINVAL;
 	}
 
-        uint32_t count = 0;
+        // uint32_t count = 0;
         uint16_t buf;
         struct adc_sequence sequence = { 
                 .buffer = &buf,
