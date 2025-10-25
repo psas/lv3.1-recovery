@@ -27,7 +27,7 @@ LOG_MODULE_REGISTER(arbiter, LOG_LEVEL_INF);
 
 #define ERS_ARBITER_SLEEP_PER_MS 2000
 
-#define RING_POS_PERIOD_MS 1000
+#define RING_POS_PERIOD_MS 2000
 
 //----------------------------------------------------------------------
 // - SECTION - file scoped
@@ -269,6 +269,9 @@ int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 	enum hall_sensor_state hall_1_state = HALL_OUTPUT_UNKNOWN;
 	enum hall_sensor_state hall_2_state = HALL_OUTPUT_UNKNOWN;
 
+	LOG_INF("M8");
+	k_msleep(5);
+
 	rc = ekget_both_hall_sensors(&hall_1_reading, &hall_2_reading);
 	if (rc != 0)
 	{
@@ -290,7 +293,7 @@ int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 		return rc;
 	}
 
-LOG_INF("hall readings, states: %u %u  %d %d", hall_1_reading, hall_2_reading, hall_1_state, hall_2_state);
+// LOG_INF("hall readings, states: %u %u  %d %d", hall_1_reading, hall_2_reading, hall_1_state, hall_2_state);
 // LOG_INF("state1, state2: %d %d", hall_1_state, hall_2_state);
 
 /*
@@ -360,19 +363,19 @@ determinations.
 qualify_validity:
 	if ((hall_1_state == HALL_OUTPUT_BETWEEN) && (hall_2_state == HALL_OUTPUT_BETWEEN))
 	{
-		LOG_INF("both hall in between");
+		// LOG_INF("both hall in between");
 		*ring_position = RING_BETWEEN_FULLY_QUALIFIED;
 	}
 
 	if ((hall_1_state == HALL_OUTPUT_ACTIVE) && (hall_2_state == HALL_OUTPUT_INACTIVE))
 	{
-		LOG_INF("M4");
+		// LOG_INF("M4");
 		*ring_position = RING_UNLOCKED_FULLY_QUALIFIED;
 	}
 
 	if ((hall_1_state == HALL_OUTPUT_INACTIVE) && (hall_2_state == HALL_OUTPUT_ACTIVE))
 	{
-		LOG_INF("M5");
+		// LOG_INF("M5");
 		*ring_position = RING_LOCKED_FULLY_QUALIFIED;
 	}
 
@@ -436,12 +439,56 @@ void determine_ring_pos_work_handler(struct k_work *work)
 
 K_WORK_DEFINE(determine_ring_pos_work, determine_ring_pos_work_handler);
 
+struct k_work_sync work_sync;
+
 void ring_position_timer_handler(struct k_timer *dummy)
 {
-        k_work_submit(&determine_ring_pos_work);
+	LOG_INF("M7");
+	bool flush_result = k_work_flush(&determine_ring_pos_work, &work_sync);
+	LOG_INF("call to k_work_flush returns %d", flush_result);
+
+	int32_t rc = k_work_submit(&determine_ring_pos_work);
+	if (rc < 0)
+	{
+		LOG_ERR("Failed to submit to work queue, err %d", rc);
+	}
+	else
+	{
+		LOG_ERR("work queue submission call returns status %d", rc);
+	}
 }
 
 K_TIMER_DEFINE(ring_position_timer, ring_position_timer_handler, NULL);
+
+/**
+ * @brief routine to change interval for lock ring position detection at
+ *   run time.
+ *
+ * @return 0 without condition. 
+ */
+
+int32_t update_ring_position_detection_timer(const uint32_t timeout_ms)
+{
+	LOG_INF("called to update ring position timer, requested interval %u ms", timeout_ms);
+
+	k_timer_stop(&ring_position_timer);
+
+	if (timeout_ms > 0)
+	{
+		LOG_INF("M6 - %u ms", timeout_ms);
+		k_timer_start(&ring_position_timer, K_MSEC(100), K_MSEC(timeout_ms));
+	}
+	else
+	{
+		LOG_INF("Leaving timer stopped per request for zero length interval.");
+	}
+
+	return 0;
+}
+
+//----------------------------------------------------------------------
+// - SECTION - arbiter thread entry point
+//----------------------------------------------------------------------
 
 void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 {
@@ -450,12 +497,10 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
         ARG_UNUSED(arg3);
 
 	static uint32_t loop_count = 0;
-	enum lock_ring_position ring_position = RING_POSITION_UNKNOWN;
 	int32_t rc = 0;
 
 	while (1)
 	{
-		// LOG_INF("M3");
 #if 0
 		LOG_INF("setting deploy1 GPIO to %d", (loop_count % 2));
 		rc = ers_gpios_set_deploy1(loop_count % 2);
@@ -464,9 +509,12 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 		LOG_INF("GPIO set returns status %d", rc);
 #endif
 
-// TODO [x] Call ring state determination code
+#ifdef DEV_DETERMINE_RING_POSITION_IN_MAIN_LOOP
+		enum lock_ring_position ring_position = RING_POSITION_UNKNOWN;
+
 		rc = arbiter_determine_ring_state(&ring_position);
 		// LOG_INF("Current lock ring position:  %d", ring_position);
+#endif
 
 // TODO [ ] Call battery state determination code
 
@@ -491,7 +539,9 @@ int32_t ers_init_arbiter(void)
 		LOG_ERR("ERROR spawning arbiter thread\n");
 	}
 
-	// k_timer_start(&ring_position_timer, K_MSEC(RING_POS_PERIOD_MS), K_MSEC(RING_POS_PERIOD_MS));
+#ifndef DEV_DETERMINE_RING_POSITION_IN_MAIN_LOOP
+	k_timer_start(&ring_position_timer, K_MSEC(RING_POS_PERIOD_MS), K_MSEC(RING_POS_PERIOD_MS));
+#endif
 
 	return rc;
 }

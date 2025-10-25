@@ -172,61 +172,6 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 SHELL_CMD_REGISTER(ers, &ers_cmds, "- ERS - development commands", NULL);
 
 //----------------------------------------------------------------------
-// - SECTION - ERS lock ring commands (IN PROGRESS)
-//----------------------------------------------------------------------
-
-static int sw_show_locking_ring_pos(const struct shell *shell, size_t argc, char *argv[])
-{
-        ARG_UNUSED(shell);
-        ARG_UNUSED(argc);
-        ARG_UNUSED(argv);
-	enum lock_ring_position ring_position = RING_POSITION_UNKNOWN;
-	int32_t rc = arbiter_determine_ring_state(&ring_position);
-	if (rc == 0)
-	{
-		char lbuf[SIZE_SHORT_ERS_MESSAGE] = {0};
-		char *ring_pos_as_str = lbuf;
-		ring_pos_as_str = ring_pos_to_str(ring_position);
-		LOG_INF("Current lock ring position:  %d %s", ring_position, ring_pos_as_str);
-	}
-	else
-	{
-		LOG_INF("Failed lock ring position query, error %d", rc);
-	}
-
-	return rc;
-}
-
-static int sw_lock_ring(const struct shell *shell, size_t argc, char *argv[])
-{
-        ARG_UNUSED(shell);
-        ARG_UNUSED(argc);
-        ARG_UNUSED(argv);
-	LOG_INF("- STUB - for command to lock parachute locking ring");
-	return 0;
-}
-
-static int sw_unlock_ring(const struct shell *shell, size_t argc, char *argv[])
-{
-        ARG_UNUSED(shell);
-        ARG_UNUSED(argc);
-        ARG_UNUSED(argv);
-	LOG_INF("- STUB - for command to lock parachute locking ring");
-	return 0;
-}
-
-SHELL_SUBCMD_SET_CREATE(sub_section_ring, (ring));
-
-SHELL_SUBCMD_ADD((ring), show_position, &sub_section_ring, "show locking ring position", sw_show_locking_ring_pos, 1, 0);
-// TODO [ ] add command to lock ring
-// TODO [ ] add command to unlock ring
-SHELL_SUBCMD_ADD((ring), lock, &sub_section_ring, "lock ring", sw_lock_ring, 1, 0);
-
-SHELL_SUBCMD_ADD((ring), unlock, &sub_section_ring, "unlock ring", sw_unlock_ring, 1, 0);
-
-SHELL_CMD_REGISTER(ring, &sub_section_ring, "- ERS - lock ring commands", NULL);
-
-//----------------------------------------------------------------------
 // - SECTION - ERS Hall sensor commands
 //----------------------------------------------------------------------
 
@@ -260,6 +205,104 @@ SHELL_SUBCMD_ADD((hall), defaults, &sub_section_hall, "restore Hall sensor limit
 
 SHELL_CMD_REGISTER(hall, &sub_section_hall,
   "- ERS - show and set Hall sensor limit values (in ADC counts)", NULL);
+
+//----------------------------------------------------------------------
+// - SECTION - ERS lock ring commands (IN PROGRESS)
+//----------------------------------------------------------------------
+
+static int sw_show_locking_ring_pos(const struct shell *shell, size_t argc, char *argv[])
+{
+        ARG_UNUSED(shell);
+        ARG_UNUSED(argc);
+        ARG_UNUSED(argv);
+	enum lock_ring_position ring_position = RING_POSITION_UNKNOWN;
+	int32_t rc = arbiter_determine_ring_state(&ring_position);
+	if (rc == 0)
+	{
+		char lbuf[SIZE_SHORT_ERS_MESSAGE] = {0};
+		char *ring_pos_as_str = lbuf;
+		ring_pos_as_str = ring_pos_to_str(ring_position);
+		LOG_INF("Current lock ring position:  %d %s", ring_position, ring_pos_as_str);
+	}
+	else
+	{
+		LOG_INF("Failed lock ring position query, error %d", rc);
+	}
+
+	return rc;
+}
+
+static int sw_set_pos_detection_interval(const struct shell *shell, size_t argc, char *argv[])
+{
+        ARG_UNUSED(shell);
+        ARG_UNUSED(argc);
+        ARG_UNUSED(argv);
+
+        uint32_t value = 0;
+        char *endptr, *str;
+        int32_t rc = 0;
+
+        str = argv[1];
+        value = strtol(str, &endptr, BASE_TEN);
+
+	LOG_INF("Storing ring position detection interval of %u ms . . .", value);
+	set_ring_pos_detection_interval(value);
+	rc = update_ring_position_detection_timer(value);
+	return rc;
+}
+
+static int sw_show_pos_detection_interval(const struct shell *shell, size_t argc, char *argv[])
+{
+        ARG_UNUSED(shell);
+        ARG_UNUSED(argc);
+        ARG_UNUSED(argv);
+	// LOG_INF("- INPROGRESS STUB 1024 - command show ring position detection interval");
+
+        uint32_t value = 0;
+	get_ring_pos_detection_interval(&value);
+	LOG_INF("ring position detection interval is %u ms", value);
+	return 0;
+}
+
+
+static int sw_lock_ring(const struct shell *shell, size_t argc, char *argv[])
+{
+        ARG_UNUSED(shell);
+        ARG_UNUSED(argc);
+        ARG_UNUSED(argv);
+	LOG_INF("- STUB - for command to lock parachute locking ring");
+	return 0;
+}
+
+static int sw_unlock_ring(const struct shell *shell, size_t argc, char *argv[])
+{
+        ARG_UNUSED(shell);
+        ARG_UNUSED(argc);
+        ARG_UNUSED(argv);
+	LOG_INF("- STUB - for command to lock parachute locking ring");
+	return 0;
+}
+
+// clang-format off
+SHELL_SUBCMD_SET_CREATE(sub_section_ring, (ring));
+
+SHELL_SUBCMD_ADD((ring), show_position, &sub_section_ring, "show locking ring position",
+  sw_show_locking_ring_pos, 1, 0);
+
+SHELL_SUBCMD_ADD((ring), dishow, &sub_section_ring, "show ring position detection internal in ms",
+  sw_show_pos_detection_interval, 1, 0);
+
+SHELL_SUBCMD_ADD((ring), diset, &sub_section_ring, "set ring position detection internal in ms",
+  sw_set_pos_detection_interval, 2, 0);
+
+// TODO [ ] add command to lock ring
+// TODO [ ] add command to unlock ring
+SHELL_SUBCMD_ADD((ring), lock, &sub_section_ring, "lock ring", sw_lock_ring, 1, 0);
+
+SHELL_SUBCMD_ADD((ring), unlock, &sub_section_ring, "unlock ring", sw_unlock_ring, 1, 0);
+
+SHELL_CMD_REGISTER(ring, &sub_section_ring, "- ERS - lock ring commands", NULL);
+// clang-format on
 
 //----------------------------------------------------------------------
 // - SECTION - DAC commands
@@ -332,6 +375,10 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 );
 
 SHELL_CMD_REGISTER(dac, &cmds_dac, "- ERS - DAC info and set commands", NULL);
+
+//----------------------------------------------------------------------
+// - SECTION - init function
+//----------------------------------------------------------------------
 
 int32_t ers_init_shell_support(void)
 {

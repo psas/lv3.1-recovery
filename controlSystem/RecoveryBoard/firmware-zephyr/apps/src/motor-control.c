@@ -184,6 +184,26 @@ int32_t motor_ctrl_drive_deploy2_high(void)
 	}
 }
 
+int32_t motor_ctrl_lock_ring(void)
+{
+// Set DAC output to create ~100m at H-bridge output
+// Drive NOT_MOTOR_PS high to enable H-bridge
+// Drive deploy signals to move ring to locked position
+// Periodically check for ring position in locked state and in unknown state,
+// turn off motor in those states.
+
+	return 0;
+}
+
+int32_t motor_ctrl_unlock_ring(void)
+{
+	return 0;
+}
+
+//----------------------------------------------------------------------
+// - SECTION - initialize motor control module
+//----------------------------------------------------------------------
+
 int32_t ers_init_motor_ctrl(void)
 {
         int32_t rc = 0;

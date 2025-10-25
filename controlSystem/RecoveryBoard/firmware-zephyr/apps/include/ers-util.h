@@ -3,4 +3,6 @@
 
 #define SIZE_SHORT_ERS_MESSAGE 64
 
+#define BASE_TEN 10
+
 #endif // ERS_UTIL_H

@@ -9,6 +9,7 @@
 
 LOG_MODULE_REGISTER(keeper, LOG_LEVEL_INF);
 
+#include <arbiter.h>
 #include <ers-config-defaults.h>
 #include <keeper.h>
 
@@ -18,7 +19,8 @@ LOG_MODULE_REGISTER(keeper, LOG_LEVEL_INF);
  *
  * @note ERS keeper module tracks and shares most ERS board condition and state
  *   information.  State info is organized in this module in the following
- *   sets of config settings, readings and "programmatic" conditions:
+ *   sets of config settings, readings and "programmatic" conditions.  These are
+ *   collectively named "data groups":
  *
  * (1) battery (for recovery system)
  *    +  voltage reading
@@ -29,7 +31,9 @@ LOG_MODULE_REGISTER(keeper, LOG_LEVEL_INF);
  *    +  ISO_DROGUE input on "Sender" ERS board only
  *    +  ISO_MAIN input on "Sender" ERS board only
  *
- * (3) motor related (motor for lock ring)
+ * (2 1/2) analog input not categorized
+ *
+ * (3) locking ring
  *    +  Hall sensors 1
  *       o  reading
  *       o  v_under ADC count limit
@@ -42,6 +46,10 @@ LOG_MODULE_REGISTER(keeper, LOG_LEVEL_INF);
  *       o  inactive ADC count limit
  *       o  between ADC count limit
  *       o  active ADC count limit
+ *    +  ring state, present physical position: locked, between, unlocked, unknown
+ *    +  ring position detection interval
+ *
+ * (4) motor related (motor for lock ring)
  *    +  Motor
  *       o  MOTOR_ISENSE analog input for current reading
  *       o  NOT_MOTOR_FAILA digital input
@@ -50,15 +58,17 @@ LOG_MODULE_REGISTER(keeper, LOG_LEVEL_INF);
  *       o  DEPLOY1 one of two H-bridge control signals
  *       o  DEPLOY2 two of two H-bridge control signals
  *
- * (4) CAN bus related
- *    +  CAN ok flag
- *    +  ERS summary state data (sent out via periodic CAN message)
- *       o  ring_status
- *       o  battery_voltage (in decivolts)
- *       o  battery_ok
- *       o  shore_power_ok
- *       o  can_bus_ok
- *       o  ready_state
+ * (5) CAN bus related
+ *
+ * (6) ERS summary state data
+ *    +  ring_status
+ *    +  battery_voltage (in decivolts)
+ *    +  battery_ok
+ *    +  shore_power_ok
+ *    +  can_bus_ok
+ *    +  ready_state
+ *
+ * (7) ERS diagnostics
  */
 
 /*
@@ -143,6 +153,8 @@ struct hall_sensor_limits {
 
 static struct hall_sensor_limits hall_sensor_fs[HALL_SENSOR_COUNT];
 
+static atomic_t ring_pos_interval = ATOMIC_INIT(0);
+
 /**
  * @defgroup system_state
  */
@@ -203,8 +215,35 @@ static bool keeper_initialized_fs = false;
 // - SECTION - routines
 //----------------------------------------------------------------------
 
-// GPIO type inputs
-// "set" APIs
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - DATA GROUP - (1) battery
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+// Battery reading in ADC counts
+void ekset_batt_read(const uint32_t value)
+{
+	atomic_set(&batt_read, (atomic_val_t)value);
+}
+
+void ekget_batt_read(uint32_t* value)
+{
+	*value = atomic_get(&batt_read);
+}
+
+// Battery reading in millivolts
+void ekset_batt_read_mv(const uint32_t value)
+{
+	atomic_set(&batt_read_mv, (atomic_val_t)value);
+}
+
+void ekget_batt_read_mv(uint32_t* value)
+{
+	*value = atomic_get(&batt_read_mv);
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - DATA GROUP - (2) digital inputs
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 void ekset_iso_drogue(const uint32_t value)
 {
@@ -221,13 +260,6 @@ void ekset_not_umb_on(const uint32_t value)
 	atomic_set(&not_umb_on, (atomic_val_t)value);
 }
 
-void ekset_not_motor_faila(const uint32_t value)
-{
-	atomic_set(&not_umb_on, (atomic_val_t)value);
-}
-
-// "get" APIs
-
 void ekget_iso_drogue(uint32_t* value)
 {
 	*value = atomic_get(&iso_drogue);
@@ -243,102 +275,9 @@ void ekget_not_unb_on(uint32_t* value)
 	*value = atomic_get(&not_umb_on);
 }
 
-void ekget_not_motor_faila(uint32_t* value)
-{
-	*value = atomic_get(&not_motor_faila);
-}
-
-//----------------------------------------------------------------------
-// - SECTION - ERS analog inputs
-//----------------------------------------------------------------------
-
-// "set" APIs for analog inputs
-
-void ekset_batt_read(const uint32_t value)
-{
-	atomic_set(&batt_read, (atomic_val_t)value);
-}
-
-/**
- * @brief store batter voltage converted to decivolts:
- */
-
-void ekset_batt_read_dv(const uint32_t value)
-{
-	atomic_set(&batt_read_dv, (atomic_val_t)value);
-}
-
-void ekset_motor_isense(const uint32_t value)
-{
-	atomic_set(&motor_isense, (atomic_val_t)value);
-}
-
-void ekset_hall_1(const uint32_t value)
-{
-	atomic_set(&hall_1, (atomic_val_t)value);
-}
-
-void ekset_hall_2(const uint32_t value)
-{
-	atomic_set(&hall_2, (atomic_val_t)value);
-}
-
-// Analog counts converted to millivolts:
-
-void ekset_batt_read_mv(const uint32_t value)
-{
-	atomic_set(&batt_read_mv, (atomic_val_t)value);
-}
-
-void ekset_motor_isense_mv(const uint32_t value)
-{
-	atomic_set(&motor_isense_mv, (atomic_val_t)value);
-}
-
-void ekset_hall_1_mv(const uint32_t value)
-{
-	atomic_set(&hall_1_mv, (atomic_val_t)value);
-}
-
-void ekset_hall_2_mv(const uint32_t value)
-{
-	atomic_set(&hall_2_mv, (atomic_val_t)value);
-}
-
-
-/**
- * @brief Function to store both Hall sensor readings with mutual exclusion
- *   to assure these values are read only when both are up to date.
- */
-
-int32_t ekset_both_hall_sensors(const uint32_t value_1, const uint32_t value_2)
-{
-	int32_t rc = 0;
-	if (!keeper_initialized_fs)
-	{
-		LOG_ERR("Data keeper module not initialized!");
-		return -ESRCH;
-	}
-
-	k_mutex_lock(&hall_sensors_mtx, K_FOREVER);
-	if (rc != 0)
-	{
-		LOG_ERR("Failed to lock mutex for \"store hall sensors values\", error %d", rc);
-		return rc;
-	}
-
-	ekset_hall_1(value_1);
-	ekset_hall_2(value_2);
-
-	k_mutex_unlock(&hall_sensors_mtx);
-	if (rc != 0)
-	{
-		LOG_ERR("Failed to lock mutex for \"store hall sensors values\", error %d", rc);
-		return rc;
-	}
-
-	return 0;
-}
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - DATA GROUP - (2 1/2) analog inputs not categorized
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 int32_t ekset_adc_value(const enum ers_adc_values idx, const uint32_t val)
 {
@@ -390,16 +329,6 @@ int32_t ekset_adc_value_in_mv(const enum ers_adc_values_in_mv idx, const uint32_
 
 // "get" APIs for analog inputs
 
-void ekget_batt_read(uint32_t* value)
-{
-	*value = atomic_get(&batt_read);
-}
-
-void ekget_motor_isense(uint32_t* value)
-{
-	*value = atomic_get(&motor_isense);
-}
-
 void ekget_hall_1(uint32_t* value)
 {
 	*value = atomic_get(&hall_1);
@@ -411,16 +340,6 @@ void ekget_hall_2(uint32_t* value)
 }
 
 
-void ekget_batt_read_mv(uint32_t* value)
-{
-	*value = atomic_get(&batt_read_mv);
-}
-
-void ekget_motor_isense_mv(uint32_t* value)
-{
-	*value = atomic_get(&motor_isense_mv);
-}
-
 void ekget_hall_1_mv(uint32_t* value)
 {
 	*value = atomic_get(&hall_1_mv);
@@ -431,15 +350,67 @@ void ekget_hall_2_mv(uint32_t* value)
 	*value = atomic_get(&hall_2_mv);
 }
 
+// Give ring state logic readings from same sample period:
 
-// The decivolt value getter . . .
 
-void ekget_batt_read_dv(uint32_t* value)
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - DATA GROUP - (3) locking ring
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+void ekset_hall_1(const uint32_t value)
 {
-	*value = atomic_get(&batt_read_dv);
+	atomic_set(&hall_1, (atomic_val_t)value);
 }
 
-// Give ring state logic readings from same sample period:
+void ekset_hall_2(const uint32_t value)
+{
+	atomic_set(&hall_2, (atomic_val_t)value);
+}
+
+void ekset_hall_1_mv(const uint32_t value)
+{
+	atomic_set(&hall_1_mv, (atomic_val_t)value);
+}
+
+void ekset_hall_2_mv(const uint32_t value)
+{
+	atomic_set(&hall_2_mv, (atomic_val_t)value);
+}
+
+/**
+ * @brief Function to store both Hall sensor readings with mutual exclusion
+ *   to assure these values are read only when both are up to date.
+ */
+
+int32_t ekset_both_hall_sensors(const uint32_t value_1, const uint32_t value_2)
+{
+	int32_t rc = 0;
+	if (!keeper_initialized_fs)
+	{
+		LOG_ERR("Data keeper module not initialized!");
+		return -ESRCH;
+	}
+
+	k_mutex_lock(&hall_sensors_mtx, K_FOREVER);
+	if (rc != 0)
+	{
+		LOG_ERR("Failed to lock mutex for \"store hall sensors values\", error %d", rc);
+		return rc;
+	}
+
+	ekset_hall_1(value_1);
+	ekset_hall_2(value_2);
+
+	k_mutex_unlock(&hall_sensors_mtx);
+	if (rc != 0)
+	{
+		LOG_ERR("Failed to lock mutex for \"store hall sensors values\", error %d", rc);
+		return rc;
+	}
+
+	return 0;
+}
 
 int32_t ekget_both_hall_sensors(uint32_t *value_1, uint32_t *value_2)
 {
@@ -453,7 +424,7 @@ int32_t ekget_both_hall_sensors(uint32_t *value_1, uint32_t *value_2)
 		return -ESRCH;
 	}
 
-	k_mutex_lock(&hall_sensors_mtx, K_FOREVER);
+	// k_mutex_lock(&hall_sensors_mtx, K_FOREVER);
 	if (rc != 0)
 	{
 		LOG_ERR("Failed to lock mutex for \"store hall sensors values\", error %d", rc);
@@ -462,7 +433,8 @@ int32_t ekget_both_hall_sensors(uint32_t *value_1, uint32_t *value_2)
 
 	ekget_hall_1_mv(value_1);
 	ekget_hall_2_mv(value_2);
-	k_mutex_unlock(&hall_sensors_mtx);
+
+	// k_mutex_unlock(&hall_sensors_mtx);
 	if (rc != 0)
 	{
 		LOG_ERR("Failed to unlock mutex for \"store hall sensors values\", error %d", rc);
@@ -472,9 +444,12 @@ int32_t ekget_both_hall_sensors(uint32_t *value_1, uint32_t *value_2)
 	return 0;
 }
 
-//----------------------------------------------------------------------
-// - SECTION - motor related
-//----------------------------------------------------------------------
+/**
+ * @note Hall sensor limits help us to categorize ADC reading sub-ranges
+ *   into physical positions of the lock ring drive gear relative to the
+ *   airframe.  Here define setter and getter APIs to support run time
+ *   adjustments to these readings sub-range limits.
+ */
 
 int32_t set_hall_sensor_limit(const enum hall_sensor_ids sensor_idx,
 				const enum hall_sensor_limit_ids limit_idx,
@@ -542,42 +517,84 @@ int32_t get_hall_sensor_limit(const enum hall_sensor_ids sensor_idx,
 	return 0;
 }
 
-//----------------------------------------------------------------------
-// - SECTION - Off-chip peripherals and system statae
-//----------------------------------------------------------------------
+void set_ring_pos_detection_interval(const uint32_t timeout_ms)
+{
+	atomic_set(&ring_pos_interval, (atomic_val_t)timeout_ms);
+}
 
-// "set" APIs
+void get_ring_pos_detection_interval(uint32_t *timeout_ms)
+{
+	*timeout_ms = atomic_get(&ring_pos_interval);
+}
 
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - DATA GROUP - (4) motor
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+// motor current reading in ADC counts
+void ekset_motor_isense(const uint32_t value)
+{
+	atomic_set(&motor_isense, (atomic_val_t)value);
+}
+
+void ekget_motor_isense(uint32_t* value)
+{
+	*value = atomic_get(&motor_isense);
+}
+
+// motor current reading in milliamps
+// TODO [ ] correct API name to reflect units of millamps not millivolts:
+void ekset_motor_isense_mv(const uint32_t value)
+{
+	atomic_set(&motor_isense_mv, (atomic_val_t)value);
+}
+
+void ekget_motor_isense_mv(uint32_t* value)
+{
+	*value = atomic_get(&motor_isense_mv);
+}
+
+// motor digitnal status signal out
+void ekset_not_motor_faila(const uint32_t value)
+{
+	atomic_set(&not_umb_on, (atomic_val_t)value);
+}
+
+void ekget_not_motor_faila(uint32_t* value)
+{
+	*value = atomic_get(&not_motor_faila);
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - DATA GROUP - (6) ERS summary state data
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+// Lock ring status
 void ekset_ring_status(const uint32_t value)
 {
 	atomic_set(&ring_status, (atomic_val_t)value);
 }
 
-void ekset_batt_ok(const uint32_t value)
-{
-	atomic_set(&batt_ok, (atomic_val_t)value);
-}
-
-void ekset_shore_power_ok(const uint32_t value)
-{
-	atomic_set(&shore_power_ok, (atomic_val_t)value);
-}
-
-void ekset_can_bus_ok(const uint32_t value)
-{
-	atomic_set(&can_bus_ok, (atomic_val_t)value);
-}
-
-void ekset_ready_state(const uint32_t value)
-{
-	atomic_set(&ready_state, (atomic_val_t)value);
-}
-
-// "get" APIs
-
 void ekget_ring_status(uint32_t* value)
 {
 	*value = atomic_get(&ring_status);
+}
+
+// Battery reading in decivolts
+void ekset_batt_read_dv(const uint32_t value)
+{
+	atomic_set(&batt_read_dv, (atomic_val_t)value);
+}
+
+void ekget_batt_read_dv(uint32_t* value)
+{
+	*value = atomic_get(&batt_read_dv);
+}
+
+// Battery ok flag
+void ekset_batt_ok(const uint32_t value)
+{
+	atomic_set(&batt_ok, (atomic_val_t)value);
 }
 
 void ekget_batt_ok(uint32_t* value)
@@ -585,14 +602,32 @@ void ekget_batt_ok(uint32_t* value)
 	*value = atomic_get(&batt_ok);
 }
 
+// Shore power ok flag
+void ekset_shore_power_ok(const uint32_t value)
+{
+	atomic_set(&shore_power_ok, (atomic_val_t)value);
+}
+
 void ekget_shore_power_ok(uint32_t* value)
 {
 	*value = atomic_get(&shore_power_ok);
 }
 
+// CAN bus ok flag
+void ekset_can_bus_ok(const uint32_t value)
+{
+	atomic_set(&can_bus_ok, (atomic_val_t)value);
+}
+
 void ekget_can_bus_ok(uint32_t* value)
 {
 	*value = atomic_get(&can_bus_ok);
+}
+
+// Ready state flag
+void ekset_ready_state(const uint32_t value)
+{
+	atomic_set(&ready_state, (atomic_val_t)value);
 }
 
 void ekget_ready_state(uint32_t* value)
@@ -646,6 +681,8 @@ int32_t set_hall_sensor_default_limits(void)
 static int32_t initialize_system_state_vars(void)
 {
 	int32_t rc = 0;
+
+	atomic_set(&ring_pos_interval, (atomic_val_t)RING_LOCKED);
 
 	summary_state.ring_position = ATOMIC_INIT(0); // TODO [ ] assign RING_POSITION_UNKNOWN
 	summary_state.battery_voltage =  ATOMIC_INIT(0); 

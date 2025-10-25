@@ -132,8 +132,6 @@ void ekset_motor_isense_mv(const uint32_t value);
 void ekset_hall_1_mv(const uint32_t value);
 void ekset_hall_2_mv(const uint32_t value);
 
-
-
 void ekset_batt_read_dv(const uint32_t value);
 
 /**
@@ -167,13 +165,21 @@ void ekget_hall_2_mv(uint32_t* value);
 
 void ekget_batt_read_dv(uint32_t* value);
 
+// - DATA GROUP - (3) locking ring
+
 /**
  * @return 0 on success to obtain mutex and to get sensor values
  * @return -ESRCH when module not initialized
  */
 int32_t ekget_both_hall_sensors(uint32_t *value_1, uint32_t *value_2);
 
-// Off-chip peripherals and system statae
+void set_ring_pos_detection_interval(const uint32_t timeout_ms);
+
+void get_ring_pos_detection_interval(uint32_t *timeout_ms);
+
+// - DATA GROUP - (4) motor
+
+// - DATA GROUP - (6) ERS summary state data
 
 void ekset_ring_status(const uint32_t value);
 void ekset_batt_ok(const uint32_t value);
