@@ -29,6 +29,8 @@ LOG_MODULE_REGISTER(arbiter, LOG_LEVEL_INF);
 
 #define RING_POS_PERIOD_MS 2000
 
+#define DEV_DETERMINE_RING_POSITION_IN_MAIN_LOOP
+
 //----------------------------------------------------------------------
 // - SECTION - file scoped
 //----------------------------------------------------------------------
@@ -270,7 +272,7 @@ int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 	enum hall_sensor_state hall_2_state = HALL_OUTPUT_UNKNOWN;
 
 	LOG_INF("M8");
-	k_msleep(5);
+	// k_msleep(5);
 
 	rc = ekget_both_hall_sensors(&hall_1_reading, &hall_2_reading);
 	if (rc != 0)
@@ -363,19 +365,19 @@ determinations.
 qualify_validity:
 	if ((hall_1_state == HALL_OUTPUT_BETWEEN) && (hall_2_state == HALL_OUTPUT_BETWEEN))
 	{
-		// LOG_INF("both hall in between");
+		LOG_INF("both hall in between");
 		*ring_position = RING_BETWEEN_FULLY_QUALIFIED;
 	}
 
 	if ((hall_1_state == HALL_OUTPUT_ACTIVE) && (hall_2_state == HALL_OUTPUT_INACTIVE))
 	{
-		// LOG_INF("M4");
+		LOG_INF("ring unlocked, fully qualified");
 		*ring_position = RING_UNLOCKED_FULLY_QUALIFIED;
 	}
 
 	if ((hall_1_state == HALL_OUTPUT_INACTIVE) && (hall_2_state == HALL_OUTPUT_ACTIVE))
 	{
-		// LOG_INF("M5");
+		LOG_INF("ring locked, fully qualified");
 		*ring_position = RING_LOCKED_FULLY_QUALIFIED;
 	}
 
