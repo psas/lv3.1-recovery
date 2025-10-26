@@ -252,6 +252,10 @@ int32_t adc_reading_to_hall_state(const enum hall_sensor_ids sensor_idx,
 	{
 		*state = HALL_OUTPUT_ACTIVE;
 	}
+	else
+	{
+		*state = HALL_OUTPUT_OVER_VOLTAGE;
+	}
 
 	return 0;
 }
@@ -271,7 +275,7 @@ int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 	enum hall_sensor_state hall_1_state = HALL_OUTPUT_UNKNOWN;
 	enum hall_sensor_state hall_2_state = HALL_OUTPUT_UNKNOWN;
 
-	LOG_INF("M8");
+	// LOG_INF("M8");
 	// k_msleep(5);
 
 	rc = ekget_both_hall_sensors(&hall_1_reading, &hall_2_reading);
@@ -295,7 +299,7 @@ int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 		return rc;
 	}
 
-// LOG_INF("hall readings, states: %u %u  %d %d", hall_1_reading, hall_2_reading, hall_1_state, hall_2_state);
+LOG_INF("readings, states: %u %u  %d %d", hall_1_reading, hall_2_reading, hall_1_state, hall_2_state);
 // LOG_INF("state1, state2: %d %d", hall_1_state, hall_2_state);
 
 /*
@@ -315,6 +319,7 @@ determinations.
 	// Look for possible "between" sensor values pairs first:
 	if ((hall_1_state == HALL_OUTPUT_BETWEEN) || (hall_2_state == HALL_OUTPUT_BETWEEN))
 	{
+		LOG_INF("H1");
 		*ring_position = RING_BETWEEN_L_AND_U;
 		goto qualify_validity;
 	}
@@ -322,6 +327,7 @@ determinations.
 	// Cover error possibilities:
 	if (hall_1_state == hall_2_state)
 	{
+		LOG_INF("H2");
 		*ring_position = RING_POSITION_UNKNOWN;
 		goto done;
 	}
@@ -331,6 +337,7 @@ determinations.
 	    ((hall_2_state == HALL_OUTPUT_UNDER_VOLTAGE) ||
 	     (hall_2_state == HALL_OUTPUT_OVER_VOLTAGE)))
 	{
+		LOG_INF("H3");
 		*ring_position = RING_LOCKED;
 		goto done;
 	}
@@ -340,6 +347,7 @@ determinations.
 	    ((hall_1_state == HALL_OUTPUT_UNDER_VOLTAGE) ||
 	     (hall_1_state == HALL_OUTPUT_OVER_VOLTAGE)))
 	{
+		LOG_INF("H4");
 		*ring_position = RING_UNLOCKED;
 		goto done;
 	}
@@ -349,6 +357,7 @@ determinations.
 	    ((hall_2_state == HALL_OUTPUT_UNDER_VOLTAGE) ||
 	     (hall_2_state == HALL_OUTPUT_OVER_VOLTAGE)))
 	{
+		LOG_INF("H5");
 		*ring_position = RING_UNLOCKED;
 		goto done;
 	}
@@ -358,6 +367,7 @@ determinations.
 	    ((hall_1_state == HALL_OUTPUT_UNDER_VOLTAGE) ||
 	     (hall_1_state == HALL_OUTPUT_OVER_VOLTAGE)))
 	{
+		LOG_INF("H6");
 		*ring_position = RING_LOCKED;
 		goto done;
 	}
@@ -385,21 +395,27 @@ done:
 	return rc;
 }
 
-char *ring_pos_to_str(enum lock_ring_position pos)
+char *ring_pos_to_str(const enum lock_ring_position pos)
 {
         switch (pos) {
         case RING_LOCKED:
                 return "ring locked";
+		break;
         case RING_BETWEEN_L_AND_U:
                 return "ring between";
+		break;
         case RING_UNLOCKED:
                 return "ring unlocked";
+		break;
         case RING_LOCKED_FULLY_QUALIFIED:
                 return "ring locked (fully qualified)";
+		break;
         case RING_BETWEEN_FULLY_QUALIFIED:
                 return "ring between (fully qualified)";
+		break;
         case RING_UNLOCKED_FULLY_QUALIFIED:
                 return "ring unlocked (fully qualified)";
+		break;
 	case RING_POSITION_UNKNOWN:
         default:
                 return "ring position unknown";
@@ -410,8 +426,7 @@ char *ring_pos_to_str(enum lock_ring_position pos)
 // - SECTION - arbiter scheduled elements
 //----------------------------------------------------------------------
 
-// Here define a routine to submit to Zephyr's work queue, followed
-// by a kernel time which calls the API to submit that work:
+// Here define a routine to submit to Zephyr's work queue.
 
 void determine_ring_pos_work_handler(struct k_work *work)
 {
@@ -513,9 +528,11 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 
 #ifdef DEV_DETERMINE_RING_POSITION_IN_MAIN_LOOP
 		enum lock_ring_position ring_position = RING_POSITION_UNKNOWN;
+		// char lbuf[50] = {0};
+		char *str_ptr = ring_pos_to_str(ring_position);
 
 		rc = arbiter_determine_ring_state(&ring_position);
-		// LOG_INF("Current lock ring position:  %d", ring_position);
+		LOG_INF("ring state:  %s (%d)", str_ptr, ring_position);
 #endif
 
 // TODO [ ] Call battery state determination code

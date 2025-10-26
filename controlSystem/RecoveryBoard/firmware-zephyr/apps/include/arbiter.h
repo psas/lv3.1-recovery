@@ -4,12 +4,12 @@
 #include <zephyr/shell/shell.h>
 
 enum hall_sensor_state {
-	HALL_OUTPUT_UNDER_VOLTAGE,
-	HALL_OUTPUT_INACTIVE,
-	HALL_OUTPUT_BETWEEN,
-	HALL_OUTPUT_ACTIVE,
-	HALL_OUTPUT_OVER_VOLTAGE,
-	HALL_OUTPUT_UNKNOWN
+	HALL_OUTPUT_UNDER_VOLTAGE, // (S0)
+	HALL_OUTPUT_INACTIVE,      // (S1)
+	HALL_OUTPUT_BETWEEN,       // (S2)
+	HALL_OUTPUT_ACTIVE,        // (S3)
+	HALL_OUTPUT_OVER_VOLTAGE,  // (S4)
+	HALL_OUTPUT_UNKNOWN        // (S5)
 };
 
 enum lock_ring_position {
@@ -52,6 +52,6 @@ int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position);
 
 int32_t update_ring_position_detection_timer(const uint32_t timeout_ms);
 
-char *ring_pos_to_str(enum lock_ring_position pos);
+char *ring_pos_to_str(const enum lock_ring_position pos);
 
 #endif // ERS_ARBITER_H
