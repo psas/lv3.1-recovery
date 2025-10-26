@@ -45,14 +45,6 @@ static uint32_t dev_test_calls_fs = 0;
 // - SECTION - routines
 //----------------------------------------------------------------------
 
-#if 0
-static int ers_cmd_wrapper_read_adc_all(const struct shell *shell, size_t argc, char *argv[])
-{
-	int rc = cmd_ers_read_adc_all(shell);
-	return rc;
-}
-#endif
-
 static int ers_cmd_wrapper_read_adc_in0(const struct shell *shell, size_t argc, char *argv[])
 {
 	int32_t rc = 0;
@@ -150,7 +142,6 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 	ers_cmds,
 	SHELL_CMD_ARG(adcall, NULL,
 		"Read ERS board's four ADC channels",
-
 		ers_cmd_wrapper_read_adc_all, 0, 0),
 	SHELL_CMD_ARG(adc0, NULL,
 		"Read ERS board ADC for Hall sensor 1",

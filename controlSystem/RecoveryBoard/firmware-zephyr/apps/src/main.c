@@ -100,13 +100,14 @@ int main(void)
 		rc = motor_ctrl_set_not_motor_ps((loop_count / 2) & 0x1);
 		if (rc != 0)
 		{
-			// LOG_ERR("Failed to set not_motor_ps pin to %u, error %d",
-			//  ((loop_count / 2) & 0x1), rc);
+			LOG_ERR("Failed to set not_motor_ps pin to %u, error %d",
+			  ((loop_count / 2) & 0x1), rc);
 		}
-		else
-		{
-			// LOG_INF("Set not_motor_ps pin to %d", ((loop_count / 2) & 0x1));
-		}
+
+		k_msleep(200);
+		uint32_t b;
+		ekget_motor_isense(&b);
+		LOG_INF("motor_isense ADC_IN9 = %u", b);
 
 		k_msleep(ERS_MAIN_LOOP_PERIOD_MS);
 	}
