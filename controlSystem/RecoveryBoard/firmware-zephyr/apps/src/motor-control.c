@@ -47,25 +47,25 @@ static const struct gpio_dt_spec led0 = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 
 // TODO [ ] Add check for motor control module initialized.
 
-int32_t motor_ctrl_set_deploy1(const uint32_t value)
+int32_t mc_set_deploy1(const uint32_t value)
 {
 	int32_t rc = gpio_pin_set(deploy1.port, deploy1.pin, value);
 	return rc;
 }
 
-int32_t motor_ctrl_set_deploy2(const uint32_t value)
+int32_t mc_set_deploy2(const uint32_t value)
 {
 	int32_t rc = gpio_pin_set(deploy2.port, deploy2.pin, value);
 	return rc;
 }
 
-int32_t motor_ctrl_set_not_motor_ps(const uint32_t value)
+int32_t mc_set_not_motor_ps(const uint32_t value)
 {
 	int32_t rc = gpio_pin_set(not_motor_ps.port, not_motor_ps.pin, value);
 	return rc;
 }
 
-int32_t motor_ctrl_set_led0(const uint32_t value)
+int32_t mc_set_led0(const uint32_t value)
 {
 	int32_t rc = gpio_pin_set(led0.port, led0.pin, value);
 	// LOG_INF("- 1019 - setting LED0 output pin to %u", value);
@@ -74,7 +74,7 @@ int32_t motor_ctrl_set_led0(const uint32_t value)
 
 // GPIOs used as outputs
 
-int32_t motor_ctrl_configure_deploy1(void)
+int32_t mc_configure_deploy1(void)
 {
         if (!gpio_is_ready_dt(&deploy1)) {
                 LOG_ERR("Error: deploy1 device %s is not ready",
@@ -93,7 +93,7 @@ int32_t motor_ctrl_configure_deploy1(void)
 	return rc;
 }
 
-int32_t motor_ctrl_configure_deploy2(void)
+int32_t mc_configure_deploy2(void)
 {
         if (!gpio_is_ready_dt(&deploy2)) {
                 LOG_ERR("Error: deploy2 device %s is not ready",
@@ -112,7 +112,7 @@ int32_t motor_ctrl_configure_deploy2(void)
 	return rc;
 }
 
-int32_t motor_ctrl_configure_not_motor_ps(void)
+int32_t mc_configure_not_motor_ps(void)
 {
         if (!gpio_is_ready_dt(&not_motor_ps)) {
                 LOG_ERR("Error: not_motor_ps device %s is not ready",
@@ -133,7 +133,7 @@ int32_t motor_ctrl_configure_not_motor_ps(void)
 
 
 
-int32_t motor_ctrl_configure_led0(void)
+int32_t mc_configure_led0(void)
 {
         if (!gpio_is_ready_dt(&led0)) {
                 LOG_ERR("Error: led0 device %s is not ready",
@@ -154,11 +154,11 @@ int32_t motor_ctrl_configure_led0(void)
 
 
 
-int32_t motor_ctrl_drive_deploy1_high(void)
+int32_t mc_drive_deploy1_high(void)
 {
 	int32_t rc1, rc2;
-	rc1 = motor_ctrl_set_deploy1(1);
-	rc2 = motor_ctrl_set_deploy2(0);
+	rc1 = mc_set_deploy1(1);
+	rc2 = mc_set_deploy2(0);
 	if ((rc1 == 0) && (rc2 == 0))
 	{
 		return 0;
@@ -169,11 +169,11 @@ int32_t motor_ctrl_drive_deploy1_high(void)
 	}
 }
 
-int32_t motor_ctrl_drive_deploy2_high(void)
+int32_t mc_drive_deploy2_high(void)
 {
 	int32_t rc1, rc2;
-	rc1 = motor_ctrl_set_deploy1(0);
-	rc2 = motor_ctrl_set_deploy2(1);
+	rc1 = mc_set_deploy1(0);
+	rc2 = mc_set_deploy2(1);
 	if ((rc1 == 0) && (rc2 == 0))
 	{
 		return 0;
@@ -184,7 +184,7 @@ int32_t motor_ctrl_drive_deploy2_high(void)
 	}
 }
 
-int32_t motor_ctrl_lock_ring(void)
+int32_t mc_lock_ring(void)
 {
 // Set DAC output to create ~100m at H-bridge output
 // Drive NOT_MOTOR_PS high to enable H-bridge
@@ -195,7 +195,7 @@ int32_t motor_ctrl_lock_ring(void)
 	return 0;
 }
 
-int32_t motor_ctrl_unlock_ring(void)
+int32_t mc_unlock_ring(void)
 {
 	return 0;
 }
@@ -210,21 +210,21 @@ int32_t ers_init_motor_ctrl(void)
 
 // ERS GPIOs used for output:
 
-	rc = motor_ctrl_configure_deploy1();
+	rc = mc_configure_deploy1();
 	if (rc)
 	{
 		LOG_ERR("Configure deploy1 signal out, err %d", rc);
 		return rc;
 	}
 
-	rc = motor_ctrl_configure_deploy2();
+	rc = mc_configure_deploy2();
 	if (rc)
 	{
 		LOG_ERR("Configure deploy2 signal out, err %d", rc);
 		return rc;
 	}
 
-	rc = motor_ctrl_configure_not_motor_ps();
+	rc = mc_configure_not_motor_ps();
 	if (rc)
 	{
 		LOG_ERR("Configure not_motor_ps signal out, err %d", rc);
@@ -233,13 +233,13 @@ int32_t ers_init_motor_ctrl(void)
 
 
 	// 1019
-	rc = motor_ctrl_configure_led0();
+	rc = mc_configure_led0();
 	LOG_ERR("- 1019 - Configure led0 signal out returns status %d", rc);
 	// 1019
 
 
 	// Drive NOT_MOTOR_PS high to assure motor H-bridge is powered:
-	rc = motor_ctrl_set_not_motor_ps(0);
+	rc = mc_set_not_motor_ps(0);
 	LOG_INF("- DEV 1015 - setting not_motor_ps to 1 returns %d", rc);
 
         return rc; 
