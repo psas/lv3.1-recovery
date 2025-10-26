@@ -84,7 +84,7 @@ int main(void)
 			rc = dac_set_output(450);
  			// LOG_INF("1015 - set DAC output call returns %d", rc);
 
-			rc = motor_ctrl_drive_deploy1_high();
+			rc = mc_drive_deploy1_high();
  			// LOG_INF("1015 - driving deploy1 high, deploy2 low returns %d", rc);
 		}
 		else
@@ -92,12 +92,12 @@ int main(void)
 			rc = dac_set_output(10);
  			// LOG_INF("1015 - set DAC output call returns %d", rc);
 
-			rc = motor_ctrl_drive_deploy2_high();
+			rc = mc_drive_deploy2_high();
  			// LOG_INF("1015 - driving deploy2 high, deploy1 low returns %d", rc);
 		}
 
-		rc = motor_ctrl_set_led0((loop_count / 2) & 0x1);
-		rc = motor_ctrl_set_not_motor_ps((loop_count / 2) & 0x1);
+		rc = mc_set_led0((loop_count / 2) & 0x1);
+		rc = mc_set_not_motor_ps((loop_count / 2) & 0x1);
 		if (rc != 0)
 		{
 			LOG_ERR("Failed to set not_motor_ps pin to %u, error %d",
