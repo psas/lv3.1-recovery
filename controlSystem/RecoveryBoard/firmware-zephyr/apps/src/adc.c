@@ -13,12 +13,11 @@
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/adc.h>
 #include <zephyr/kernel.h>
-// #include <zephyr/sys/printk.h>
 #include <zephyr/sys/util.h>
 #include <zephyr/shell/shell.h>
 
 #include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(ers_adc, CONFIG_ERS_ADC_LOG_LEVEL);
+LOG_MODULE_REGISTER(ers_adc, CONFIG_ADC_LOG_LEVEL);
 
 #include "keeper.h"
 

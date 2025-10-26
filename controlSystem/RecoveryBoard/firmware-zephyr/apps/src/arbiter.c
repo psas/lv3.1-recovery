@@ -10,7 +10,7 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/shell/shell.h>
 
-LOG_MODULE_REGISTER(arbiter, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(arbiter, CONFIG_ARBITER_LOG_LEVEL);
 
 #include <ers-can.h>
 #include <ers-config-defaults.h>
