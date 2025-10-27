@@ -29,6 +29,7 @@ LOG_MODULE_REGISTER(shell_support, LOG_LEVEL_INF);
 #include <ers-dac.h>
 #include <ers-util.h>
 #include <keeper.h>
+#include <motor-control.h>
 
 #define SHELL_SUPPORT_THREAD_STACK_SIZE 512
 #define SHELL_SUPPORT_THREAD_PRIORITY 5
@@ -262,6 +263,13 @@ static int sw_lock_ring(const struct shell *shell, size_t argc, char *argv[])
         ARG_UNUSED(argc);
         ARG_UNUSED(argv);
 	LOG_INF("- STUB - for command to lock parachute locking ring");
+
+	int32_t rc = mc_lock_ring();
+	if (rc != 0)
+	{
+		LOG_ERR("Failed to lock ring, err %d", rc);
+	}
+
 	return 0;
 }
 

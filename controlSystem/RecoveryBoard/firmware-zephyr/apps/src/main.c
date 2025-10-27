@@ -82,7 +82,7 @@ int main(void)
 		k_msleep(200);
 		uint32_t b;
 		ekget_motor_isense(&b);
-		LOG_INF("motor_isense ADC_IN9 = %u", b);
+		// LOG_INF("motor_isense ADC_IN9 = %u", b);
 
 		k_msleep(ERS_MAIN_LOOP_PERIOD_MS);
 	}
