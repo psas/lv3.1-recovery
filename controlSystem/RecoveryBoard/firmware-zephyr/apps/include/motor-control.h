@@ -16,3 +16,5 @@ int32_t mc_set_not_motor_ps(const uint32_t value);
 
 // TODO [ ] refactor to separate source file, as LED is not directly motor related:
 int32_t mc_set_led0(const uint32_t value);
+
+int32_t mc_lock_ring(void);
