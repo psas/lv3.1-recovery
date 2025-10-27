@@ -8,12 +8,6 @@ manifest:
       remote: zephyrproject-rtos
       revision: v3.7.0
       import: true
-    # Drivers repository
-    # - name: zephyr-driver-work-v2
-    #  path: kionix-drivers
-    #  revision: main
-    #  url: https://github.com/tedhavelka/zephyr-driver-work-v2
-    #  import: true   ...2021-08-26 for some reason this should be commented out - TMH
   self:
     # This repository should be cloned to 
-    path: psas-ers-board-bringup
+    path: psas/lv3.1-recovery
