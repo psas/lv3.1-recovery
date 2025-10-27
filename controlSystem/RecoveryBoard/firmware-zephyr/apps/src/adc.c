@@ -34,6 +34,8 @@ LOG_MODULE_REGISTER(ers_adc, CONFIG_ADC_LOG_LEVEL);
 // #define ERS_ADC_READ_TIMEOUT 1500
 // static struct k_timeout_t ers_adc_read_timeout K_MSEC(ERS_ADC_READ_TIMEOUT);
 
+#define MOTOR_ISENSE_READ_PERIOD_MS 50
+
 //----------------------------------------------------------------------
 // - SECTION - file scoped
 //----------------------------------------------------------------------
@@ -72,13 +74,16 @@ int32_t cmd_ers_read_adc_in0(const struct shell *shell)
         return 0;
 }
 
-// TODO [x] Amend the "read ADC all" command to accept a range of channels,
+// TODO [ ] Amend the "read ADC all" command to accept a range of channels,
 //   to support the reading of one channel with the same routine.
 
-// TODO [ ] Implement logic to update both Hall sensor values when "read ADC
+// TODO [x] Implement logic to update both Hall sensor values when "read ADC
 //   channels" API is called to read all channels.  (This to assue that Hall
 //   sensor readings are from the same cycle of readings, and not the past
 //   two cycles.)
+
+// TODO [ ] Check that following API to read ADC channel range has complete
+//   comment block in ers-adc.h header file.
 
 int32_t adc_read_channels(const enum ers_adc_values idx_begin,
 			  const enum ers_adc_values idx_end)
@@ -106,10 +111,14 @@ int32_t adc_read_channels(const enum ers_adc_values idx_begin,
                 .buffer_size = sizeof(buf),
         };
 
+// TODO [ ] See about replacing this custom symbol with use of Zephyr module
+//          level logging.  See ERS Zephyr firmware files 'Kconfig' and
+//          'ers-log-levels.conf' for some details.
 #if DEV_ERS_ADC_REGULAR_REPORTING
         LOG_INF("ADC reading[%u]:", count++);
 #endif
-        for (size_t i = 0U; i < ARRAY_SIZE(adc_channels); i++)
+        // for (size_t i = 0U; i < ARRAY_SIZE(adc_channels); i++)
+        for (size_t i = idx_begin; i < idx_end; i++)
         {
                 int32_t val_mv;
 
@@ -173,6 +182,29 @@ int32_t adc_read_channels(const enum ers_adc_values idx_begin,
 
 	return rc;
 }
+
+//----------------------------------------------------------------------
+// - SECTION - scheduling set up
+//----------------------------------------------------------------------
+
+void motor_isense_timer_handler(struct k_timer *place_holder)
+{
+	int32_t rc = 0;
+
+	rc = adc_read_channels(ADC_READING_MOTOR_ISENSE, ADC_READING_MOTOR_ISENSE);
+	if (rc != 0)
+	{
+		LOG_ERR("Failed to read ADC channel for motor current, err %d", rc);
+	}
+
+//	rc = ekset_adc_value(ADC_READING_MOTOR_ISENSE, value);
+//	if (rc != 0)
+//	{
+//		LOG_ERR("Failed to store latest motor current reading, err %d", rc);
+//	}
+}
+
+K_TIMER_DEFINE(motor_isense_timer, motor_isense_timer_handler, NULL);
 
 void adc_thread_entry(void *arg1, void *arg2, void *arg3)
 {
@@ -240,6 +272,8 @@ int32_t adc_init(void)
 	{
 		LOG_INF("starting ADC thread . . .");
 	}
+
+	k_timer_start(&motor_isense_timer, K_MSEC(0), K_MSEC(MOTOR_ISENSE_READ_PERIOD_MS));
 
 	return rc;
 }
