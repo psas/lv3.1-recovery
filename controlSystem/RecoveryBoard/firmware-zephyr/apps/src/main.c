@@ -24,7 +24,7 @@ LOG_MODULE_REGISTER(ers_main, LOG_LEVEL_INF);
 // - SECTION - pound defines
 //----------------------------------------------------------------------
 
-#define ERS_MAIN_LOOP_PERIOD_MS 1000
+#define ERS_MAIN_LOOP_PERIOD_MS 250
 
 //----------------------------------------------------------------------
 // - SECTION - routines
@@ -79,10 +79,39 @@ int main(void)
 			LOG_INF("batt, motor, hall1, hall2: %u, %u, %u, %u", a, b, c, d);
 		}
 
+#if 0
+// 2025-10-26 SUN - MOTOR DRIVE TEST FRAGMENT BEGIN
+		if (loop_count % 2)
+		{
+			rc = dac_set_output(450);
+ 			// LOG_INF("1015 - set DAC output call returns %d", rc);
+
+			rc = mc_drive_deploy1_high();
+ 			// LOG_INF("1015 - driving deploy1 high, deploy2 low returns %d", rc);
+		}
+		else
+		{
+			rc = dac_set_output(10);
+ 			// LOG_INF("1015 - set DAC output call returns %d", rc);
+
+			rc = mc_drive_deploy2_high();
+ 			// LOG_INF("1015 - driving deploy2 high, deploy1 low returns %d", rc);
+		}
+
+		rc = mc_set_led0((loop_count / 2) & 0x1);
+		rc = mc_set_not_motor_ps((loop_count / 2) & 0x1);
+		if (rc != 0)
+		{
+			LOG_ERR("Failed to set not_motor_ps pin to %u, error %d",
+			  ((loop_count / 2) & 0x1), rc);
+		}
+// 2025-10-26 SUN - MOTOR DRIVE TEST FRAGMENT BEGIN
+#endif // 0
+
 		k_msleep(200);
 		uint32_t b;
 		ekget_motor_isense(&b);
-		// LOG_INF("motor_isense ADC_IN9 = %u", b);
+		LOG_INF("motor_isense ADC_IN9 = %u", b);
 
 		k_msleep(ERS_MAIN_LOOP_PERIOD_MS);
 	}

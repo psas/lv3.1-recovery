@@ -117,8 +117,9 @@ int32_t adc_read_channels(const enum ers_adc_values idx_begin,
 #if DEV_ERS_ADC_REGULAR_REPORTING
         LOG_INF("ADC reading[%u]:", count++);
 #endif
-        // for (size_t i = 0U; i < ARRAY_SIZE(adc_channels); i++)
-        for (size_t i = idx_begin; i < idx_end; i++)
+
+        for (size_t i = 0U; i < ARRAY_SIZE(adc_channels); i++)
+        // for (size_t i = idx_begin; i <= idx_end; i++)
         {
                 int32_t val_mv;
 
@@ -187,25 +188,6 @@ int32_t adc_read_channels(const enum ers_adc_values idx_begin,
 // - SECTION - scheduling set up
 //----------------------------------------------------------------------
 
-void motor_isense_timer_handler(struct k_timer *place_holder)
-{
-	int32_t rc = 0;
-
-	rc = adc_read_channels(ADC_READING_MOTOR_ISENSE, ADC_READING_MOTOR_ISENSE);
-	if (rc != 0)
-	{
-		LOG_ERR("Failed to read ADC channel for motor current, err %d", rc);
-	}
-
-//	rc = ekset_adc_value(ADC_READING_MOTOR_ISENSE, value);
-//	if (rc != 0)
-//	{
-//		LOG_ERR("Failed to store latest motor current reading, err %d", rc);
-//	}
-}
-
-K_TIMER_DEFINE(motor_isense_timer, motor_isense_timer_handler, NULL);
-
 void adc_thread_entry(void *arg1, void *arg2, void *arg3)
 {
         ARG_UNUSED(arg1);
@@ -234,7 +216,7 @@ void adc_thread_entry(void *arg1, void *arg2, void *arg3)
 #if DEV_ERS_ADC_REGULAR_REPORTING
                 LOG_INF("ADC reading[%u]: (thread entry function)\n", count++);
 #endif
-		rc = adc_read_channels(ADC_READING_BATT_READ, ADC_READING_HALL_2);
+		rc = adc_read_channels(ADC_READING_BATT_READ, ADC_READING_HALL_2); // adc_thread_entry()
                 k_sleep(K_MSEC(ADC_READ_PERIOD_MS));
         }
 }
@@ -273,7 +255,6 @@ int32_t adc_init(void)
 		LOG_INF("starting ADC thread . . .");
 	}
 
-	k_timer_start(&motor_isense_timer, K_MSEC(0), K_MSEC(MOTOR_ISENSE_READ_PERIOD_MS));
-
+	LOG_INF("- DEV 1026 - ADC module configured %u channels.", ARRAY_SIZE(adc_channels));
 	return rc;
 }

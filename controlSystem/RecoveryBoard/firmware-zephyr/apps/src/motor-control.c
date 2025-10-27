@@ -196,27 +196,29 @@ int32_t mc_lock_ring(void)
 
 	int32_t rc = 0;
 
-	LOG_INF("M1");
+	LOG_INF("M1 - DEPLOY1 high");
 	// (1) make sure BDS63150 is on, not in power saving mode:
-	rc = mc_set_not_motor_ps(0x1);
+	rc = mc_set_not_motor_ps(0x0);
 	if (rc != 0) { LOG_ERR("Trouble motor_ps!"); }
 
 	// (2) set DAC to produce minimal current needed to turn over lock ring motor:
-	rc = dac_set_output(1400);
+	rc = dac_set_output(600);
 	if (rc != 0) { LOG_ERR("Trouble set DAC out!"); }
 
 	// (3) apply logic levels to BDS63150 IN1, IN2 pins for H-bridge output:
 	rc = mc_drive_deploy1_high();
 	if (rc != 0) { LOG_ERR("Trouble set DEPLOY1, DEPLOY1!"); }
 
-	k_msleep(1500);
+	LOG_INF("M2 - pause . . .");
+	k_msleep(2000);
 
 	// (4) reduce current to motor to way low:
+	LOG_INF("M1 - DAC output low . . .");
 	rc = dac_set_output(5);
 	if (rc != 0) { LOG_ERR("Trouble set DAC out to near zero!"); }
 
 	// (5) set BDS63150 to power saving mode:
-	rc = mc_set_not_motor_ps(0x0);
+	rc = mc_set_not_motor_ps(0x1);
 	if (rc != 0) { LOG_ERR("Trouble motor_ps!"); }
 
 	return rc;
