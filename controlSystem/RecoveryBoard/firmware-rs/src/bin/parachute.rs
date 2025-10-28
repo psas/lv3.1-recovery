@@ -3,14 +3,14 @@
 
 use defmt::*;
 use embassy_executor::Spawner;
-use embassy_stm32::can::{Frame, StandardId};
 use embassy_stm32::{
     adc::{Adc, InterruptHandler, SampleTime},
     bind_interrupts,
     can::{
-        frame::Header, Can, CanRx, Fifo, Id, Rx0InterruptHandler, Rx1InterruptHandler,
-        SceInterruptHandler, TxInterruptHandler,
+        filter::Mask32, frame::Header, Can, CanRx, Fifo, Frame, Id, Rx0InterruptHandler,
+        Rx1InterruptHandler, SceInterruptHandler, StandardId, TxInterruptHandler,
     },
+    dac::Dac,
     gpio::{Input, Level, Output, OutputType, Pull, Speed},
     peripherals::{ADC1, CAN, USART2},
     time::Hertz,
@@ -18,30 +18,24 @@ use embassy_stm32::{
         low_level::CountingMode,
         simple_pwm::{PwmPin, SimplePwm},
     },
-    usart::{BufferedUart, Config as UartConfig, DataBits, Parity, StopBits},
+    usart::{
+        BufferedInterruptHandler, BufferedUart, Config as UartConfig, DataBits, Parity, StopBits,
+    },
 };
-use embassy_stm32::{can::filter::Mask32, dac::Dac, usart::BufferedInterruptHandler};
 use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex};
-
 use embassy_time::{with_timeout, Duration, Instant, TimeoutError, Timer};
 use embedded_io_async::{Read, Write};
 use firmware_rs::{
     adc::{read_battery_from_ref, ADC_MTX, BATT_READ_WATCH},
-    buzzer::{BuzzerMode, BUZZER_MODE_MTX},
+    blink::blink_led,
+    buzzer::{active_beep, BuzzerMode, BUZZER_MODE_MTX},
     can::{
-        can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_TX_CHANNEL, DROGUE_ACKNOWLEDGE_ID,
-        DROGUE_DEPLOY_ID, MAIN_ACKNOWLEDGE_ID, MAIN_DEPLOY_ID,
+        can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_MTX, CAN_TX_CHANNEL, DROGUE_ACKNOWLEDGE_ID, DROGUE_DEPLOY_ID, MAIN_ACKNOWLEDGE_ID, MAIN_DEPLOY_ID, TELEMETRUM_HEARTBEAT_ID
     },
     motor::{Motor, MotorType},
-    ring::{read_pos_sensor, Ring, RingPosition, RingType, RING_POSITION_WATCH},
+    ring::{read_pos_sensor, Ring, RingPosition, RingType, RING_POSITION_WATCH, SENSOR_READ_WATCH},
     types::*,
     uart::{IO, UART_BUF_SIZE, UART_RX_BUF_CELL, UART_TX_BUF_CELL},
-};
-use firmware_rs::{
-    blink::blink_led,
-    buzzer::active_beep,
-    can::{CAN_MTX, TELEMETRUM_HEARTBEAT_ID},
-    ring::SENSOR_READ_WATCH,
 };
 use noline::builder::EditorBuilder;
 use {defmt_rtt as _, panic_probe as _};
