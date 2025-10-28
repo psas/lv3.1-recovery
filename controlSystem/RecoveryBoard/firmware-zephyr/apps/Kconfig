@@ -14,9 +14,9 @@ module = ARBITER
 module-str = arbiter module
 source "subsys/logging/Kconfig.template.log_config"
 
-# module = ERS_ADC
-# module-str = ADC module
-# source "subsys/logging/Kconfig.template.log_config"
+module = CAN
+module-str = CAN module
+source "subsys/logging/Kconfig.template.log_config"
 
 module = ERS_MOTOR_CONTROL
 module-str = motor control module

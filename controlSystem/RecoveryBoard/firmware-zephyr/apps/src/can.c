@@ -15,7 +15,7 @@
 #include <zephyr/devicetree.h>
 
 #include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(can_counter, CONFIG_SAMPLE_CAN_COUNTER_LOG_LEVEL);
+LOG_MODULE_REGISTER(ers_can_module, CONFIG_CAN_LOG_LEVEL);
 
 #include <keeper.h>
 
@@ -219,7 +219,7 @@ void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 		}
 #endif
 
-#if 0
+#if 1
 		switch (frame.id)
 		{
 		case MSG_ID_TELEMETRUM_SENDER:

@@ -24,7 +24,7 @@ LOG_MODULE_REGISTER(ers_main, LOG_LEVEL_INF);
 // - SECTION - pound defines
 //----------------------------------------------------------------------
 
-#define ERS_MAIN_LOOP_PERIOD_MS 250
+#define ERS_MAIN_LOOP_PERIOD_MS 10000
 
 //----------------------------------------------------------------------
 // - SECTION - routines
