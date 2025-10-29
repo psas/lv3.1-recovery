@@ -11,7 +11,9 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(ers_motor_ctrl, LOG_LEVEL_INF);
 
+#include <arbiter.h>
 #include <ers-dac.h>
+#include <keeper.h>
 
 //----------------------------------------------------------------------
 // - SECTION - file scoped
@@ -209,8 +211,31 @@ int32_t mc_lock_ring(void)
 	rc = mc_drive_deploy1_high();
 	if (rc != 0) { LOG_ERR("Trouble set DEPLOY1, DEPLOY1!"); }
 
+#if 0
 	LOG_INF("M2 - pause . . .");
 	k_msleep(2000);
+#else
+	enum lock_ring_position ring_pos = RING_POSITION_UNKNOWN;
+	uint32_t i;
+#define RING_CHECK_INTERVAL_MS 10
+#define COUNT_CHECKS 100
+
+	for (i = 0; i < COUNT_CHECKS; i++)
+	{
+		get_detected_ring_position(&ring_pos);
+
+		if ((ring_pos == RING_LOCKED) || (ring_pos == RING_UNLOCKED) ||
+		    (ring_pos == RING_LOCKED_FULLY_QUALIFIED) ||
+		    (ring_pos == RING_UNLOCKED_FULLY_QUALIFIED))
+		{
+			LOG_INF("Stopping motor on ring position = %d", ring_pos);
+			break;
+		}
+		k_msleep(RING_CHECK_INTERVAL_MS);
+	}
+
+	LOG_INF("Stopped motor after %u ring position checks", i);
+#endif
 
 	// (4) reduce current to motor to way low:
 	LOG_INF("M1 - DAC output low . . .");
@@ -226,7 +251,52 @@ int32_t mc_lock_ring(void)
 
 int32_t mc_unlock_ring(void)
 {
-	return 0;
+	int32_t rc = 0;
+
+	LOG_INF("M1 - DEPLOY1 high");
+	// (1) make sure BDS63150 is on, not in power saving mode:
+	rc = mc_set_not_motor_ps(0x0);
+	if (rc != 0) { LOG_ERR("Trouble motor_ps!"); }
+
+	// (2) set DAC to produce minimal current needed to turn over lock ring motor:
+	rc = dac_set_output(600);
+	if (rc != 0) { LOG_ERR("Trouble set DAC out!"); }
+
+	// (3) apply logic levels to BDS63150 IN1, IN2 pins for H-bridge output:
+	rc = mc_drive_deploy2_high();
+	if (rc != 0) { LOG_ERR("Trouble set DEPLOY1, DEPLOY1!"); }
+
+	enum lock_ring_position ring_pos = RING_POSITION_UNKNOWN;
+	uint32_t i;
+#define RING_CHECK_INTERVAL_MS 10
+#define COUNT_CHECKS 100
+
+	for (i = 0; i < COUNT_CHECKS; i++)
+	{
+		get_detected_ring_position(&ring_pos);
+
+		if ((ring_pos == RING_LOCKED) || (ring_pos == RING_UNLOCKED) ||
+		    (ring_pos == RING_LOCKED_FULLY_QUALIFIED) ||
+		    (ring_pos == RING_UNLOCKED_FULLY_QUALIFIED))
+		{
+			LOG_INF("Stopping motor on ring position = %d", ring_pos);
+			break;
+		}
+		k_msleep(RING_CHECK_INTERVAL_MS);
+	}
+
+	LOG_INF("Stopped motor after %u ring position checks", i);
+
+	// (4) reduce current to motor to way low:
+	LOG_INF("M1 - DAC output low . . .");
+	rc = dac_set_output(5);
+	if (rc != 0) { LOG_ERR("Trouble set DAC out to near zero!"); }
+
+	// (5) set BDS63150 to power saving mode:
+	rc = mc_set_not_motor_ps(0x1);
+	if (rc != 0) { LOG_ERR("Trouble motor_ps!"); }
+
+	return rc;
 }
 
 //----------------------------------------------------------------------

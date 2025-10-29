@@ -527,6 +527,16 @@ void get_ring_pos_detection_interval(uint32_t *timeout_ms)
 	*timeout_ms = atomic_get(&ring_pos_interval);
 }
 
+void set_detected_ring_position(const enum lock_ring_position ring_pos)
+{
+	atomic_set(&summary_state.ring_position, (atomic_val_t)ring_pos);
+}
+
+void get_detected_ring_position(enum lock_ring_position *ring_pos)
+{
+	*ring_pos = atomic_get(&summary_state.ring_position);
+}
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // - DATA GROUP - (4) motor
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -684,7 +694,7 @@ static int32_t initialize_system_state_vars(void)
 
 	atomic_set(&ring_pos_interval, (atomic_val_t)RING_LOCKED);
 
-	summary_state.ring_position = ATOMIC_INIT(0); // TODO [ ] assign RING_POSITION_UNKNOWN
+	summary_state.ring_position = ATOMIC_INIT(RING_POSITION_UNKNOWN);
 	summary_state.battery_voltage =  ATOMIC_INIT(0); 
 	summary_state.battery_ok = ATOMIC_INIT(0); 
 	summary_state.shore_power_ok = ATOMIC_INIT(0);
