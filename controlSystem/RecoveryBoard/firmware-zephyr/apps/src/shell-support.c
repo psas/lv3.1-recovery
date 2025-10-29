@@ -290,7 +290,7 @@ static int sw_unlock_ring(const struct shell *shell, size_t argc, char *argv[])
 // clang-format off
 SHELL_SUBCMD_SET_CREATE(sub_section_ring, (ring));
 
-SHELL_SUBCMD_ADD((ring), show_position, &sub_section_ring, "show locking ring position",
+SHELL_SUBCMD_ADD((ring), position, &sub_section_ring, "show locking ring position",
   sw_show_locking_ring_pos, 1, 0);
 
 SHELL_SUBCMD_ADD((ring), dishow, &sub_section_ring, "show ring position detection internal in ms",
