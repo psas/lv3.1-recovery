@@ -133,6 +133,8 @@ static atomic_t motor_isense_mv = ATOMIC_INIT(0);
 static atomic_t hall_1_mv = ATOMIC_INIT(0);
 static atomic_t hall_2_mv = ATOMIC_INIT(0);
 
+static atomic_t dac_setting_ring_lock = ATOMIC_INIT(0);
+
 /**
  * @defgroup sensors
  *
@@ -573,6 +575,17 @@ void ekset_not_motor_faila(const uint32_t value)
 void ekget_not_motor_faila(uint32_t* value)
 {
 	*value = atomic_get(&not_motor_faila);
+}
+
+// DAC setting to use for ring lock and ring unlock motor actuations
+void ekset_DAC_setting_ring_lock(const uint32_t value)
+{
+	atomic_set(&dac_setting_ring_lock, (atomic_val_t)value);
+}
+
+void ekget_DAC_setting_ring_lock(uint32_t *value)
+{
+	*value = atomic_get(&dac_setting_ring_lock);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
