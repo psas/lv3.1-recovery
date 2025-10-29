@@ -439,24 +439,15 @@ void determine_ring_pos_work_handler(struct k_work *work)
 	{
 		LOG_ERR("Failed to figure lock ring position, error %d", rc);
 	}
-	// TODO [ ] remove following LOG_INF() call in production code:
-	// TODO [ ] convert ring_position_fs to atomic type.
-#if 0
-	else
-	{
-		// LOG_INF("Lock ring position is %d", ring_position_fs);
-		// if ((call_count % 200) == 0)
-		if (1)
-		{
-			LOG_INF("arbiter determine ring position called %u times", call_count);
-		}
-	}
-#endif // development block
+
+	set_detected_ring_position(ring_position_fs);
 }
 
 K_WORK_DEFINE(determine_ring_pos_work, determine_ring_pos_work_handler);
 
 struct k_work_sync work_sync;
+
+atomic_t ring_pos_work_status = ATOMIC_INIT(0);
 
 void ring_position_timer_handler(struct k_timer *dummy)
 {
@@ -467,11 +458,13 @@ void ring_position_timer_handler(struct k_timer *dummy)
 	int32_t rc = k_work_submit(&determine_ring_pos_work);
 	if (rc < 0)
 	{
-		LOG_ERR("Failed to submit to work queue, err %d", rc);
+		// LOG_ERR("Failed to submit to work queue, err %d", rc);
+		atomic_set(&ring_pos_work_status, 1);
 	}
 	else
 	{
-		LOG_ERR("work queue submission call returns status %d", rc);
+		// LOG_ERR("work queue submission call returns status %d", rc);
+		atomic_set(&ring_pos_work_status, 0);
 	}
 }
 

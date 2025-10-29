@@ -1,6 +1,8 @@
 #ifndef ERS_KEEPER_H
 #define ERS_KEEPER_H
 
+#include <arbiter.h>
+
 /**
  * @note ERS "Keeper" module, to hold and share most ERS board run time data.
  *
@@ -176,6 +178,10 @@ int32_t ekget_both_hall_sensors(uint32_t *value_1, uint32_t *value_2);
 void set_ring_pos_detection_interval(const uint32_t timeout_ms);
 
 void get_ring_pos_detection_interval(uint32_t *timeout_ms);
+
+void set_detected_ring_position(const enum lock_ring_position ring_pos);
+
+void get_detected_ring_position(enum lock_ring_position *ring_pos);
 
 // - DATA GROUP - (4) motor
 

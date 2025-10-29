@@ -262,7 +262,6 @@ static int sw_lock_ring(const struct shell *shell, size_t argc, char *argv[])
         ARG_UNUSED(shell);
         ARG_UNUSED(argc);
         ARG_UNUSED(argv);
-	LOG_INF("- STUB - for command to lock parachute locking ring");
 
 	int32_t rc = mc_lock_ring();
 	if (rc != 0)
@@ -278,7 +277,13 @@ static int sw_unlock_ring(const struct shell *shell, size_t argc, char *argv[])
         ARG_UNUSED(shell);
         ARG_UNUSED(argc);
         ARG_UNUSED(argv);
-	LOG_INF("- STUB - for command to lock parachute locking ring");
+
+	int32_t rc = mc_unlock_ring();
+	if (rc != 0)
+	{
+		LOG_ERR("Failed to lock ring, err %d", rc);
+	}
+
 	return 0;
 }
 
