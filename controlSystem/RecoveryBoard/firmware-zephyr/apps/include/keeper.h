@@ -185,6 +185,9 @@ void get_detected_ring_position(enum lock_ring_position *ring_pos);
 
 // - DATA GROUP - (4) motor
 
+void ekset_DAC_setting_ring_lock(const uint32_t value);
+void ekget_DAC_setting_ring_lock(uint32_t *value);
+
 // - DATA GROUP - (6) ERS summary state data
 
 void ekset_ring_status(const uint32_t value);

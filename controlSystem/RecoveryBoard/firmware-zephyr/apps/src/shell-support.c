@@ -346,15 +346,36 @@ static int cmd_dac_show_dac_setting(const struct shell *shell, size_t argc, char
 
 static int cmd_dac_set_output(const struct shell *shell, size_t argc, char *argv[])
 {
-	LOG_INF("stub command to set DAC output");
-
         uint32_t value = 0;
         char *endptr, *str;
         str = argv[1];
         value = strtol(str, &endptr, 10);  // TODO [ ] factor BASE_10 symbol to ers-utils.h header and use it here
 	int32_t rc = 0;
 
+	LOG_INF("to DAC writing value %u . . .", value);
 	rc = dac_set_output(value);
+	return 0;
+}
+
+static int cmd_dac_store_setting_for_lock_unlock(const struct shell *shell, size_t argc, char *argv[])
+{
+        uint32_t value = 0;
+        char *endptr, *str;
+        str = argv[1];
+        value = strtol(str, &endptr, 10);  // TODO [ ] factor BASE_10 symbol to ers-utils.h header and use it here
+	// int32_t rc = 0;
+
+	LOG_INF("storing DAC setting %u for ring lock and unlock operations . . .", value);
+	ekset_DAC_setting_ring_lock(value);
+	return 0;
+}
+
+static int cmd_dac_get_setting_for_lock_unlock(const struct shell *shell, size_t argc, char *argv[])
+{
+        uint32_t value = 0;
+	// int32_t rc = 0;
+	ekget_DAC_setting_ring_lock(&value);
+	LOG_INF("present DAC setting for ring lock and unlock is %u", value);
 	return 0;
 }
 
@@ -375,6 +396,12 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
         SHELL_CMD_ARG(set, NULL,
                 "set DAC output",
                 cmd_dac_set_output, 0, 0),
+        SHELL_CMD_ARG(set_lock_unlock_current, NULL,
+                "store DAC setting for ring lock and unlock",
+                cmd_dac_store_setting_for_lock_unlock, 0, 0),
+        SHELL_CMD_ARG(show_lock_unlock_current, NULL,
+                "show DAC setting for ring lock and unlock",
+                cmd_dac_get_setting_for_lock_unlock, 0, 0),
         SHELL_SUBCMD_SET_END
 );
 
