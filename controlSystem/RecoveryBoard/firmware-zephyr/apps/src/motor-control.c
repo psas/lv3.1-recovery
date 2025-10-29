@@ -188,6 +188,10 @@ int32_t mc_drive_deploy2_high(void)
 	}
 }
 
+#define DEV_DAC_SETTING_IN_SITU 800
+#define RING_CHECK_INTERVAL_MS 10
+#define COUNT_CHECKS 30
+
 int32_t mc_lock_ring(void)
 {
 // Set DAC output to create ~100m at H-bridge output
@@ -204,29 +208,22 @@ int32_t mc_lock_ring(void)
 	if (rc != 0) { LOG_ERR("Trouble motor_ps!"); }
 
 	// (2) set DAC to produce minimal current needed to turn over lock ring motor:
-	rc = dac_set_output(600);
+	rc = dac_set_output(DEV_DAC_SETTING_IN_SITU);
 	if (rc != 0) { LOG_ERR("Trouble set DAC out!"); }
 
 	// (3) apply logic levels to BDS63150 IN1, IN2 pins for H-bridge output:
-	rc = mc_drive_deploy1_high();
+	rc = mc_drive_deploy2_high();
 	if (rc != 0) { LOG_ERR("Trouble set DEPLOY1, DEPLOY1!"); }
 
-#if 0
-	LOG_INF("M2 - pause . . .");
-	k_msleep(2000);
-#else
 	enum lock_ring_position ring_pos = RING_POSITION_UNKNOWN;
 	uint32_t i;
-#define RING_CHECK_INTERVAL_MS 10
-#define COUNT_CHECKS 100
 
 	for (i = 0; i < COUNT_CHECKS; i++)
 	{
 		get_detected_ring_position(&ring_pos);
 
-		if ((ring_pos == RING_LOCKED) || (ring_pos == RING_UNLOCKED) ||
-		    (ring_pos == RING_LOCKED_FULLY_QUALIFIED) ||
-		    (ring_pos == RING_UNLOCKED_FULLY_QUALIFIED))
+		if ((ring_pos == RING_LOCKED) ||
+		    (ring_pos == RING_LOCKED_FULLY_QUALIFIED))
 		{
 			LOG_INF("Stopping motor on ring position = %d", ring_pos);
 			break;
@@ -235,7 +232,6 @@ int32_t mc_lock_ring(void)
 	}
 
 	LOG_INF("Stopped motor after %u ring position checks", i);
-#endif
 
 	// (4) reduce current to motor to way low:
 	LOG_INF("M1 - DAC output low . . .");
@@ -259,24 +255,21 @@ int32_t mc_unlock_ring(void)
 	if (rc != 0) { LOG_ERR("Trouble motor_ps!"); }
 
 	// (2) set DAC to produce minimal current needed to turn over lock ring motor:
-	rc = dac_set_output(600);
+	rc = dac_set_output(DEV_DAC_SETTING_IN_SITU);
 	if (rc != 0) { LOG_ERR("Trouble set DAC out!"); }
 
 	// (3) apply logic levels to BDS63150 IN1, IN2 pins for H-bridge output:
-	rc = mc_drive_deploy2_high();
+	rc = mc_drive_deploy1_high();
 	if (rc != 0) { LOG_ERR("Trouble set DEPLOY1, DEPLOY1!"); }
 
 	enum lock_ring_position ring_pos = RING_POSITION_UNKNOWN;
 	uint32_t i;
-#define RING_CHECK_INTERVAL_MS 10
-#define COUNT_CHECKS 100
 
 	for (i = 0; i < COUNT_CHECKS; i++)
 	{
 		get_detected_ring_position(&ring_pos);
 
-		if ((ring_pos == RING_LOCKED) || (ring_pos == RING_UNLOCKED) ||
-		    (ring_pos == RING_LOCKED_FULLY_QUALIFIED) ||
+		if ((ring_pos == RING_UNLOCKED) ||
 		    (ring_pos == RING_UNLOCKED_FULLY_QUALIFIED))
 		{
 			LOG_INF("Stopping motor on ring position = %d", ring_pos);
