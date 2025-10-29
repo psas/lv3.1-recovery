@@ -13,7 +13,7 @@ pub type BuzzerModeMtxType = Mutex<CriticalSectionRawMutex, Option<BuzzerMode>>;
 pub static BUZZER_MODE_MTX: BuzzerModeMtxType = Mutex::new(None);
 
 #[embassy_executor::task]
-pub async fn active_beep(mut pwm: SimplePwm<'static, TIM15>, mode: &'static BuzzerModeMtxType) {
+pub async fn active_beep(mut pwm: SimplePwm<'static, TIM15>) {
 
     // start up melody
     pwm.ch2().enable();
@@ -32,7 +32,7 @@ pub async fn active_beep(mut pwm: SimplePwm<'static, TIM15>, mode: &'static Buzz
     loop {
         let mut delay: u64 = 777; // Picking delays that hopefully won't overlap other tasks
         {
-            let mut mode_unlocked = mode.lock().await;
+            let mut mode_unlocked = BUZZER_MODE_MTX.lock().await;
             if let Some(mode) = mode_unlocked.as_mut() {
                 match mode {
                     BuzzerMode::High => {

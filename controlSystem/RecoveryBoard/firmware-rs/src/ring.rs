@@ -7,9 +7,11 @@ use embassy_sync::mutex::Mutex;
 use embassy_sync::watch::Watch;
 use embassy_time::Timer;
 
-use crate::types::AdcType;
+use crate::adc::ADC_MTX;
 
 pub type RingType = Mutex<ThreadModeRawMutex, Option<Ring>>;
+
+pub static RING_MTX: RingType = Mutex::new(None);
 
 pub static RING_POSITION_WATCH: Watch<ThreadModeRawMutex, RingPosition, 5> = Watch::new();
 pub static SENSOR_READ_WATCH: Watch<ThreadModeRawMutex, SensorReadings, 5> = Watch::new();
@@ -64,20 +66,14 @@ pub struct Ring {
     pb1: Peri<'static, PB1>,
     sensor1_limits: SensorLimits,
     sensor2_limits: SensorLimits,
-    adc_mtx: &'static AdcType,
 }
 
 impl Ring {
-    pub fn new(
-        pa0: Peri<'static, PA0>,
-        pa1: Peri<'static, PA1>,
-        pb1: Peri<'static, PB1>,
-        adc_mtx: &'static AdcType,
-    ) -> Self {
+    pub fn new(pa0: Peri<'static, PA0>, pa1: Peri<'static, PA1>, pb1: Peri<'static, PB1>) -> Self {
         let sensor1_limits = SensorLimits::new(3700, 600, 2100, 900);
         let sensor2_limits = SensorLimits::new(3700, 600, 1300, 900);
 
-        Self { pa0, pa1, pb1, sensor1_limits, sensor2_limits, adc_mtx }
+        Self { pa0, pa1, pb1, sensor1_limits, sensor2_limits }
     }
 
     pub async fn broadcast_ring_position(&mut self) {
@@ -127,7 +123,7 @@ impl Ring {
         let mut motor_isense_read = 0u16;
 
         {
-            let mut adc_unlocked = self.adc_mtx.lock().await;
+            let mut adc_unlocked = ADC_MTX.lock().await;
             if let Some(adc) = adc_unlocked.as_mut() {
                 sensor1_read = adc.read(&mut self.pa0).await;
                 sensor2_read = adc.read(&mut self.pa1).await;
@@ -150,10 +146,10 @@ impl Ring {
 }
 
 #[embassy_executor::task]
-pub async fn read_pos_sensor(ring: &'static RingType) {
+pub async fn read_pos_sensor() {
     loop {
         {
-            let mut ring_unlocked = ring.lock().await;
+            let mut ring_unlocked = RING_MTX.lock().await;
             if let Some(ring) = ring_unlocked.as_mut() {
                 ring.broadcast_ring_position().await;
             }

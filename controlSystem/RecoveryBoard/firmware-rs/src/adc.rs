@@ -23,12 +23,12 @@ pub async fn read_battery(mut adc: Adc<'static, ADC1>, mut pb0: Peri<'static, PB
 }
 
 #[embassy_executor::task]
-pub async fn read_battery_from_ref(adc: &'static AdcType, mut pb0: Peri<'static, PB0>) {
+pub async fn read_battery_from_ref(mut pb0: Peri<'static, PB0>) {
     loop {
         let mut batt_sig: u8 = 0;
 
         {
-            let mut adc_unlocked = adc.lock().await;
+            let mut adc_unlocked = ADC_MTX.lock().await;
             if let Some(adc_ref) = adc_unlocked.as_mut() {
                 let adc_read = adc_ref.read(&mut pb0).await;
                 let v_batt = ((adc_read as f32) / 4096.0 * 3.3) / 0.2326;

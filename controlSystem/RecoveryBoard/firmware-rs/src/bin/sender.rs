@@ -230,7 +230,7 @@ async fn main(spawner: Spawner) {
     }
 
     unwrap!(spawner.spawn(blink_led(p.PB14)));
-    unwrap!(spawner.spawn(active_beep(pwm, &BUZZER_MODE_MTX)));
+    unwrap!(spawner.spawn(active_beep(pwm)));
     unwrap!(spawner.spawn(cli(uart)));
     unwrap!(spawner.spawn(read_battery(adc, p.PB0)));
     unwrap!(spawner.spawn(handle_iso_rising_edge(iso_drogue, DROGUE_DEPLOY_ID)));

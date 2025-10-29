@@ -33,7 +33,7 @@ use firmware_rs::{
         can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_MTX, CAN_TX_CHANNEL, DROGUE_ACKNOWLEDGE_ID, DROGUE_DEPLOY_ID, MAIN_ACKNOWLEDGE_ID, MAIN_DEPLOY_ID, TELEMETRUM_HEARTBEAT_ID
     },
     motor::{Motor, MotorType},
-    ring::{read_pos_sensor, Ring, RingPosition, RingType, RING_POSITION_WATCH, SENSOR_READ_WATCH},
+    ring::{read_pos_sensor, Ring, RingPosition, RING_MTX, RING_POSITION_WATCH, SENSOR_READ_WATCH},
     types::*,
     uart::{IO, UART_BUF_SIZE, UART_RX_BUF_CELL, UART_TX_BUF_CELL},
 };
@@ -131,7 +131,6 @@ async fn set_state(update: ChuteStateField) {
 
 static UMB_ON_MTX: UmbOnType = Mutex::new(None);
 static SYSTEM_STATE_MTX: Mutex<ThreadModeRawMutex, Option<ChuteState>> = Mutex::new(None);
-static RING_MTX: RingType = Mutex::new(None);
 static MOTOR_MTX: MotorType = Mutex::new(None);
 
 #[embassy_executor::main]
@@ -196,8 +195,8 @@ async fn main(spawner: Spawner) {
         sys_state.id = 2;
     }
 
-    let motor = Motor::new(p.PB4, p.PB5, p.PB6, p.PB7, dac, &RING_POSITION_WATCH);
-    let ring = Ring::new(p.PA0, p.PA1, p.PB1, &ADC_MTX);
+    let motor = Motor::new(p.PB4, p.PB5, p.PB6, p.PB7, dac);
+    let ring = Ring::new(p.PA0, p.PA1, p.PB1);
 
     {
         // Put peripherals into mutex if shared among tasks.
@@ -211,10 +210,10 @@ async fn main(spawner: Spawner) {
     }
 
     unwrap!(spawner.spawn(blink_led(p.PB14)));
-    unwrap!(spawner.spawn(active_beep(pwm, &BUZZER_MODE_MTX)));
+    unwrap!(spawner.spawn(active_beep(pwm)));
     unwrap!(spawner.spawn(cli(uart)));
-    unwrap!(spawner.spawn(read_battery_from_ref(&ADC_MTX, p.PB0)));
-    unwrap!(spawner.spawn(read_pos_sensor(&RING_MTX)));
+    unwrap!(spawner.spawn(read_battery_from_ref(p.PB0)));
+    unwrap!(spawner.spawn(read_pos_sensor()));
 
     // enable can at last minute so other tasks can still spawn if can bus is down
     can.enable().await;
@@ -224,7 +223,7 @@ async fn main(spawner: Spawner) {
         *(CAN_MTX.lock().await) = Some(can);
     }
 
-    unwrap!(spawner.spawn(can_writer(can_tx, &CAN_TX_CHANNEL)));
+    unwrap!(spawner.spawn(can_writer(can_tx)));
     unwrap!(spawner.spawn(can_reader(can_rx)));
     unwrap!(spawner.spawn(parachute_heartbeat()));
 

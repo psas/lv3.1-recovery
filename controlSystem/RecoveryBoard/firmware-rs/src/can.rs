@@ -44,10 +44,9 @@ pub async fn echo_can(mut can: Can<'static>) -> () {
 #[embassy_executor::task]
 pub async fn can_writer(
     mut can_tx: CanTx<'static>,
-    can_tx_ch: &'static Channel<CriticalSectionRawMutex, CanTxChannelMsg, 10>,
 ) -> () {
     loop {
-        let frame = can_tx_ch.receive().await;
+        let frame = CAN_TX_CHANNEL.receive().await;
         if frame.blocking {
             can_tx.write(&frame.frame).await;
         }

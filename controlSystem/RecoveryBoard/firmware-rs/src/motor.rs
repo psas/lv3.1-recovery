@@ -6,10 +6,10 @@ use embassy_stm32::{
     peripherals::{DAC1, PB4, PB5, PB6, PB7},
     Peri,
 };
-use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex, watch::Watch};
+use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex};
 use embassy_time::{with_timeout, Duration};
 
-use crate::ring::{RingPosition, MOTOR_ISENSE_WATCH};
+use crate::ring::{RingPosition, MOTOR_ISENSE_WATCH, RING_POSITION_WATCH};
 
 pub struct Motor {
     pub deploy1: Output<'static>,
@@ -17,7 +17,6 @@ pub struct Motor {
     pub ps: Output<'static>,
     pub motor_fail: Input<'static>,
     pub dac: Dac<'static, DAC1, Async>,
-    ring_pos_watch: &'static Watch<ThreadModeRawMutex, RingPosition, 5>,
 }
 
 pub enum MotorMode {
@@ -35,14 +34,13 @@ impl Motor {
         pb6: Peri<'static, PB6>,
         pb7: Peri<'static, PB7>,
         dac: Dac<'static, DAC1, Async>,
-        ring_pos_watch: &'static Watch<ThreadModeRawMutex, RingPosition, 5>,
     ) -> Self {
         let deploy1 = Output::new(pb4, Level::Low, Speed::Medium);
         let deploy2 = Output::new(pb5, Level::Low, Speed::Medium);
         let ps = Output::new(pb6, Level::High, Speed::Medium);
         let motor_fail = Input::new(pb7, Pull::Up);
 
-        Self { deploy1, deploy2, ps, motor_fail, dac, ring_pos_watch }
+        Self { deploy1, deploy2, ps, motor_fail, dac }
     }
 
     pub fn set_mode(&mut self, mode: MotorMode) {
@@ -92,7 +90,7 @@ impl Motor {
 
     async fn read_ring_pos_until_condition(&mut self, position: RingPosition) {
         let mut ring_pos_receiver =
-            self.ring_pos_watch.receiver().expect("Could not get ring_pos rcvr");
+            RING_POSITION_WATCH.receiver().expect("Could not get ring_pos rcvr");
         let mut isense_receiver = MOTOR_ISENSE_WATCH.receiver().expect("Could not get isense rcvr");
         let mut buf = [0u16; 16];
         let mut count = 0usize;
