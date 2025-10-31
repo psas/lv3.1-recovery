@@ -36,7 +36,7 @@ ERS firmware TODO list:
 
 [ ] Implement an arbiter to act upon current state and gathered data.
     [x] create an arbiter thread with stub code.
-    [ ] add logic to arbiter to determine and store ring state.
+    [x] add logic to arbiter to determine and store ring state.
     [ ] add logic to arbiter to determine and store battery state.
     [ ] add logic to arbiter to determine and store shore power state.
     [ ] add logic to arbiter to determine and store ready state.
@@ -63,22 +63,22 @@ ERS firmware TODO list:
 [ ] Add following shell commands from Google doc by Andrew, Theo, Hessah:
     [x] help
     [ ] state - ERS system state
-    [ ] l - lock ring
-    [ ] u - unlock ring
-    [ ] pos [poll] - report locking ring position
+    [x] l - lock ring
+    [x] u - unlock ring
+    [x] pos [poll] - report locking ring position
 
 2025-10-21 TUE
 
 [ ] Add commands:
     [ ] to enable/disable lock ring position reporting
-    [ ] to set lock ring position (hall sensor reading) interval in milliseconds
-    [ ] to show lock ring position detection interval
-    [ ] to restore Hall sensor cutoff value defaults
+    [x] to set lock ring position (hall sensor reading) interval in milliseconds
+    [x] to show lock ring position detection interval
+    [x] to restore Hall sensor cutoff value defaults
 
 [ ] To arbiter add:
-    [ ] a kernel timer for developing ring lock and ring unlock routines (in absence
+    [-] a kernel timer for developing ring lock and ring unlock routines (in absence
          of lock ring assembly)
 
 [ ] To ADC module
-    [ ] add a timer and Zephyr work queue submission to read motor current channel
+    [-] add a timer and Zephyr work queue submission to read motor current channel
     [ ] add a command to show motor current and current reading interval
