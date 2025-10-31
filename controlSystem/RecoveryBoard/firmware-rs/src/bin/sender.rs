@@ -245,7 +245,7 @@ async fn main(spawner: Spawner) {
         *(CAN_MTX.lock().await) = Some(can);
     }
 
-    unwrap!(spawner.spawn(can_writer(can_tx, &CAN_TX_CHANNEL)));
+    unwrap!(spawner.spawn(can_writer(can_tx)));
     unwrap!(spawner.spawn(can_reader(can_rx)));
 
     // Keep main from returning. Needed for can_tx/can_rx or they get dropped

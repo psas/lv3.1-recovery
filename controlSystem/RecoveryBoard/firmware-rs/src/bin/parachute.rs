@@ -30,7 +30,8 @@ use firmware_rs::{
     blink::blink_led,
     buzzer::{active_beep, BuzzerMode, BUZZER_MODE_MTX},
     can::{
-        can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_MTX, CAN_TX_CHANNEL, DROGUE_ACKNOWLEDGE_ID, DROGUE_DEPLOY_ID, MAIN_ACKNOWLEDGE_ID, MAIN_DEPLOY_ID, TELEMETRUM_HEARTBEAT_ID
+        can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_MTX, CAN_TX_CHANNEL, DROGUE_ACKNOWLEDGE_ID,
+        DROGUE_DEPLOY_ID, MAIN_ACKNOWLEDGE_ID, MAIN_DEPLOY_ID, TELEMETRUM_HEARTBEAT_ID,
     },
     motor::{Motor, MotorType},
     ring::{read_pos_sensor, Ring, RingPosition, RING_MTX, RING_POSITION_WATCH, SENSOR_READ_WATCH},
@@ -454,14 +455,14 @@ async fn can_reader(mut can_rx: CanRx<'static>) -> () {
         match can_rx.read().await {
             Ok(envelope) => match envelope.frame.id() {
                 Id::Standard(id) if id.as_raw() == DROGUE_DEPLOY_ID => {
-                    let frame =
-                        Frame::new_data(StandardId::new(DROGUE_ACKNOWLEDGE_ID).unwrap(), &[1])
-                            .unwrap();
-                    let acknowledge_msg = CanTxChannelMsg::new(true, frame);
-                    CAN_TX_CHANNEL.send(acknowledge_msg).await;
-
                     #[cfg(feature = "drogue")]
                     {
+                        let frame =
+                            Frame::new_data(StandardId::new(DROGUE_ACKNOWLEDGE_ID).unwrap(), &[1])
+                                .unwrap();
+                        let acknowledge_msg = CanTxChannelMsg::new(true, frame);
+                        CAN_TX_CHANNEL.send(acknowledge_msg).await;
+
                         let mut motor_unlocked = MOTOR_MTX.lock().await;
                         if let Some(motor) = motor_unlocked.as_mut() {
                             motor
