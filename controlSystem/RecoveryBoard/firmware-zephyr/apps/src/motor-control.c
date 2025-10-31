@@ -4,6 +4,8 @@
  * ERS board firmware source file motor-control.c
  */
 
+#include <string.h>
+
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/gpio.h>
@@ -189,8 +191,51 @@ int32_t mc_drive_deploy2_high(void)
 }
 
 #define DEV_DAC_SETTING_IN_SITU 800
-#define RING_CHECK_INTERVAL_MS 10
-#define COUNT_CHECKS 30
+#define RING_CHECK_INTERVAL_MS 5 // was 10
+#define COUNT_CHECKS 60 // was 30
+
+static uint32_t motor_current_in_adc_fs[COUNT_CHECKS] = {0};
+
+#define READING_WIDTH 6
+#define READINGS_PER_LINE 8
+#define MARGIN 8
+#define LINE_LEN ((READING_WIDTH * READINGS_PER_LINE) + MARGIN)
+
+void show_motor_currents(void)
+{
+	char lbuf[LINE_LEN] = { 0 };
+	uint32_t i = 0;
+	uint32_t j = 1;
+	uint32_t buf_len = 0;
+
+	while (i < COUNT_CHECKS)
+	{
+		if ((i % READINGS_PER_LINE) != 0)
+		{
+			buf_len = strlen(lbuf);
+
+			if (buf_len == 0)
+			{
+				snprintf(&lbuf[buf_len], (LINE_LEN - buf_len), "(%u)", j);
+				buf_len = strlen(lbuf);
+				j++;
+			}
+
+			snprintf(&lbuf[buf_len], (LINE_LEN - buf_len), " %u,",
+			  motor_current_in_adc_fs[i]);
+		}
+		else
+		{
+			LOG_INF("%s", lbuf);
+			memset(lbuf, 0, sizeof(lbuf));
+			k_msleep(100);
+		}
+		i++;
+	}
+
+	LOG_INF("%s", lbuf);
+	k_msleep(5);
+}
 
 int32_t mc_lock_ring(void)
 {
@@ -225,12 +270,13 @@ int32_t mc_lock_ring(void)
 		if ((ring_pos == RING_LOCKED) ||
 		    (ring_pos == RING_LOCKED_FULLY_QUALIFIED))
 		{
-			LOG_INF("Stopping motor on ring position = %d", ring_pos);
 			break;
 		}
+
+		ekget_motor_isense(&motor_current_in_adc_fs[i]);
 		k_msleep(RING_CHECK_INTERVAL_MS);
 	}
-
+	LOG_INF("Stopping motor on ring position = %d", ring_pos);
 	LOG_INF("Stopped motor after %u ring position checks", i);
 
 	// (4) reduce current to motor to way low:
@@ -241,6 +287,20 @@ int32_t mc_lock_ring(void)
 	// (5) set BDS63150 to power saving mode:
 	rc = mc_set_not_motor_ps(0x1);
 	if (rc != 0) { LOG_ERR("Trouble motor_ps!"); }
+
+	LOG_INF("motor currents:");
+#if 0
+	for (i = 0; i < COUNT_CHECKS; i++)
+	{
+		LOG_INF("%u", motor_current_in_adc_fs[i]);
+		if ((i % 5) == 0)
+		{
+			k_msleep(10);
+		}
+	}
+#else
+	show_motor_currents();
+#endif
 
 	return rc;
 }

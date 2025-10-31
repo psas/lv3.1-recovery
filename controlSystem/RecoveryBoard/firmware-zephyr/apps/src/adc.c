@@ -29,7 +29,7 @@ LOG_MODULE_REGISTER(ers_adc, CONFIG_ADC_LOG_LEVEL);
 #define ADC_THREAD_PRIORITY 3
 #define ADC_READ_PERIOD_MS 10
 
-#undef DEV_ERS_ADC_REGULAR_REPORTING
+#undef DEV_ERS_ADC_PERIODIC_REPORTING
 
 // #define ERS_ADC_READ_TIMEOUT 1500
 // static struct k_timeout_t ers_adc_read_timeout K_MSEC(ERS_ADC_READ_TIMEOUT);
@@ -114,7 +114,7 @@ int32_t adc_read_channels(const enum ers_adc_values idx_begin,
 // TODO [ ] See about replacing this custom symbol with use of Zephyr module
 //          level logging.  See ERS Zephyr firmware files 'Kconfig' and
 //          'ers-log-levels.conf' for some details.
-#if DEV_ERS_ADC_REGULAR_REPORTING
+#if DEV_ERS_ADC_PERIODIC_REPORTING
         LOG_INF("ADC reading[%u]:", count++);
 #endif
 
@@ -123,7 +123,7 @@ int32_t adc_read_channels(const enum ers_adc_values idx_begin,
         {
                 int32_t val_mv;
 
-#if DEV_ERS_ADC_REGULAR_REPORTING
+#if DEV_ERS_ADC_PERIODIC_REPORTING
                 LOG_INF("- %s, channel %d: ",
                              adc_channels[i].dev->name,
                              adc_channels[i].channel_id);
@@ -155,7 +155,7 @@ int32_t adc_read_channels(const enum ers_adc_values idx_begin,
                         val_mv = (int32_t)buf;
                 }
 
-#if DEV_ERS_ADC_REGULAR_REPORTING
+#if DEV_ERS_ADC_PERIODIC_REPORTING
                 LOG_INF("%"PRId32, val_mv);
 #endif
                 rc = adc_raw_to_millivolts_dt(&adc_channels[i], &val_mv);
@@ -168,7 +168,7 @@ int32_t adc_read_channels(const enum ers_adc_values idx_begin,
                 {
 			// Store ADC reading in ERS app "keeper" module:
 			ekset_adc_value_in_mv(i, (uint32_t)buf);
-#if DEV_ERS_ADC_REGULAR_REPORTING
+#if DEV_ERS_ADC_PERIODIC_REPORTING
                         LOG_INF(" = %"PRId32" mV", val_mv);
 #endif
 		}
@@ -213,7 +213,7 @@ void adc_thread_entry(void *arg1, void *arg2, void *arg3)
 
         while (1)
         {
-#if DEV_ERS_ADC_REGULAR_REPORTING
+#if DEV_ERS_ADC_PERIODIC_REPORTING
                 LOG_INF("ADC reading[%u]: (thread entry function)\n", count++);
 #endif
 		rc = adc_read_channels(ADC_READING_BATT_READ, ADC_READING_HALL_2); // adc_thread_entry()
