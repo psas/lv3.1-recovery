@@ -38,7 +38,7 @@ use firmware_rs::{
     can::{
         can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_MTX, CAN_TX_CHANNEL, DROGUE_ACKNOWLEDGE_ID,
         DROGUE_DEPLOY_ID, DROGUE_STATUS_ID, MAIN_ACKNOWLEDGE_ID, MAIN_DEPLOY_ID, MAIN_STATUS_ID,
-        TELEMETRUM_HEARTBEAT_ID,
+        SENDER_HEARTBEAT_ID,
     },
     types::*,
     uart::{IO, UART_BUF_SIZE, UART_RX_BUF_CELL, UART_TX_BUF_CELL},
@@ -569,7 +569,7 @@ async fn telemetrum_heartbeat(mut rr_pin: Output<'static>) -> () {
                     0,
                 ];
 
-                let id = StandardId::new(TELEMETRUM_HEARTBEAT_ID).unwrap();
+                let id = StandardId::new(SENDER_HEARTBEAT_ID).unwrap();
                 let header = Header::new(Standard(id), 8, false);
                 let frame = Frame::new(header, &status_buf).unwrap();
 

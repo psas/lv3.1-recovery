@@ -14,7 +14,7 @@ pub const DROGUE_ACKNOWLEDGE_ID: u16 = 0x101;
 pub const MAIN_DEPLOY_ID: u16 = 0x200;
 pub const MAIN_STATUS_ID: u16 = 0x720;
 pub const MAIN_ACKNOWLEDGE_ID: u16 = 0x201;
-pub const TELEMETRUM_HEARTBEAT_ID: u16 = 0x700;
+pub const SENDER_HEARTBEAT_ID: u16 = 0x700;
 
 pub static CAN_TX_CHANNEL: Channel<CriticalSectionRawMutex, CanTxChannelMsg, 10> = Channel::new();
 pub static CAN_MTX: Mutex<ThreadModeRawMutex, Option<Can>> = Mutex::new(None);
