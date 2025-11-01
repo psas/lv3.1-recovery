@@ -1,4 +1,11 @@
-# Requires python-can v4.5, pySerial v3.5
+"""
+This script uses the Vulcan to spoof the other two parachute boards when you only have one board to use.
+It's purpose is to test that the sender board is functioning properly.
+Make sure to pass in the path to your Vulcan with the `-d` flag when invoking this script.
+You should see that the Vulcan is sending good status messages over the CAN bus that match both drogue and main parachute board heartbeat IDs.
+* Requires python-can v4.5, pySerial v3.5 *
+"""
+
 import can
 import time
 import argparse
@@ -33,17 +40,26 @@ def main():
     # Configure the connection to the VulCAN
     bus = can.interface.Bus(channel="can0", interface="socketcan", bitrate=bitrate)
 
+    status_buf = [
+        2,  # Ring locked
+        100,  # Battery voltage in 0.1 volts (> 9.9v is good)
+        1,  # Batt_ok == True
+        1,  # Shore power Off == true
+        1,  # Received sender message in last two seconds
+        1,  # Board is ready to release parachute
+        0,  # unused
+        0,  # unused
+    ]
+
     while True:
         message_id = 0x710
-        data_bytes = [0x01]
         msg = can.Message(
-            arbitration_id=message_id, data=data_bytes, is_extended_id=False
+            arbitration_id=message_id, data=status_buf, is_extended_id=False
         )
         bus.send(msg)
         message2_id = 0x720
-        data_bytes2 = [0x01]
         msg2 = can.Message(
-            arbitration_id=message2_id, data=data_bytes2, is_extended_id=False
+            arbitration_id=message2_id, data=status_buf, is_extended_id=False
         )
         bus.send(msg2)
         logger.info("Sent messages: %s %s", msg, msg2)
