@@ -33,16 +33,13 @@ use firmware_rs::{
         can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_MTX, CAN_TX_CHANNEL, DROGUE_ACKNOWLEDGE_ID,
         DROGUE_DEPLOY_ID, MAIN_ACKNOWLEDGE_ID, MAIN_DEPLOY_ID, SENDER_HEARTBEAT_ID,
     },
-    motor::{Motor, MotorType},
+    motor::{Motor, MotorType, MOTOR_DRIVE_CURR_MA, MOTOR_DRIVE_DUR_MS},
     ring::{read_pos_sensor, Ring, RingPosition, RING_MTX, RING_POSITION_WATCH, SENSOR_READ_WATCH},
     types::*,
     uart::{IO, UART_BUF_SIZE, UART_RX_BUF_CELL, UART_TX_BUF_CELL},
 };
 use noline::builder::EditorBuilder;
 use {defmt_rtt as _, panic_probe as _};
-
-const MOTOR_DRIVE_DUR_MS: u64 = 1000;
-const MOTOR_DRIVE_CURR_MA: u16 = 1000;
 
 bind_interrupts!(struct CanIrqs {
     CEC_CAN =>

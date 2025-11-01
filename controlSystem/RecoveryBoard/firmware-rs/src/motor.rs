@@ -11,6 +11,9 @@ use embassy_time::{with_timeout, Duration};
 
 use crate::ring::{RingPosition, MOTOR_ISENSE_WATCH, RING_POSITION_WATCH};
 
+pub const MOTOR_DRIVE_DUR_MS: u64 = 1000;
+pub const MOTOR_DRIVE_CURR_MA: u16 = 1000;
+
 pub struct Motor {
     pub deploy1: Output<'static>,
     pub deploy2: Output<'static>,
