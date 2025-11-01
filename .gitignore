@@ -45,3 +45,4 @@ fp-info-cache
 # Rust generated files
 controlSystem/RecoveryBoard/firmware-rs/target
 controlSystem/RecoveryBoard/firmware-rs/Cargo.lock
+controlSystem/RecoveryBoard/firmware-rs/__pycache__
