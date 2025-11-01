@@ -37,7 +37,7 @@ use firmware_rs::{
     buzzer::{active_beep, BuzzerMode, BUZZER_MODE_MTX},
     can::{
         can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_MTX, CAN_TX_CHANNEL, DROGUE_ACKNOWLEDGE_ID,
-        DROGUE_DEPLOY_ID, DROGUE_STATUS_ID, MAIN_ACKNOWLEDGE_ID, MAIN_DEPLOY_ID, MAIN_STATUS_ID,
+        DROGUE_DEPLOY_ID, DROGUE_HEARTBEAT_ID, MAIN_ACKNOWLEDGE_ID, MAIN_DEPLOY_ID, MAIN_HEARTBEAT_ID,
         SENDER_HEARTBEAT_ID,
     },
     types::*,
@@ -404,7 +404,7 @@ async fn can_reader(mut can_rx: CanRx<'static>) -> () {
     loop {
         match can_rx.read().await {
             Ok(envelope) => match envelope.frame.id() {
-                Id::Standard(id) if id.as_raw() == MAIN_STATUS_ID => {
+                Id::Standard(id) if id.as_raw() == MAIN_HEARTBEAT_ID => {
                     let status = envelope.frame.data()[0];
                     set_state(SenderStateField::MainLastSeen(envelope.ts.as_millis())).await;
                     set_state(SenderStateField::MainStatus(status > 0)).await;
@@ -416,7 +416,7 @@ async fn can_reader(mut can_rx: CanRx<'static>) -> () {
                 Id::Standard(id) if id.as_raw() == MAIN_ACKNOWLEDGE_ID => {
                     MAIN_ACKNOWLEDGE.store(true, core::sync::atomic::Ordering::Relaxed);
                 }
-                Id::Standard(id) if id.as_raw() == DROGUE_STATUS_ID => {
+                Id::Standard(id) if id.as_raw() == DROGUE_HEARTBEAT_ID => {
                     let status = envelope.frame.data()[0];
                     set_state(SenderStateField::DrogueLastSeen(envelope.ts.as_millis())).await;
                     set_state(SenderStateField::DrogueStatus(status > 0)).await;

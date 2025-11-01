@@ -599,8 +599,8 @@ async fn parachute_heartbeat() -> () {
 
                 #[cfg(feature = "main")]
                 {
-                    use firmware_rs::can::MAIN_STATUS_ID;
-                    let id = StandardId::new(MAIN_STATUS_ID).unwrap();
+                    use firmware_rs::can::MAIN_HEARTBEAT_ID;
+                    let id = StandardId::new(MAIN_HEARTBEAT_ID).unwrap();
                     let header = Header::new(Id::Standard(id), 8, false);
                     let frame = Frame::new(header, &status_buf).unwrap();
                     let msg: CanTxChannelMsg = CanTxChannelMsg::new(false, frame);
@@ -609,8 +609,8 @@ async fn parachute_heartbeat() -> () {
 
                 #[cfg(feature = "drogue")]
                 {
-                    use firmware_rs::can::DROGUE_STATUS_ID;
-                    let id = StandardId::new(DROGUE_STATUS_ID).unwrap();
+                    use firmware_rs::can::DROGUE_HEARTBEAT_ID;
+                    let id = StandardId::new(DROGUE_HEARTBEAT_ID).unwrap();
                     let header = Header::new(Id::Standard(id), 8, false);
                     let frame = Frame::new(header, &status_buf).unwrap();
                     let msg: CanTxChannelMsg = CanTxChannelMsg::new(false, frame);
