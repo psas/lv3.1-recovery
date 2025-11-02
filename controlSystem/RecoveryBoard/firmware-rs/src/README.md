@@ -67,7 +67,7 @@ The message IDs follow a numbering scheme:
 ### Tasks
 
 - `echo_can`
-  Debug task that will simply write a message to the bus, and then enter a loop that waits for a response which it then echoes back to the bus again. To be used with `test_can.py`.
+  Debug task that will simply write a message to the bus, and then enter a loop that waits for a response which it then echoes back to the bus again. To be used with `echo_can.py`.
 
 - `can_writer`
   Handles writing messages to the CAN bus for all boards. The channel used by this task only accepts a CanTxChannelMsg, which is a simple wrapper around Embassy's CAN Frame, that tells the writer task if it should write the message with a blocking write, or if it should only try to write the message and fail with an error if it can't.
