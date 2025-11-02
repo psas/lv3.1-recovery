@@ -95,23 +95,26 @@ impl Motor {
         let mut ring_pos_receiver =
             RING_POSITION_WATCH.receiver().expect("Could not get ring_pos rcvr");
         let mut isense_receiver = MOTOR_ISENSE_WATCH.receiver().expect("Could not get isense rcvr");
-        let mut buf = [0u16; 16];
+        const BUFSIZE: usize = 64; // INFO If running the motor for longer, increase this
+        let mut buf = [0u16; BUFSIZE];
         let mut count = 0usize;
         loop {
-            buf[count] = isense_receiver.changed().await;
+            if count < BUFSIZE {
+                buf[count] = isense_receiver.changed().await;
+            }
             let ring_position = ring_pos_receiver.changed().await;
             count = count.wrapping_add(1);
             if ring_position == position {
                 break;
             }
         }
+        // INFO Only gets to this point if the ring reaches the desired position
         debug!("Motor_isense: {}", buf[..count]);
     }
 
     pub async fn drive(&mut self, mode: RingPosition, duration_ms: u64, force: bool, current: u16) {
         self.limit_motor_current(current).await;
         self.set_mode(MotorMode::Stop);
-
         match mode {
             RingPosition::Locked => {
                 self.set_mode(MotorMode::Reverse);
