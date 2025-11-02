@@ -20,12 +20,6 @@ This binary is the program for either the drogue or the main ERS parachute board
 To flash it as the drogue board run `cargo run --bin parachute --features=drogue`.
 To flash it as the main board run `cargo run --bin parachute --features=main`.
 
-### Constants
-
-- **`MOTOR_DRIVE_DUR_MS`**: Duration in milliseconds to drive the motor before it is considered to have timed out. This is used in the `.drive()` method of the `Motor` struct.
-
-- **`MOTOR_DRIVE_CURR_MA`**: Current at which to drive the motor in milliamps. Increasing this will increase the force with which the motor drives the ring.
-
 ### Interrupts
 
 the f091rc MCU bundles all of the CAN and CEC interrupts together into one interrupt. Because of this, we must bind the Rx0, Rx1, Tx, and Sce interrupt handlers to this one interrupt.
