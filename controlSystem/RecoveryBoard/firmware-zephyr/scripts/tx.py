@@ -74,6 +74,12 @@ while loop_count < 10:
   print(f"Sent message: {message}")
   time.sleep(1/4)
 
+# 2025-11-04
+  message_id = 0x100
+  data_bytes = [0x55, 0x44, 0x55, 0x44, 0x55, 0x44, 0x55, 0x44]
+  message = can.Message(arbitration_id=message_id, data=data_bytes, is_extended_id=True)
+  bus.send(message)
+
   message_id = 0x700
 
   data_bytes = [0x55, 0x44, 0x55, 0x44, 0x55, 0x44, 0x55, 0x44]
