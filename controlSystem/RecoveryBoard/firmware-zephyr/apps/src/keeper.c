@@ -225,6 +225,14 @@ static bool keeper_initialized_fs = false;
 void ekset_batt_read(const uint32_t value)
 {
 	atomic_set(&batt_read, (atomic_val_t)value);
+#if 0
+	static uint32_t call_count = 0;
+	if ((call_count % 100) == 0)
+	{
+		LOG_INF("battery reading %u stored", value);
+	}
+	call_count++;
+#endif
 }
 
 void ekget_batt_read(uint32_t* value)
