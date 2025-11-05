@@ -4,6 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/**
+ * @note CAN message filters are presently defined in routine rx_thread_entry().
+ */
+
 #include <stdio.h>
 
 #include <zephyr/kernel.h>
@@ -196,12 +200,28 @@ void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 		.mask = CAN_EXT_ID_MASK
 	};
 
+	const struct can_filter filter_unlock_drogue_chute = {
+		.flags = CAN_FILTER_IDE,
+		.id = MSG_ID_UNLOCK_DROGUE_CHUTE,
+		.mask = CAN_EXT_ID_MASK
+	};
+
+	const struct can_filter filter_unlock_main_chute = {
+		.flags = CAN_FILTER_IDE,
+		.id = MSG_ID_UNLOCK_MAIN_CHUTE,
+		.mask = CAN_EXT_ID_MASK
+	};
+
 	struct can_frame frame;
 	int filter_id;
 
 	filter_id = can_add_rx_filter_msgq(can_dev, &counter_msgq, &filter_sender_heartbeat);
 	filter_id = can_add_rx_filter_msgq(can_dev, &counter_msgq, &filter_drogue_heartbeat);
 	filter_id = can_add_rx_filter_msgq(can_dev, &counter_msgq, &filter_main_heartbeat);
+// TODO [ ] consider adding build time symbol to select CAN filter additions
+//          based on given ERS firmware variant 'sender', 'drogue', and 'main'.
+	filter_id = can_add_rx_filter_msgq(can_dev, &counter_msgq, &filter_unlock_drogue_chute);
+	filter_id = can_add_rx_filter_msgq(can_dev, &counter_msgq, &filter_unlock_main_chute);
 
 	while (1) {
 		k_msgq_get(&counter_msgq, &frame, K_FOREVER);
