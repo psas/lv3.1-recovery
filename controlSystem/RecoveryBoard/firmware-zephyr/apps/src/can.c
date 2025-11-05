@@ -175,12 +175,12 @@ void heartbeat_timer_handler(struct k_timer *dummy)
 
 K_TIMER_DEFINE(heartbeat_timer, heartbeat_timer_handler, NULL);
 
-
 void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 {
 	ARG_UNUSED(arg1);
 	ARG_UNUSED(arg2);
 	ARG_UNUSED(arg3);
+	int32_t rc = 0;
 
 	const struct can_filter filter_sender_heartbeat = {
 		.flags = CAN_FILTER_IDE,
@@ -252,6 +252,11 @@ void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 			LOG_INF("RX %X - main chute heartbeat", frame.id);
 			break;
 		case MSG_ID_UNLOCK_DROGUE_CHUTE:
+			rc = mc_unlock_ring();
+			if (rc != 0)
+			{
+				LOG_ERR("Failed to unlock ring via CAN message, err %d", rc);
+			}
 			LOG_INF("RX %X - unlock drogue chute", frame.id);
 			break;
 		case MSG_ID_UNLOCK_MAIN_CHUTE:
@@ -261,6 +266,7 @@ void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 		}
 #endif
 	}
+//	LOG_INF("M2");
 }
 
 char *state_to_str(enum can_state state)

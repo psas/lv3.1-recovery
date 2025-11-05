@@ -6,20 +6,27 @@ channel = "/dev/ttyACM1"
 bitrate = 125000
 led_message_id = 0x10
 unlock_drogue_msg_id = 0x100
+unlock_main_msg_id = 0x200
 
 # Configure the connection to the VulCAN
 bus = can.interface.Bus(channel=channel, interface="slcan", bitrate=bitrate)
 
 loop_count = 1
-while loop_count <= 2:
+while loop_count <= 1:
 
-  message_id = led_message_id
-
-  data_bytes = [0x55, 0xCC, 0x55, 0xCC]
-  message = can.Message(arbitration_id=message_id, data=data_bytes, is_extended_id=False)
+  message_id = unlock_drogue_msg_id
+  data_bytes = [0x01]
+  message = can.Message(arbitration_id=message_id, data=data_bytes, is_extended_id=True)
   bus.send(message)
-  print(f"Sent message: {message}")
+  print(f"Sent message with id {message_id}: {message}")
   time.sleep(1/2)
+
+  message_id = 0x710
+  data_bytes = [0x55, 0x44, 0x55, 0x44]
+  message = can.Message(arbitration_id=message_id, data=data_bytes, is_extended_id=True)
+  bus.send(message)
+  print(f"Sent message with id {message_id}: {message}")
+  time.sleep(3/2)
 
   loop_count += 1
 
