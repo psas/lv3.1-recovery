@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <math.h>
 #include <stdlib.h>
 
 #include <zephyr/kernel.h>
@@ -395,6 +396,8 @@ done:
 	return rc;
 }
 
+// TODO [ ] fix ring_pos_to_str() routine.
+
 char *ring_pos_to_str(const enum lock_ring_position pos)
 {
         switch (pos) {
@@ -496,6 +499,22 @@ int32_t update_ring_position_detection_timer(const uint32_t timeout_ms)
 	return 0;
 }
 
+int32_t calc_battery_voltage(void)
+{
+	uint32_t adc_reading = 0;
+	float battery_voltage = 0.0;
+	uint32_t battery_voltage_dv = 0;
+
+	ekget_batt_read(&adc_reading);
+	// Vbatt = (ADC reading / 4096 * 3.3 V) * 0.2326
+	// battery_voltage = ((((float)adc_reading / (float)4096) * 3.3) * 0.2326);
+	battery_voltage = (((double)adc_reading / (double)4096) * 3.3);
+	battery_voltage_dv = round(battery_voltage * 100);
+
+	ekset_batt_read_dv(battery_voltage);
+	return 0;
+}
+
 //----------------------------------------------------------------------
 // - SECTION - arbiter thread entry point
 //----------------------------------------------------------------------
@@ -529,6 +548,8 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 #endif
 
 // TODO [ ] Call battery state determination code
+		rc = calc_battery_voltage();
+		LOG_INF("calc battery voltage returns status %d", rc);
 
 		loop_count++;
 		k_msleep(ERS_ARBITER_SLEEP_PER_MS);
