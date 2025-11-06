@@ -15,13 +15,12 @@
 #include <zephyr/drivers/can.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/sys/byteorder.h>
-
 #include <zephyr/devicetree.h>
-
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(ers_can_module, CONFIG_CAN_LOG_LEVEL);
 
 #include <keeper.h>
+#include <motor-control.h>
 
 #define RX_THREAD_STACK_SIZE 512
 #define RX_THREAD_PRIORITY 2
