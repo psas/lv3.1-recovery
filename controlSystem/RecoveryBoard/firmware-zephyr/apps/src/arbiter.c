@@ -506,12 +506,13 @@ int32_t calc_battery_voltage(void)
 	uint32_t battery_voltage_dv = 0;
 
 	ekget_batt_read(&adc_reading);
-	// Vbatt = (ADC reading / 4096 * 3.3 V) * 0.2326
-	// battery_voltage = ((((float)adc_reading / (float)4096) * 3.3) * 0.2326);
-	battery_voltage = (((double)adc_reading / (double)4096) * 3.3);
-	battery_voltage_dv = round(battery_voltage * 100);
 
-	ekset_batt_read_dv(battery_voltage);
+	battery_voltage = (double)(((double)adc_reading / (double)4096 *3.3) / 0.2326);
+	LOG_WRN("(3)  (%u / 4096 * 3.3 / 0.2326) gives %f mv", adc_reading,
+	  (double)(((double)adc_reading / (double)4096 *3.3) / 0.2326));
+
+	battery_voltage_dv = round(battery_voltage * 10);
+	ekset_batt_read_dv(battery_voltage_dv);
 	return 0;
 }
 

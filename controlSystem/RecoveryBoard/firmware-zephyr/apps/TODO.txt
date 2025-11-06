@@ -53,12 +53,12 @@ ERS firmware TODO list:
     [ ] reserved
     [ ] reserved
 
-[ ] Implement APIs to control GPIO output signals
+[x] Implement APIs to control GPIO output signals
     [x] deploy1
     [x] deploy1
     [x] motor_ps (not tested)
 
-[ ] Add APIs to lock and to unlock rocket parachute section ring.
+[x] Add APIs to lock and to unlock rocket parachute section ring.
 
 [ ] Add following shell commands from Google doc by Andrew, Theo, Hessah:
     [x] help
