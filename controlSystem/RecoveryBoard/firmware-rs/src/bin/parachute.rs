@@ -11,6 +11,7 @@ use embassy_stm32::{
         Rx1InterruptHandler, SceInterruptHandler, StandardId, TxInterruptHandler,
     },
     dac::Dac,
+    flash::Flash,
     gpio::{Input, Level, Output, OutputType, Pull, Speed},
     peripherals::{ADC1, CAN, USART2},
     time::Hertz,
@@ -33,6 +34,7 @@ use firmware_rs::{
         can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_MTX, CAN_TX_CHANNEL, DROGUE_ACKNOWLEDGE_ID,
         DROGUE_DEPLOY_ID, MAIN_ACKNOWLEDGE_ID, MAIN_DEPLOY_ID, SENDER_HEARTBEAT_ID,
     },
+    flash::{FLASH_MTX, MOTOR_ACT_SECTOR_OFFSET, MOTOR_ACT_SECTOR_SIZE},
     motor::{Motor, MotorType, MOTOR_DRIVE_CURR_MA, MOTOR_DRIVE_DUR_MS},
     ring::{read_pos_sensor, Ring, RingPosition, RING_MTX, RING_POSITION_WATCH, SENSOR_READ_WATCH},
     types::*,
@@ -193,6 +195,8 @@ async fn main(spawner: Spawner) {
         sys_state.id = 2;
     }
 
+    let flash = Flash::new_blocking(p.FLASH);
+
     let motor = Motor::new(p.PB4, p.PB5, p.PB6, p.PB7, dac);
     let ring = Ring::new(p.PA0, p.PA1, p.PB1);
 
@@ -205,6 +209,7 @@ async fn main(spawner: Spawner) {
         *(SYSTEM_STATE_MTX.lock().await) = Some(sys_state);
         *(RING_MTX.lock().await) = Some(ring);
         *(MOTOR_MTX.lock().await) = Some(motor);
+        *(FLASH_MTX.lock().await) = Some(flash);
     }
 
     unwrap!(spawner.spawn(blink_led(p.PB14)));
@@ -269,6 +274,8 @@ pub async fn cli(uart: BufferedUart<'static>) {
                         " --pulse: Do a 100ms step instead of a full swing.\r\n\n",
                         "pos: Print the current sensor readings and ring state.\r\n",
                         " --poll: Print the sensor value and ring state every second.\r\n\n",
+                        "acts: Print the number of motor actuations stored in flash\r\n\n",
+                        "erase: Erase motor actuation count data from flash\r\n\n",
                     ];
                     for line in lines {
                         io.write(line.as_bytes()).await.unwrap();
@@ -427,6 +434,38 @@ pub async fn cli(uart: BufferedUart<'static>) {
                                 *mode = BuzzerMode::Off;
                             }
                         }
+                    }
+                }
+                "erase" => {
+                    let mut motor_unlocked = MOTOR_MTX.lock().await;
+                    if let Some(motor) = motor_unlocked.as_mut() {
+                        motor.erase_actuation_data().await;
+                    }
+                }
+                "acts" => {
+                    let mut flash_unlocked = FLASH_MTX.lock().await;
+                    if let Some(flash) = flash_unlocked.as_mut() {
+                        let mut bytes = [0u8; (MOTOR_ACT_SECTOR_SIZE / 8) as usize];
+                        let mut buf = [0u8; 64];
+
+                        if let Err(e) = flash.blocking_read(MOTOR_ACT_SECTOR_OFFSET, &mut bytes) {
+                            error!("Error reading flash: {}", e);
+                            let s = format_no_std::show(
+                                &mut buf,
+                                format_args!("Error reading flash: {:?}\r\n", e),
+                            )
+                            .unwrap();
+
+                            io.write(s.as_bytes()).await.unwrap();
+                        }
+
+                        let s = format_no_std::show(
+                            &mut buf,
+                            format_args!("Actuations: {}\r\n", bytes[0] + 1), // Data starts at 255
+                        )
+                        .unwrap();
+
+                        io.write(s.as_bytes()).await.unwrap();
                     }
                 }
                 "version" => {

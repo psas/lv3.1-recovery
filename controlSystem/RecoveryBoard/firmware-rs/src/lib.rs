@@ -9,3 +9,4 @@ pub mod types;
 pub mod adc;
 pub mod uart;
 pub mod blink;
+pub mod flash;

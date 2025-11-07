@@ -9,7 +9,10 @@ use embassy_stm32::{
 use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex};
 use embassy_time::{with_timeout, Duration};
 
-use crate::ring::{RingPosition, MOTOR_ISENSE_WATCH, RING_POSITION_WATCH};
+use crate::{
+    flash::{FLASH_MTX, MOTOR_ACT_SECTOR_OFFSET, MOTOR_ACT_SECTOR_SIZE},
+    ring::{RingPosition, MOTOR_ISENSE_WATCH, RING_POSITION_WATCH},
+};
 
 pub const MOTOR_DRIVE_DUR_MS: u64 = 1000;
 pub const MOTOR_DRIVE_CURR_MA: u16 = 1000;
@@ -112,6 +115,45 @@ impl Motor {
         debug!("Motor_isense: {}", buf[..count]);
     }
 
+    async fn increment_actuation_count(&self) {
+        let mut flash_unlocked = FLASH_MTX.lock().await;
+        if let Some(flash) = flash_unlocked.as_mut() {
+            let mut buf = [0u8; (MOTOR_ACT_SECTOR_SIZE / 8) as usize];
+
+            if let Err(e) = flash.blocking_read(MOTOR_ACT_SECTOR_OFFSET, &mut buf) {
+                error!("Error reading actuation count from memory: {}", e);
+            }
+
+            buf[0] = buf[0].wrapping_add(1);
+
+            // Sector must be erased before writing or SEQ err will be thrown
+            if let Err(e) = flash.blocking_erase(
+                MOTOR_ACT_SECTOR_OFFSET,
+                MOTOR_ACT_SECTOR_OFFSET + MOTOR_ACT_SECTOR_SIZE,
+            ) {
+                error!("Error erasing memory: {}", e);
+            }
+
+            if let Err(e) = flash.blocking_write(MOTOR_ACT_SECTOR_OFFSET, &buf) {
+                error!("Error writing actuation count to memory: {}", e);
+            }
+        }
+    }
+
+    pub async fn erase_actuation_data(&self) {
+        let mut flash_unlocked = FLASH_MTX.lock().await;
+        if let Some(flash) = flash_unlocked.as_mut() {
+            info!("Erasing motor actuation data");
+            if let Err(e) = flash.blocking_erase(
+                MOTOR_ACT_SECTOR_OFFSET,
+                MOTOR_ACT_SECTOR_OFFSET + MOTOR_ACT_SECTOR_SIZE,
+            ) {
+                error!("Error erasing memory: {}", e);
+            }
+            info!("Motor actuation data erased");
+        }
+    }
+
     pub async fn drive(&mut self, mode: RingPosition, duration_ms: u64, force: bool, current: u16) {
         self.limit_motor_current(current).await;
         self.set_mode(MotorMode::Stop);
@@ -148,6 +190,7 @@ impl Motor {
         }
 
         self.set_mode(MotorMode::PowerSave);
+        self.increment_actuation_count().await;
     }
 }
 

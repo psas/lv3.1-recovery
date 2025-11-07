@@ -219,6 +219,8 @@ Provides a command-line interface over UART for system monitoring and control:
 - `batt`: Display current battery voltage
 - `beep`: Toggle periodic beeping
 - `version`: Display firmware version information
+- `acts`: Print the count of motor actuations stored in flash memory
+- `erase`: Erase motor actuation count data from flash memory
 
 #### `read_battery`
 
