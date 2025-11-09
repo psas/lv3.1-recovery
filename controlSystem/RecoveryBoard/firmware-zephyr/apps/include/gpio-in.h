@@ -1,6 +1,9 @@
 #ifndef GPIO_IN_H
 #define GPIO_IN_H
 
+// TODO [ ] rename gpio-in.[ch] to reflect this module also controls GPIO
+//           outputs.
+
 int32_t ers_init_gpio_in(void);
 
 int32_t ers_gpios_set_deploy1(const uint32_t value);

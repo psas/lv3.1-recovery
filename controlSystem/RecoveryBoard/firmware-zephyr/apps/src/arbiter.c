@@ -24,9 +24,12 @@ LOG_MODULE_REGISTER(arbiter, CONFIG_ARBITER_LOG_LEVEL);
 // - SECTION - defines
 //----------------------------------------------------------------------
 
+// Select an ERS battery voltage "ok" threshold of 9.0 VDC, in tenths of a volt:
+#define BATTERY_VOLTAGE_OK_THRESHOLD_TENTHS_V 90
+
 #define BASE_10 10
 
-#define ERS_ARBITER_SLEEP_PER_MS 2000
+#define ERS_ARBITER_SLEEP_PERIOD_MS 2000
 
 #define RING_POS_PERIOD_MS 2000
 
@@ -263,6 +266,12 @@ int32_t adc_reading_to_hall_state(const enum hall_sensor_ids sensor_idx,
 
 /**
  * @brief Routine to determine lock ring position.
+ *
+ * @note This routine determines ring position as described in
+ *  https://docs.google.com/document/d/1DnytDlZa1X-BaIqlIBrfcuedKocKrCpTfgMspk0twxI/edit?tab=t.0#heading=h.rg42p47rcyt5,
+ *  and further it determines lock ring "status" as described in
+ *  the same document.  Second parameter is a simplified version
+ *  of the first "position" parameter.
  *
  * @note Calling code is responsible for setting parameter ring_position to
  *    a sensible starting value, namely 'RING_POSITION_UNKNOWN'.
@@ -528,6 +537,27 @@ int32_t update_ring_position_detection_timer(const uint32_t timeout_ms)
 	return 0;
 }
 
+/**
+ * @brief Routine to apply a threshold test to latest battery voltage and to
+ *   update a flag to indicate whether batter voltage ok.
+ */
+
+int32_t determine_batt_ok(void)
+{
+	int32_t batt_voltage_in_tenths_v = 0;
+	ekget_batt_read_dv(&batt_voltage_in_tenths_v);
+	if (batt_voltage_in_tenths_v >= BATTERY_VOLTAGE_OK_THRESHOLD_TENTHS_V)
+	{
+		ekset_batt_ok(1);
+	}
+	else
+	{
+		ekset_batt_ok(0);
+	}
+
+	return 0;
+}
+
 int32_t calc_battery_voltage(void)
 {
 	uint32_t adc_reading = 0;
@@ -581,8 +611,10 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 		rc = calc_battery_voltage();
 		LOG_INF("calc battery voltage returns status %d", rc);
 
+		rc = determine_batt_ok();
+
 		loop_count++;
-		k_msleep(ERS_ARBITER_SLEEP_PER_MS);
+		k_msleep(ERS_ARBITER_SLEEP_PERIOD_MS);
 	}
 }
 
