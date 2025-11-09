@@ -19,6 +19,7 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(ers_can_module, CONFIG_CAN_LOG_LEVEL);
 
+#include <ers-app-config.h>
 #include <keeper.h>
 #include <motor-control.h>
 
@@ -80,17 +81,36 @@ struct can_bus_err_cnt current_err_cnt;
 CAN_MSGQ_DEFINE(change_led_msgq, 2);
 CAN_MSGQ_DEFINE(counter_msgq, 2);
 
+#if defined(ERS_BOARD_VARIANT_SENDER)
 enum ers_state_var_indeces {
-	IDX_TELEMETRUM_STATE,
-	IDX_BATT_READ,
-	IDX_BATT_OK,
-	IDX_SHORE_POW_STATUS,
-	IDX_CAN_BUS_OK,
-	IDX_ERS_STATUS,
-	IDX_ROCKET_READY,
-	IDX_RESERVED,
+	IDX_SENDER_TELEMETRUM_STATE,
+	IDX_SENDER_BATT_READ,
+	IDX_SENDER_BATT_OK,
+	IDX_SENDER_SHORE_POW_STATUS,
+	IDX_SENDER_CAN_BUS_OK,
+	IDX_SENDER_ERS_STATUS,
+	IDX_SENDER_ROCKET_READY,
+	IDX_RESERVED_01,
 	IDX_STATE_VAR_LAST_ELEMENT
 };
+#elif defined(ERS_BOARD_VARIANT_DROGUE_CHUTE)
+#warning "- NOTICE - builing ERS board firmware variant 'Drogue'."
+enum ers_state_var_indeces {
+	IDX_DROGUE_RING_STATE,
+	IDX_DROGUE_BATT_READ,
+	IDX_DROGUE_BATT_OK,
+	IDX_DROGUE_SHORE_POW_STATUS,
+	IDX_DROGUE_CAN_BUS_OK,
+	IDX_DROGUE_READY,
+	IDX_RESERVED_01,
+	IDX_RESERVED_02,
+	IDX_STATE_VAR_LAST_ELEMENT
+};
+#else
+#warning "ERROR no ERS board firmware variant defined."
+#warning "Need one of ERS_BOARD_VARIANT_SENDER,"
+#warning "ERS_BOARD_VARIANT_DROGUE_CHUTE or ERS_BOARD_VARIANT_MAIN_CHUTE."
+#endif
 
 static uint8_t ers_state_vars_fs[IDX_STATE_VAR_LAST_ELEMENT] = {0};
 
@@ -144,19 +164,26 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
                 .dlc = sizeof(ers_state_vars_fs)
         };
 
+	// (1)
+	enum lock_ring_state ring_state = RING_STATE_UNKNOWN;
+	ekget_ring_status(&ring_state);
+
+	// (2)
 	uint32_t battery_voltage = 0;
 	ekget_batt_read_dv(&battery_voltage);
+
+	// (5)
 	uint32_t can_bus_ok_flag = 0;
 	ekget_can_bus_ok(&can_bus_ok_flag);
 
-	ers_state_vars_fs[IDX_TELEMETRUM_STATE] = 0;
-	ers_state_vars_fs[IDX_BATT_READ] = (uint8_t)(battery_voltage & 0xFF);
-	ers_state_vars_fs[IDX_BATT_OK] = 0;
-	ers_state_vars_fs[IDX_SHORE_POW_STATUS] = 0;
-	ers_state_vars_fs[IDX_CAN_BUS_OK] = (uint8_t)(can_bus_ok_flag & 0xFF);
-	ers_state_vars_fs[IDX_ERS_STATUS] = 0;
-	ers_state_vars_fs[IDX_ROCKET_READY] = 0;
-	ers_state_vars_fs[IDX_RESERVED] = 0;
+	ers_state_vars_fs[IDX_DROGUE_RING_STATE] = (uint8_t)(ring_state);
+	ers_state_vars_fs[IDX_DROGUE_BATT_READ] = (uint8_t)(battery_voltage & 0xFF);
+	ers_state_vars_fs[IDX_DROGUE_BATT_OK] = 0;
+	ers_state_vars_fs[IDX_DROGUE_SHORE_POW_STATUS] = 0;
+	ers_state_vars_fs[IDX_DROGUE_CAN_BUS_OK] = (uint8_t)(can_bus_ok_flag & 0xFF);
+	ers_state_vars_fs[IDX_DROGUE_READY] = 0;
+	ers_state_vars_fs[IDX_RESERVED_01] = 0;
+	ers_state_vars_fs[IDX_RESERVED_02] = 0;
 
 	memcpy(ers_status_frame.data, ers_state_vars_fs, sizeof(ers_state_vars_fs));
 
