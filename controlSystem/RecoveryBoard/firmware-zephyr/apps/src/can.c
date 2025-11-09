@@ -156,8 +156,6 @@ void tx_irq_callback(const struct device *dev, int error, void *arg)
 
 void prep_and_send_status_frame_work_handler(struct k_work *work)
 {
-	// LOG_INF("preparing status message, data length is %d", sizeof(ers_state_vars_fs));
-
         struct can_frame ers_status_frame = {
                 .flags = 0,
                 .id = MSG_ID_STATUS_AND_HEARTBEAT,
@@ -172,13 +170,19 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
 	uint32_t battery_voltage = 0;
 	ekget_batt_read_dv(&battery_voltage);
 
+	// (3)
+	uint32_t batt_ok_flag = 0;
+	ekget_batt_ok(&batt_ok_flag);
+
+	// (4 . . . drogue chute board detected power status)
+
 	// (5)
 	uint32_t can_bus_ok_flag = 0;
 	ekget_can_bus_ok(&can_bus_ok_flag);
 
 	ers_state_vars_fs[IDX_DROGUE_RING_STATE] = (uint8_t)(ring_state);
 	ers_state_vars_fs[IDX_DROGUE_BATT_READ] = (uint8_t)(battery_voltage & 0xFF);
-	ers_state_vars_fs[IDX_DROGUE_BATT_OK] = 0;
+	ers_state_vars_fs[IDX_DROGUE_BATT_OK] = batt_ok_flag;
 	ers_state_vars_fs[IDX_DROGUE_SHORE_POW_STATUS] = 0;
 	ers_state_vars_fs[IDX_DROGUE_CAN_BUS_OK] = (uint8_t)(can_bus_ok_flag & 0xFF);
 	ers_state_vars_fs[IDX_DROGUE_READY] = 0;
