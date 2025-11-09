@@ -190,13 +190,13 @@ void ekget_DAC_setting_ring_lock(uint32_t *value);
 
 // - DATA GROUP - (6) ERS summary state data
 
-void ekset_ring_status(const uint32_t value);
+void ekset_ring_status(const enum lock_ring_state value);
 void ekset_batt_ok(const uint32_t value);
 void ekset_shore_power_ok(const uint32_t value);
 void ekset_can_bus_ok(const uint32_t value);
 void ekset_ready_state(const uint32_t value);
 
-void ekget_ring_status(uint32_t* value);
+void ekget_ring_status(enum lock_ring_state *value);
 void ekget_batt_ok(uint32_t* value);
 void ekget_shore_power_ok(uint32_t* value);
 void ekget_can_bus_ok(uint32_t* value);

@@ -23,6 +23,21 @@ enum lock_ring_position {
 };
 
 /**
+ * @note Ring state is a simplified version of lock_ring_position, and is
+ *   sent in the given ERS board's CAN heartbeat / status message.
+ */
+
+// TODO [ ] Find out from team which state to apply when ring position is not
+//           known.
+
+enum lock_ring_state {
+	RING_STATE_UNLOCKED,
+	RING_STATE_BETWEEN,
+	RING_STATE_LOCKED,
+	RING_STATE_UNKNOWN
+};
+
+/**
  * @brief ERS arbiter initialization routine.
  *
  * @warning This routine must be called to make arbiter module ready for use.

@@ -601,12 +601,12 @@ void ekget_DAC_setting_ring_lock(uint32_t *value)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 // Lock ring status
-void ekset_ring_status(const uint32_t value)
+void ekset_ring_status(const enum lock_ring_state value)
 {
 	atomic_set(&ring_status, (atomic_val_t)value);
 }
 
-void ekget_ring_status(uint32_t* value)
+void ekget_ring_status(enum lock_ring_state *value)
 {
 	*value = atomic_get(&ring_status);
 }
@@ -617,7 +617,7 @@ void ekset_batt_read_dv(const uint32_t value)
 	atomic_set(&batt_read_dv, (atomic_val_t)value);
 }
 
-void ekget_batt_read_dv(uint32_t* value)
+void ekget_batt_read_dv(uint32_t *value)
 {
 	*value = atomic_get(&batt_read_dv);
 }

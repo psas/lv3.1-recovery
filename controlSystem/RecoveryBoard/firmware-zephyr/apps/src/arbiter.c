@@ -392,11 +392,40 @@ qualify_validity:
 		*ring_position = RING_LOCKED_FULLY_QUALIFIED;
 	}
 
+	/**
+	 * @note Seems a bit duplicative but ring position from Hall sensor pair
+	 *   readings is more finely defined than ring state as it appears in
+	 *   CAN heartbeat-plus-update message.  Provide for the simpler ring
+	 *   state reporting here in following switch construct.
+	 */
+
+	enum lock_ring_state ring_state;
+
+	switch (*ring_position)
+	{
+	case RING_UNLOCKED:
+	case RING_UNLOCKED_FULLY_QUALIFIED:
+		ring_state = RING_STATE_UNLOCKED;
+		break;
+	case RING_BETWEEN_L_AND_U:
+	case RING_BETWEEN_FULLY_QUALIFIED:
+		ring_state = RING_STATE_BETWEEN;
+		break;
+	case RING_LOCKED:
+	case RING_LOCKED_FULLY_QUALIFIED:
+		ring_state = RING_STATE_LOCKED;
+		break;
+	case RING_POSITION_UNKNOWN:
+	default:
+		ring_state = RING_STATE_UNKNOWN;
+	}
+
+	ekset_ring_status(ring_state);
 done:
 	return rc;
 }
 
-// TODO [ ] fix ring_pos_to_str() routine.
+// TODO [ ] fix ring_pos_to_str() routine, does not appear to return correct string.
 
 char *ring_pos_to_str(const enum lock_ring_position pos)
 {
