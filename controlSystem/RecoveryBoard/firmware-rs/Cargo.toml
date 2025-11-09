@@ -21,6 +21,17 @@ embedded-hal-nb = "1.0.0"
 noline = "0.5.1"
 heapless = "0.9.1"
 format_no_std = "1.2.0"
+embedded-test-linker-script = { version = "0.1.0" }
+
+[dev-dependencies]
+embedded-test = { version = "0.7.0", features=["embassy", "defmt"] }
+
+[lib]
+harness = false # Important: As we bring our own test harness for all tests
+
+[[test]]
+name = "blinky"
+harness = false
 
 [profile.release]
 debug = 2
