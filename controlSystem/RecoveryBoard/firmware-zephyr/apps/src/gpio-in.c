@@ -18,7 +18,7 @@ LOG_MODULE_REGISTER(gpio_in, LOG_LEVEL_INF);
 // - SECTION - pound defines
 //----------------------------------------------------------------------
 
-#define ERS_GPIO_THREAD_SLEEP_MS 12000
+#define ERS_GPIO_THREAD_SLEEP_MS 100
 
 //----------------------------------------------------------------------
 // - SECTION - file scoped
@@ -222,6 +222,8 @@ void gpio_in_thread_entry(void *arg1, void *arg2, void *arg3)
 				val[ERS_SIG_NOT_MOTOR_FAILA]
 				);
 		}
+
+		ekset_not_umb_on(val[ERS_SIG_NOT_UMB_ON]);
 
 		k_msleep(ERS_GPIO_THREAD_SLEEP_MS);
 	}
