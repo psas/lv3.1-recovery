@@ -175,6 +175,8 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
 	ekget_batt_ok(&batt_ok_flag);
 
 	// (4 . . . drogue chute board detected power status)
+	uint32_t not_umb_on = 0;
+	ekget_not_umb_on(&not_umb_on);
 
 	// (5)
 	uint32_t can_bus_ok_flag = 0;
@@ -183,7 +185,8 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
 	ers_state_vars_fs[IDX_DROGUE_RING_STATE] = (uint8_t)(ring_state);
 	ers_state_vars_fs[IDX_DROGUE_BATT_READ] = (uint8_t)(battery_voltage & 0xFF);
 	ers_state_vars_fs[IDX_DROGUE_BATT_OK] = batt_ok_flag;
-	ers_state_vars_fs[IDX_DROGUE_SHORE_POW_STATUS] = 0;
+	// TODO [ ] mask not_umb_on with 0x1 to assure Boolean value:
+	ers_state_vars_fs[IDX_DROGUE_SHORE_POW_STATUS] = (uint8_t)(not_umb_on);
 	ers_state_vars_fs[IDX_DROGUE_CAN_BUS_OK] = (uint8_t)(can_bus_ok_flag & 0xFF);
 	ers_state_vars_fs[IDX_DROGUE_READY] = 0;
 	ers_state_vars_fs[IDX_RESERVED_01] = 0;

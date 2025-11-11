@@ -280,7 +280,7 @@ void ekget_iso_main(uint32_t* value)
 	*value = atomic_get(&iso_main);
 }
 
-void ekget_not_unb_on(uint32_t* value)
+void ekget_not_umb_on(uint32_t* value)
 {
 	*value = atomic_get(&not_umb_on);
 }
