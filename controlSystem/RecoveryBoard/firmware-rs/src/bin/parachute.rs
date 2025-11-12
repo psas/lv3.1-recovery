@@ -363,24 +363,57 @@ pub async fn cli(uart: BufferedUart<'static>) {
                         while let Err(TimeoutError) =
                             with_timeout(Duration::from_secs(1), io.read(&mut buf)).await
                         {
-                            let ring_pos = ring_pos_rcvr.changed().await;
-                            let sensor_readings = sensor_readings_rcvr.changed().await;
-
-                            match ring_pos {
-                                RingPosition::Locked => {
+                            match ring_pos_rcvr.try_get() {
+                                Some(RingPosition::Locked) => {
                                     io.write(b"Ring Locked - ").await.unwrap();
                                 }
-                                RingPosition::Unlocked => {
+                                Some(RingPosition::Unlocked) => {
                                     io.write(b"Ring Unlocked - ").await.unwrap();
                                 }
-                                RingPosition::Inbetween => {
+                                Some(RingPosition::Inbetween) => {
                                     io.write(b"Ring Inbetween - ").await.unwrap();
                                 }
-                                RingPosition::Error => {
+                                Some(RingPosition::Error) => {
                                     io.write(b"Ring Error - ").await.unwrap();
+                                }
+                                None => {
+                                    io.write(b"Ring Not Initialized - ").await.unwrap();
                                 }
                             }
 
+                            if let Some(sensor_readings) = sensor_readings_rcvr.try_get() {
+                                let s = format_no_std::show(
+                                    &mut wbuf,
+                                    format_args!(
+                                        "Sensor 1: {} Sensor 2: {}\r\n",
+                                        sensor_readings.sensor1, sensor_readings.sensor2
+                                    ),
+                                )
+                                .unwrap();
+
+                                io.write(s.as_bytes()).await.unwrap();
+                            }
+                        }
+                    } else {
+                        match ring_pos_rcvr.try_get() {
+                            Some(RingPosition::Locked) => {
+                                io.write(b"Ring Locked - ").await.unwrap();
+                            }
+                            Some(RingPosition::Unlocked) => {
+                                io.write(b"Ring Unlocked - ").await.unwrap();
+                            }
+                            Some(RingPosition::Inbetween) => {
+                                io.write(b"Ring Inbetween - ").await.unwrap();
+                            }
+                            Some(RingPosition::Error) => {
+                                io.write(b"Ring Error - ").await.unwrap();
+                            }
+                            None => {
+                                io.write(b"Ring Not Initialized - \r\n").await.unwrap();
+                            }
+                        }
+
+                        if let Some(sensor_readings) = sensor_readings_rcvr.try_get() {
                             let s = format_no_std::show(
                                 &mut wbuf,
                                 format_args!(
@@ -392,35 +425,6 @@ pub async fn cli(uart: BufferedUart<'static>) {
 
                             io.write(s.as_bytes()).await.unwrap();
                         }
-                    } else {
-                        let ring_pos = ring_pos_rcvr.changed().await;
-                        let sensor_readings = sensor_readings_rcvr.changed().await;
-
-                        match ring_pos {
-                            RingPosition::Locked => {
-                                io.write(b"Ring Locked\r\n").await.unwrap();
-                            }
-                            RingPosition::Unlocked => {
-                                io.write(b"Ring Unlocked\r\n").await.unwrap();
-                            }
-                            RingPosition::Inbetween => {
-                                io.write(b"Ring Inbetween\r\n").await.unwrap();
-                            }
-                            RingPosition::Error => {
-                                io.write(b"Ring Error\r\n").await.unwrap();
-                            }
-                        }
-
-                        let s = format_no_std::show(
-                            &mut wbuf,
-                            format_args!(
-                                "Sensor 1: {} Sensor 2: {}\r\n",
-                                sensor_readings.sensor1, sensor_readings.sensor2
-                            ),
-                        )
-                        .unwrap();
-
-                        io.write(s.as_bytes()).await.unwrap();
                     }
                 }
                 "beep" => {
@@ -579,12 +583,12 @@ async fn parachute_heartbeat() -> () {
             }
         }
 
-        let ring_position = ring_pos_rcvr.changed().await;
-        let ring_pos_u8: u8 = match ring_position {
-            RingPosition::Unlocked => 0,
-            RingPosition::Inbetween => 1,
-            RingPosition::Locked => 2,
-            _ => 3,
+        let ring_pos_u8: u8 = match ring_pos_rcvr.try_get() {
+            Some(RingPosition::Unlocked) => 1,
+            Some(RingPosition::Inbetween) => 2,
+            Some(RingPosition::Locked) => 3,
+            Some(RingPosition::Error) => 4,
+            None => 0,
         };
 
         let batt_read = batt_read_rcvr.changed().await;
