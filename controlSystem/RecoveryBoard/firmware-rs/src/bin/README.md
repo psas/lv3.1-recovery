@@ -11,14 +11,16 @@ The src/bin directory contains the actual binaries that get flashed to the board
 This binary is a simple testing program that blinks the LED and prints `"Hello, World"` over RTT.
 It's purpose is to verify that your development environment is set up properly.
 It can be flashed to either a NUCLEOf091rc development board or one of the actual PSAS ERS boards.
-To flash it to a NUCLEO run `cargo run --bin blinky`.
-To flash it to an ERS board, run `cargo run --bin blinky --features=main`
+The command to flash it is `cargo run -r --bin blinky`
+To flash it to a NUCLEO leave the BOARD environment variable unset.
+To flash it to an ERS board, set the BOARD environment variable to `"main"`
 
 ## Parachute
 
 This binary is the program for either the drogue or the main ERS parachute boards.
-To flash it as the drogue board run `cargo run --bin parachute --features=drogue`.
-To flash it as the main board run `cargo run --bin parachute --features=main`.
+The command to flash it is `cargo run -r --bin parachute`
+To flash it as the drogue board set the BOARD environment variable to `"drogue"`.
+To flash it as the main board set the BOARD environment variable to `"main"`.
 
 ### Interrupts
 
@@ -124,11 +126,11 @@ The `can_writer` task is imported from the local `can.rs` module. It waits for a
 
 #### `can_reader`
 
-`can_reader` is the task that handles waiting for CAN messages to come in on the CAN bus and responding appropriately. It behaves differently depending on whether the board was flashed with `--features=drogue` or `--features=main`.
+`can_reader` is the task that handles waiting for CAN messages to come in on the CAN bus and responding appropriately. It behaves differently depending on whether the board was flashed with the BOARD environment variable set to `"main"` or `"drogue"`
 
-- If the task receives a message with an ID matching `DROGUE_DEPLOY_ID`, and it was flashed with the drogue feature flag, it will unlock the motor mutex and drive the motor to unlock the ring. If it was flashed with the main feature flag, it will do nothing.
+- If the task receives a message with an ID matching `DROGUE_DEPLOY_ID`, and it was flashed with the drogue BOARD environment variable, it will unlock the motor mutex and drive the motor to unlock the ring. If it was flashed with the main BOARD environment variable, it will do nothing.
 
-- If the task receives a message with an ID matching `MAIN_DEPLOY_ID`, and it was flashed with the main feature flag, it will unlock the motor mutex and drive the motor to unlock the ring. Otherwise, it will do nothing.
+- If the task receives a message with an ID matching `MAIN_DEPLOY_ID`, and it was flashed with the main BOARD environment variable, it will unlock the motor mutex and drive the motor to unlock the ring. Otherwise, it will do nothing.
 
 - If the task receives a message with an ID matching `SENDER_HEARTBEAT_ID`, it will update its internal `sender_last_seen` state field with the timestamp of the message.
 
@@ -136,7 +138,7 @@ The `can_writer` task is imported from the local `can.rs` module. It waits for a
 
 This task sends a message over the CAN bus that communicates its state and whether its ready to drive the motor or not. Because it also reads many bits of state, it also updates the system state at the same time. This presents potential for improvement, as this isn't really what the heartbeat task should do. It should only be responsible for sending the CAN message. Unfortunately, due to time constraints this refactoring hasn't been a high priority. In a perfect world `main()` would be responsible for business logic such as updating important state fields, setting the buzzer's mode, printing messages when state changes, etc, and the heartbeat task would simply communicate this state to the CAN bus.
 
-It accomplishes sending this message mainly by constructing a status buffer that contains u8 representations of its internal state. It grabs receivers for the various Watch signals and unlocks global mutexes as needed and then conditionally sends messages based on which feature flag the board was flashed with.
+It accomplishes sending this message mainly by constructing a status buffer that contains u8 representations of its internal state. It grabs receivers for the various Watch signals and unlocks global mutexes as needed and then conditionally sends messages based on which BOARD environment variable the board was flashed with.
 
 ## Sender
 

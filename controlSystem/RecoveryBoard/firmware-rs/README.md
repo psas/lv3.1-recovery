@@ -23,13 +23,7 @@ With all the dependencies installed, you should now be able to navigate to the d
 cargo run --bin blinky --release
 ```
 
-if you are flashing onto the Nucleo-F091RC development board.
-
-If you are flashing blinky directly onto one of the ERS boards, you will need to add a feature flag. Enter this command instead: 
-
-```rust
-cargo run --bin blinky --features=main --release
-```
+If you are flashing blinky directly onto one of the ERS boards, you will need to set the BOARD environment variable to `"main"`.
 
 After it builds, terminal output should look like this if everything went according to plan:
 

@@ -35,7 +35,3 @@ harness = false
 
 [profile.release]
 debug = 2
-
-[features]
-main = []
-drogue = []

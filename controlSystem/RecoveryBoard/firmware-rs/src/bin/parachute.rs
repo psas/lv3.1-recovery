@@ -185,12 +185,12 @@ async fn main(spawner: Spawner) {
     let dac = Dac::new(p.DAC1, p.DMA1_CH3, p.DMA1_CH4, p.PA4, p.PA5);
     let mut sys_state = ChuteState::default();
 
-    #[cfg(feature = "drogue")]
+    #[cfg(drogue)]
     {
         sys_state.id = 1;
     }
 
-    #[cfg(feature = "main")]
+    #[cfg(main)]
     {
         sys_state.id = 2;
     }
@@ -495,7 +495,7 @@ async fn can_reader(mut can_rx: CanRx<'static>) -> () {
         match can_rx.read().await {
             Ok(envelope) => match envelope.frame.id() {
                 Id::Standard(id) if id.as_raw() == DROGUE_DEPLOY_ID => {
-                    #[cfg(feature = "drogue")]
+                    #[cfg(drogue)]
                     {
                         let frame =
                             Frame::new_data(StandardId::new(DROGUE_ACKNOWLEDGE_ID).unwrap(), &[1])
@@ -517,7 +517,7 @@ async fn can_reader(mut can_rx: CanRx<'static>) -> () {
                     }
                 }
                 Id::Standard(id) if id.as_raw() == MAIN_DEPLOY_ID => {
-                    #[cfg(feature = "main")]
+                    #[cfg(main)]
                     {
                         let frame =
                             Frame::new_data(StandardId::new(MAIN_ACKNOWLEDGE_ID).unwrap(), &[1])
@@ -637,7 +637,7 @@ async fn parachute_heartbeat() -> () {
                     0,
                 ];
 
-                #[cfg(feature = "main")]
+                #[cfg(main)]
                 {
                     use firmware_rs::can::MAIN_HEARTBEAT_ID;
                     let id = StandardId::new(MAIN_HEARTBEAT_ID).unwrap();
@@ -647,7 +647,7 @@ async fn parachute_heartbeat() -> () {
                     CAN_TX_CHANNEL.send(msg).await;
                 }
 
-                #[cfg(feature = "drogue")]
+                #[cfg(drogue)]
                 {
                     use firmware_rs::can::DROGUE_HEARTBEAT_ID;
                     let id = StandardId::new(DROGUE_HEARTBEAT_ID).unwrap();

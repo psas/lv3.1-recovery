@@ -24,7 +24,7 @@ mod tests {
 
         let mut led = Output::new(p.PA5, Level::High, Speed::Low);
 
-        #[cfg(feature = "main")]
+        #[cfg(main)]
         let mut led = Output::new(p.PB14, Level::High, Speed::Low);
 
         for i in 1..=5 {

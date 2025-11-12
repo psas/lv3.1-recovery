@@ -15,7 +15,7 @@ async fn main(_spawner: Spawner) {
 
     let mut led = Output::new(p.PA5, Level::High, Speed::Low);
 
-    #[cfg(feature = "main")]
+    #[cfg(main)]
     let mut led = Output::new(p.PB14, Level::High, Speed::Low);
 
     loop {
