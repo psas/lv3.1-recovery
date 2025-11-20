@@ -40,3 +40,25 @@ Programming ✔ 100% [####################]  15.00 KiB @  20.53 KiB/s (took 1s) 
 ```
 
 and the led should be blinking.
+
+## Flashing
+
+The commands to flash the binaries are as follows:
+
+*Sender*:
+
+```rust
+cargo sender
+```
+
+*Drogue parachute*:
+
+```rust
+BOARD=drogue cargo parachute
+```
+
+*Main parachute*:
+
+```rust
+BOARD=main cargo parachute
+```

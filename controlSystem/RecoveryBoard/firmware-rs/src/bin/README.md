@@ -18,9 +18,8 @@ To flash it to an ERS board, set the BOARD environment variable to `"main"`
 ## Parachute
 
 This binary is the program for either the drogue or the main ERS parachute boards.
-The command to flash it is `cargo run -r --bin parachute`
-To flash it as the drogue board set the BOARD environment variable to `"drogue"`.
-To flash it as the main board set the BOARD environment variable to `"main"`.
+To flash it as the drogue board, run `BOARD=drogue cargo parachute`.
+To flash it as the main board, run `BOARD=main cargo parachute`.
 
 ### Interrupts
 
@@ -143,6 +142,7 @@ It accomplishes sending this message mainly by constructing a status buffer that
 ## Sender
 
 This binary is the program for the sender board, which acts as the central controller for the ERS system. It monitors parachute board status, handles deployment commands, and communicates rocket readiness.
+To flash the board as the sender, run `cargo sender`
 
 ### Interrupts
 

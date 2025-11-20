@@ -1,6 +1,10 @@
 [target.thumbv6m-none-eabi]
 runner = 'probe-rs run --chip STM32F091RCTX'
 
+[alias]
+sender = "run -r --bin sender"
+parachute = "run -r --bin parachute"
+
 [build]
 target = "thumbv6m-none-eabi"
 

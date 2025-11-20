@@ -137,6 +137,16 @@ static MOTOR_MTX: MotorType = Mutex::new(None);
 async fn main(spawner: Spawner) {
     let p = embassy_stm32::init(Default::default());
 
+    #[cfg(main)]
+    {
+        info!("main")
+    }
+
+    #[cfg(drogue)]
+    {
+        info!("drogue")
+    }
+
     let umb_on = Input::new(p.PA8, Pull::Up);
     let _can_shdn = Output::new(p.PA10, Level::Low, Speed::Medium);
     let _can_silent = Output::new(p.PA9, Level::Low, Speed::Medium);
