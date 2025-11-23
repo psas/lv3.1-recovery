@@ -45,6 +45,7 @@ ERS firmware TODO list:
 
 [ ] Implement off-chip and system status checking routines
     [ ] ring status    . . . one of 2 = locked, 1 = between, 0 = unlocked
+// ~2025-11-11 update:  0x00 = Ring status: 0 = uninitialized, 1 = unlocked, 2 = in between, 3 = locked, 4 = error
     [x] batt_voltage   . . . among analog inputs
     [x] batt_ok        . . . a threshold based state
     [x] shore_power_ok . . . 1 = shore power detected, 0 = no shore power
