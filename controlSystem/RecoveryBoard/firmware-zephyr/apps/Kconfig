@@ -26,9 +26,12 @@ module = ERS_GPIO
 module-str = ERS GPIO module
 source "subsys/logging/Kconfig.template.log_config"
 
+module = ERS_SETTINGS
+module-str = ERS settings module
+source "subsys/logging/Kconfig.template.log_config"
+
 # Following Kconfig inclusion needed to support Zephyr logging template macros
 source "Kconfig.zephyr"
-# rsource "Kconfig.zephyr"
 
 # ERS application specific
 rsource "Kconfig.can"
