@@ -6,11 +6,10 @@
 #include <zephyr/device.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/sys/util.h>
-// #include <zephyr/sys/printk.h>
 #include <inttypes.h>
 
 #include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(gpio_in, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(gpio_in, CONFIG_ERS_GPIO_LOG_LEVEL);
 
 #include <keeper.h>
 

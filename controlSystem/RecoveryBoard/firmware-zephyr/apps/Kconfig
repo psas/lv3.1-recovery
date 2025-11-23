@@ -22,6 +22,10 @@ module = ERS_MOTOR_CONTROL
 module-str = motor control module
 source "subsys/logging/Kconfig.template.log_config"
 
+module = ERS_GPIO
+module-str = ERS GPIO module
+source "subsys/logging/Kconfig.template.log_config"
+
 # Following Kconfig inclusion needed to support Zephyr logging template macros
 source "Kconfig.zephyr"
 # rsource "Kconfig.zephyr"
