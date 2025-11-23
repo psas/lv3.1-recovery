@@ -13,6 +13,7 @@
 #include <ers-adc.h>
 #include <ers-can.h>
 #include <ers-dac.h>
+#include <ers-settings.h>
 #include <gpio-in.h>
 #include <keeper.h>
 #include <motor-control.h>
@@ -60,6 +61,9 @@ int main(void)
 
 	rc = ers_init_arbiter();
 	LOG_INF("ERS arbitration module init returns %d", rc);
+
+	ers_settings_init();
+	LOG_INF("just back from ERS settings module init");
 
 	LOG_INF("main() entering 'while (1)' loop . . .");
 
