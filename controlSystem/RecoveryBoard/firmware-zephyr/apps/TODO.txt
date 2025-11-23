@@ -37,8 +37,8 @@ ERS firmware TODO list:
 [ ] Implement an arbiter to act upon current state and gathered data.
     [x] create an arbiter thread with stub code.
     [x] add logic to arbiter to determine and store ring state.
-    [ ] add logic to arbiter to determine and store battery state.
-    [ ] add logic to arbiter to determine and store shore power state.
+    [x] add logic to arbiter to determine and store battery state.
+    [x] add logic to arbiter to determine and store shore power state.
     [ ] add logic to arbiter to determine and store ready state.
 
 [x] Implement a local way to toggle periodic diagnostics on and off at run time.
@@ -46,12 +46,12 @@ ERS firmware TODO list:
 [ ] Implement off-chip and system status checking routines
     [ ] ring status    . . . one of 2 = locked, 1 = between, 0 = unlocked
     [x] batt_voltage   . . . among analog inputs
-    [ ] batt_ok        . . . a threshold based state
-    [ ] shore_power_ok . . . 1 = shore power detected, 0 = no shore power
+    [x] batt_ok        . . . a threshold based state
+    [x] shore_power_ok . . . 1 = shore power detected, 0 = no shore power
     [x] can_bus_ok     . . . telemetrum heartbeat received within last two seconds
     [ ] ready_state    . . . true when (1) battery ok (2) ring locked (3) CAN bus ok
-    [ ] reserved
-    [ ] reserved
+    [x] reserved
+    [x] reserved
 
 [x] Implement APIs to control GPIO output signals
     [x] deploy1
@@ -82,3 +82,6 @@ ERS firmware TODO list:
 [ ] To ADC module
     [-] add a timer and Zephyr work queue submission to read motor current channel
     [ ] add a command to show motor current and current reading interval
+
+[ ] Implement the code differences to support main chute board, should be only
+     difference in two or a few CAN message IDs.
