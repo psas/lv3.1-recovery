@@ -217,6 +217,25 @@ static void example_without_handler(void)
 	}
 }
 
+/**
+ * @brief Retrieve a persistent setting from the key named by parameter 'name'.
+ */
+
+int32_t retrieve_ers_setting(const char* name, void *val, const uint32_t size)
+{
+	// int32_t value_copy;
+	int32_t rc = 0;
+	rc = load_immediate_value(name, val, size);
+	if (rc == -ENOENT) {
+		LOG_ERR("Key '%s' not yet initialized, read status %d", name, rc);
+	} else if (rc == 0) {
+		LOG_INF("key '%s' holds %d", name, (int32_t)val);
+	} else {
+		LOG_ERR("Failed to load immediate value, err %d", rc);
+	}
+	return rc;
+}
+
 void ers_settings_init(void)
 {
 	int32_t rc;
@@ -238,6 +257,7 @@ void ers_settings_init(void)
 	LOG_INF("subtree <%s> handler registered: OK", alph_handler.name);
 	LOG_INF("subtree <alpha/beta> has static handler");
 
+	uint8_t val = 0;
 	uint32_t i;
 	for (i = 0; i < 6; i++) {
 
@@ -246,5 +266,8 @@ void ers_settings_init(void)
 		 * a key-value without dedicated handler
 		 */
 		example_without_handler();
+
+		rc = retrieve_ers_setting("motor_uses", &val, sizeof(val));
+		LOG_INF("- DEV 1130 - call to retrieve motor uses count returns status %d", rc);
 	}
 }
