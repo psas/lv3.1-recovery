@@ -61,6 +61,8 @@ int main(void)
 
 	rc = ers_init_arbiter();
 	LOG_INF("ERS arbitration module init returns %d", rc);
+	// Many dropped log message, can delay here allow them to print?
+	k_msleep(100);
 
 	ers_settings_init();
 	LOG_INF("just back from ERS settings module init");
