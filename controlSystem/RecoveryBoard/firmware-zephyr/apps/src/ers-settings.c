@@ -16,6 +16,13 @@ LOG_MODULE_REGISTER(ers_settings, CONFIG_ERS_SETTINGS_LOG_LEVEL);
 // - SECTION - pound defines
 //----------------------------------------------------------------------
 
+#define GAMMA_DEFAULT_VAl 0
+
+#define FAIL_MSG "fail (err %d)\n"
+
+#define SECTION_BEGIN_LINE \
+        "\n=================================================\n"
+
 //----------------------------------------------------------------------
 // - SECTION - file scoped
 //----------------------------------------------------------------------
@@ -45,6 +52,13 @@ struct settings_handler alph_handler = {
                 .h_commit = alpha_handle_commit,
                 .h_export = alpha_handle_export
 };
+
+struct direct_immediate_value {
+	size_t len;
+	void *dest;
+	uint8_t fetched;
+};
+
 // --- ZEPHYR 3.7.0 SETTINGS SAMPLE CODE END ---
 
 //----------------------------------------------------------------------
@@ -120,6 +134,89 @@ int alpha_handle_export(int (*cb)(const char *name,
 	return 0;
 }
 
+static int direct_loader_immediate_value(const char *name, size_t len,
+					 settings_read_cb read_cb, void *cb_arg,
+					 void *param)
+{
+	const char *next;
+	size_t name_len;
+	int rc;
+	struct direct_immediate_value *one_value =
+					(struct direct_immediate_value *)param;
+
+	name_len = settings_name_next(name, &next);
+
+	if (name_len == 0) {
+		if (len == one_value->len) {
+			rc = read_cb(cb_arg, one_value->dest, len);
+			if (rc >= 0) {
+				one_value->fetched = 1;
+				LOG_INF("immediate load: OK.\n");
+				return 0;
+			}
+
+			LOG_ERR(FAIL_MSG, rc);
+			return rc;
+		}
+		return -EINVAL;
+	}
+
+	/* other keys aren't served by the callback
+	 * Return success in order to skip them
+	 * and keep storage processing.
+	 */
+	return 0;
+}
+
+int load_immediate_value(const char *name, void *dest, size_t len)
+{
+	int rc;
+	struct direct_immediate_value dov;
+
+	dov.fetched = 0;
+	dov.len = len;
+	dov.dest = dest;
+
+	rc = settings_load_subtree_direct(name, direct_loader_immediate_value,
+					  (void *)&dov);
+	if (rc == 0) {
+		if (!dov.fetched) {
+			rc = -ENOENT;
+		}
+	}
+
+	return rc;
+}
+
+static void example_without_handler(void)
+{
+	uint8_t val_u8;
+	int rc;
+
+	LOG_INF(SECTION_BEGIN_LINE);
+	LOG_INF("Service a key-value pair without dedicated handlers\n\n");
+	rc = load_immediate_value("gamma", &val_u8, sizeof(val_u8));
+	if (rc == -ENOENT) {
+		val_u8 = GAMMA_DEFAULT_VAl;
+		LOG_WRN("<gamma> = %d (default)\n", val_u8);
+	} else if (rc == 0) {
+		LOG_INF("<gamma> = %d\n", val_u8);
+	} else {
+		LOG_ERR("Failed to load immediate value, err %d", rc);
+	}
+
+	val_u8++;
+
+	LOG_INF("save <gamma> key directly: ");
+	rc = settings_save_one("gamma", (const void *)&val_u8,
+			       sizeof(val_u8));
+	if (rc) {
+		LOG_ERR(FAIL_MSG, rc);
+	} else {
+		LOG_INF("OK.\n");
+	}
+}
+
 void ers_settings_init(void)
 {
 	int32_t rc;
@@ -140,4 +237,14 @@ void ers_settings_init(void)
 
 	LOG_INF("subtree <%s> handler registered: OK", alph_handler.name);
 	LOG_INF("subtree <alpha/beta> has static handler");
+
+	uint32_t i;
+	for (i = 0; i < 6; i++) {
+
+		LOG_INF("settings exercise iteration %u:", i);
+		/*---------------------------------------
+		 * a key-value without dedicated handler
+		 */
+		example_without_handler();
+	}
 }
