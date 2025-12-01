@@ -18,10 +18,10 @@ LOG_MODULE_REGISTER(ers_settings, CONFIG_ERS_SETTINGS_LOG_LEVEL);
 
 #define GAMMA_DEFAULT_VAl 0
 
-#define FAIL_MSG "fail (err %d)\n"
+#define FAIL_MSG "fail (err %d)"
 
 #define SECTION_BEGIN_LINE \
-        "\n=================================================\n"
+        "================================================="
 
 //----------------------------------------------------------------------
 // - SECTION - file scoped
@@ -151,7 +151,7 @@ static int direct_loader_immediate_value(const char *name, size_t len,
 			rc = read_cb(cb_arg, one_value->dest, len);
 			if (rc >= 0) {
 				one_value->fetched = 1;
-				LOG_INF("immediate load: OK.\n");
+				LOG_INF("immediate load: OK.");
 				return 0;
 			}
 
@@ -194,13 +194,13 @@ static void example_without_handler(void)
 	int rc;
 
 	LOG_INF(SECTION_BEGIN_LINE);
-	LOG_INF("Service a key-value pair without dedicated handlers\n\n");
+	LOG_INF("Service a key-value pair without dedicated handlers");
 	rc = load_immediate_value("gamma", &val_u8, sizeof(val_u8));
 	if (rc == -ENOENT) {
 		val_u8 = GAMMA_DEFAULT_VAl;
-		LOG_WRN("<gamma> = %d (default)\n", val_u8);
+		LOG_WRN("<gamma> = %d (default)", val_u8);
 	} else if (rc == 0) {
-		LOG_INF("<gamma> = %d\n", val_u8);
+		LOG_INF("<gamma> = %d", val_u8);
 	} else {
 		LOG_ERR("Failed to load immediate value, err %d", rc);
 	}
@@ -213,7 +213,7 @@ static void example_without_handler(void)
 	if (rc) {
 		LOG_ERR(FAIL_MSG, rc);
 	} else {
-		LOG_INF("OK.\n");
+		LOG_INF("OK.");
 	}
 }
 
