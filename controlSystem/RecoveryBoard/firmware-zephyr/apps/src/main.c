@@ -53,6 +53,12 @@ int main(void)
 	rc = ers_init_can();
 	LOG_INF("ERS CAN module init returns %d", rc);
 
+
+	ers_settings_init();
+	LOG_INF("just back from ERS settings module init");
+	k_msleep(500);
+
+
         rc = ers_init_shell_support();
 	LOG_INF("ERS command initialization returns %d", rc);
 
@@ -62,10 +68,7 @@ int main(void)
 	rc = ers_init_arbiter();
 	LOG_INF("ERS arbitration module init returns %d", rc);
 	// Many dropped log message, can delay here allow them to print?
-	k_msleep(100);
-
-	ers_settings_init();
-	LOG_INF("just back from ERS settings module init");
+	// k_msleep(500);
 
 	LOG_INF("main() entering 'while (1)' loop . . .");
 

@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/settings/settings.h>
 
@@ -223,15 +224,34 @@ static void example_without_handler(void)
 
 int32_t retrieve_ers_setting(const char* name, void *val, const uint32_t size)
 {
-	// int32_t value_copy;
+	// uint32_t val_local = 0;
 	int32_t rc = 0;
+
 	rc = load_immediate_value(name, val, size);
+	// rc = load_immediate_value(name, &val_local, sizeof(val_local));
 	if (rc == -ENOENT) {
 		LOG_ERR("Key '%s' not yet initialized, read status %d", name, rc);
+		// LOG_ERR("val_local holds %u", val_local);
 	} else if (rc == 0) {
-		LOG_INF("key '%s' holds %d", name, (int32_t)val);
+		// LOG_INF("key '%s' holds %u", name, val_local);
+		uint32_t* val_ptr = (uint32_t *)val;
+		LOG_INF("key '%s' holds %u", name, *val_ptr);
 	} else {
 		LOG_ERR("Failed to load immediate value, err %d", rc);
+	}
+	return rc;
+}
+
+int32_t store_ers_setting(const char* name, const void *val, const uint32_t size)
+{
+	int32_t rc = 0;
+	LOG_INF("save '%s' key directly: ", name);
+	// rc = settings_save_one(name, (const void *)&val, sizeof(val));
+	rc = settings_save_one(name, &val, sizeof(val));
+	if (rc) {
+		LOG_ERR("Fail to store value for '%s', err %d", name, rc);
+	} else {
+		LOG_INF("Stored value %u to key '%s'", (uint32_t)val, name);
 	}
 	return rc;
 }
@@ -257,17 +277,42 @@ void ers_settings_init(void)
 	LOG_INF("subtree <%s> handler registered: OK", alph_handler.name);
 	LOG_INF("subtree <alpha/beta> has static handler");
 
-	uint8_t val = 0;
+#define DEV_MOTOR_USE_COUNT_STARTING_VALUE 5
+	uint32_t val = 0;
 	uint32_t i;
 	for (i = 0; i < 6; i++) {
 
-		LOG_INF("settings exercise iteration %u:", i);
+		LOG_INF("*****  settings exercise iteration %u:  ******", i);
+#if 0
 		/*---------------------------------------
 		 * a key-value without dedicated handler
 		 */
 		example_without_handler();
-
+#else
 		rc = retrieve_ers_setting("motor_uses", &val, sizeof(val));
-		LOG_INF("- DEV 1130 - call to retrieve motor uses count returns status %d", rc);
+		LOG_INF("- DEV 1130 - call to retrieve motor use count returns status %d", rc);
+		if (val > ((1 << 10) - 1))
+		{
+			val = 0;
+		}
+
+		if (rc != 0)
+		{
+			val = DEV_MOTOR_USE_COUNT_STARTING_VALUE;
+		}
+		else
+		{
+			LOG_INF("- DEV 1130 - read motor use count of %u", val);
+			k_msleep(10);
+
+			val += 2;
+			LOG_INF("- DEV 1130 - incrementing value to %u", val);
+			k_msleep(10);
+		}
+	
+		rc = store_ers_setting("motor_uses", (const void *)val, sizeof(val));
+		LOG_INF("- DEV 1130 - call to store motor use count returns status %d", rc);
+#endif
+		k_msleep(2000);
 	}
 }
