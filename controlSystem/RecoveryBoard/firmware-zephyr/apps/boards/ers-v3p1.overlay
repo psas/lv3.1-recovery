@@ -54,18 +54,26 @@
         };
 };
 
+// CAN transceiver related
+
 &can1 {
         status = "okay";
 };
-/*
-&dac1 {
-        status = "okay";
-};
-*/
+
+// digital-to-analog conversion (DAC) related
+
 / {
         zephyr,user {
                 dac = <&dac1>;
                 dac-channel-id = <1>;
                 dac-resolution = <12>;
         };
+};
+
+&pwmleds {
+        status = "okay";
+};
+
+&pwm2 {
+        status = "okay";
 };

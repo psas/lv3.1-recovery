@@ -567,9 +567,10 @@ int32_t calc_battery_voltage(void)
 	ekget_batt_read(&adc_reading);
 
 	battery_voltage = (double)(((double)adc_reading / (double)4096 *3.3) / 0.2326);
+#if 0
 	LOG_WRN("(3)  (%u / 4096 * 3.3 / 0.2326) gives %f mv", adc_reading,
 	  (double)(((double)adc_reading / (double)4096 *3.3) / 0.2326));
-
+#endif
 	battery_voltage_dv = round(battery_voltage * 10);
 	ekset_batt_read_dv(battery_voltage_dv);
 	return 0;

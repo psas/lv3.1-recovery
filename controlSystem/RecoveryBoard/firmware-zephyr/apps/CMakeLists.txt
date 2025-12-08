@@ -32,5 +32,6 @@ target_sources(app PRIVATE
     src/keeper.c
     src/main.c
     src/motor-control.c
+    src/pwm.c
     src/shell-support.c
 )

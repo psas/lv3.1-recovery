@@ -280,7 +280,7 @@ void ers_settings_init(void)
 #define DEV_MOTOR_USE_COUNT_STARTING_VALUE 5
 	uint32_t val = 0;
 	uint32_t i;
-	for (i = 0; i < 6; i++) {
+	for (i = 0; i < 3; i++) {
 
 		LOG_INF("*****  settings exercise iteration %u:  ******", i);
 #if 0
