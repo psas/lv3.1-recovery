@@ -139,13 +139,13 @@
         st,prescaler = <10000>;
         status = "okay";
 
-        pwm2: pwm {
-                /* NOTE: disabled by default, PWM2 conflicts with SPI1 */
+        pwm1: pwm {
                 pinctrl-0 = <&tim15_ch1_pb14>;
                 pinctrl-names = "default";
         };
 
-        pwm1: pwm {
+        pwm2: pwm {
+                /* NOTE: disabled by default, PWM2 conflicts with SPI1 */
                 pinctrl-0 = <&tim15_ch2_pb15>;
                 pinctrl-names = "default";
         };
@@ -159,11 +159,14 @@
 
 // Note with this arrangement buzzer works but orange LED does not show PWM signal:
                 pwm_led_orange: pwm_led_orange {
-			pwms = <&pwm2 1 PWM_MSEC(20) PWM_POLARITY_NORMAL>;
-                };
-
-                pwm_buzzer: pwm_buzzer {
-                        pwms = <&pwm2 2 PWM_MSEC(20) PWM_POLARITY_NORMAL>;
+			pwms = <&pwm1 2 PWM_MSEC(20) PWM_POLARITY_NORMAL>;     //
+			// pwms = <&pwm2 2 PWM_MSEC(20) PWM_POLARITY_NORMAL>;  //
+			// pwms = <&pwm2 1 PWM_MSEC(20) PWM_POLARITY_NORMAL>;  // <-+
+                };                                                             //   |
+                                                                               //   | 
+                pwm_buzzer: pwm_buzzer {                                       //   | 
+                        pwms = <&pwm2 2 PWM_MSEC(20) PWM_POLARITY_NORMAL>;     // <-+ buzzer works
+                        // pwms = <&pwm1 1 PWM_MSEC(20) PWM_POLARITY_NORMAL>;  // no channels work
                 };
         };
 

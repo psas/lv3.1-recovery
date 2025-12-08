@@ -128,7 +128,7 @@ int32_t pwm_play_melody(void)
 		period = (period / 2U);
 		note_count--;
 		// k_sleep(K_SECONDS(1U));
-		k_msleep(2000);
+		k_msleep(500);
 	}
 	return 0;
 }
