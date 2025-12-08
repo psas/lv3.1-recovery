@@ -17,6 +17,7 @@
 #include <gpio-in.h>
 #include <keeper.h>
 #include <motor-control.h>
+#include <ers-pwm.h>
 #include <shell-support.h>
 
 LOG_MODULE_REGISTER(ers_main, LOG_LEVEL_INF);
@@ -39,6 +40,7 @@ int main(void)
         rc = ers_init_gpio_in();
 	LOG_INF("GPIO input pin initialization returns %d", rc);
 
+#if 0
         rc = ers_init_motor_ctrl();
 	LOG_INF("motor control module init returns %d", rc);
 
@@ -53,14 +55,13 @@ int main(void)
 	rc = ers_init_can();
 	LOG_INF("ERS CAN module init returns %d", rc);
 
-
 	ers_settings_init();
 	LOG_INF("just back from ERS settings module init");
 	k_msleep(500);
 
-
         rc = ers_init_shell_support();
 	LOG_INF("ERS command initialization returns %d", rc);
+#endif // 0
 
 	rc = ers_init_keeper();
 	LOG_INF("ERS data \"keeper\" initialization returns %d", rc);
@@ -69,6 +70,9 @@ int main(void)
 	LOG_INF("ERS arbitration module init returns %d", rc);
 	// Many dropped log message, can delay here allow them to print?
 	// k_msleep(500);
+
+	rc = pwm_init();
+	LOG_INF("ERS PWM module init returns %d", rc);
 
 	LOG_INF("main() entering 'while (1)' loop . . .");
 
@@ -122,6 +126,8 @@ int main(void)
 		ekget_motor_isense(&b);
 		LOG_INF("motor_isense ADC_IN9 = %u", b);
 
+		rc = pwm_play_melody();
+		// . . . do something with rc.
 		k_msleep(ERS_MAIN_LOOP_PERIOD_MS);
 	}
 
