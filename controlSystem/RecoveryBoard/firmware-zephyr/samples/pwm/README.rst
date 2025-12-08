@@ -7,4 +7,4 @@ Build in current directory with::
 
 Flash target hardware with:
 
-  $ ../../flash-manually.sh w --conf-dir ../../scripts
+  $ ./flash-manually.lnk w
