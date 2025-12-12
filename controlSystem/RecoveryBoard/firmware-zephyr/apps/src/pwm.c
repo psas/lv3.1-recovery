@@ -74,6 +74,31 @@ int32_t pwm_init(void)
 	return rc;
 }
 
+static int32_t buzzer_heartbeat(void)
+{
+	static uint32_t call_count = 0;
+
+	if (call_count > 2)
+	{
+		return 0;
+	}
+	call_count++;
+
+	uint32_t period = 2800000;
+
+	int32_t rc = pwm_set_dt(&pwm_led0, period, period / 2U);
+	k_msleep(250);
+	rc = pwm_set_dt(&pwm_led0, 0, 0);
+	k_msleep(250);
+
+	rc = pwm_set_dt(&pwm_led0, period, period / 2U);
+	k_msleep(250);
+	rc = pwm_set_dt(&pwm_led0, 0, 0);
+	k_msleep(250);
+
+	return rc;
+}
+
 /*
 Using period 15625000
 Using period 7812500   . . . 256
@@ -98,37 +123,11 @@ From ChibiOS ERS work, source file beep.c:
 
 int32_t pwm_play_melody(void)
 {
-	uint32_t period;
-	uint32_t note_count = 5;
-	int ret;
+	int rc;
 
-// Use 500000000 to achieve 2Hz PWD signal on ERS orange LED
-// (buzzer will require much higher frequency to produce audible sound)
-#define DEV_STARTING_PERIOD 62500000
-#define DEV_MAX_PERIOD 1000000000
-	// period = max_period_fs;
-	period = DEV_STARTING_PERIOD;
-	while (note_count > 0) {
-		ret = pwm_set_dt(&pwm_led0, period, period / 2U);
-		if (ret) {
-			LOG_ERR("Error %d: failed to set pulse width", ret);
-			LOG_ERR("on device %s", pwm_led0.dev->name);
-			return 0;
-		}
-#if 1
-		ret = pwm_set_dt(&pwm_buzzer, period, period / 2U);
-		if (ret) {
-			LOG_ERR("Error %d: failed to set pulse width", ret);
-			LOG_ERR("on device %s", pwm_buzzer.dev->name);
-			return 0;
-		}
-#endif // 0
-		LOG_INF("Using period %d\n", period);
-
-		period = (period / 2U);
-		note_count--;
-		// k_sleep(K_SECONDS(1U));
-		k_msleep(500);
+	while (1) {
+		rc = buzzer_heartbeat();
+		k_sleep(K_SECONDS(2U));
 	}
 	return 0;
 }
