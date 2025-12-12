@@ -154,25 +154,20 @@
 / {
         pwmleds: pwmleds {
                 compatible = "pwm-leds";
-                /* NOTE: disabled by default, PWM2 conflicts with SPI1 */
                 status = "disabled";
 
-// Note with this arrangement buzzer works but orange LED does not show PWM signal:
+/// Note with this arrangement buzzer works but orange LED does not show PWM signal:
                 pwm_led_orange: pwm_led_orange {
-			pwms = <&pwm1 2 PWM_MSEC(20) PWM_POLARITY_NORMAL>;     //
-			// pwms = <&pwm2 2 PWM_MSEC(20) PWM_POLARITY_NORMAL>;  //
-			// pwms = <&pwm2 1 PWM_MSEC(20) PWM_POLARITY_NORMAL>;  // <-+
-                };                                                             //   |
-                                                                               //   | 
-                pwm_buzzer: pwm_buzzer {                                       //   | 
-                        pwms = <&pwm2 2 PWM_MSEC(20) PWM_POLARITY_NORMAL>;     // <-+ buzzer works
-                        // pwms = <&pwm1 1 PWM_MSEC(20) PWM_POLARITY_NORMAL>;  // no channels work
+			pwms = <&pwm1 2 PWM_MSEC(20) PWM_POLARITY_NORMAL>;
+		};
+
+                pwm_buzzer: pwm_buzzer {
+                        pwms = <&pwm2 2 PWM_MSEC(20) PWM_POLARITY_NORMAL>;
                 };
         };
 
 	aliases {
         	led0 = &led_orange;
-		pwm-led0 = &pwm_led_orange;
 		buzzer = &pwm_buzzer;
 		sw0 = &iso_drogue;
 		sw1 = &iso_main;

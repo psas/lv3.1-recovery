@@ -11,7 +11,6 @@
 
 LOG_MODULE_REGISTER(pwm, LOG_LEVEL_INF);
 
-static const struct pwm_dt_spec pwm_led0 = PWM_DT_SPEC_GET(DT_ALIAS(pwm_led0));
 static const struct pwm_dt_spec pwm_buzzer = PWM_DT_SPEC_GET(DT_ALIAS(buzzer));
 
 #define MIN_PERIOD PWM_SEC(1U) / 128U
@@ -23,28 +22,15 @@ static uint32_t max_period_fs;
 // - SECTION - routines
 //----------------------------------------------------------------------
 
-int32_t pwm_init_alt_channel(void)
-{
-	LOG_INF("PWM set up for ERS buzzer\n");
-
-	if (!pwm_is_ready_dt(&pwm_buzzer)) {
-		LOG_ERR("Error: PWM device %s is not ready\n",
-		       pwm_buzzer.dev->name);
-		return -ENODEV;
-	}
-
-	return 0;
-}
-
 int32_t pwm_init(void)
 {
 	int32_t rc = 0;
 
-	LOG_INF("initializing PWM for device '%s'\n", pwm_led0.dev->name);
+	LOG_INF("initializing PWM for device '%s'\n", pwm_buzzer.dev->name);
 
-	if (!pwm_is_ready_dt(&pwm_led0)) {
+	if (!pwm_is_ready_dt(&pwm_buzzer)) {
 		LOG_ERR("Error: PWM device %s is not ready\n",
-		       pwm_led0.dev->name);
+		       pwm_buzzer.dev->name);
 		return -ENODEV;
 	}
 
@@ -55,9 +41,9 @@ int32_t pwm_init(void)
 	 * Keep its value at least MIN_PERIOD * 4 to make sure
 	 * the sample changes frequency at least once.
 	 */
-	LOG_INF("Calibrating for channel %d...\n", pwm_led0.channel);
+	LOG_INF("Calibrating for channel %d...\n", pwm_buzzer.channel);
 	max_period_fs = MAX_PERIOD;
-	while (pwm_set_dt(&pwm_led0, max_period_fs, max_period_fs / 2U)) {
+	while (pwm_set_dt(&pwm_buzzer, max_period_fs, max_period_fs / 2U)) {
 		max_period_fs /= 2U;
 		if (max_period_fs < (4U * MIN_PERIOD)) {
 			LOG_ERR("Error: PWM device "
@@ -69,32 +55,6 @@ int32_t pwm_init(void)
 
 	LOG_INF("Done calibrating; maximum/minimum periods %u/%lu nsec\n",
 	       max_period_fs, MIN_PERIOD);
-
-	rc = pwm_init_alt_channel();
-	return rc;
-}
-
-static int32_t buzzer_heartbeat(void)
-{
-	static uint32_t call_count = 0;
-
-	if (call_count > 2)
-	{
-		return 0;
-	}
-	call_count++;
-
-	uint32_t period = 2800000;
-
-	int32_t rc = pwm_set_dt(&pwm_led0, period, period / 2U);
-	k_msleep(250);
-	rc = pwm_set_dt(&pwm_led0, 0, 0);
-	k_msleep(250);
-
-	rc = pwm_set_dt(&pwm_led0, period, period / 2U);
-	k_msleep(250);
-	rc = pwm_set_dt(&pwm_led0, 0, 0);
-	k_msleep(250);
 
 	return rc;
 }
@@ -121,13 +81,38 @@ From ChibiOS ERS work, source file beep.c:
  21   // - 23 -> ~4350Hz
 */
 
+static int32_t buzzer_heartbeat(void)
+{
+	static uint32_t call_count = 0;
+
+	if (call_count > 2)
+	{
+		return 0;
+	}
+	call_count++;
+
+	uint32_t period = 2800000;
+
+	int32_t rc = pwm_set_dt(&pwm_buzzer, period, period / 2U);
+	k_msleep(250);
+	rc = pwm_set_dt(&pwm_buzzer, 0, 0);
+	k_msleep(250);
+
+	rc = pwm_set_dt(&pwm_buzzer, period, period / 2U);
+	k_msleep(250);
+	rc = pwm_set_dt(&pwm_buzzer, 0, 0);
+	k_msleep(250);
+
+	return rc;
+}
+
 int32_t pwm_play_melody(void)
 {
 	int rc;
 
-	while (1) {
+	// while (1) {
 		rc = buzzer_heartbeat();
 		k_sleep(K_SECONDS(2U));
-	}
+	// }
 	return 0;
 }
