@@ -40,7 +40,6 @@ int main(void)
         rc = ers_init_gpio_in();
 	LOG_INF("GPIO input pin initialization returns %d", rc);
 
-#if 0
         rc = ers_init_motor_ctrl();
 	LOG_INF("motor control module init returns %d", rc);
 
@@ -61,15 +60,12 @@ int main(void)
 
         rc = ers_init_shell_support();
 	LOG_INF("ERS command initialization returns %d", rc);
-#endif // 0
 
 	rc = ers_init_keeper();
 	LOG_INF("ERS data \"keeper\" initialization returns %d", rc);
 
 	rc = ers_init_arbiter();
 	LOG_INF("ERS arbitration module init returns %d", rc);
-	// Many dropped log message, can delay here allow them to print?
-	// k_msleep(500);
 
 	rc = pwm_init();
 	LOG_INF("ERS PWM module init returns %d", rc);
@@ -91,35 +87,6 @@ int main(void)
 			ekget_hall_2(&d);
 			LOG_INF("batt, motor, hall1, hall2: %u, %u, %u, %u", a, b, c, d);
 		}
-
-#if 0
-// 2025-10-26 SUN - MOTOR DRIVE TEST FRAGMENT BEGIN
-		if (loop_count % 2)
-		{
-			rc = dac_set_output(450);
- 			// LOG_INF("1015 - set DAC output call returns %d", rc);
-
-			rc = mc_drive_deploy1_high();
- 			// LOG_INF("1015 - driving deploy1 high, deploy2 low returns %d", rc);
-		}
-		else
-		{
-			rc = dac_set_output(10);
- 			// LOG_INF("1015 - set DAC output call returns %d", rc);
-
-			rc = mc_drive_deploy2_high();
- 			// LOG_INF("1015 - driving deploy2 high, deploy1 low returns %d", rc);
-		}
-
-		rc = mc_set_led0((loop_count / 2) & 0x1);
-		rc = mc_set_not_motor_ps((loop_count / 2) & 0x1);
-		if (rc != 0)
-		{
-			LOG_ERR("Failed to set not_motor_ps pin to %u, error %d",
-			  ((loop_count / 2) & 0x1), rc);
-		}
-// 2025-10-26 SUN - MOTOR DRIVE TEST FRAGMENT BEGIN
-#endif // 0
 
 		k_msleep(200);
 		uint32_t b;
