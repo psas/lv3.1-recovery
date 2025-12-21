@@ -182,6 +182,7 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
 	uint32_t can_bus_ok_flag = 0;
 	ekget_can_bus_ok(&can_bus_ok_flag);
 
+	// ring status: 0 = uninitialized, 1 = unlocked, 2 = in between, 3 = locked, 4 = error
 	ers_state_vars_fs[IDX_DROGUE_RING_STATE] = (uint8_t)(ring_state);
 	ers_state_vars_fs[IDX_DROGUE_BATT_READ] = (uint8_t)(battery_voltage & 0xFF);
 	ers_state_vars_fs[IDX_DROGUE_BATT_OK] = batt_ok_flag;
@@ -192,11 +193,27 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
 	ers_state_vars_fs[IDX_RESERVED_01] = 0;
 	ers_state_vars_fs[IDX_RESERVED_02] = 0;
 
+	ers_state_vars_fs[IDX_DROGUE_READY] = 
+	  (ers_state_vars_fs[IDX_DROGUE_RING_STATE] == 3) &&
+	   ers_state_vars_fs[IDX_DROGUE_BATT_OK] &&
+	   ers_state_vars_fs[IDX_DROGUE_CAN_BUS_OK];
+
 	memcpy(ers_status_frame.data, ers_state_vars_fs, sizeof(ers_state_vars_fs));
 
 	can_send(can_dev, &ers_status_frame, K_FOREVER,
 		 tx_irq_callback,
 		 "ERS status frame");
+
+        LOG_INF("                  ringst battrd battok pwrsts canok  ready  reserv reserv");
+	LOG_INF("drogue CAN frame: 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X",
+	  ers_state_vars_fs[IDX_DROGUE_RING_STATE],
+	  ers_state_vars_fs[IDX_DROGUE_BATT_READ],
+	  ers_state_vars_fs[IDX_DROGUE_BATT_OK],
+	  ers_state_vars_fs[IDX_DROGUE_SHORE_POW_STATUS],
+	  ers_state_vars_fs[IDX_DROGUE_CAN_BUS_OK],
+	  ers_state_vars_fs[IDX_DROGUE_READY],
+	  ers_state_vars_fs[IDX_RESERVED_01],
+	  ers_state_vars_fs[IDX_RESERVED_02]);
 }
 
 K_WORK_DEFINE(prep_and_send_status_frame_work, prep_and_send_status_frame_work_handler);
@@ -299,7 +316,6 @@ void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 		}
 #endif
 	}
-//	LOG_INF("M2");
 }
 
 char *state_to_str(enum can_state state)
@@ -329,16 +345,6 @@ int32_t ers_init_can(void)
 		LOG_ERR("CAN: Device %s not ready.", can_dev->name);
 		return -ENODEV;
 	}
-
-// TODO [ ] Learn how to set CAN bus bit rate in Zephyr app.  Following API
-//   did not seem to be available:
-#if 0
-	ret = can_set_bitrate_data(can_dev, 500000);
-	if (ret != 0) {
-		LOG_ERR("Failed to set CAN bitrate, error %d]", ret);
-		return 0;
-	}
-#endif
 
 	rc = can_start(can_dev);
 	if (rc != 0) {
