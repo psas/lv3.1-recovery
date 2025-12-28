@@ -11,7 +11,7 @@ Pytest is a testing framework written in Python. It is useful for this project t
 
 ### Embedded Test
 
-embedded_test is a testing framework written by the people at probe-rs. It allows us to write tests that get ran on the boards themselves. To create a new test, it is recommended that you copy the `blinky.rs` file as it contains the necessary boilerplate code to get the tests running, and rename it to `<testname>.rs` where `<testname>` is the name of the test you are writing. Then, in the `Config.toml` file at the root of the directory, add this block of code:
+embedded_test is a testing framework written by the people at probe-rs. It allows us to write tests that get ran on the boards themselves. To create a new test, it is recommended that you copy the `blinky.rs` file as it contains the necessary boilerplate code to get the tests running, and rename it to `<testname>.rs` where `<testname>` is the name of the test you are writing. Then, in the `Cargo.toml` file at the root of the directory, add this block of code:
 
 ```rust
 [[test]]
