@@ -41,6 +41,17 @@ Programming ✔ 100% [####################]  15.00 KiB @  20.53 KiB/s (took 1s) 
 
 and the led should be blinking.
 
+## Building
+
+If you are planning on flashing, you can just call the commands in the Flashing section after this and building will be handled automatically.
+If you need to build separately for some reason, run:
+
+```bash
+cargo build -r --bin blinky
+```
+
+replacing blinky with the name of the source file in the `src/bin` directory you want to build.
+
 ## Flashing
 
 The commands to flash the binaries are as follows:
