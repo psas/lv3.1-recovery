@@ -38,42 +38,39 @@ LOG_MODULE_REGISTER(shell_support, LOG_LEVEL_INF);
 // - SECTION - file scoped
 //----------------------------------------------------------------------
 
-static const struct shell *shell_ptr_fs = NULL;
+// TODO [ ] remove defunct file scoped vars:
+// static const struct shell *shell_ptr_fs = NULL;
 
-static uint32_t dev_test_calls_fs = 0;
+// static uint32_t dev_test_calls_fs = 0;
 
 //----------------------------------------------------------------------
 // - SECTION - routines
 //----------------------------------------------------------------------
 
-static int ers_cmd_wrapper_read_adc_in0(const struct shell *shell, size_t argc, char *argv[])
+static int cmd_wrapper_read_adc_in0(const struct shell *shell, size_t argc, char *argv[])
 {
-	int32_t rc = 0;
-	shell_fprintf(shell, SHELL_NORMAL, "- STUB FUNCTION - to read and print ADC IN0 channel.\n");
-	return rc;
+        // ARG_UNUSED(shell);
+        ARG_UNUSED(argc);
+        ARG_UNUSED(argv);
+
+	// int32_t rc = 0;
+	return cmd_ers_read_adc_in0(shell);
 }
 
-static int ers_cmd_print_mark(const struct shell *shell, size_t argc, char *argv[])
+static int cmd_wrapper_read_adc_in1(const struct shell *shell, size_t argc, char *argv[])
 {
-	shell_fprintf(shell, SHELL_NORMAL, "- MARK -\n");
-        shell_ptr_fs = shell;
-	return 0;
-}
+        // ARG_UNUSED(shell);
+        ARG_UNUSED(argc);
+        ARG_UNUSED(argv);
 
-static int ers_cmd_print_shell_addr(const struct shell *shell, size_t argc, char *argv[])
-{
-	shell_fprintf(shell, SHELL_NORMAL, "Current shell at addr 0x%" PRIxPTR "\n",
-		      (long unsigned int)shell_ptr_fs);
-	shell_fprintf(shell, SHELL_NORMAL, "DEV 0926 app shell print test called %u "
-		      " times\n", dev_test_calls_fs);
-	return 0;
+	return cmd_ers_read_adc_in1(shell);
 }
 
 //----------------------------------------------------------------------
 // - SECTION - ERS diagnotics
 //----------------------------------------------------------------------
 
-static int ers_cmd_diag_periodic_on(const struct shell *shell, size_t argc, char *argv[])
+static int cmd_diag_periodic_on(const struct shell *shell, size_t argc, char *argv[])
 {
         ARG_UNUSED(shell);
         ARG_UNUSED(argc);
@@ -83,7 +80,7 @@ static int ers_cmd_diag_periodic_on(const struct shell *shell, size_t argc, char
 	return 0;
 }
 
-static int ers_cmd_diag_periodic_off(const struct shell *shell, size_t argc, char *argv[])
+static int cmd_diag_periodic_off(const struct shell *shell, size_t argc, char *argv[])
 {
         ARG_UNUSED(shell);
         ARG_UNUSED(argc);
@@ -97,10 +94,10 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 	ers_cmds_diag,
 	SHELL_CMD_ARG(on, NULL,
 		"enable ERS periodic diagnostics",
-		ers_cmd_diag_periodic_on, 0, 0),
+		cmd_diag_periodic_on, 0, 0),
 	SHELL_CMD_ARG(off, NULL,
 		"disable ERS periodic diagnostics",
-		ers_cmd_diag_periodic_off, 0, 0),
+		cmd_diag_periodic_off, 0, 0),
 	SHELL_SUBCMD_SET_END
 	);
 
@@ -110,9 +107,9 @@ SHELL_CMD_REGISTER(diag, &ers_cmds_diag, "- ERS - diagnostics", NULL);
 // - SECTION - ERS ADC commands
 //----------------------------------------------------------------------
 
-static int ers_cmd_wrapper_read_adc_all(const struct shell *shell, size_t argc, char *argv[])
+static int cmd_wrapper_read_adc_all(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(shell);
+        // ARG_UNUSED(shell);
         ARG_UNUSED(argc);
         ARG_UNUSED(argv);
 	int32_t rc = 0;
@@ -136,28 +133,18 @@ static int ers_cmd_wrapper_read_adc_all(const struct shell *shell, size_t argc, 
 	return rc;
 }
 
-// TODO [ ] move all command routines referenced by this Zephyr macro to this
-//   in-file section.
-
 SHELL_STATIC_SUBCMD_SET_CREATE(
 	ers_cmds,
 	SHELL_CMD_ARG(adcall, NULL,
 		"Read ERS board's four ADC channels",
-		ers_cmd_wrapper_read_adc_all, 0, 0),
+		cmd_wrapper_read_adc_all, 0, 0),
 	SHELL_CMD_ARG(adc0, NULL,
 		"Read ERS board ADC for Hall sensor 1",
-		ers_cmd_wrapper_read_adc_in0, 0, 0),
-#if 0
+		cmd_wrapper_read_adc_in0, 0, 0),
+// TODO [ ] Add following command for second Hall sensor:
 	SHELL_CMD_ARG(adc1, NULL,
 		"Read ERS board ADC for Hall sensor 2",
-		cmd_ers_read_adc_in1, 0, 0),
-#endif
-	SHELL_CMD_ARG(print_mark, NULL,
-		"output to shell console a brief 'mark' message",
-		ers_cmd_print_mark, 0, 0),
-	SHELL_CMD_ARG(print_shell_ptr, NULL,
-		"print address of run time Zephyr shell instance",
-		ers_cmd_print_shell_addr, 0, 0),
+		cmd_wrapper_read_adc_in1, 0, 0),
 	SHELL_SUBCMD_SET_END
 	);
 
@@ -181,19 +168,19 @@ SHELL_SUBCMD_ADD((hall), show_limits, &sub_section_hall,
   "show Hall sensor limit values (ADC counts 0..4095)", arbiter_show_hall_state_limits, 1, 0);
 
 SHELL_SUBCMD_ADD((hall), v_under_limit, &sub_section_hall_set,
-  "set Hall limit 'voltage under':  hall v_under [s1|s2] [value]", sw_set_limit_v_under, 3, 0);
+  "set Hall limit 'voltage under':  hall v_under [s1|s2] [value]", cmd_set_limit_v_under, 3, 0);
 
 SHELL_SUBCMD_ADD((hall), inactive_limit, &sub_section_hall_set,
-  "set Hall state inactive limit:  hall inactive [s1|s2] [value]", sw_set_limit_inactive, 3, 0);
+  "set Hall state inactive limit:  hall inactive [s1|s2] [value]", cmd_set_limit_inactive, 3, 0);
 
 SHELL_SUBCMD_ADD((hall), between_limit, &sub_section_hall_set,
-  "set Hall state between limit:  hall between [s1|s2] [value]", sw_set_limit_between, 3, 0);
+  "set Hall state between limit:  hall between [s1|s2] [value]", cmd_set_limit_between, 3, 0);
 
 SHELL_SUBCMD_ADD((hall), active_limit, &sub_section_hall_set,
-  "set Hall state active limit:  hall active [s1|s2] [value]", sw_set_limit_active, 3, 0);
+  "set Hall state active limit:  hall active [s1|s2] [value]", cmd_set_limit_active, 3, 0);
 
 SHELL_SUBCMD_ADD((hall), defaults, &sub_section_hall, "restore Hall sensor limit defaults",
-  sw_set_default_limits, 1, 0);
+  cmd_set_default_limits, 1, 0);
 
 SHELL_CMD_REGISTER(hall, &sub_section_hall,
   "- ERS - show and set Hall sensor limit values (in ADC counts)", NULL);
@@ -202,7 +189,9 @@ SHELL_CMD_REGISTER(hall, &sub_section_hall,
 // - SECTION - ERS lock ring commands (IN PROGRESS)
 //----------------------------------------------------------------------
 
-static int sw_show_locking_ring_pos(const struct shell *shell, size_t argc, char *argv[])
+// TODO [ ] For consistency change 'cmd_' to 'cmd_' in following command routine names:
+
+static int cmd_show_locking_ring_pos(const struct shell *shell, size_t argc, char *argv[])
 {
         ARG_UNUSED(shell);
         ARG_UNUSED(argc);
@@ -224,7 +213,7 @@ static int sw_show_locking_ring_pos(const struct shell *shell, size_t argc, char
 	return rc;
 }
 
-static int sw_set_pos_detection_interval(const struct shell *shell, size_t argc, char *argv[])
+static int cmd_set_pos_detection_interval(const struct shell *shell, size_t argc, char *argv[])
 {
         ARG_UNUSED(shell);
         ARG_UNUSED(argc);
@@ -243,12 +232,11 @@ static int sw_set_pos_detection_interval(const struct shell *shell, size_t argc,
 	return rc;
 }
 
-static int sw_show_pos_detection_interval(const struct shell *shell, size_t argc, char *argv[])
+static int cmd_show_pos_detection_interval(const struct shell *shell, size_t argc, char *argv[])
 {
         ARG_UNUSED(shell);
         ARG_UNUSED(argc);
         ARG_UNUSED(argv);
-	// LOG_INF("- INPROGRESS STUB 1024 - command show ring position detection interval");
 
         uint32_t value = 0;
 	get_ring_pos_detection_interval(&value);
@@ -257,7 +245,7 @@ static int sw_show_pos_detection_interval(const struct shell *shell, size_t argc
 }
 
 
-static int sw_lock_ring(const struct shell *shell, size_t argc, char *argv[])
+static int cmd_lock_ring(const struct shell *shell, size_t argc, char *argv[])
 {
         ARG_UNUSED(shell);
         ARG_UNUSED(argc);
@@ -272,7 +260,7 @@ static int sw_lock_ring(const struct shell *shell, size_t argc, char *argv[])
 	return 0;
 }
 
-static int sw_unlock_ring(const struct shell *shell, size_t argc, char *argv[])
+static int cmd_unlock_ring(const struct shell *shell, size_t argc, char *argv[])
 {
         ARG_UNUSED(shell);
         ARG_UNUSED(argc);
@@ -291,19 +279,17 @@ static int sw_unlock_ring(const struct shell *shell, size_t argc, char *argv[])
 SHELL_SUBCMD_SET_CREATE(sub_section_ring, (ring));
 
 SHELL_SUBCMD_ADD((ring), position, &sub_section_ring, "show locking ring position",
-  sw_show_locking_ring_pos, 1, 0);
+  cmd_show_locking_ring_pos, 1, 0);
 
 SHELL_SUBCMD_ADD((ring), dishow, &sub_section_ring, "show ring position detection internal in ms",
-  sw_show_pos_detection_interval, 1, 0);
+  cmd_show_pos_detection_interval, 1, 0);
 
 SHELL_SUBCMD_ADD((ring), diset, &sub_section_ring, "set ring position detection internal in ms",
-  sw_set_pos_detection_interval, 2, 0);
+  cmd_set_pos_detection_interval, 2, 0);
 
-// TODO [ ] add command to lock ring
-// TODO [ ] add command to unlock ring
-SHELL_SUBCMD_ADD((ring), lock, &sub_section_ring, "lock ring", sw_lock_ring, 1, 0);
+SHELL_SUBCMD_ADD((ring), lock, &sub_section_ring, "lock ring", cmd_lock_ring, 1, 0);
 
-SHELL_SUBCMD_ADD((ring), unlock, &sub_section_ring, "unlock ring", sw_unlock_ring, 1, 0);
+SHELL_SUBCMD_ADD((ring), unlock, &sub_section_ring, "unlock ring", cmd_unlock_ring, 1, 0);
 
 SHELL_CMD_REGISTER(ring, &sub_section_ring, "- ERS - lock ring commands", NULL);
 // clang-format on
@@ -349,7 +335,7 @@ static int cmd_dac_set_output(const struct shell *shell, size_t argc, char *argv
         uint32_t value = 0;
         char *endptr, *str;
         str = argv[1];
-        value = strtol(str, &endptr, 10);  // TODO [ ] factor BASE_10 symbol to ers-utils.h header and use it here
+        value = strtol(str, &endptr, BASE_TEN);
 	int32_t rc = 0;
 
 	LOG_INF("to DAC writing value %u . . .", value);
@@ -362,7 +348,7 @@ static int cmd_dac_store_setting_for_lock_unlock(const struct shell *shell, size
         uint32_t value = 0;
         char *endptr, *str;
         str = argv[1];
-        value = strtol(str, &endptr, 10);  // TODO [ ] factor BASE_10 symbol to ers-utils.h header and use it here
+        value = strtol(str, &endptr, BASE_TEN);
 	// int32_t rc = 0;
 
 	LOG_INF("storing DAC setting %u for ring lock and unlock operations . . .", value);
