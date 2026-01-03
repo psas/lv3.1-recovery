@@ -29,8 +29,11 @@ LOG_MODULE_REGISTER(ers_adc, CONFIG_ADC_LOG_LEVEL);
 #define ADC_THREAD_PRIORITY 3
 #define ADC_READ_PERIOD_MS 10
 
-#undef DEV_ERS_ADC_PERIODIC_REPORTING
+#define DEV_ERS_ADC_PERIODIC_REPORTING
+// #undef DEV_ERS_ADC_PERIODIC_REPORTING
 
+// TODO [ ] review whether timeout needed and whether there was an issue for
+//   which timeout not implemented here, and if so document that reason:
 // #define ERS_ADC_READ_TIMEOUT 1500
 // static struct k_timeout_t ers_adc_read_timeout K_MSEC(ERS_ADC_READ_TIMEOUT);
 
@@ -67,12 +70,6 @@ struct k_mutex adc_mtx;
 //----------------------------------------------------------------------
 // - SECTION - routines
 //----------------------------------------------------------------------
-
-int32_t cmd_ers_read_adc_in0(const struct shell *shell)
-{
-	shell_fprintf(shell, SHELL_NORMAL, "stub function for read ADC in0\n");
-        return 0;
-}
 
 // TODO [ ] Amend the "read ADC all" command to accept a range of channels,
 //   to support the reading of one channel with the same routine.
@@ -111,19 +108,15 @@ int32_t adc_read_channels(const enum ers_adc_values idx_begin,
                 .buffer_size = sizeof(buf),
         };
 
-// TODO [ ] See about replacing this custom symbol with use of Zephyr module
-//          level logging.  See ERS Zephyr firmware files 'Kconfig' and
-//          'ers-log-levels.conf' for some details.
-#if DEV_ERS_ADC_PERIODIC_REPORTING
-        LOG_INF("ADC reading[%u]:", count++);
-#endif
-
-        for (size_t i = 0U; i < ARRAY_SIZE(adc_channels); i++)
-        // for (size_t i = idx_begin; i <= idx_end; i++)
+        // for (size_t i = 0U; i < ARRAY_SIZE(adc_channels); i++)
+        for (size_t i = idx_begin; i <= idx_end; i++)
         {
                 int32_t val_mv;
 
-#if DEV_ERS_ADC_PERIODIC_REPORTING
+// TODO [ ] See about replacing this custom symbol with use of Zephyr module
+//          level logging.  See ERS Zephyr firmware files 'Kconfig' and
+//          'ers-log-levels.conf' for some details.
+#ifdef DEV_ERS_ADC_PERIODIC_REPORTING
                 LOG_INF("- %s, channel %d: ",
                              adc_channels[i].dev->name,
                              adc_channels[i].channel_id);
@@ -155,7 +148,7 @@ int32_t adc_read_channels(const enum ers_adc_values idx_begin,
                         val_mv = (int32_t)buf;
                 }
 
-#if DEV_ERS_ADC_PERIODIC_REPORTING
+#ifdef DEV_ERS_ADC_PERIODIC_REPORTING
                 LOG_INF("%"PRId32, val_mv);
 #endif
                 rc = adc_raw_to_millivolts_dt(&adc_channels[i], &val_mv);
@@ -168,7 +161,7 @@ int32_t adc_read_channels(const enum ers_adc_values idx_begin,
                 {
 			// Store ADC reading in ERS app "keeper" module:
 			ekset_adc_value_in_mv(i, (uint32_t)buf);
-#if DEV_ERS_ADC_PERIODIC_REPORTING
+#ifdef DEV_ERS_ADC_PERIODIC_REPORTING
                         LOG_INF(" = %"PRId32" mV", val_mv);
 #endif
 		}
@@ -184,6 +177,18 @@ int32_t adc_read_channels(const enum ers_adc_values idx_begin,
 	return rc;
 }
 
+int32_t cmd_ers_read_adc_in0(const struct shell *shell)
+{
+	shell_fprintf(shell, SHELL_NORMAL, "reading Hall sensor 1, ADC channel IN0 . . .\n");
+	return adc_read_channels(ADC_READING_HALL_1, ADC_READING_HALL_1);
+}
+
+int32_t cmd_ers_read_adc_in1(const struct shell *shell)
+{
+	shell_fprintf(shell, SHELL_NORMAL, "reading Hall sensor 2, ADC channel IN1 . . .\n");
+	return adc_read_channels(ADC_READING_HALL_1, ADC_READING_HALL_1);
+}
+
 //----------------------------------------------------------------------
 // - SECTION - scheduling set up
 //----------------------------------------------------------------------
@@ -194,6 +199,7 @@ void adc_thread_entry(void *arg1, void *arg2, void *arg3)
         ARG_UNUSED(arg2);
         ARG_UNUSED(arg3);
 
+	static uint32_t count = 0;
         int32_t rc = 0;
 
         /* Configure channels individually prior to sampling. */
@@ -213,8 +219,11 @@ void adc_thread_entry(void *arg1, void *arg2, void *arg3)
 
         while (1)
         {
-#if DEV_ERS_ADC_PERIODIC_REPORTING
-                LOG_INF("ADC reading[%u]: (thread entry function)\n", count++);
+#ifdef DEV_ERS_ADC_PERIODIC_REPORTING
+		if ((count % 300) == 0)
+		{
+                	LOG_INF("ADC reading[%u]: (thread entry function)\n", count++);
+		}
 #endif
 		rc = adc_read_channels(ADC_READING_BATT_READ, ADC_READING_HALL_2); // adc_thread_entry()
                 k_sleep(K_MSEC(ADC_READ_PERIOD_MS));

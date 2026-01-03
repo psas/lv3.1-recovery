@@ -57,7 +57,7 @@ void arbiter_set_hall_state_cutoff_defaults(void);
 // TODO [ ] Add check of 'endptr' to determine whether we got valid numeric input,
 //  in all routines which call strtol():
 
-int32_t sw_set_limit_v_under(const struct shell *shell, size_t argc, char **argv)
+int32_t cmd_set_limit_v_under(const struct shell *shell, size_t argc, char **argv)
 {
 	uint32_t value = 0;
 	char *endptr, *str;
@@ -85,7 +85,7 @@ int32_t sw_set_limit_v_under(const struct shell *shell, size_t argc, char **argv
 	return 0;
 }
 
-int32_t sw_set_limit_inactive(const struct shell *shell, size_t argc, char **argv)
+int32_t cmd_set_limit_inactive(const struct shell *shell, size_t argc, char **argv)
 {
 	uint32_t value = 0;
 	char *endptr, *str;
@@ -113,7 +113,7 @@ int32_t sw_set_limit_inactive(const struct shell *shell, size_t argc, char **arg
 	return 0;
 }
 
-int32_t sw_set_limit_between(const struct shell *shell, size_t argc, char **argv)
+int32_t cmd_set_limit_between(const struct shell *shell, size_t argc, char **argv)
 {
 	uint32_t value = 0;
 	char *endptr, *str;
@@ -141,7 +141,7 @@ int32_t sw_set_limit_between(const struct shell *shell, size_t argc, char **argv
 	return 0;
 }
 
-int32_t sw_set_limit_active(const struct shell *shell, size_t argc, char **argv)
+int32_t cmd_set_limit_active(const struct shell *shell, size_t argc, char **argv)
 {
 	uint32_t value = 0;
 	char *endptr, *str;
@@ -203,7 +203,7 @@ void arbiter_show_hall_state_limits(const struct shell *shell)
  * @brief Shell wrapper function to restore default Hall sensor limit values.
  */
 
-void sw_set_default_limits(const struct shell *shell, size_t argc, char **argv)
+void cmd_set_default_limits(const struct shell *shell, size_t argc, char **argv)
 {
 	LOG_INF("Setting Hall sensor limit default values . . .");
 	int32_t rc = set_hall_sensor_default_limits();

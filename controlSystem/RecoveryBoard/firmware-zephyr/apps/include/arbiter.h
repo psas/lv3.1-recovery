@@ -53,12 +53,12 @@ int32_t ers_init_arbiter(void);
  * @param [0..4095] an ADC count within the 12-bit ADC range of possible values.
  */
 
-int32_t sw_set_limit_v_under(const struct shell *shell, size_t argc, char **argv);
-int32_t sw_set_limit_inactive(const struct shell *shell, size_t argc, char **argv);
-int32_t sw_set_limit_between(const struct shell *shell, size_t argc, char **argv);
-int32_t sw_set_limit_active(const struct shell *shell, size_t argc, char **argv);
+int32_t cmd_set_limit_v_under(const struct shell *shell, size_t argc, char **argv);
+int32_t cmd_set_limit_inactive(const struct shell *shell, size_t argc, char **argv);
+int32_t cmd_set_limit_between(const struct shell *shell, size_t argc, char **argv);
+int32_t cmd_set_limit_active(const struct shell *shell, size_t argc, char **argv);
 
-void sw_set_default_limits(const struct shell *shell, size_t argc, char **argv);
+void cmd_set_default_limits(const struct shell *shell, size_t argc, char **argv);
 
 void arbiter_show_hall_state_limits(const struct shell *shell);
 
