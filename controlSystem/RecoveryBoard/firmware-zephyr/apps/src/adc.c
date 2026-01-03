@@ -29,8 +29,8 @@ LOG_MODULE_REGISTER(ers_adc, CONFIG_ADC_LOG_LEVEL);
 #define ADC_THREAD_PRIORITY 3
 #define ADC_READ_PERIOD_MS 10
 
-#define DEV_ERS_ADC_PERIODIC_REPORTING
-// #undef DEV_ERS_ADC_PERIODIC_REPORTING
+// #define DEV_ERS_ADC_PERIODIC_REPORTING
+#undef DEV_ERS_ADC_PERIODIC_REPORTING
 
 // TODO [ ] review whether timeout needed and whether there was an issue for
 //   which timeout not implemented here, and if so document that reason:
@@ -100,7 +100,6 @@ int32_t adc_read_channels(const enum ers_adc_values idx_begin,
 		return -EINVAL;
 	}
 
-        // uint32_t count = 0;
         uint16_t buf;
         struct adc_sequence sequence = { 
                 .buffer = &buf,
@@ -108,7 +107,6 @@ int32_t adc_read_channels(const enum ers_adc_values idx_begin,
                 .buffer_size = sizeof(buf),
         };
 
-        // for (size_t i = 0U; i < ARRAY_SIZE(adc_channels); i++)
         for (size_t i = idx_begin; i <= idx_end; i++)
         {
                 int32_t val_mv;
@@ -179,14 +177,40 @@ int32_t adc_read_channels(const enum ers_adc_values idx_begin,
 
 int32_t cmd_ers_read_adc_in0(const struct shell *shell)
 {
-	shell_fprintf(shell, SHELL_NORMAL, "reading Hall sensor 1, ADC channel IN0 . . .\n");
-	return adc_read_channels(ADC_READING_HALL_1, ADC_READING_HALL_1);
+	uint32_t adc_reading;
+	int32_t rc;
+
+	rc = adc_read_channels(ADC_READING_HALL_1, ADC_READING_HALL_1);
+	if (rc == 0)
+	{
+		ekget_hall_1_mv(&adc_reading);
+		shell_fprintf(shell, SHELL_NORMAL, "Hall 1 sensor reads %u mV\n", adc_reading);
+	}
+	else
+	{
+		shell_fprintf(shell, SHELL_NORMAL, "failed to read Hall 1 sensor, err %d\n", rc);
+	}
+
+	return rc;
 }
 
 int32_t cmd_ers_read_adc_in1(const struct shell *shell)
 {
-	shell_fprintf(shell, SHELL_NORMAL, "reading Hall sensor 2, ADC channel IN1 . . .\n");
-	return adc_read_channels(ADC_READING_HALL_1, ADC_READING_HALL_1);
+	uint32_t adc_reading;
+	int32_t rc;
+
+	rc = adc_read_channels(ADC_READING_HALL_2, ADC_READING_HALL_2);
+	if (rc == 0)
+	{
+		ekget_hall_2_mv(&adc_reading);
+		shell_fprintf(shell, SHELL_NORMAL, "Hall 2 sensor reads %u mV\n", adc_reading);
+	}
+	else
+	{
+		shell_fprintf(shell, SHELL_NORMAL, "failed to read Hall 2 sensor, err %d\n", rc);
+	}
+
+	return rc;
 }
 
 //----------------------------------------------------------------------
@@ -199,7 +223,9 @@ void adc_thread_entry(void *arg1, void *arg2, void *arg3)
         ARG_UNUSED(arg2);
         ARG_UNUSED(arg3);
 
+#ifdef DEV_ERS_ADC_PERIODIC_REPORTING
 	static uint32_t count = 0;
+#endif
         int32_t rc = 0;
 
         /* Configure channels individually prior to sampling. */
@@ -225,7 +251,7 @@ void adc_thread_entry(void *arg1, void *arg2, void *arg3)
                 	LOG_INF("ADC reading[%u]: (thread entry function)\n", count++);
 		}
 #endif
-		rc = adc_read_channels(ADC_READING_BATT_READ, ADC_READING_HALL_2); // adc_thread_entry()
+		rc = adc_read_channels(ADC_READING_HALL_1, ADC_READING_MOTOR_ISENSE); // adc_thread_entry()
                 k_sleep(K_MSEC(ADC_READ_PERIOD_MS));
         }
 }
