@@ -86,3 +86,7 @@ ERS firmware TODO list:
 
 [ ] Implement the code differences to support main chute board, should be only
      difference in two or a few CAN message IDs.
+
+2026-01-03
+[ ] Extend current readings for short period after ring lock and ring unlock
+     actions, to catch when current drops to zero.
