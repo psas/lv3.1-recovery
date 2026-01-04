@@ -108,11 +108,11 @@ static int32_t buzzer_heartbeat(void)
 
 int32_t pwm_play_melody(void)
 {
-	int rc;
-
-	// while (1) {
-		rc = buzzer_heartbeat();
-		k_sleep(K_SECONDS(2U));
-	// }
+	int rc = buzzer_heartbeat();
+	if (rc != 0)
+	{
+		LOG_ERR("Failed to produce buzzer heartbeat audio, err %d", rc);
+	}
+	k_sleep(K_SECONDS(2U));
 	return 0;
 }

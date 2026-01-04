@@ -22,7 +22,6 @@ LOG_MODULE_REGISTER(ers_motor_ctrl, LOG_LEVEL_INF);
 // - SECTION - file scoped
 //----------------------------------------------------------------------
 
-// - DEV 0928 BEGIN -
 #define DOUT1_NODE DT_ALIAS(dout1)
 #if !DT_NODE_HAS_STATUS(DOUT1_NODE, okay)
 #error "Unsupported board: 'dout1' devicetree alias is not defined"
@@ -40,19 +39,14 @@ static const struct gpio_dt_spec deploy2 = GPIO_DT_SPEC_GET_OR(DOUT2_NODE, gpios
 #error "Unsupported board: 'dout3' devicetree alias is not defined"
 #endif
 static const struct gpio_dt_spec not_motor_ps = GPIO_DT_SPEC_GET_OR(DOUT3_NODE, gpios, {0});
-// - DEV 0928 END -
-
-// - DEV 1019 BEGIN -
-#define LED0_NODE DT_ALIAS(led0)
-#if !DT_NODE_HAS_STATUS(LED0_NODE, okay)
-#error "Unsupported board: 'led0' devicetree alias is not defined"
-#endif
-// static const struct gpio_dt_spec led0 = GPIO_DT_SPEC_GET_OR(LED0_NODE, gpios, {0});
-static const struct gpio_dt_spec led0 = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
-// - DEV 1019 END -
-
 
 // TODO [ ] Add check for motor control module initialized.
+// Flag to indiciate that this module is initialized:
+static bool motor_control_initialized_fs = false;
+
+//----------------------------------------------------------------------
+// - SECTION - routines
+//----------------------------------------------------------------------
 
 int32_t mc_set_deploy1(const uint32_t value)
 {
@@ -71,15 +65,6 @@ int32_t mc_set_not_motor_ps(const uint32_t value)
 	int32_t rc = gpio_pin_set(not_motor_ps.port, not_motor_ps.pin, value);
 	return rc;
 }
-
-int32_t mc_set_led0(const uint32_t value)
-{
-	int32_t rc = gpio_pin_set(led0.port, led0.pin, value);
-	// LOG_INF("- 1019 - setting LED0 output pin to %u", value);
-	return rc;
-}
-
-// GPIOs used as outputs
 
 int32_t mc_configure_deploy1(void)
 {
@@ -137,29 +122,6 @@ int32_t mc_configure_not_motor_ps(void)
 
 	return rc;
 }
-
-
-
-int32_t mc_configure_led0(void)
-{
-        if (!gpio_is_ready_dt(&led0)) {
-                LOG_ERR("Error: led0 device %s is not ready",
-                       led0.port->name);
-                return -EIO;
-        }
-
-	// Configure GPIO as output and initialize output state to high:
-        int32_t rc = gpio_pin_configure_dt(&led0, GPIO_OUTPUT_ACTIVE);
-        if (rc != 0) {
-                printk("Error %d: failed to configure %s pin %d\n",
-                       rc, led0.port->name, led0.pin);
-                return -EINVAL;
-        }
-
-	return rc;
-}
-
-
 
 int32_t mc_drive_deploy1_high(void)
 {
@@ -431,14 +393,11 @@ int32_t ers_init_motor_ctrl(void)
 		return rc;
 	}
 
-	// 1019
-	rc = mc_configure_led0();
-	LOG_ERR("- 1019 - Configure led0 signal out returns status %d", rc);
-	// 1019
-
 	// Drive NOT_MOTOR_PS high to assure motor H-bridge is powered:
 	rc = mc_set_not_motor_ps(0);
 	LOG_INF("- DEV 1015 - setting not_motor_ps to 1 returns %d", rc);
+
+	motor_control_initialized_fs = true;
 
         return rc; 
 }
