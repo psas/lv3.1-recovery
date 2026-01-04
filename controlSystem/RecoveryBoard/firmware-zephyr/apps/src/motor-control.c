@@ -238,6 +238,60 @@ void show_motor_currents(void)
 	k_msleep(5);
 }
 
+int32_t mc_update_lock_count(void)
+{
+	uint32_t val = 0;
+	// TODO [ ] Consider reading lock event count from keeper module, from
+	//  SRAM, as it will have been copied by keeper during app start up.
+	int32_t rc = retrieve_ers_setting(KEY_NAME_LOCK_COUNT, &val, sizeof(val));
+
+	if (rc != 0) {
+		val = RING_LOCK_EVENT_STARTING_COUNT;
+		LOG_ERR("Failed to read count of ring lock events, err %d", rc);
+		LOG_DBG("Resetting count of ring lock events to %d",
+			RING_LOCK_EVENT_STARTING_COUNT);
+	} else {
+		val += 1;
+	}
+
+	set_ring_lock_event_count(val);
+
+	LOG_INF("- DEV 0104 - storing ring lock event count of %u", val);
+	rc = store_ers_setting(KEY_NAME_LOCK_COUNT, (const void *)val, sizeof(val));
+	if (rc != 0) {
+		LOG_ERR("Failed to store count of ring lock events, err %d", rc);
+	}
+
+	return rc;
+}
+
+int32_t mc_update_unlock_count(void)
+{
+	uint32_t val = 0;
+	// TODO [ ] Consider reading lock event count from keeper module, from
+	//  SRAM, as it will have been copied by keeper during app start up.
+	int32_t rc = retrieve_ers_setting(KEY_NAME_UNLOCK_COUNT, &val, sizeof(val));
+
+	if (rc != 0) {
+		val = RING_UNLOCK_EVENT_STARTING_COUNT;
+		LOG_ERR("Failed to read count of ring unlock events, err %d", rc);
+		LOG_DBG("Resetting count of ring unlock events to %d",
+			RING_UNLOCK_EVENT_STARTING_COUNT);
+	} else {
+		val += 1;
+	}
+
+	set_ring_unlock_event_count(val);
+
+	rc = store_ers_setting(KEY_NAME_UNLOCK_COUNT, (const void *)val, sizeof(val));
+	if (rc != 0) {
+		LOG_ERR("Failed to store count of ring unlock events, err %d", rc);
+	}
+
+	return rc;
+}
+
+
 int32_t mc_lock_ring(void)
 {
 // Set DAC output to create ~100m at H-bridge output
@@ -285,6 +339,8 @@ int32_t mc_lock_ring(void)
 	rc = dac_set_output(5);
 	if (rc != 0) { LOG_ERR("Trouble set DAC out to near zero!"); }
 
+	rc = mc_update_lock_count();
+
 	// (5) set BDS63150 to power saving mode:
 	rc = mc_set_not_motor_ps(0x1);
 	if (rc != 0) { LOG_ERR("Trouble motor_ps!"); }
@@ -294,65 +350,6 @@ int32_t mc_lock_ring(void)
 
 	return rc;
 }
-
-// - DEV 0103 BEGIN -
-#define KEY_NAME_LOCK_COUNT "lock_count"
-#define KEY_NAME_UNLOCK_COUNT "unlock_count"
-#define RING_LOCK_EVENT_STARTING_COUNT 0
-#define RING_UNLOCK_EVENT_STARTING_COUNT 0
-int32_t mc_update_lock_count(void)
-{
-	uint32_t val = 0;
-	// TODO [ ] Consider reading lock event count from keeper module, from
-	//  SRAM, as it will have been copied by keeper during app start up.
-	int32_t rc = retrieve_ers_setting(KEY_NAME_LOCK_COUNT, &val, sizeof(val));
-
-	if (rc != 0) {
-		val = RING_LOCK_EVENT_STARTING_COUNT;
-		LOG_ERR("Failed to read count of ring lock events, err %d", rc);
-		LOG_DBG("Resetting count of ring lock events to %d",
-			RING_LOCK_EVENT_STARTING_COUNT);
-	} else {
-		val += 1;
-	}
-
-	set_ring_lock_event_count(val);
-
-	rc = store_ers_setting(KEY_NAME_LOCK_COUNT, (const void *)val, sizeof(val));
-	if (rc != 0) {
-		LOG_ERR("Failed to store count of ring lock events, err %d", rc);
-	}
-
-	return rc;
-}
-
-int32_t mc_update_unlock_count(void)
-{
-	uint32_t val = 0;
-	// TODO [ ] Consider reading lock event count from keeper module, from
-	//  SRAM, as it will have been copied by keeper during app start up.
-	int32_t rc = retrieve_ers_setting(KEY_NAME_UNLOCK_COUNT, &val, sizeof(val));
-
-	if (rc != 0) {
-		val = RING_UNLOCK_EVENT_STARTING_COUNT;
-		LOG_ERR("Failed to read count of ring unlock events, err %d", rc);
-		LOG_DBG("Resetting count of ring unlock events to %d",
-			RING_UNLOCK_EVENT_STARTING_COUNT);
-	} else {
-		val += 1;
-	}
-
-	set_ring_unlock_event_count(val);
-
-	rc = store_ers_setting(KEY_NAME_UNLOCK_COUNT, (const void *)val, sizeof(val));
-	if (rc != 0) {
-		LOG_ERR("Failed to store count of ring unlock events, err %d", rc);
-	}
-
-	return rc;
-}
-
-// - DEV 0103 END -
 
 int32_t mc_unlock_ring(void)
 {
@@ -394,7 +391,7 @@ int32_t mc_unlock_ring(void)
 	rc = dac_set_output(5);
 	if (rc != 0) { LOG_ERR("Trouble set DAC out to near zero!"); }
 
-	rc = mc_update_lock_count();
+	rc = mc_update_unlock_count();
 
 	// (5) set BDS63150 to power saving mode:
 	rc = mc_set_not_motor_ps(0x1);

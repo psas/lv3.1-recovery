@@ -242,6 +242,7 @@ void ers_settings_init(void)
 	LOG_INF("subtree <alpha/beta> has static handler");
 
 // TODO [ ] - BEGIN - remove following local proof of concept code
+#if 0
 #define DEV_MOTOR_USE_COUNT_STARTING_VALUE 5
 	uint32_t val = 0;
 	uint32_t i;
@@ -273,5 +274,6 @@ void ers_settings_init(void)
 		LOG_INF("- DEV 1130 - call to store motor use count returns status %d", rc);
 		k_msleep(2000);
 	}
+#endif // 0
 // TODO [ ] - END - remove following local proof of concept code
 }

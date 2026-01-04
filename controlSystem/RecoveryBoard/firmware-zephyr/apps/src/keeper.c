@@ -12,96 +12,7 @@ LOG_MODULE_REGISTER(keeper, LOG_LEVEL_INF);
 #include <arbiter.h>
 #include <ers-config-defaults.h>
 #include <keeper.h>
-
-// TODO [ ] Move following long comment block into a separate document file in
-//  ./docs.  Add a reference here to that file, so there is one file to which
-//  this source file and the keeper module header file can point.
-
-/**
- * @brief ERS "keeper" module, acts like a bulletin board to hold shared data
- *   across the app.
- *
- * @note ERS keeper module tracks and shares most ERS board condition and state
- *   information.  State info is organized in this module in the following
- *   sets of config settings, readings and "programmatic" conditions.  These are
- *   collectively named "data groups":
- *
- * (1) battery (for recovery system)
- *    +  voltage reading
- *    +  battery "ok" minimum limit
- *
- * (2) simple digital inputs
- *    +  umbilical (shore) power connected
- *    +  ISO_DROGUE input on "Sender" ERS board only
- *    +  ISO_MAIN input on "Sender" ERS board only
- *
- * (2 1/2) analog input not categorized
- *
- * (3) locking ring
- *    +  Hall sensors 1
- *       o  reading
- *       o  v_under ADC count limit
- *       o  inactive ADC count limit
- *       o  between ADC count limit
- *       o  active ADC count limit
- *    +  Hall sensors 2
- *       o  reading
- *       o  v_under ADC count limit
- *       o  inactive ADC count limit
- *       o  between ADC count limit
- *       o  active ADC count limit
- *    +  ring state, present physical position: locked, between, unlocked, unknown
- *    +  ring position detection interval
- *
- * (4) motor related (motor for lock ring)
- *    +  Motor
- *       o  MOTOR_ISENSE analog input for current reading
- *       o  NOT_MOTOR_FAILA digital input
- *       o  NOT_MOTOR_PS output to enable H-bridge
- *       o  DAC output to control current to motor
- *       o  DEPLOY1 one of two H-bridge control signals
- *       o  DEPLOY2 two of two H-bridge control signals
- *
- * (5) CAN bus related
- *
- * (6) ERS summary state data
- *    +  ring_status
- *    +  battery_voltage (in decivolts)
- *    +  battery_ok
- *    +  shore_power_ok
- *    +  can_bus_ok
- *    +  ready_state
- *
- * (7) ERS diagnostics
- *
- * (8) Lock ring event counts stored in flash
- */
-
-/*
-------------------------------------------------------------------------
-Summary of known ERS inputs 2025-09-25, subject to be updated:
-
-Digital:
-
-[x] !UMB_ON (PA8 = GPIO input)
-[x] ISO_DROGUE (PA5 = GPIO input)      . . . "Sender" ERS board only
-[x] ISO_MAIN  (PA6 = GPIO input)       . . . "Sender" ERS board only
-[ ] !MOTOR_FAILA (PB7 = GPIO input)
-
-Analog:
-
-[x] BATT_READ (PB0 = analog input ADC_IN8)
-[x] MOTOR_ISENSE (PB1 = Analog input ADC_IN9)
-[x] HALL1 (PA0 = Analog input ADC_IN0)
-[x] HALL2 (PA1 = Analog input ADC_IN1)
-
-Message based inputs:
-
-[ ] CAN module   . . . given ERS board/firmware variant will keep track
-                       of one or more CAN messages, through state
-                       variables.
-------------------------------------------------------------------------
-*/ 
+#include "settings-ers.h"
 
 // some GPIO inputs, effectively Boolean
 
@@ -162,28 +73,17 @@ struct hall_sensor_limits {
 
 static struct hall_sensor_limits hall_sensor_fs[HALL_SENSOR_COUNT];
 
+// App determines lock ring position at this interval of time:
 static atomic_t ring_pos_interval = ATOMIC_INIT(0);
 
+// Counts of times ring locked and unlocked:
 static atomic_t ring_lock_events = ATOMIC_INIT(0);
 static atomic_t ring_unlock_events = ATOMIC_INIT(0);
 
-/**
- * @defgroup system_state
- */
+// Summary state variables (values usually determined by tests of simpler data):
 
-// Off-chip peripherals and system statae
-//
-// [ ] ring status    . . . one of 2 = locked, 1 = between, 0 = unlocked
-// [x] batt_voltage   . . . among analog inputs
-// [ ] batt_ok        . . . a threshold based state
-// [ ] shore_power_ok . . . 1 = shore power detected, 0 = no shore power
-// [x] can_bus_ok     . . . telemetrum heartbeat received within last two seconds
-// [ ] ready_state    . . . true when (1) battery ok (2) ring locked (3) CAN bus ok
-// [ ] reserved
-// [ ] reserved
-
-// TODO [ ] remove these individual file scoped variables in favor of
-//          struct to organize them:
+// TODO [ ] Consider factoring summary state variables into a structure,
+//  this may improve code readability and mainenance:
 
 static atomic_t ring_status = ATOMIC_INIT(0);
 // QUESTION - put battery voltage in struct of ERS states?
@@ -219,8 +119,11 @@ struct ers_config_and_state {
 // Support run time toggling of diagnostics which share UART with Zephyr shell:
 static atomic_t ers_diag_flag_fs = ATOMIC_INIT(0);
 
+// Provide a mutex to assure that both Hall sensors are updated without anyone
+// reading their latest values in the middle of this pair of updates:
 struct k_mutex hall_sensors_mtx;
 
+// Flag to indiciate that this module is initialized:
 static bool keeper_initialized_fs = false;
 
 //----------------------------------------------------------------------
@@ -734,6 +637,7 @@ int32_t set_hall_sensor_default_limits(void)
 
 static int32_t initialize_system_state_vars(void)
 {
+	uint32_t count = 0;
 	int32_t rc = 0;
 
 	atomic_set(&ring_pos_interval, (atomic_val_t)RING_LOCKED);
@@ -753,7 +657,31 @@ static int32_t initialize_system_state_vars(void)
 		rc = -EINVAL;
 	}
 
-	LOG_INF("M2");
+	//TODO [ ] Call settings module to read ring lock count and unlock count:
+	rc = retrieve_ers_setting(KEY_NAME_LOCK_COUNT, (void *)count, sizeof(count));
+	if (rc != 0) {
+		LOG_ERR("Failed to read ring lock events count from flash, err %d", rc);
+		set_ring_lock_event_count(RING_LOCK_EVENT_STARTING_COUNT);
+		rc = store_ers_setting(KEY_NAME_LOCK_COUNT, (void *)count, sizeof(count));
+		if (rc != 0) {
+			LOG_ERR("Failed to write default ring lock count value, err %d", rc);
+		}
+	} else {
+		set_ring_lock_event_count(count);
+	}
+
+	rc = retrieve_ers_setting(KEY_NAME_UNLOCK_COUNT, (void *)count, sizeof(count));
+	if (rc != 0) {
+		LOG_ERR("Failed to read ring unlock events count from flash, err %d", rc);
+		set_ring_unlock_event_count(RING_UNLOCK_EVENT_STARTING_COUNT);
+		rc = store_ers_setting(KEY_NAME_UNLOCK_COUNT, (void *)count, sizeof(count));
+		if (rc != 0) {
+			LOG_ERR("Failed to write default ring unlock count value, err %d", rc);
+		}
+	} else {
+		set_ring_unlock_event_count(count);
+	}
+
 	return rc;
 }
 
