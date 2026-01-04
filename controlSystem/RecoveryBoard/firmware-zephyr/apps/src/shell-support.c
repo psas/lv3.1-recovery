@@ -35,34 +35,20 @@ LOG_MODULE_REGISTER(shell_support, LOG_LEVEL_INF);
 #define SHELL_SUPPORT_THREAD_PRIORITY 5
 
 //----------------------------------------------------------------------
-// - SECTION - file scoped
-//----------------------------------------------------------------------
-
-// TODO [ ] remove defunct file scoped vars:
-// static const struct shell *shell_ptr_fs = NULL;
-
-// static uint32_t dev_test_calls_fs = 0;
-
-//----------------------------------------------------------------------
 // - SECTION - routines
 //----------------------------------------------------------------------
 
 static int cmd_wrapper_read_adc_in0(const struct shell *shell, size_t argc, char *argv[])
 {
-        // ARG_UNUSED(shell);
         ARG_UNUSED(argc);
         ARG_UNUSED(argv);
-
-	// int32_t rc = 0;
 	return cmd_ers_read_adc_in0(shell);
 }
 
 static int cmd_wrapper_read_adc_in1(const struct shell *shell, size_t argc, char *argv[])
 {
-        // ARG_UNUSED(shell);
         ARG_UNUSED(argc);
         ARG_UNUSED(argv);
-
 	return cmd_ers_read_adc_in1(shell);
 }
 
@@ -109,17 +95,17 @@ SHELL_CMD_REGISTER(diag, &ers_cmds_diag, "- ERS - diagnostics", NULL);
 
 static int cmd_wrapper_read_adc_all(const struct shell *shell, size_t argc, char *argv[])
 {
-        // ARG_UNUSED(shell);
         ARG_UNUSED(argc);
         ARG_UNUSED(argv);
 	int32_t rc = 0;
 
-        shell_print(shell, "Calling ADC module to read all ADC channels . . .");
+        shell_print(shell, "Calling ADC module to read all ADC channels . . .\n");
 	rc = adc_read_channels(ADC_READING_BATT_READ, ADC_READING_HALL_2);
 	if (rc != 0)
 	{
-		LOG_ERR("ADC read channels returns error status %d", rc);
-		LOG_ERR("Last known good stored readings are:");
+		shell_fprintf(shell, SHELL_NORMAL, "ADC read channels returns error status %d\n",
+				 rc);
+		shell_fprintf(shell, SHELL_NORMAL, "Last known good stored readings are:\n");
 	}
 
 	uint32_t a, b, c, d;
@@ -127,8 +113,8 @@ static int cmd_wrapper_read_adc_all(const struct shell *shell, size_t argc, char
 	ekget_motor_isense(&b);
 	ekget_hall_1(&c);
 	ekget_hall_2(&d);
-	LOG_INF("ADC counts for batter, motor current, Hall 1, Hall 2:");
-	LOG_INF("%u  %u  %u  %u", a, b, c, d);
+	shell_fprintf(shell, SHELL_NORMAL, "ADC counts for batter, motor current, Hall 1, Hall 2:\n");
+	shell_fprintf(shell, SHELL_NORMAL, "%u  %u  %u  %u", a, b, c, d);
 
 	return rc;
 }
@@ -141,7 +127,6 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 	SHELL_CMD_ARG(adc0, NULL,
 		"Read ERS board ADC for Hall sensor 1",
 		cmd_wrapper_read_adc_in0, 0, 0),
-// TODO [ ] Add following command for second Hall sensor:
 	SHELL_CMD_ARG(adc1, NULL,
 		"Read ERS board ADC for Hall sensor 2",
 		cmd_wrapper_read_adc_in1, 0, 0),
@@ -189,13 +174,15 @@ SHELL_CMD_REGISTER(hall, &sub_section_hall,
 // - SECTION - ERS lock ring commands (IN PROGRESS)
 //----------------------------------------------------------------------
 
-// TODO [ ] For consistency change 'cmd_' to 'cmd_' in following command routine names:
+// TODO [ ] use the shell parameter to print queried data, to avoid the echo
+//           or doubling effect when the shell "sees" log messages from Zephyr's
+//          logging system.
 
 static int cmd_show_locking_ring_pos(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(shell);
         ARG_UNUSED(argc);
         ARG_UNUSED(argv);
+
 	enum lock_ring_position ring_position = RING_POSITION_UNKNOWN;
 	int32_t rc = arbiter_determine_ring_state(&ring_position);
 	if (rc == 0)
@@ -203,11 +190,13 @@ static int cmd_show_locking_ring_pos(const struct shell *shell, size_t argc, cha
 		char lbuf[SIZE_SHORT_ERS_MESSAGE] = {0};
 		char *ring_pos_as_str = lbuf;
 		ring_pos_as_str = ring_pos_to_str(ring_position);
-		LOG_INF("Current lock ring position:  %d %s", ring_position, ring_pos_as_str);
+		shell_fprintf(shell, SHELL_NORMAL, "Current lock ring position:  %d %s\n",
+				ring_position, ring_pos_as_str);
 	}
 	else
 	{
-		LOG_INF("Failed lock ring position query, error %d", rc);
+		shell_fprintf(shell, SHELL_NORMAL, "Failed lock ring position query, error %d\n",
+				 rc);
 	}
 
 	return rc;
@@ -215,7 +204,6 @@ static int cmd_show_locking_ring_pos(const struct shell *shell, size_t argc, cha
 
 static int cmd_set_pos_detection_interval(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(shell);
         ARG_UNUSED(argc);
         ARG_UNUSED(argv);
 
@@ -226,7 +214,8 @@ static int cmd_set_pos_detection_interval(const struct shell *shell, size_t argc
         str = argv[1];
         value = strtol(str, &endptr, BASE_TEN);
 
-	LOG_INF("Storing ring position detection interval of %u ms . . .", value);
+	shell_fprintf(shell, SHELL_NORMAL, "Storing ring position detection "
+			"interval of %u ms . . .\n", value);
 	set_ring_pos_detection_interval(value);
 	rc = update_ring_position_detection_timer(value);
 	return rc;
@@ -234,27 +223,25 @@ static int cmd_set_pos_detection_interval(const struct shell *shell, size_t argc
 
 static int cmd_show_pos_detection_interval(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(shell);
         ARG_UNUSED(argc);
         ARG_UNUSED(argv);
 
         uint32_t value = 0;
 	get_ring_pos_detection_interval(&value);
-	LOG_INF("ring position detection interval is %u ms", value);
+	shell_fprintf(shell, SHELL_NORMAL, "ring position detection interval is %u ms\n", value);
 	return 0;
 }
 
 
 static int cmd_lock_ring(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(shell);
         ARG_UNUSED(argc);
         ARG_UNUSED(argv);
 
 	int32_t rc = mc_lock_ring();
 	if (rc != 0)
 	{
-		LOG_ERR("Failed to lock ring, err %d", rc);
+		shell_fprintf(shell, SHELL_NORMAL, "Failed to lock ring, err %d\n", rc);
 	}
 
 	return 0;
@@ -262,14 +249,13 @@ static int cmd_lock_ring(const struct shell *shell, size_t argc, char *argv[])
 
 static int cmd_unlock_ring(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(shell);
         ARG_UNUSED(argc);
         ARG_UNUSED(argv);
 
 	int32_t rc = mc_unlock_ring();
 	if (rc != 0)
 	{
-		LOG_ERR("Failed to lock ring, err %d", rc);
+		shell_fprintf(shell, SHELL_NORMAL, "Failed to lock ring, err %d\n", rc);
 	}
 
 	return 0;
@@ -300,31 +286,38 @@ SHELL_CMD_REGISTER(ring, &sub_section_ring, "- ERS - lock ring commands", NULL);
 
 static int cmd_dac_show_range(const struct shell *shell, size_t argc, char *argv[])
 {
+        ARG_UNUSED(argc);
+        ARG_UNUSED(argv);
+
 	uint32_t bound_low = 0;
 	uint32_t bound_high = 0;
 	int32_t rc = dac_range(&bound_low, &bound_high);
 	if (rc != 0)
 	{
-		LOG_ERR("Failed to read DAC range values, err %d", rc);
+		shell_fprintf(shell, SHELL_NORMAL, "Failed to read DAC range values, err %d\n", rc);
 	}
 	else
 	{
-		LOG_INF("DAC range is %u..%u", bound_low, bound_high);
+		shell_fprintf(shell, SHELL_NORMAL, "DAC range is %u..%u\n", bound_low, bound_high);
 	}
 	return 0;
 }
 
 static int cmd_dac_show_dac_setting(const struct shell *shell, size_t argc, char *argv[])
 {
+        ARG_UNUSED(argc);
+        ARG_UNUSED(argv);
+
 	uint32_t dac_setting = 0;
 	int32_t rc = dac_present_value(&dac_setting);
 	if (rc == 0)
 	{
-		LOG_INF("present DAC setting is %u", dac_setting);
+		shell_fprintf(shell, SHELL_NORMAL, "present DAC setting is %u\n", dac_setting);
 	}
 	else
 	{
-		LOG_ERR("Failed to get present DAC setting, error %d", rc);
+		shell_fprintf(shell, SHELL_NORMAL, "Failed to get present DAC setting, error %d\n",
+				rc);
 	}
 
 	return 0;
@@ -332,44 +325,47 @@ static int cmd_dac_show_dac_setting(const struct shell *shell, size_t argc, char
 
 static int cmd_dac_set_output(const struct shell *shell, size_t argc, char *argv[])
 {
+        ARG_UNUSED(argc);
+        ARG_UNUSED(argv);
+
         uint32_t value = 0;
         char *endptr, *str;
         str = argv[1];
         value = strtol(str, &endptr, BASE_TEN);
 	int32_t rc = 0;
 
-	LOG_INF("to DAC writing value %u . . .", value);
+	shell_fprintf(shell, SHELL_NORMAL, "to DAC writing value %u . . .\n", value);
 	rc = dac_set_output(value);
 	return 0;
 }
 
 static int cmd_dac_store_setting_for_lock_unlock(const struct shell *shell, size_t argc, char *argv[])
 {
+        ARG_UNUSED(argc);
+        ARG_UNUSED(argv);
+
         uint32_t value = 0;
         char *endptr, *str;
         str = argv[1];
         value = strtol(str, &endptr, BASE_TEN);
-	// int32_t rc = 0;
 
-	LOG_INF("storing DAC setting %u for ring lock and unlock operations . . .", value);
+	shell_fprintf(shell, SHELL_NORMAL,
+		 "storing DAC setting %u for ring lock and unlock operations . . .\n", value);
 	ekset_DAC_setting_ring_lock(value);
 	return 0;
 }
 
 static int cmd_dac_get_setting_for_lock_unlock(const struct shell *shell, size_t argc, char *argv[])
 {
+        ARG_UNUSED(argc);
+        ARG_UNUSED(argv);
+
         uint32_t value = 0;
-	// int32_t rc = 0;
 	ekget_DAC_setting_ring_lock(&value);
-	LOG_INF("present DAC setting for ring lock and unlock is %u", value);
+	shell_fprintf(shell, SHELL_NORMAL, "present DAC setting for ring lock and unlock is %u\n",
+			 value);
 	return 0;
 }
-
-// The following creates commands:
-//
-//   uart$ dac range
-//   uart$ dac show_present_value
-//   uart$ dac set <value>
 
 SHELL_STATIC_SUBCMD_SET_CREATE(
         cmds_dac,
