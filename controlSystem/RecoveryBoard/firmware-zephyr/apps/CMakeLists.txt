@@ -28,10 +28,10 @@ target_sources(app PRIVATE
     src/can.c
     src/dac.c
     src/gpio-in.c
-    src/ers-settings.c
     src/keeper.c
     src/main.c
     src/motor-control.c
     src/pwm.c
+    src/settings-ers.c
     src/shell-support.c
 )

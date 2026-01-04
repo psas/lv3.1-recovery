@@ -130,7 +130,7 @@ void ekset_hall_1(const uint32_t value);
 void ekset_hall_2(const uint32_t value);
 
 void ekset_batt_read_mv(const uint32_t value);
-void ekset_motor_isense_mv(const uint32_t value);
+void ekset_motor_isense_ma(const uint32_t value);
 void ekset_hall_1_mv(const uint32_t value);
 void ekset_hall_2_mv(const uint32_t value);
 
@@ -182,6 +182,12 @@ void get_ring_pos_detection_interval(uint32_t *timeout_ms);
 void set_detected_ring_position(const enum lock_ring_position ring_pos);
 
 void get_detected_ring_position(enum lock_ring_position *ring_pos);
+
+// Parachute section ring lock and unlock events
+void set_ring_lock_event_count(const uint32_t count);
+void set_ring_unlock_event_count(const uint32_t count);
+void get_ring_lock_event_count(uint32_t *count);
+void get_ring_unlock_event_count(uint32_t *count);
 
 // - DATA GROUP - (4) motor
 
