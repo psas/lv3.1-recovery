@@ -13,6 +13,10 @@ LOG_MODULE_REGISTER(keeper, LOG_LEVEL_INF);
 #include <ers-config-defaults.h>
 #include <keeper.h>
 
+// TODO [ ] Move following long comment block into a separate document file in
+//  ./docs.  Add a reference here to that file, so there is one file to which
+//  this source file and the keeper module header file can point.
+
 /**
  * @brief ERS "keeper" module, acts like a bulletin board to hold shared data
  *   across the app.
@@ -69,6 +73,8 @@ LOG_MODULE_REGISTER(keeper, LOG_LEVEL_INF);
  *    +  ready_state
  *
  * (7) ERS diagnostics
+ *
+ * (8) Lock ring event counts stored in flash
  */
 
 /*
@@ -116,7 +122,7 @@ static atomic_t not_umb_on = ATOMIC_INIT(0);
 static atomic_t batt_read = ATOMIC_INIT(0);
 static atomic_t batt_read_mv = ATOMIC_INIT(0);
 // TODO [ ] Refactor battery millivolt to decivolt conversion to occur
-//   after calls to get batter voltage:
+//   after calls to get battery voltage:
 static atomic_t batt_read_dv = ATOMIC_INIT(0);
 
 /**
@@ -126,12 +132,8 @@ static atomic_t batt_read_dv = ATOMIC_INIT(0);
 static atomic_t not_motor_faila = ATOMIC_INIT(0);
 
 static atomic_t motor_isense = ATOMIC_INIT(0);
-static atomic_t hall_1 = ATOMIC_INIT(0);
-static atomic_t hall_2 = ATOMIC_INIT(0);
 
 static atomic_t motor_isense_mv = ATOMIC_INIT(0);
-static atomic_t hall_1_mv = ATOMIC_INIT(0);
-static atomic_t hall_2_mv = ATOMIC_INIT(0);
 
 static atomic_t dac_setting_ring_lock = ATOMIC_INIT(0);
 
@@ -146,6 +148,11 @@ static atomic_t dac_setting_ring_lock = ATOMIC_INIT(0);
  *   sensor.
  */
 
+static atomic_t hall_1 = ATOMIC_INIT(0);
+static atomic_t hall_2 = ATOMIC_INIT(0);
+static atomic_t hall_1_mv = ATOMIC_INIT(0);
+static atomic_t hall_2_mv = ATOMIC_INIT(0);
+
 struct hall_sensor_limits {
 	atomic_t v_under;
 	atomic_t inactive;
@@ -156,6 +163,9 @@ struct hall_sensor_limits {
 static struct hall_sensor_limits hall_sensor_fs[HALL_SENSOR_COUNT];
 
 static atomic_t ring_pos_interval = ATOMIC_INIT(0);
+
+static atomic_t ring_lock_events = ATOMIC_INIT(0);
+static atomic_t ring_unlock_events = ATOMIC_INIT(0);
 
 /**
  * @defgroup system_state
@@ -225,14 +235,6 @@ static bool keeper_initialized_fs = false;
 void ekset_batt_read(const uint32_t value)
 {
 	atomic_set(&batt_read, (atomic_val_t)value);
-#if 0
-	static uint32_t call_count = 0;
-	if ((call_count % 100) == 0)
-	{
-		LOG_INF("battery reading %u stored", value);
-	}
-	call_count++;
-#endif
 }
 
 void ekget_batt_read(uint32_t* value)
@@ -321,7 +323,7 @@ int32_t ekset_adc_value_in_mv(const enum ers_adc_values_in_mv idx, const uint32_
 		ekset_batt_read_mv(val);
 		break;
         case ADC_READING_MOTOR_ISENSE_MV:
-		ekset_motor_isense_mv(val);
+		ekset_motor_isense_ma(val);
 		break;
         case ADC_READING_HALL_1_MV:
 		ekset_hall_1_mv(val);
@@ -337,7 +339,11 @@ int32_t ekset_adc_value_in_mv(const enum ers_adc_values_in_mv idx, const uint32_
 	return 0;
 }
 
-// "get" APIs for analog inputs
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - DATA GROUP - (3) locking ring
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+// Getters
 
 void ekget_hall_1(uint32_t* value)
 {
@@ -349,7 +355,6 @@ void ekget_hall_2(uint32_t* value)
 	*value = atomic_get(&hall_2);
 }
 
-
 void ekget_hall_1_mv(uint32_t* value)
 {
 	*value = atomic_get(&hall_1_mv);
@@ -360,13 +365,7 @@ void ekget_hall_2_mv(uint32_t* value)
 	*value = atomic_get(&hall_2_mv);
 }
 
-// Give ring state logic readings from same sample period:
-
-
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// - DATA GROUP - (3) locking ring
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Setters
 
 void ekset_hall_1(const uint32_t value)
 {
@@ -434,7 +433,10 @@ int32_t ekget_both_hall_sensors(uint32_t *value_1, uint32_t *value_2)
 		return -ESRCH;
 	}
 
-	// k_mutex_lock(&hall_sensors_mtx, K_FOREVER);
+// TODO [ ] Watch behavior when issuing lock and unlock ring commands, try to
+//  determine why mutex lock and unlock calls were commented out here as of
+//  2026-01-04:
+	k_mutex_lock(&hall_sensors_mtx, K_FOREVER);
 	if (rc != 0)
 	{
 		LOG_ERR("Failed to lock mutex for \"store hall sensors values\", error %d", rc);
@@ -444,7 +446,7 @@ int32_t ekget_both_hall_sensors(uint32_t *value_1, uint32_t *value_2)
 	ekget_hall_1_mv(value_1);
 	ekget_hall_2_mv(value_2);
 
-	// k_mutex_unlock(&hall_sensors_mtx);
+	k_mutex_unlock(&hall_sensors_mtx);
 	if (rc != 0)
 	{
 		LOG_ERR("Failed to unlock mutex for \"store hall sensors values\", error %d", rc);
@@ -547,6 +549,28 @@ void get_detected_ring_position(enum lock_ring_position *ring_pos)
 	*ring_pos = atomic_get(&summary_state.ring_position);
 }
 
+// Parachute section ring lock and unlock events
+
+void set_ring_lock_event_count(const uint32_t count)
+{
+	atomic_set(&ring_lock_events, (atomic_val_t)count);
+}
+
+void set_ring_unlock_event_count(const uint32_t count)
+{
+	atomic_set(&ring_unlock_events, (atomic_val_t)count);
+}
+
+void get_ring_lock_event_count(uint32_t *count)
+{
+	*count = atomic_get(&ring_lock_events);
+}
+
+void get_ring_unlock_event_count(uint32_t *count)
+{
+	*count = atomic_get(&ring_unlock_events);
+}
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // - DATA GROUP - (4) motor
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -563,8 +587,7 @@ void ekget_motor_isense(uint32_t* value)
 }
 
 // motor current reading in milliamps
-// TODO [ ] correct API name to reflect units of millamps not millivolts:
-void ekset_motor_isense_mv(const uint32_t value)
+void ekset_motor_isense_ma(const uint32_t value)
 {
 	atomic_set(&motor_isense_mv, (atomic_val_t)value);
 }

@@ -13,11 +13,11 @@
 #include <ers-adc.h>
 #include <ers-can.h>
 #include <ers-dac.h>
-#include <ers-settings.h>
 #include <gpio-in.h>
 #include <keeper.h>
 #include <motor-control.h>
 #include <ers-pwm.h>
+#include <settings-ers.h>
 #include <shell-support.h>
 
 LOG_MODULE_REGISTER(ers_main, LOG_LEVEL_INF);
