@@ -54,6 +54,9 @@ struct k_thread poll_state_thread_data;
 #define MSG_ID_MAIN_HEARTBEAT      0x720
 #define MSG_ID_UNLOCK_DROGUE_CHUTE 0x100
 #define MSG_ID_UNLOCK_MAIN_CHUTE   0x200
+
+#define MSG_ID_ACKNOLEDGE_DROGUE_UNLOCK 0x101
+#define MSG_ID_ACKNOLEDGE_MAIN_UNLOCK   0x201
 // clang-format on
 
 // TODO [ ] Come up with some pound defines or similar to select a status
@@ -63,6 +66,7 @@ struct k_thread poll_state_thread_data;
 #define MSG_ID_STATUS_AND_HEARTBEAT MSG_ID_DROGUE_HEARTBEAT
 
 #define HEARTBEAT_PERIOD_S 1
+// TODO [ ] Choose a more clear name for CANBus health check period in seconds:
 #define CAN_BUS_CHECK_PER_S 2
 
 //----------------------------------------------------------------------
@@ -205,7 +209,8 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
 		 "ERS status frame");
 
         LOG_INF("                  ringst battrd battok pwrsts canok  ready  reserv reserv");
-	LOG_INF("drogue CAN frame: 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X",
+	LOG_INF("drogue CAN frame:  0x%02X   0x%02X   0x%02X   0x%02X   0x%02X   0x%02X   0x%02X"
+	"   0x%02X",
 	  ers_state_vars_fs[IDX_DROGUE_RING_STATE],
 	  ers_state_vars_fs[IDX_DROGUE_BATT_READ],
 	  ers_state_vars_fs[IDX_DROGUE_BATT_OK],
@@ -302,11 +307,15 @@ void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 			LOG_INF("RX %X - main chute heartbeat", frame.id);
 			break;
 		case MSG_ID_UNLOCK_DROGUE_CHUTE:
+// TODO [ ] Add needed test before calling unlock API.  Test per ERS Google doc is:
+// "If !UMB_ON = 1 (no umbilical voltage) and the the RING_STATUS = 2 (it’s locked)"
 			rc = mc_unlock_ring();
 			if (rc != 0)
 			{
 				LOG_ERR("Failed to unlock ring via CAN message, err %d", rc);
 			}
+
+
 			LOG_INF("RX %X - unlock drogue chute", frame.id);
 			break;
 		case MSG_ID_UNLOCK_MAIN_CHUTE:

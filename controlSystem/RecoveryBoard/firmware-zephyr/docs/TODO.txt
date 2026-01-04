@@ -90,3 +90,5 @@ ERS firmware TODO list:
 2026-01-03
 [ ] Extend current readings for short period after ring lock and ring unlock
      actions, to catch when current drops to zero.
+
+[ ] Change pound include statement for ERS header to use double quotes, not arrow brackets.
