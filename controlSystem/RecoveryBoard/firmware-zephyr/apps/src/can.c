@@ -23,12 +23,12 @@ LOG_MODULE_REGISTER(ers_can_module, CONFIG_CAN_LOG_LEVEL);
 #include <keeper.h>
 #include <motor-control.h>
 
-#define RX_THREAD_STACK_SIZE 512
+#define RX_THREAD_STACK_SIZE 1536
 #define RX_THREAD_PRIORITY 2
 K_THREAD_STACK_DEFINE(rx_thread_stack, RX_THREAD_STACK_SIZE);
 struct k_thread rx_thread_data;
 
-#define STATE_POLL_THREAD_STACK_SIZE 512
+#define STATE_POLL_THREAD_STACK_SIZE 1024
 #define STATE_POLL_THREAD_PRIORITY 2
 K_THREAD_STACK_DEFINE(poll_state_stack, STATE_POLL_THREAD_STACK_SIZE);
 struct k_thread poll_state_thread_data;
@@ -117,6 +117,7 @@ enum ers_state_var_indeces {
 #endif
 
 static uint8_t ers_state_vars_fs[IDX_STATE_VAR_LAST_ELEMENT] = {0};
+static uint8_t ers_small_payload_fs[1] = {0};
 
 //----------------------------------------------------------------------
 // - SECTION - routines
@@ -156,6 +157,21 @@ void tx_irq_callback(const struct device *dev, int error, void *arg)
                 LOG_ERR("Callback! error-code: %d   Sender: %s",
                        error, sender);
         }
+}
+
+void prep_and_send_ack_unlock_command(void)
+{
+        struct can_frame ers_acknowledge_frame = {
+                .flags = 0,
+                .id = MSG_ID_ACKNOLEDGE_DROGUE_UNLOCK,
+                .dlc = sizeof(ers_small_payload_fs)
+        };
+
+LOG_INF("M7");
+	can_send(can_dev, &ers_acknowledge_frame, K_FOREVER,
+		 tx_irq_callback,
+		 "ERS acklowledge frame");
+LOG_INF("M8");
 }
 
 void prep_and_send_status_frame_work_handler(struct k_work *work)
@@ -309,14 +325,17 @@ void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 		case MSG_ID_UNLOCK_DROGUE_CHUTE:
 // TODO [ ] Add needed test before calling unlock API.  Test per ERS Google doc is:
 // "If !UMB_ON = 1 (no umbilical voltage) and the the RING_STATUS = 2 (it’s locked)"
+			LOG_INF("RX %X - unlock drogue chute", frame.id);
+#if 0
+			LOG_INF("      - (skipping call to unlock ring as test)");
+#else
 			rc = mc_unlock_ring();
 			if (rc != 0)
 			{
 				LOG_ERR("Failed to unlock ring via CAN message, err %d", rc);
 			}
-
-
-			LOG_INF("RX %X - unlock drogue chute", frame.id);
+#endif // 0
+			prep_and_send_ack_unlock_command();
 			break;
 		case MSG_ID_UNLOCK_MAIN_CHUTE:
 			LOG_INF("RX %X - unlock main chute", frame.id);

@@ -21,12 +21,13 @@ while loop_count <= 1:
   print(f"Sent message with id {message_id}: {message}")
   time.sleep(1/2)
 
-  message_id = 0x710
-  data_bytes = [0x55, 0x44, 0x55, 0x44]
-  message = can.Message(arbitration_id=message_id, data=data_bytes, is_extended_id=True)
-  bus.send(message)
-  print(f"Sent message with id {message_id}: {message}")
-  time.sleep(3/2)
+  if 0:
+    message_id = 0x710
+    data_bytes = [0x55, 0x44, 0x55, 0x44]
+    message = can.Message(arbitration_id=message_id, data=data_bytes, is_extended_id=True)
+    bus.send(message)
+    print(f"Sent message with id {message_id}: {message}")
+    time.sleep(3/2)
 
   loop_count += 1
 
