@@ -4,6 +4,59 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+# ERS firmware thread stack sizes
+
+config ADC_THREAD_STACK_SIZE
+        int "ERS ADC thread stack size"
+        default 512
+        help
+          Select stack size for ERS ADC thread
+
+config ARBITER_THREAD_STACK_SIZE
+        int "ERS arbiter thread stack size"
+        default 512
+        help
+          Select stack size for ERS arbiter thread
+
+config CAN_RX_THREAD_STACK_SIZE
+        int "ERS CAN RX thread stack size"
+        default 1536
+        help
+          Select stack size for ERS CAN RX thread
+
+config GPIO_THREAD_STACK_SIZE
+        int "ERS GPIO thread stack size"
+        default 512
+        help
+          Select stack size for ERS GPIO thread
+
+# ERS firmware thread priorities
+
+config ADC_THREAD_PRIORITY
+        int "ADC module thread priority"
+        default 3
+        help
+          Priority of ERS thread to manage ADC channel readings.
+
+config ARBITER_THREAD_PRIORITY
+        int "ERS arbiter thread priority"
+        default 5
+        help
+          Priority of ERS arbiter thread, which determines system readiness
+          to unlock ring to release one of drogue and main parachutes.
+
+config CAN_RX_THREAD_PRIORITY
+        int "ERS CAN interface thread priority"
+        default 2
+        help
+          Priority of CAN interface thread.
+
+config GPIO_THREAD_PRIORITY
+        int "ERS GPIO thread priority"
+        default 4
+        help
+          Priority of thread which primarily reads I/O pins of the ERS board.
+
 # TODO [ ] Give all ERS firmware modules a Zephyr log config reference here:
 
 module = ADC

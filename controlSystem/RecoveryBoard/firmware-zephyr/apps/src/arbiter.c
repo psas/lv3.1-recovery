@@ -39,9 +39,7 @@ LOG_MODULE_REGISTER(arbiter, CONFIG_ARBITER_LOG_LEVEL);
 // - SECTION - file scoped
 //----------------------------------------------------------------------
 
-#define ARBITER_THREAD_STACK_SIZE 512
-#define ARBITER_THREAD_PRIORITY 1
-K_THREAD_STACK_DEFINE(arbiter_thread_stack, ARBITER_THREAD_STACK_SIZE);
+K_THREAD_STACK_DEFINE(arbiter_thread_stack, CONFIG_ARBITER_THREAD_STACK_SIZE);
 struct k_thread arbiter_thread_data;
 
 static enum lock_ring_position ring_position_fs = RING_POSITION_UNKNOWN;
@@ -630,7 +628,7 @@ int32_t ers_init_arbiter(void)
 	k_tid_t arbiter_tid = k_thread_create(&arbiter_thread_data, arbiter_thread_stack,
 					K_THREAD_STACK_SIZEOF(arbiter_thread_stack),
 					arbiter_thread_entry, NULL, NULL, NULL,
-				 	ARBITER_THREAD_PRIORITY, 0, K_NO_WAIT);
+					CONFIG_ARBITER_THREAD_PRIORITY, 0, K_NO_WAIT);
 	if (!arbiter_tid) {
 		LOG_ERR("ERROR spawning arbiter thread\n");
 	}

@@ -23,15 +23,8 @@ LOG_MODULE_REGISTER(ers_can_module, CONFIG_CAN_LOG_LEVEL);
 #include <keeper.h>
 #include <motor-control.h>
 
-#define RX_THREAD_STACK_SIZE 1536
-#define RX_THREAD_PRIORITY 2
-K_THREAD_STACK_DEFINE(rx_thread_stack, RX_THREAD_STACK_SIZE);
+K_THREAD_STACK_DEFINE(rx_thread_stack, CONFIG_CAN_RX_THREAD_STACK_SIZE);
 struct k_thread rx_thread_data;
-
-#define STATE_POLL_THREAD_STACK_SIZE 1024
-#define STATE_POLL_THREAD_PRIORITY 2
-K_THREAD_STACK_DEFINE(poll_state_stack, STATE_POLL_THREAD_STACK_SIZE);
-struct k_thread poll_state_thread_data;
 
 #define LED_MSG_ID 0x10
 #define COUNTER_MSG_ID 0x12345
@@ -387,7 +380,7 @@ int32_t ers_init_can(void)
 	rx_tid = k_thread_create(&rx_thread_data, rx_thread_stack,
 				 K_THREAD_STACK_SIZEOF(rx_thread_stack),
 				 rx_thread_entry, NULL, NULL, NULL,
-				 RX_THREAD_PRIORITY, 0, K_NO_WAIT);
+				 CONFIG_CAN_RX_THREAD_PRIORITY, 0, K_NO_WAIT);
 	if (!rx_tid) {
 		LOG_ERR("ERROR spawning rx thread");
 	}
