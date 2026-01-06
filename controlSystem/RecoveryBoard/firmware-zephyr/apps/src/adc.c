@@ -25,11 +25,8 @@ LOG_MODULE_REGISTER(ers_adc, CONFIG_ADC_LOG_LEVEL);
 // - SECTION - pound defines
 //----------------------------------------------------------------------
 
-#define ADC_THREAD_STACK_SIZE 512
-#define ADC_THREAD_PRIORITY 3
 #define ADC_READ_PERIOD_MS 10
 
-// #define DEV_ERS_ADC_PERIODIC_REPORTING
 #undef DEV_ERS_ADC_PERIODIC_REPORTING
 
 // TODO [ ] review whether timeout needed and whether there was an issue for
@@ -60,7 +57,7 @@ static const struct adc_dt_spec adc_channels[] = {
 // TODO [ ] Compare thread configuration code in can.c with what is here:
 struct k_thread adc_thread_data;
 
-K_THREAD_STACK_DEFINE(adc_thread_stack, ADC_THREAD_STACK_SIZE);
+K_THREAD_STACK_DEFINE(adc_thread_stack, CONFIG_ADC_THREAD_STACK_SIZE);
 
 struct k_mutex adc_mtx;
 
@@ -280,7 +277,7 @@ int32_t adc_init(void)
 	k_tid_t adc_tid = k_thread_create(&adc_thread_data, adc_thread_stack,
 					  K_THREAD_STACK_SIZEOF(adc_thread_stack),
 					  adc_thread_entry, NULL, NULL, NULL,
-					  ADC_THREAD_PRIORITY, 0, K_NO_WAIT);
+					  CONFIG_ADC_THREAD_PRIORITY, 0, K_NO_WAIT);
 	if (!adc_tid)
 	{
 		LOG_ERR("ERROR spawning ADC thread\n");

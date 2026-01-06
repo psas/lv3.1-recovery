@@ -59,10 +59,7 @@ static struct gpio_callback pin_not_umb_on_cb_data;
 static struct gpio_callback pin_not_motor_faila_cb_data;
 #endif // 0
 
-#define GPIO_IN_THREAD_STACK_SIZE 512
-#define GPIO_IN_THREAD_PRIORITY 5
-
-K_THREAD_STACK_DEFINE(gpio_in_thread_stack, GPIO_IN_THREAD_STACK_SIZE);
+K_THREAD_STACK_DEFINE(gpio_in_thread_stack, CONFIG_GPIO_THREAD_STACK_SIZE);
 
 struct k_thread gpio_in_thread_data;
 
@@ -264,7 +261,7 @@ int32_t ers_init_gpio_in(void)
                                  gpio_in_thread_stack,
                                  K_THREAD_STACK_SIZEOF(gpio_in_thread_stack),
                                  gpio_in_thread_entry, NULL, NULL, NULL,
-                                 GPIO_IN_THREAD_PRIORITY, 0, K_NO_WAIT);
+                                 CONFIG_GPIO_THREAD_PRIORITY, 0, K_NO_WAIT);
         if (!gpio_in_tid) {
                 LOG_ERR("ERROR spawning shell support thread\n");
         }

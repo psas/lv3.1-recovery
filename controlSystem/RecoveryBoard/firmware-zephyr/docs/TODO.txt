@@ -101,4 +101,4 @@ ERS firmware TODO list:
    (a second separate Python script to send CAN frames breaks the reception of
     the first Python script which only listens.)
 
-[ ] Create Kconfig symbols for ERS thread priorities and stack sizes
+[x] Create Kconfig symbols for ERS thread priorities and stack sizes
