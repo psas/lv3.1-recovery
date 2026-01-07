@@ -3,8 +3,9 @@ import time
 
 # Replace '/dev/ttyACM0' with the appropriate port for your SLCAN device (COM1, /dev/tty.usbmodem, etc) and set the desired bitrate (10, 20, 50, 100, 125, 250, 500, 800, 1000 kbps)
 channel = "/dev/ttyACM1"
-# bitrate = 500000
-bitrate = 125000
+bitrate = 500000
+# bitrate = 125000
+# bitrate = 1000000
 
 # Configure the connection to the VulCAN
 # bus = can.interface.Bus(channel=channel, bustype="slcan", bitrate=bitrate)

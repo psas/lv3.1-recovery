@@ -67,15 +67,8 @@ struct k_thread rx_thread_data;
 //----------------------------------------------------------------------
 
 const struct device *const can_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_canbus));
-struct gpio_dt_spec led = GPIO_DT_SPEC_GET_OR(DT_ALIAS(led0), gpios, {0});
 
-struct k_work_poll change_led_work;
-struct k_work state_change_work;
-enum can_state current_state;
-struct can_bus_err_cnt current_err_cnt;
-
-// TODO [ ] Review whether both of these message queues needed:
-CAN_MSGQ_DEFINE(change_led_msgq, 2);
+// TODO [x] Review whether both of these message queues needed:
 CAN_MSGQ_DEFINE(counter_msgq, 2);
 
 #if defined(ERS_BOARD_VARIANT_SENDER)
@@ -367,8 +360,17 @@ int32_t ers_init_can(void)
 		return -ENODEV;
 	}
 
+// From "./include/zephyr/drivers/can.h":
+// int can_set_bitrate_data(const struct device *dev, uint32_t bitrate_data);
+
+	rc = can_set_bitrate_data(can_dev, 500000);
+	if (rc != 0)
+	{
+		LOG_ERR("Failed to set CAN bitrate, err %d", rc);
+	}
+
 	rc = can_start(can_dev);
-	if (rc != 0) {
+ 	if (rc != 0) {
 		LOG_ERR("Error starting CAN controller [%d]", rc);
 		return -EAGAIN;
 	}
