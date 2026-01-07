@@ -283,9 +283,6 @@ int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 	enum hall_sensor_state hall_1_state = HALL_OUTPUT_UNKNOWN;
 	enum hall_sensor_state hall_2_state = HALL_OUTPUT_UNKNOWN;
 
-	// LOG_INF("M8");
-	// k_msleep(5);
-
 	rc = ekget_both_hall_sensors(&hall_1_reading, &hall_2_reading);
 	if (rc != 0)
 	{
@@ -308,7 +305,6 @@ int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 	}
 
 LOG_INF("readings, states: %u %u  %d %d", hall_1_reading, hall_2_reading, hall_1_state, hall_2_state);
-// LOG_INF("state1, state2: %d %d", hall_1_state, hall_2_state);
 
 /*
    Hall2   Vun   Ina   Bet   Act   Ovr 
@@ -589,14 +585,6 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 
 	while (1)
 	{
-#if 0
-		LOG_INF("setting deploy1 GPIO to %d", (loop_count % 2));
-		rc = ers_gpios_set_deploy1(loop_count % 2);
-		LOG_INF("GPIO set returns status %d", rc);
-		rc = ers_gpios_set_deploy2((loop_count + 1) % 2);
-		LOG_INF("GPIO set returns status %d", rc);
-#endif
-
 #ifdef DEV_DETERMINE_RING_POSITION_IN_MAIN_LOOP
 		enum lock_ring_position ring_position = RING_POSITION_UNKNOWN;
 		// char lbuf[50] = {0};
@@ -611,6 +599,22 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 		LOG_INF("calc battery voltage returns status %d", rc);
 
 		rc = determine_batt_ok();
+
+		// 1 = if battery OK and locked and has received Telemetrum Sender message within the last 2 seconds
+		uint32_t battery_ok = 0;
+		uint32_t can_bus_ok = 0;
+		enum lock_ring_state ring_state = RING_STATE_UNKNOWN;
+
+		ekget_batt_ok(&battery_ok);
+		ekget_can_bus_ok(&can_bus_ok);
+		ekget_ring_status(&ring_state);
+
+		LOG_INF("- DEV 0105 - determining ERS ready state . . .");
+		if (battery_ok && can_bus_ok && (ring_state == RING_STATE_LOCKED)) {
+			ekset_ready_state(true);
+		} else {
+			ekset_ready_state(false);
+		}
 
 		loop_count++;
 		k_msleep(ERS_ARBITER_SLEEP_PERIOD_MS);
