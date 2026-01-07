@@ -12,7 +12,7 @@ ERS firmware TODO list:
     [ ] TX messages:
           [x] 0x710 drogue board status plus heartbeat
           [ ] 0x720 main board status plus heartbeat
-          [ ] 0x101 acknowledge receipt of message with id 0x100
+          [x] 0x101 acknowledge receipt of message with id 0x100
           [ ] 0x201 acknowledge receipt of message with id 0x200
 
 [x] In CAN module configure a timer and workqueue task, where this task clears
@@ -93,9 +93,10 @@ ERS firmware TODO list:
 
 [ ] Change pound include statement for ERS header to use double quotes, not arrow brackets.
 
-[ ] Check whether polling thread in can.c is needed.
+[x] Check whether polling thread in can.c is needed.
 
 [ ] Locate and update place in code where CAN bitrate is set.
+    See https://docs.zephyrproject.org/latest/hardware/peripherals/can/controller.html
 
 [ ] Amend helper Python script `rx.py` to periodically send Telemetrum heartbeat.
    (a second separate Python script to send CAN frames breaks the reception of
