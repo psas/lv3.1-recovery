@@ -58,6 +58,7 @@
 
 &can1 {
         status = "okay";
+	bitrate = <1000000>;
 };
 
 // digital-to-analog conversion (DAC) related
