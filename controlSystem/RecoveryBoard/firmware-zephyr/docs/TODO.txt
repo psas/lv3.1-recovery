@@ -95,11 +95,18 @@ ERS firmware TODO list:
 
 [x] Check whether polling thread in can.c is needed.
 
-[ ] Locate and update place in code where CAN bitrate is set.
+[x] Locate and update place in code where CAN bitrate is set.
     See https://docs.zephyrproject.org/latest/hardware/peripherals/can/controller.html
 
-[ ] Amend helper Python script `rx.py` to periodically send Telemetrum heartbeat.
+[x] Amend helper Python script `rx.py` to periodically send Telemetrum heartbeat.
    (a second separate Python script to send CAN frames breaks the reception of
     the first Python script which only listens.)
 
 [x] Create Kconfig symbols for ERS thread priorities and stack sizes
+
+[x] Amend the README in firmware-zephyr directory with instructions to start a
+     debugging session.
+
+[ ] Amend settings to optionally store Hall sensor cutoff values to flash.  These
+     need to be calibrated per ERS board, would be helpful to have them persist
+     across power cyclings.

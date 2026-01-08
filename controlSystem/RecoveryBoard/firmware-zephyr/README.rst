@@ -13,7 +13,7 @@ Before invoking the ERS Zephyr firmware compilation, be sure to enable your loca
 
     $ source ./.venv/bin/activate
 
-ERS Zephyr based firmware is part of the PSAS repository https://github.com/psas/lv3.1-recovery.  Zephyr based firmware for the drogue and main chute firmware variants is located in ``lv3.1-recovery/controlSystem/RecoveryBoard/firmware-zephyr/``.  To compile a rough helper script to call openocd is located in ``lv3.1-recovery/controlSystem/RecoveryBoard/firmware-zephyr/``.  In your local repo change to this directory and enter the command::
+ERS Zephyr based firmware is part of the PSAS repository https://github.com/psas/lv3.1-recovery.  Zephyr based firmware for the drogue and main chute firmware variants is located in ``lv3.1-recovery/controlSystem/RecoveryBoard/firmware-zephyr/``.  To simplify the build command there's a rough helper script located in ``lv3.1-recovery/controlSystem/RecoveryBoard/firmware-zephyr/``, along side the project's apps and boards directories.  In your local repo change to this directory and enter the command::
 
     (1) $ west build -b ers-v3p1 -p -- -DBOARD_ROOT=..
 
@@ -41,11 +41,11 @@ In a second terminal invoke::
 
     $ arm-none-eabi-gdb ./build/zephyr/zephyr.elf
 
-Now in second terminal at the gdb prompt enter:
+Now in second terminal at the gdb prompt enter::
 
     (gdb) target extended-remote localhost:3333
 
-At this point you should be able to issue the commands supported by gdb and on the respective attached MCU.  To reset and restart the firmware application:
+At this point you should be able to issue the commands supported by gdb and on the respective attached MCU.  To reset and restart the firmware application::
 
     (gdb) monitor reset halt
     (gdb) load
