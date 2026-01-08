@@ -9,7 +9,7 @@ This README file accompanies a firmware project targeting the ERS board and its 
 How to build
 ------------
 
-Before invoking the ERS Zephyr firmware compilation, be sure to enable your local Python virtual environment.  Assuming you are at a shell in the directory which contains the hidden ``.venv`` directory, enter the command:
+Before invoking the ERS Zephyr firmware compilation, be sure to enable your local Python virtual environment.  Assuming you are at a shell in the directory which contains the hidden ``.venv`` directory, enter the command::
 
     $ source ./.venv/bin/activate
 
@@ -29,3 +29,26 @@ When the firmware build process completes with success, it is now possible to fl
     (2) $ ../flash-manually.sh w --conf-dir ../scripts
 
 Note the ``-p`` option causes the build process to delete nearly all the prior build artifacts, and building the ``menuconfig`` option essentially limits the build to the parsing of all project Kconfig files.  After building ``menuconfig`` the most recent binaries will need to be rebuilt using command (1).
+
+How to debug
+------------
+
+In one terminal invoke ``openocd`` with arguments::
+
+    $ openocd -f ~/projects/psas/lv3.1-recovery/controlSystem/RecoveryBoard/zephyr/boards/others/stm32f030_demo/support/openocd.cfg
+
+In a second terminal invoke::
+
+    $ arm-none-eabi-gdb ./build/zephyr/zephyr.elf
+
+Now in second terminal at the gdb prompt enter:
+
+    (gdb) target extended-remote localhost:3333
+
+At this point you should be able to issue the commands supported by gdb and on the respective attached MCU.  To reset and restart the firmware application:
+
+    (gdb) monitor reset halt
+    (gdb) load
+    (gdb) reset
+
+If you have a terminal program (e.g. minicom, picocom) open to the MCU debug UART you should see the given firmware logging messages appear, beginning with any boot time and start time messages.
