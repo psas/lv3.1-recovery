@@ -288,13 +288,11 @@ void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 			continue;
 		}
 
-#if 1
 		if (frame.id == MSG_ID_TELEMETRUM_SENDER) {
 			k_timer_start(&telemetrum_check_timer, K_SECONDS(2), K_SECONDS(2));
 			// LOG_INF("RX %X - telemetrum heartbeat", frame.id);
 			ekset_can_bus_ok(1);
 		}
-#endif
 
 #if 1
 		switch (frame.id)
