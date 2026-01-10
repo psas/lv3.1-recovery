@@ -109,4 +109,13 @@ ERS firmware TODO list:
 
 [ ] Amend settings to optionally store Hall sensor cutoff values to flash.  These
      need to be calibrated per ERS board, would be helpful to have them persist
-     across power cyclings.
+     across power cyclings.  (In case these values need to change in the field
+     where firmware builds and flashing may be harder to perform, this persistnet
+     storage would remove the need to recompile the firmware.  But it also adds
+     to code to be tested for correctness.)
+
+[ ] Find out whether Zephyr ADC channel scanning API requires all configured
+     analog inputs (channels) to be measured in order to obtain correct readings.
+     Passing just one or a subset of channels to API seems to return zero as
+     the reading value all the time, and this disagrees with the data which are
+     actually available.
