@@ -44,11 +44,23 @@ struct k_thread arbiter_thread_data;
 
 static enum lock_ring_position ring_position_fs = RING_POSITION_UNKNOWN;
 
-void arbiter_set_hall_state_cutoff_defaults(void);
-
 //----------------------------------------------------------------------
 // - SECTION - routines
 //----------------------------------------------------------------------
+
+int32_t determine_which_sensor(const char *sensor_name, enum hall_sensor_ids *idx)
+{
+	if (strncmp("s1", sensor_name, sizeof("s1")) == 0) {
+		*idx = HALL_SENSOR_1;
+	}
+	else if (strncmp("s2", sensor_name, sizeof("s2")) == 0) {
+		*idx = HALL_SENSOR_2;
+	}
+	else {
+		return -EINVAL;
+	}
+	return 0;
+}
 
 // Routines to accept and store Hall sensor limits
 
@@ -61,16 +73,8 @@ int32_t cmd_set_limit_v_under(const struct shell *shell, size_t argc, char **arg
 	char *endptr, *str;
 	enum hall_sensor_ids sensor_idx;
 
-	if (strncmp("s1", argv[1], sizeof("s1")) == 0)
-	{
-		sensor_idx = HALL_SENSOR_1;
-	}
-	else if (strncmp("s2", argv[1], sizeof("s2")) == 0)
-	{
-		sensor_idx = HALL_SENSOR_2;
-	}
-	else
-	{
+	int32_t rc = determine_which_sensor(argv[1], &sensor_idx);
+	if (rc != 0) {
 		return -EINVAL;
 	}
 
@@ -89,16 +93,8 @@ int32_t cmd_set_limit_inactive(const struct shell *shell, size_t argc, char **ar
 	char *endptr, *str;
 	enum hall_sensor_ids sensor_idx;
 
-	if (strncmp("s1", argv[1], sizeof("s1")) == 0)
-	{
-		sensor_idx = HALL_SENSOR_1;
-	}
-	else if (strncmp("s2", argv[1], sizeof("s2")) == 0)
-	{
-		sensor_idx = HALL_SENSOR_2;
-	}
-	else
-	{
+	int32_t rc = determine_which_sensor(argv[1], &sensor_idx);
+	if (rc != 0) {
 		return -EINVAL;
 	}
 
@@ -117,16 +113,8 @@ int32_t cmd_set_limit_between(const struct shell *shell, size_t argc, char **arg
 	char *endptr, *str;
 	enum hall_sensor_ids sensor_idx;
 
-	if (strncmp("s1", argv[1], sizeof("s1")) == 0)
-	{
-		sensor_idx = HALL_SENSOR_1;
-	}
-	else if (strncmp("s2", argv[1], sizeof("s2")) == 0)
-	{
-		sensor_idx = HALL_SENSOR_2;
-	}
-	else
-	{
+	int32_t rc = determine_which_sensor(argv[1], &sensor_idx);
+	if (rc != 0) {
 		return -EINVAL;
 	}
 
@@ -145,16 +133,8 @@ int32_t cmd_set_limit_active(const struct shell *shell, size_t argc, char **argv
 	char *endptr, *str;
 	enum hall_sensor_ids sensor_idx;
 
-	if (strncmp("s1", argv[1], sizeof("s1")) == 0)
-	{
-		sensor_idx = HALL_SENSOR_1;
-	}
-	else if (strncmp("s2", argv[1], sizeof("s2")) == 0)
-	{
-		sensor_idx = HALL_SENSOR_2;
-	}
-	else
-	{
+	int32_t rc = determine_which_sensor(argv[1], &sensor_idx);
+	if (rc != 0) {
 		return -EINVAL;
 	}
 
@@ -205,12 +185,9 @@ void cmd_set_default_limits(const struct shell *shell, size_t argc, char **argv)
 {
 	LOG_INF("Setting Hall sensor limit default values . . .");
 	int32_t rc = set_hall_sensor_default_limits();
-	if (rc != 0)
-	{
+	if (rc != 0) {
 		LOG_ERR("Failed to set hall limit default values, err %d", rc);
-	}
-	else
-	{
+	} else {
 		arbiter_show_hall_state_limits(shell);
 	}
 }
@@ -228,8 +205,7 @@ int32_t adc_reading_to_hall_state(const enum hall_sensor_ids sensor_idx,
 {
 	uint32_t limit_v_under, limit_inactive, limit_between, limit_active;
 
-	if ((sensor_idx < 0) || (sensor_idx >= HALL_SENSOR_COUNT))
-	{
+	if ((sensor_idx < 0) || (sensor_idx >= HALL_SENSOR_COUNT)) {
 		return -EINVAL;
 	}
 
@@ -238,24 +214,15 @@ int32_t adc_reading_to_hall_state(const enum hall_sensor_ids sensor_idx,
 	get_hall_sensor_limit(sensor_idx, HL_BETWEEN, &limit_between);
 	get_hall_sensor_limit(sensor_idx, HL_ACTIVE, &limit_active);
 
-	if (adc_reading < limit_v_under)
-	{
+	if (adc_reading < limit_v_under) {
 		*state = HALL_OUTPUT_UNDER_VOLTAGE;
-	}
-	else if (adc_reading < limit_inactive)
-	{
+	} else if (adc_reading < limit_inactive) {
 		*state = HALL_OUTPUT_INACTIVE;
-	}
-	else if (adc_reading < limit_between)
-	{
+	} else if (adc_reading < limit_between) {
 		*state = HALL_OUTPUT_BETWEEN;
-	}
-	else if (adc_reading < limit_active)
-	{
+	} else if (adc_reading < limit_active) {
 		*state = HALL_OUTPUT_ACTIVE;
-	}
-	else
-	{
+	} else {
 		*state = HALL_OUTPUT_OVER_VOLTAGE;
 	}
 
@@ -284,22 +251,19 @@ int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 	enum hall_sensor_state hall_2_state = HALL_OUTPUT_UNKNOWN;
 
 	rc = ekget_both_hall_sensors(&hall_1_reading, &hall_2_reading);
-	if (rc != 0)
-	{
+	if (rc != 0) {
 		LOG_ERR("determine ring position could not get hall readings, err %d", rc);
 		goto done;
 	}
 
 	rc = adc_reading_to_hall_state(HALL_SENSOR_1, hall_1_reading, &hall_1_state);
-	if (rc != 0)
-	{
+	if (rc != 0) {
 		LOG_ERR("Failed to get hall sensor 1 state from reading comparison, err %d", rc);
 		return rc;
 	}
 
 	rc = adc_reading_to_hall_state(HALL_SENSOR_2, hall_2_reading, &hall_2_state);
-	if (rc != 0)
-	{
+	if (rc != 0) {
 		LOG_ERR("Failed to get hall sensor 2 state from reading comparison, err %d", rc);
 		return rc;
 	}
@@ -321,16 +285,14 @@ determinations.
 */
 
 	// Look for possible "between" sensor values pairs first:
-	if ((hall_1_state == HALL_OUTPUT_BETWEEN) || (hall_2_state == HALL_OUTPUT_BETWEEN))
-	{
+	if ((hall_1_state == HALL_OUTPUT_BETWEEN) || (hall_2_state == HALL_OUTPUT_BETWEEN)) {
 		LOG_INF("H1");
 		*ring_position = RING_BETWEEN_L_AND_U;
 		goto qualify_validity;
 	}
 
 	// Cover error possibilities:
-	if (hall_1_state == hall_2_state)
-	{
+	if (hall_1_state == hall_2_state) {
 		LOG_INF("H2");
 		*ring_position = RING_POSITION_UNKNOWN;
 		goto done;
@@ -377,20 +339,17 @@ determinations.
 	}
 
 qualify_validity:
-	if ((hall_1_state == HALL_OUTPUT_BETWEEN) && (hall_2_state == HALL_OUTPUT_BETWEEN))
-	{
+	if ((hall_1_state == HALL_OUTPUT_BETWEEN) && (hall_2_state == HALL_OUTPUT_BETWEEN)) {
 		LOG_INF("both hall in between");
 		*ring_position = RING_BETWEEN_FULLY_QUALIFIED;
 	}
 
-	if ((hall_1_state == HALL_OUTPUT_ACTIVE) && (hall_2_state == HALL_OUTPUT_INACTIVE))
-	{
+	if ((hall_1_state == HALL_OUTPUT_ACTIVE) && (hall_2_state == HALL_OUTPUT_INACTIVE)) {
 		LOG_INF("ring unlocked, fully qualified");
 		*ring_position = RING_UNLOCKED_FULLY_QUALIFIED;
 	}
 
-	if ((hall_1_state == HALL_OUTPUT_INACTIVE) && (hall_2_state == HALL_OUTPUT_ACTIVE))
-	{
+	if ((hall_1_state == HALL_OUTPUT_INACTIVE) && (hall_2_state == HALL_OUTPUT_ACTIVE)) {
 		LOG_INF("ring locked, fully qualified");
 		*ring_position = RING_LOCKED_FULLY_QUALIFIED;
 	}
@@ -470,8 +429,7 @@ void determine_ring_pos_work_handler(struct k_work *work)
 	// call arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 	call_count++;
 	int32_t rc = arbiter_determine_ring_state(&ring_position_fs);
-	if (rc != 0)
-	{
+	if (rc != 0) {
 		LOG_ERR("Failed to figure lock ring position, error %d", rc);
 	}
 
@@ -491,13 +449,10 @@ void ring_position_timer_handler(struct k_timer *dummy)
 	LOG_INF("call to k_work_flush returns %d", flush_result);
 
 	int32_t rc = k_work_submit(&determine_ring_pos_work);
-	if (rc < 0)
-	{
+	if (rc < 0) {
 		// LOG_ERR("Failed to submit to work queue, err %d", rc);
 		atomic_set(&ring_pos_work_status, 1);
-	}
-	else
-	{
+	} else {
 		// LOG_ERR("work queue submission call returns status %d", rc);
 		atomic_set(&ring_pos_work_status, 0);
 	}
@@ -518,13 +473,10 @@ int32_t update_ring_position_detection_timer(const uint32_t timeout_ms)
 
 	k_timer_stop(&ring_position_timer);
 
-	if (timeout_ms > 0)
-	{
+	if (timeout_ms > 0) {
 		LOG_INF("M6 - %u ms", timeout_ms);
 		k_timer_start(&ring_position_timer, K_MSEC(100), K_MSEC(timeout_ms));
-	}
-	else
-	{
+	} else {
 		LOG_INF("Leaving timer stopped per request for zero length interval.");
 	}
 
@@ -540,12 +492,9 @@ int32_t determine_batt_ok(void)
 {
 	int32_t batt_voltage_in_tenths_v = 0;
 	ekget_batt_read_dv(&batt_voltage_in_tenths_v);
-	if (batt_voltage_in_tenths_v >= BATTERY_VOLTAGE_OK_THRESHOLD_TENTHS_V)
-	{
+	if (batt_voltage_in_tenths_v >= BATTERY_VOLTAGE_OK_THRESHOLD_TENTHS_V) {
 		ekset_batt_ok(1);
-	}
-	else
-	{
+	} else {
 		ekset_batt_ok(0);
 	}
 
@@ -561,10 +510,6 @@ int32_t calc_battery_voltage(void)
 	ekget_batt_read(&adc_reading);
 
 	battery_voltage = (double)(((double)adc_reading / (double)4096 *3.3) / 0.2326);
-#if 0
-	LOG_WRN("(3)  (%u / 4096 * 3.3 / 0.2326) gives %f mv", adc_reading,
-	  (double)(((double)adc_reading / (double)4096 *3.3) / 0.2326));
-#endif
 	battery_voltage_dv = round(battery_voltage * 10);
 	ekset_batt_read_dv(battery_voltage_dv);
 	return 0;
@@ -583,8 +528,7 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 	static uint32_t loop_count = 0;
 	int32_t rc = 0;
 
-	while (1)
-	{
+	while (1) {
 #ifdef DEV_DETERMINE_RING_POSITION_IN_MAIN_LOOP
 		enum lock_ring_position ring_position = RING_POSITION_UNKNOWN;
 		// char lbuf[50] = {0};
