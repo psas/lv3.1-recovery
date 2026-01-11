@@ -2,6 +2,7 @@
 #define ERS_KEEPER_H
 
 #include <arbiter.h>
+#include "ers-config-defaults.h"
 
 /**
  * @note ERS "Keeper" module, to hold and share most ERS board run time data.
@@ -39,6 +40,7 @@ int32_t ers_init_keeper(void);
 // - SECTION - ERS configuration
 //----------------------------------------------------------------------
 
+#if 0
 enum hall_sensor_limit_ids {
         HL_V_UNDER,
         HL_INACTIVE,
@@ -46,6 +48,7 @@ enum hall_sensor_limit_ids {
         HL_ACTIVE,
         HALL_SENSOR_LIMIT_COUNT
 };
+#endif // 0
 
 enum hall_sensor_ids {
         HALL_SENSOR_1,
