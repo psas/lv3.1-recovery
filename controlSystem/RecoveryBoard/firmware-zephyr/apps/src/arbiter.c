@@ -13,12 +13,13 @@
 
 LOG_MODULE_REGISTER(arbiter, CONFIG_ARBITER_LOG_LEVEL);
 
+#include <arbiter.h>
 #include <ers-can.h>
 #include <ers-config-defaults.h>
 #include <ers-dac.h>
 #include <gpio-in.h>
 #include <keeper.h>
-#include <arbiter.h>
+#include "settings-ers.h"
 
 //----------------------------------------------------------------------
 // - SECTION - defines
@@ -144,6 +145,25 @@ int32_t cmd_set_limit_active(const struct shell *shell, size_t argc, char **argv
 		      (sensor_idx + 1), value);
 	set_hall_sensor_limit(sensor_idx, HL_ACTIVE, value);
 	return 0;
+}
+
+int32_t cmd_save_hall_limits_to_flash(const struct shell *shell, size_t argc, char **argv)
+{
+	uint32_t v_under_limit, inactive_limit, between_limit, active_limit;
+	int32_t rc = 0;
+
+	// shell_fprintf(shell, SHELL_NORMAL, "- STUB -\n");
+
+	get_hall_sensor_limit(HALL_SENSOR_1, HL_V_UNDER, &v_under_limit);
+	get_hall_sensor_limit(HALL_SENSOR_1, HL_INACTIVE, &inactive_limit);
+	get_hall_sensor_limit(HALL_SENSOR_1, HL_BETWEEN, &between_limit);
+	get_hall_sensor_limit(HALL_SENSOR_1, HL_ACTIVE, &active_limit);
+
+
+
+	// rc = store_ers_setting("",
+
+	return rc;
 }
 
 /**
