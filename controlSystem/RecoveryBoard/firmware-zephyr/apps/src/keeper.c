@@ -366,7 +366,7 @@ int32_t ekget_both_hall_sensors(uint32_t *value_1, uint32_t *value_2)
  *   adjustments to these readings sub-range limits.
  */
 
-int32_t set_hall_sensor_limit(const enum hall_sensor_ids sensor_idx,
+int32_t set_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
 				const enum hall_sensor_limit_ids limit_idx,
 				const uint32_t value)
 {
@@ -399,7 +399,7 @@ int32_t set_hall_sensor_limit(const enum hall_sensor_ids sensor_idx,
 	return 0;
 }
 
-int32_t get_hall_sensor_limit(const enum hall_sensor_ids sensor_idx,
+int32_t get_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
 				const enum hall_sensor_limit_ids limit_idx,
 				uint32_t *value)
 {

@@ -40,17 +40,7 @@ int32_t ers_init_keeper(void);
 // - SECTION - ERS configuration
 //----------------------------------------------------------------------
 
-#if 0
-enum hall_sensor_limit_ids {
-        HL_V_UNDER,
-        HL_INACTIVE,
-        HL_BETWEEN,
-        HL_ACTIVE,
-        HALL_SENSOR_LIMIT_COUNT
-};
-#endif // 0
-
-enum hall_sensor_ids {
+enum hall_sensor_instances {
         HALL_SENSOR_1,
         HALL_SENSOR_2,
         HALL_SENSOR_COUNT
@@ -64,7 +54,7 @@ enum hall_sensor_ids {
  * @return -EINVAL otherwise.
  */
 
-int32_t set_hall_sensor_limit(const enum hall_sensor_ids sensor_idx,
+int32_t set_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
                                 const enum hall_sensor_limit_ids limit_idx,
                                 const uint32_t val);
 
@@ -75,7 +65,7 @@ int32_t set_hall_sensor_limit(const enum hall_sensor_ids sensor_idx,
  * @return -EINVAL otherwise.
  */
 
-int32_t get_hall_sensor_limit(const enum hall_sensor_ids sensor_idx,
+int32_t get_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
                                 const enum hall_sensor_limit_ids limit_idx,
                                 uint32_t *value);
 
