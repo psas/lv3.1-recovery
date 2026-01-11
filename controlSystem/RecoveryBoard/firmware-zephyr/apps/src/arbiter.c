@@ -49,13 +49,13 @@ static enum lock_ring_position ring_position_fs = RING_POSITION_UNKNOWN;
 // - SECTION - routines
 //----------------------------------------------------------------------
 
-int32_t determine_which_sensor(const char *sensor_name, enum hall_sensor_ids *idx)
+int32_t determine_which_sensor(const char *sensor_name, enum hall_sensor_instances *sensor_idx)
 {
 	if (strncmp("s1", sensor_name, sizeof("s1")) == 0) {
-		*idx = HALL_SENSOR_1;
+		*sensor_idx = HALL_SENSOR_1;
 	}
 	else if (strncmp("s2", sensor_name, sizeof("s2")) == 0) {
-		*idx = HALL_SENSOR_2;
+		*sensor_idx = HALL_SENSOR_2;
 	}
 	else {
 		return -EINVAL;
@@ -72,7 +72,7 @@ int32_t cmd_set_limit_v_under(const struct shell *shell, size_t argc, char **arg
 {
 	uint32_t value = 0;
 	char *endptr, *str;
-	enum hall_sensor_ids sensor_idx;
+	enum hall_sensor_instances sensor_idx;
 
 	int32_t rc = determine_which_sensor(argv[1], &sensor_idx);
 	if (rc != 0) {
@@ -92,7 +92,7 @@ int32_t cmd_set_limit_inactive(const struct shell *shell, size_t argc, char **ar
 {
 	uint32_t value = 0;
 	char *endptr, *str;
-	enum hall_sensor_ids sensor_idx;
+	enum hall_sensor_instances sensor_idx;
 
 	int32_t rc = determine_which_sensor(argv[1], &sensor_idx);
 	if (rc != 0) {
@@ -112,7 +112,7 @@ int32_t cmd_set_limit_between(const struct shell *shell, size_t argc, char **arg
 {
 	uint32_t value = 0;
 	char *endptr, *str;
-	enum hall_sensor_ids sensor_idx;
+	enum hall_sensor_instances sensor_idx;
 
 	int32_t rc = determine_which_sensor(argv[1], &sensor_idx);
 	if (rc != 0) {
@@ -132,7 +132,7 @@ int32_t cmd_set_limit_active(const struct shell *shell, size_t argc, char **argv
 {
 	uint32_t value = 0;
 	char *endptr, *str;
-	enum hall_sensor_ids sensor_idx;
+	enum hall_sensor_instances sensor_idx;
 
 	int32_t rc = determine_which_sensor(argv[1], &sensor_idx);
 	if (rc != 0) {
@@ -219,9 +219,9 @@ void cmd_set_default_limits(const struct shell *shell, size_t argc, char **argv)
 
 // TODO [ ] determine whether this routine should be private:
 
-int32_t adc_reading_to_hall_state(const enum hall_sensor_ids sensor_idx,
+int32_t adc_reading_to_hall_state(const enum hall_sensor_instances sensor_idx,
 				  const uint32_t adc_reading,
-				  enum hall_sensor_state *state)
+				  enum hall_sensor_state_ids *state)
 {
 	uint32_t limit_v_under, limit_inactive, limit_between, limit_active;
 
@@ -267,8 +267,8 @@ int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 	int32_t rc = 0;
 	uint32_t hall_1_reading = 0;
 	uint32_t hall_2_reading = 0;
-	enum hall_sensor_state hall_1_state = HALL_OUTPUT_UNKNOWN;
-	enum hall_sensor_state hall_2_state = HALL_OUTPUT_UNKNOWN;
+	enum hall_sensor_state_ids hall_1_state = HALL_OUTPUT_UNKNOWN;
+	enum hall_sensor_state_ids hall_2_state = HALL_OUTPUT_UNKNOWN;
 
 	rc = ekget_both_hall_sensors(&hall_1_reading, &hall_2_reading);
 	if (rc != 0) {

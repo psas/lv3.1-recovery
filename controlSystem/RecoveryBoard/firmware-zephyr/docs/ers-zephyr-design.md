@@ -1,11 +1,9 @@
-ERS Zephyr Based Application
-============================
+# ERS Zephyr Based Application
 
 The PSAS LV3.1-recovery branch named `ers-zephyr-work` entails a Zephyr based application to run on 
 
 
-Modules
--------
+## Modules
 
 adc.c
 arbiter.c
@@ -19,8 +17,19 @@ pwm.c
 settings-ers.c
 shell-support.c
 
-Memory Considerations
----------------------
+# ERS Board Inputs
+
+## Hall Sensors
+
+Hall sensors in the ERS board and firmware involve sensor readings, defined sensor limits and corresponding sensor states.  These sensor states in turn are used to determine lock ring position, which is itself a state of the ERS system.
+
+The identifiers are numeric and come from C enumerations.  The symbols for
+default limit values also come from an enumeration, but they take advantage of
+the C enum feature that members of an enum may be assigned non-contiguous
+values.  In this situation we use an enum in a slightly different way to support
+easier-to-reference default limit values.
+
+## Memory Considerations
 
 Memory is allocated statically, and in local variables.  Largest array is a few hundred bytes used to store motor current readings measured during ring lock and ring unlock operations.  This array is decalred statically.
 

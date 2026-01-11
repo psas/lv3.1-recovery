@@ -119,3 +119,5 @@ ERS firmware TODO list:
      Passing just one or a subset of channels to API seems to return zero as
      the reading value all the time, and this disagrees with the data which are
      actually available.
+
+[ ] Move enum hall_sensor_instances from keeper.h to ers-config-defaults.h

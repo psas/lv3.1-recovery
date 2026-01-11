@@ -3,15 +3,6 @@
 
 #include <zephyr/shell/shell.h>
 
-enum hall_sensor_state {
-	HALL_OUTPUT_UNDER_VOLTAGE, // (S0)
-	HALL_OUTPUT_INACTIVE,      // (S1)
-	HALL_OUTPUT_BETWEEN,       // (S2)
-	HALL_OUTPUT_ACTIVE,        // (S3)
-	HALL_OUTPUT_OVER_VOLTAGE,  // (S4)
-	HALL_OUTPUT_UNKNOWN        // (S5)
-};
-
 enum lock_ring_position {
 	RING_LOCKED,
 	RING_BETWEEN_L_AND_U,
