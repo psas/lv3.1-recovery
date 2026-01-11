@@ -27,9 +27,20 @@ Under         |   error     locked   between   unlocked     error
 
 // Define an outer macro which encapsulates empirically determined Hall sensor limit values:
 
-#define HALL_SENSORS_DEFAULT_LIMIT_VALUES \
+#define HALL_AND_SENSORS_DEFAULT_LIMIT_VALUES \
 HALL_SENSOR_INST(1, 750, 920, 1600, 3100) \
 HALL_SENSOR_INST(2, 800, 950, 2600, 3100)
+
+// Create identifiers for physical Hall sensors attached to ERS board:
+
+#define HALL_SENSOR_INST(sensor_idx, limit1, limit2, limit3, limit4) HALL_SENSOR_##sensor_idx,
+
+enum hall_sensor_instances {
+HALL_AND_SENSORS_DEFAULT_LIMIT_VALUES
+HALL_SENSOR_COUNT
+};
+
+#undef HALL_SENSOR_INST
 
 // - X MACRO 2 -
 
@@ -68,7 +79,7 @@ HALL_SENSOR_LIMIT_COUNT
 #define HALL_SENSOR_CONSTRUCT(limit, per_sensor_limit, value, keyname, hall_state) per_sensor_limit = value,
 
 enum hall_sensor_limit_defaults {
-HALL_SENSORS_DEFAULT_LIMIT_VALUES
+HALL_AND_SENSORS_DEFAULT_LIMIT_VALUES
 };
 
 #undef HALL_SENSOR_CONSTRUCT

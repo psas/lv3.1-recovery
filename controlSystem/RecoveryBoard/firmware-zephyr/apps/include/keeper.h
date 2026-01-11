@@ -40,12 +40,6 @@ int32_t ers_init_keeper(void);
 // - SECTION - ERS configuration
 //----------------------------------------------------------------------
 
-enum hall_sensor_instances {
-        HALL_SENSOR_1,
-        HALL_SENSOR_2,
-        HALL_SENSOR_COUNT
-};
-
 /**
  * @brief Routine to set a given Hall sensor limit, a cutoff value
  *   measured in ADC counts, for each hall sensor in an ERS board.
