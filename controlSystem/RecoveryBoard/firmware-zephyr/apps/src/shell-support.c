@@ -114,7 +114,7 @@ static int cmd_wrapper_read_adc_all(const struct shell *shell, size_t argc, char
 	ekget_hall_1(&c);
 	ekget_hall_2(&d);
 	shell_fprintf(shell, SHELL_NORMAL, "ADC counts for batter, motor current, Hall 1, Hall 2:\n");
-	shell_fprintf(shell, SHELL_NORMAL, "%u  %u  %u  %u", a, b, c, d);
+	shell_fprintf(shell, SHELL_NORMAL, "%u  %u  %u  %u\n", a, b, c, d);
 
 	return rc;
 }

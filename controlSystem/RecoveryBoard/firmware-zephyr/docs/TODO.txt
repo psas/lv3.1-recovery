@@ -120,4 +120,4 @@ ERS firmware TODO list:
      the reading value all the time, and this disagrees with the data which are
      actually available.
 
-[ ] Move enum hall_sensor_instances from keeper.h to ers-config-defaults.h
+[x] Move enum hall_sensor_instances from keeper.h to ers-config-defaults.h
