@@ -83,8 +83,12 @@ enum ers_state_var_indeces {
 	IDX_RESERVED_01,
 	IDX_STATE_VAR_LAST_ELEMENT
 };
-#elif defined(ERS_BOARD_VARIANT_DROGUE_CHUTE)
+#elif defined(ERS_BOARD_VARIANT_DROGUE_CHUTE) || defined(ERS_BOARD_VARIANT_MAIN_CHUTE)
+#if defined(ERS_BOARD_VARIANT_DROGUE_CHUTE)
 #warning "- NOTICE - builing ERS board firmware variant 'Drogue'."
+#elif defined(ERS_BOARD_VARIANT_MAIN_CHUTE)
+#warning "- NOTICE - builing ERS board firmware variant 'Drogue'."
+#endif
 enum ers_state_var_indeces {
 	IDX_DROGUE_RING_STATE,
 	IDX_DROGUE_BATT_READ,
@@ -98,7 +102,7 @@ enum ers_state_var_indeces {
 };
 #else
 #warning "ERROR no ERS board firmware variant defined."
-#warning "Need one of ERS_BOARD_VARIANT_SENDER,"
+// #warning "Need one of ERS_BOARD_VARIANT_SENDER,"
 #warning "ERS_BOARD_VARIANT_DROGUE_CHUTE or ERS_BOARD_VARIANT_MAIN_CHUTE."
 #endif
 
@@ -149,15 +153,21 @@ void prep_and_send_ack_unlock_command(void)
 {
         struct can_frame ers_acknowledge_frame = {
                 .flags = 0,
+#if defined(ERS_BOARD_VARIANT_DROGUE_CHUTE)
                 .id = MSG_ID_ACKNOLEDGE_DROGUE_UNLOCK,
+#elif defined(ERS_BOARD_VARIANT_MAIN_CHUTE)
+                .id = MSG_ID_ACKNOLEDGE_MAIN_UNLOCK,
+#else
+#error "Need one of board variant 'drogue' or 'main' chute specified for build!"
+#endif
                 .dlc = sizeof(ers_small_payload_fs)
         };
 
-LOG_INF("M7");
+// LOG_INF("M7");
 	can_send(can_dev, &ers_acknowledge_frame, K_FOREVER,
 		 tx_irq_callback,
 		 "ERS acklowledge frame");
-LOG_INF("M8");
+// LOG_INF("M8");
 }
 
 void prep_and_send_status_frame_work_handler(struct k_work *work)
@@ -306,25 +316,30 @@ void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 		case MSG_ID_MAIN_HEARTBEAT:
 			LOG_INF("RX %X - main chute heartbeat", frame.id);
 			break;
+#if defined(ERS_BOARD_VARIANT_DROGUE_CHUTE)
 		case MSG_ID_UNLOCK_DROGUE_CHUTE:
+#elif defined(ERS_BOARD_VARIANT_MAIN_CHUTE)
+		case MSG_ID_UNLOCK_MAIN_CHUTE:
+#else
+#error "Need one of board variant 'drogue' or 'main' chute specified for build!"
+#endif
+
 // TODO [ ] Add needed test before calling unlock API.  Test per ERS Google doc is:
 // "If !UMB_ON = 1 (no umbilical voltage) and the the RING_STATUS = 2 (it’s locked)"
 			LOG_INF("RX %X - unlock drogue chute", frame.id);
-#if 0
-			LOG_INF("      - (skipping call to unlock ring as test)");
-#else
 			rc = mc_unlock_ring();
 			if (rc != 0)
 			{
 				LOG_ERR("Failed to unlock ring via CAN message, err %d", rc);
 			}
-#endif // 0
+
 			prep_and_send_ack_unlock_command();
 			break;
 		case MSG_ID_UNLOCK_MAIN_CHUTE:
 			LOG_INF("RX %X - unlock main chute", frame.id);
 			break;
 		default:
+			LOG_WRN("RX %X <- unrecognized CAN frame id", frame.id);
 		}
 #endif
 	}
