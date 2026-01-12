@@ -121,3 +121,5 @@ ERS firmware TODO list:
      actually available.
 
 [x] Move enum hall_sensor_instances from keeper.h to ers-config-defaults.h
+
+[ ] Create a timer based LED work element.
