@@ -28,8 +28,6 @@ LOG_MODULE_REGISTER(arbiter, CONFIG_ARBITER_LOG_LEVEL);
 // Select an ERS battery voltage "ok" threshold of 9.0 VDC, in tenths of a volt:
 #define BATTERY_VOLTAGE_OK_THRESHOLD_TENTHS_V 90
 
-#define BASE_10 10
-
 #define ERS_ARBITER_SLEEP_PERIOD_MS 2000
 
 #define RING_POS_PERIOD_MS 2000
@@ -63,109 +61,6 @@ int32_t determine_which_sensor(const char *sensor_name, enum hall_sensor_instanc
 	return 0;
 }
 
-// Routines to accept and store Hall sensor limits
-
-// TODO [ ] Add check of 'endptr' to determine whether we got valid numeric input,
-//  in all routines which call strtol():
-
-int32_t cmd_set_limit_v_under(const struct shell *shell, size_t argc, char **argv)
-{
-	uint32_t value = 0;
-	char *endptr, *str;
-	enum hall_sensor_instances sensor_idx;
-
-	int32_t rc = determine_which_sensor(argv[1], &sensor_idx);
-	if (rc != 0) {
-		return -EINVAL;
-	}
-
-	str = argv[2];
-	value = strtol(str, &endptr, BASE_10);
-	shell_fprintf(shell, SHELL_NORMAL, "setting Hall sensor %d limit 'v_under' to %u\n",
-		      (sensor_idx + 1), value);
-	set_hall_sensor_limit(sensor_idx, HL_V_UNDER, value);
-
-	return 0;
-}
-
-int32_t cmd_set_limit_inactive(const struct shell *shell, size_t argc, char **argv)
-{
-	uint32_t value = 0;
-	char *endptr, *str;
-	enum hall_sensor_instances sensor_idx;
-
-	int32_t rc = determine_which_sensor(argv[1], &sensor_idx);
-	if (rc != 0) {
-		return -EINVAL;
-	}
-
-	str = argv[2];
-	value = strtol(str, &endptr, BASE_10);
-	shell_fprintf(shell, SHELL_NORMAL, "setting Hall sensor %d limit 'inactive' to %u\n",
-		      (sensor_idx + 1), value);
-	set_hall_sensor_limit(sensor_idx, HL_INACTIVE, value);
-
-	return 0;
-}
-
-int32_t cmd_set_limit_between(const struct shell *shell, size_t argc, char **argv)
-{
-	uint32_t value = 0;
-	char *endptr, *str;
-	enum hall_sensor_instances sensor_idx;
-
-	int32_t rc = determine_which_sensor(argv[1], &sensor_idx);
-	if (rc != 0) {
-		return -EINVAL;
-	}
-
-	str = argv[2];
-	value = strtol(str, &endptr, BASE_10);
-	shell_fprintf(shell, SHELL_NORMAL, "setting Hall sensor %d limit 'between' to %u\n",
-		      (sensor_idx + 1), value);
-	set_hall_sensor_limit(sensor_idx, HL_BETWEEN, value);
-
-	return 0;
-}
-
-int32_t cmd_set_limit_active(const struct shell *shell, size_t argc, char **argv)
-{
-	uint32_t value = 0;
-	char *endptr, *str;
-	enum hall_sensor_instances sensor_idx;
-
-	int32_t rc = determine_which_sensor(argv[1], &sensor_idx);
-	if (rc != 0) {
-		return -EINVAL;
-	}
-
-	str = argv[2];
-	value = strtol(str, &endptr, BASE_10);
-	shell_fprintf(shell, SHELL_NORMAL, "setting Hall sensor %d limit 'active' to %u\n",
-		      (sensor_idx + 1), value);
-	set_hall_sensor_limit(sensor_idx, HL_ACTIVE, value);
-	return 0;
-}
-
-int32_t cmd_save_hall_limits_to_flash(const struct shell *shell, size_t argc, char **argv)
-{
-	uint32_t v_under_limit, inactive_limit, between_limit, active_limit;
-	int32_t rc = 0;
-
-	// shell_fprintf(shell, SHELL_NORMAL, "- STUB -\n");
-
-	get_hall_sensor_limit(HALL_SENSOR_1, HL_V_UNDER, &v_under_limit);
-	get_hall_sensor_limit(HALL_SENSOR_1, HL_INACTIVE, &inactive_limit);
-	get_hall_sensor_limit(HALL_SENSOR_1, HL_BETWEEN, &between_limit);
-	get_hall_sensor_limit(HALL_SENSOR_1, HL_ACTIVE, &active_limit);
-
-
-
-	// rc = store_ers_setting("",
-
-	return rc;
-}
-
 /**
  * @brief Routine to report Hall sensor state cutoff values (in ADC counts).
  */
@@ -174,10 +69,10 @@ void arbiter_show_hall_state_limits(const struct shell *shell)
 {
 	uint32_t v_under_limit, inactive_limit, between_limit, active_limit;
 
-	get_hall_sensor_limit(HALL_SENSOR_1, HL_V_UNDER, &v_under_limit);
-	get_hall_sensor_limit(HALL_SENSOR_1, HL_INACTIVE, &inactive_limit);
-	get_hall_sensor_limit(HALL_SENSOR_1, HL_BETWEEN, &between_limit);
-	get_hall_sensor_limit(HALL_SENSOR_1, HL_ACTIVE, &active_limit);
+	get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_UNDER, &v_under_limit);
+	get_hall_sensor_limit(HALL_SENSOR_1, HALL_STATE_V_INACTIVE, &inactive_limit);
+	get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_BETWEEN, &between_limit);
+	get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_ACTIVE, &active_limit);
 
 	shell_fprintf(shell, SHELL_NORMAL, "Hall sensor state limit values (in ADC "
 	  "counts):\n");
@@ -186,10 +81,10 @@ void arbiter_show_hall_state_limits(const struct shell *shell)
 	shell_fprintf(shell, SHELL_NORMAL, "  between limit sensor 1: %u\n", between_limit);
 	shell_fprintf(shell, SHELL_NORMAL, "   active limit sensor 1: %u\n", active_limit);
 
-	get_hall_sensor_limit(HALL_SENSOR_2, HL_V_UNDER, &v_under_limit);
-	get_hall_sensor_limit(HALL_SENSOR_2, HL_INACTIVE, &inactive_limit);
-	get_hall_sensor_limit(HALL_SENSOR_2, HL_BETWEEN, &between_limit);
-	get_hall_sensor_limit(HALL_SENSOR_2, HL_ACTIVE, &active_limit);
+	get_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_UNDER, &v_under_limit);
+	get_hall_sensor_limit(HALL_SENSOR_2, HALL_STATE_V_INACTIVE, &inactive_limit);
+	get_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_BETWEEN, &between_limit);
+	get_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_ACTIVE, &active_limit);
 
 	shell_fprintf(shell, SHELL_NORMAL, "  v under limit sensor 2: %u\n", v_under_limit);
 	shell_fprintf(shell, SHELL_NORMAL, " inactive limit sensor 2: %u\n", inactive_limit);
@@ -229,21 +124,21 @@ int32_t adc_reading_to_hall_state(const enum hall_sensor_instances sensor_idx,
 		return -EINVAL;
 	}
 
-	get_hall_sensor_limit(sensor_idx, HL_V_UNDER, &limit_v_under);
-	get_hall_sensor_limit(sensor_idx, HL_INACTIVE, &limit_inactive);
-	get_hall_sensor_limit(sensor_idx, HL_BETWEEN, &limit_between);
-	get_hall_sensor_limit(sensor_idx, HL_ACTIVE, &limit_active);
+	get_hall_sensor_limit(sensor_idx, HALL_LIMIT_V_UNDER, &limit_v_under);
+	get_hall_sensor_limit(sensor_idx, HALL_STATE_V_INACTIVE, &limit_inactive);
+	get_hall_sensor_limit(sensor_idx, HALL_LIMIT_V_BETWEEN, &limit_between);
+	get_hall_sensor_limit(sensor_idx, HALL_LIMIT_V_ACTIVE, &limit_active);
 
 	if (adc_reading < limit_v_under) {
-		*state = HALL_OUTPUT_UNDER_VOLTAGE;
+		*state = HALL_STATE_V_UNDER;
 	} else if (adc_reading < limit_inactive) {
-		*state = HALL_OUTPUT_INACTIVE;
+		*state = HALL_STATE_V_INACTIVE;
 	} else if (adc_reading < limit_between) {
-		*state = HALL_OUTPUT_BETWEEN;
+		*state = HALL_STATE_V_BETWEEN;
 	} else if (adc_reading < limit_active) {
-		*state = HALL_OUTPUT_ACTIVE;
+		*state = HALL_STATE_V_ACTIVE;
 	} else {
-		*state = HALL_OUTPUT_OVER_VOLTAGE;
+		*state = HALL_STATE_V_OVER;
 	}
 
 	return 0;
@@ -267,8 +162,8 @@ int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 	int32_t rc = 0;
 	uint32_t hall_1_reading = 0;
 	uint32_t hall_2_reading = 0;
-	enum hall_sensor_state_ids hall_1_state = HALL_OUTPUT_UNKNOWN;
-	enum hall_sensor_state_ids hall_2_state = HALL_OUTPUT_UNKNOWN;
+	enum hall_sensor_state_ids hall_1_state = HALL_STATE_UNKNOWN;
+	enum hall_sensor_state_ids hall_2_state = HALL_STATE_UNKNOWN;
 
 	rc = ekget_both_hall_sensors(&hall_1_reading, &hall_2_reading);
 	if (rc != 0) {
@@ -305,7 +200,7 @@ determinations.
 */
 
 	// Look for possible "between" sensor values pairs first:
-	if ((hall_1_state == HALL_OUTPUT_BETWEEN) || (hall_2_state == HALL_OUTPUT_BETWEEN)) {
+	if ((hall_1_state == HALL_STATE_V_BETWEEN) || (hall_2_state == HALL_STATE_V_BETWEEN)) {
 		LOG_INF("H1");
 		*ring_position = RING_BETWEEN_L_AND_U;
 		goto qualify_validity;
@@ -319,9 +214,9 @@ determinations.
 	}
 
 	// Cover row "Ina" locked positions with partial validity:
-	if ((hall_1_state == HALL_OUTPUT_INACTIVE) &&
-	    ((hall_2_state == HALL_OUTPUT_UNDER_VOLTAGE) ||
-	     (hall_2_state == HALL_OUTPUT_OVER_VOLTAGE)))
+	if ((hall_1_state == HALL_STATE_V_INACTIVE) &&
+	    ((hall_2_state == HALL_STATE_V_UNDER) ||
+	     (hall_2_state == HALL_STATE_V_OVER)))
 	{
 		LOG_INF("H3");
 		*ring_position = RING_LOCKED;
@@ -329,9 +224,9 @@ determinations.
 	}
 
 	// Cover column "Ina" unlocked positions with partial validity:
-	if ((hall_2_state == HALL_OUTPUT_INACTIVE) &&
-	    ((hall_1_state == HALL_OUTPUT_UNDER_VOLTAGE) ||
-	     (hall_1_state == HALL_OUTPUT_OVER_VOLTAGE)))
+	if ((hall_2_state == HALL_STATE_V_INACTIVE) &&
+	    ((hall_1_state == HALL_STATE_V_UNDER) ||
+	     (hall_1_state == HALL_STATE_V_OVER)))
 	{
 		LOG_INF("H4");
 		*ring_position = RING_UNLOCKED;
@@ -339,9 +234,9 @@ determinations.
 	}
 
 	// Cover row "Act" unlocked positions with partial validity:
-	if ((hall_1_state == HALL_OUTPUT_INACTIVE) &&
-	    ((hall_2_state == HALL_OUTPUT_UNDER_VOLTAGE) ||
-	     (hall_2_state == HALL_OUTPUT_OVER_VOLTAGE)))
+	if ((hall_1_state == HALL_STATE_V_INACTIVE) &&
+	    ((hall_2_state == HALL_STATE_V_UNDER) ||
+	     (hall_2_state == HALL_STATE_V_OVER)))
 	{
 		LOG_INF("H5");
 		*ring_position = RING_UNLOCKED;
@@ -349,9 +244,9 @@ determinations.
 	}
 
 	// Cover column "Act" locked positions with partial validity:
-	if ((hall_2_state == HALL_OUTPUT_ACTIVE) &&
-	    ((hall_1_state == HALL_OUTPUT_UNDER_VOLTAGE) ||
-	     (hall_1_state == HALL_OUTPUT_OVER_VOLTAGE)))
+	if ((hall_2_state == HALL_STATE_V_ACTIVE) &&
+	    ((hall_1_state == HALL_STATE_V_UNDER) ||
+	     (hall_1_state == HALL_STATE_V_OVER)))
 	{
 		LOG_INF("H6");
 		*ring_position = RING_LOCKED;
@@ -359,17 +254,17 @@ determinations.
 	}
 
 qualify_validity:
-	if ((hall_1_state == HALL_OUTPUT_BETWEEN) && (hall_2_state == HALL_OUTPUT_BETWEEN)) {
+	if ((hall_1_state == HALL_STATE_V_BETWEEN) && (hall_2_state == HALL_STATE_V_BETWEEN)) {
 		LOG_INF("both hall in between");
 		*ring_position = RING_BETWEEN_FULLY_QUALIFIED;
 	}
 
-	if ((hall_1_state == HALL_OUTPUT_ACTIVE) && (hall_2_state == HALL_OUTPUT_INACTIVE)) {
+	if ((hall_1_state == HALL_STATE_V_ACTIVE) && (hall_2_state == HALL_STATE_V_INACTIVE)) {
 		LOG_INF("ring unlocked, fully qualified");
 		*ring_position = RING_UNLOCKED_FULLY_QUALIFIED;
 	}
 
-	if ((hall_1_state == HALL_OUTPUT_INACTIVE) && (hall_2_state == HALL_OUTPUT_ACTIVE)) {
+	if ((hall_1_state == HALL_STATE_V_INACTIVE) && (hall_2_state == HALL_STATE_V_ACTIVE)) {
 		LOG_INF("ring locked, fully qualified");
 		*ring_position = RING_LOCKED_FULLY_QUALIFIED;
 	}

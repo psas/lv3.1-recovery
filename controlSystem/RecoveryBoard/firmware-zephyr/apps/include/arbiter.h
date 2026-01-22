@@ -36,6 +36,7 @@ enum lock_ring_state {
 
 int32_t ers_init_arbiter(void);
 
+#if 0
 /**
  * @brief Following four routines implement custom Zephyr shell commands.  As
  *   arguments these routines expect:
@@ -50,6 +51,7 @@ int32_t cmd_set_limit_between(const struct shell *shell, size_t argc, char **arg
 int32_t cmd_set_limit_active(const struct shell *shell, size_t argc, char **argv);
 
 int32_t cmd_save_hall_limits_to_flash(const struct shell *shell, size_t argc, char **argv);
+#endif // 0 . . . moving APIs to keeper module
 
 void cmd_set_default_limits(const struct shell *shell, size_t argc, char **argv);
 

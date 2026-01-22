@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <stdlib.h>
+
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
@@ -14,8 +16,6 @@ LOG_MODULE_REGISTER(keeper, LOG_LEVEL_INF);
 #include <keeper.h>
 #include "settings-ers.h"
 
-// some GPIO inputs, effectively Boolean
-
 /**
  * @defgroup digital_inputs
  */
@@ -23,8 +23,6 @@ LOG_MODULE_REGISTER(keeper, LOG_LEVEL_INF);
 static atomic_t iso_drogue = ATOMIC_INIT(0);
 static atomic_t iso_main = ATOMIC_INIT(0);
 static atomic_t not_umb_on = ATOMIC_INIT(0);
-
-// analog inputs, typically 12-bit or 16-bit values
 
 /**
  * @defgroup battery
@@ -242,6 +240,128 @@ int32_t ekset_adc_value_in_mv(const enum ers_adc_values_in_mv idx, const uint32_
 	return 0;
 }
 
+//----------------------------------------------------------------------
+// - SECTION - Hall sensor limits and states
+//----------------------------------------------------------------------
+
+// Routines set, get, store and retrieve Hall sensor limits
+
+// TODO [ ] Add check of 'endptr' to determine whether we got valid numeric input,
+//  in all routines which call strtol():
+
+int32_t cmd_set_limit_v_under(const struct shell *shell, size_t argc, char **argv)
+{
+	uint32_t value = 0;
+	char *endptr, *str;
+	enum hall_sensor_instances sensor_idx;
+
+	int32_t rc = determine_which_sensor(argv[1], &sensor_idx);
+	if (rc != 0) {
+		return -EINVAL;
+	}
+
+	str = argv[2];
+	value = strtol(str, &endptr, BASE_10);
+	shell_fprintf(shell, SHELL_NORMAL, "setting Hall sensor %d limit 'v_under' to %u\n",
+		      (sensor_idx + 1), value);
+	set_hall_sensor_limit(sensor_idx, HALL_LIMIT_V_UNDER, value);
+
+	return 0;
+}
+
+int32_t cmd_set_limit_inactive(const struct shell *shell, size_t argc, char **argv)
+{
+	uint32_t value = 0;
+	char *endptr, *str;
+	enum hall_sensor_instances sensor_idx;
+
+	int32_t rc = determine_which_sensor(argv[1], &sensor_idx);
+	if (rc != 0) {
+		return -EINVAL;
+	}
+
+	str = argv[2];
+	value = strtol(str, &endptr, BASE_10);
+	shell_fprintf(shell, SHELL_NORMAL, "setting Hall sensor %d limit 'inactive' to %u\n",
+		      (sensor_idx + 1), value);
+	set_hall_sensor_limit(sensor_idx, HALL_LIMIT_V_INACTIVE, value);
+
+	return 0;
+}
+
+int32_t cmd_set_limit_between(const struct shell *shell, size_t argc, char **argv)
+{
+	uint32_t value = 0;
+	char *endptr, *str;
+	enum hall_sensor_instances sensor_idx;
+
+	int32_t rc = determine_which_sensor(argv[1], &sensor_idx);
+	if (rc != 0) {
+		return -EINVAL;
+	}
+
+	str = argv[2];
+	value = strtol(str, &endptr, BASE_10);
+	shell_fprintf(shell, SHELL_NORMAL, "setting Hall sensor %d limit 'between' to %u\n",
+		      (sensor_idx + 1), value);
+	set_hall_sensor_limit(sensor_idx, HALL_LIMIT_V_BETWEEN, value);
+
+	return 0;
+}
+
+int32_t cmd_set_limit_active(const struct shell *shell, size_t argc, char **argv)
+{
+	uint32_t value = 0;
+	char *endptr, *str;
+	enum hall_sensor_instances sensor_idx;
+
+	int32_t rc = determine_which_sensor(argv[1], &sensor_idx);
+	if (rc != 0) {
+		return -EINVAL;
+	}
+
+	str = argv[2];
+	value = strtol(str, &endptr, BASE_10);
+	shell_fprintf(shell, SHELL_NORMAL, "setting Hall sensor %d limit 'active' to %u\n",
+		      (sensor_idx + 1), value);
+	set_hall_sensor_limit(sensor_idx, HALL_LIMIT_V_ACTIVE, value);
+	return 0;
+}
+
+int32_t cmd_save_hall_limits_to_flash(const struct shell *shell, size_t argc, char **argv)
+{
+	uint32_t v_under_limit, inactive_limit, between_limit, active_limit;
+	int32_t rc = 0;
+
+	// Call keeper to obtain hall limits:
+	// shell_fprintf(shell, SHELL_NORMAL, "- STUB -\n");
+	get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_UNDER, &v_under_limit);
+	get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_INACTIVE, &inactive_limit);
+	get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_BETWEEN, &between_limit);
+	get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_ACTIVE, &active_limit);
+
+	// Call keeper to obtain hall limits:
+
+#undef HALL_SENSOR_INST
+#define HALL_SENSOR_INST(idx, limit1, limit2, limit3, limit4) idx
+
+#define HALL_SENSOR_EACH_ID HALL_AND_SENSORS_DEFAULT_LIMIT_VALUES
+
+	// store_ers_setting(const char* name, const void *val, const uint32_t size)
+
+#define HALL_SENSOR_CONSTRUCT(limit_id, per_sensor_limit_id, lim_varname, \
+lim_value, lim_keyname, hall_state) \
+	rc = store_ers_setting(lim_keyname, lim_varname, sizeof(lim_varname)); \
+	if (rc < 0) { \
+		LOG_ERR("trouble storeing 'lim_varname' to flash, err %d", rc); \
+	}
+
+#undef HALL_SENSOR_INST
+
+	return rc;
+}
+
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // - DATA GROUP - (3) locking ring
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -367,7 +487,7 @@ int32_t ekget_both_hall_sensors(uint32_t *value_1, uint32_t *value_2)
  */
 
 int32_t set_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
-				const enum hall_sensor_limit_ids limit_idx,
+				const enum hall_sensor_named_limits limit_idx,
 				const uint32_t value)
 {
 	if ((sensor_idx < 0) || (sensor_idx >= HALL_SENSOR_COUNT))
@@ -381,16 +501,16 @@ int32_t set_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
 	}
 
 	switch (limit_idx) {
-	case HL_V_UNDER:
+	case HALL_LIMIT_V_UNDER:
 		atomic_set(&hall_sensor_fs[sensor_idx].v_under, value);
 		break;
-        case HL_INACTIVE:
+        case HALL_LIMIT_V_INACTIVE:
 		atomic_set(&hall_sensor_fs[sensor_idx].inactive, value);
 		break;
-        case HL_BETWEEN:
+        case HALL_LIMIT_V_BETWEEN:
 		atomic_set(&hall_sensor_fs[sensor_idx].between, value);
 		break;
-        case HL_ACTIVE:
+        case HALL_LIMIT_V_ACTIVE:
 		atomic_set(&hall_sensor_fs[sensor_idx].active, value);
 		break;
 	default:
@@ -400,7 +520,7 @@ int32_t set_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
 }
 
 int32_t get_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
-				const enum hall_sensor_limit_ids limit_idx,
+				const enum hall_sensor_named_limits limit_idx,
 				uint32_t *value)
 {
 	if ((sensor_idx < 0) || (sensor_idx >= HALL_SENSOR_COUNT))
@@ -414,16 +534,16 @@ int32_t get_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
 	}
 
 	switch (limit_idx) {
-	case HL_V_UNDER:
+	case HALL_LIMIT_V_UNDER:
 		*value = atomic_get(&hall_sensor_fs[sensor_idx].v_under);
 		break;
-        case HL_INACTIVE:
+        case HALL_LIMIT_V_INACTIVE:
 		*value = atomic_get(&hall_sensor_fs[sensor_idx].inactive);
 		break;
-        case HL_BETWEEN:
+        case HALL_LIMIT_V_BETWEEN:
 		*value = atomic_get(&hall_sensor_fs[sensor_idx].between);
 		break;
-        case HL_ACTIVE:
+        case HALL_LIMIT_V_ACTIVE:
 		*value = atomic_get(&hall_sensor_fs[sensor_idx].active);
 		break;
 	default:
@@ -622,15 +742,15 @@ void ek_get_sys_diag_mode(uint32_t* value)
 
 int32_t set_hall_sensor_default_limits(void)
 {
-	int32_t rc = set_hall_sensor_limit(HALL_SENSOR_1, HL_V_UNDER, HALL_1_LIMIT_V_UNDER);
-	rc |= set_hall_sensor_limit(HALL_SENSOR_1, HL_INACTIVE, HALL_1_LIMIT_INACTIVE);
-	rc |= set_hall_sensor_limit(HALL_SENSOR_1, HL_BETWEEN, HALL_1_LIMIT_BETWEEN);
-	rc |= set_hall_sensor_limit(HALL_SENSOR_1, HL_ACTIVE, HALL_1_LIMIT_ACTIVE);
+	int32_t rc = set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_UNDER, HALL_LIMIT_V_UNDER_S1);
+	rc |= set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_INACTIVE, HALL_LIMIT_V_INACTIVE_S1);
+	rc |= set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_BETWEEN, HALL_LIMIT_V_BETWEEN_S1);
+	rc |= set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_ACTIVE, HALL_LIMIT_V_ACTIVE_S1);
 
-	rc |= set_hall_sensor_limit(HALL_SENSOR_2, HL_V_UNDER, HALL_2_LIMIT_V_UNDER);
-	rc |= set_hall_sensor_limit(HALL_SENSOR_2, HL_INACTIVE, HALL_2_LIMIT_INACTIVE);
-	rc |= set_hall_sensor_limit(HALL_SENSOR_2, HL_BETWEEN, HALL_2_LIMIT_BETWEEN);
-	rc |= set_hall_sensor_limit(HALL_SENSOR_2, HL_ACTIVE, HALL_2_LIMIT_ACTIVE);
+	rc |= set_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_UNDER, HALL_LIMIT_V_UNDER_S2);
+	rc |= set_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_INACTIVE, HALL_LIMIT_V_INACTIVE_S2);
+	rc |= set_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_BETWEEN, HALL_LIMIT_V_BETWEEN_S2);
+	rc |= set_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_ACTIVE, HALL_LIMIT_V_ACTIVE_S2);
 
 	return rc;
 }

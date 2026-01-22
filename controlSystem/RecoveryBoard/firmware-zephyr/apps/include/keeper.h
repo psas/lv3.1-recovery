@@ -49,7 +49,7 @@ int32_t ers_init_keeper(void);
  */
 
 int32_t set_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
-                                const enum hall_sensor_limit_ids limit_idx,
+                                const enum hall_sensor_named_limits limit_idx,
                                 const uint32_t val);
 
 /**
@@ -60,7 +60,7 @@ int32_t set_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
  */
 
 int32_t get_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
-                                const enum hall_sensor_limit_ids limit_idx,
+                                const enum hall_sensor_named_limits limit_idx,
                                 uint32_t *value);
 
 /**
@@ -68,6 +68,21 @@ int32_t get_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
  */
 
 int32_t set_hall_sensor_default_limits(void);
+
+/**
+ * @brief Following four routines implement custom Zephyr shell commands.  As
+ *   arguments these routines expect:
+ *
+ * @param ["s1"|"s2"] to indicate which of two Hall sensors the limit applies.
+ * @param [0..4095] an ADC count within the 12-bit ADC range of possible values.
+ */
+
+int32_t cmd_set_limit_v_under(const struct shell *shell, size_t argc, char **argv);
+int32_t cmd_set_limit_inactive(const struct shell *shell, size_t argc, char **argv);
+int32_t cmd_set_limit_between(const struct shell *shell, size_t argc, char **argv);
+int32_t cmd_set_limit_active(const struct shell *shell, size_t argc, char **argv);
+
+int32_t cmd_save_hall_limits_to_flash(const struct shell *shell, size_t argc, char **argv);
 
 //----------------------------------------------------------------------
 // - SECTION - ERS readings
