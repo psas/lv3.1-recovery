@@ -571,7 +571,7 @@ async fn parachute_heartbeat() -> () {
     let mut prev_ready: u8 = 0;
     let mut prev_batt_ok: u8 = 0;
     let mut prev_sender_status: u8 = 0;
-    let mut prev_shore_pow_status: u8 = 0;
+    let mut prev_shore_pow_on: u8 = 0;
 
     let mut ring_pos_rcvr =
         RING_POSITION_WATCH.receiver().expect("Could not get ring pos receiver for heartbeat task");
@@ -609,12 +609,12 @@ async fn parachute_heartbeat() -> () {
         {
             let mut umb_on_unlocked = UMB_ON_MTX.lock().await;
             if let Some(umb_on_ref) = umb_on_unlocked.as_mut() {
-                let shore_pow_status = umb_on_ref.is_low() as u8;
+                let shore_pow_on = umb_on_ref.is_low() as u8;
 
-                set_state(ChuteStateField::ShorePowerStatus(shore_pow_status == 1)).await;
+                set_state(ChuteStateField::ShorePowerStatus(shore_pow_on == 1)).await;
 
                 let ready = (ring_pos_u8 == 2
-                    && shore_pow_status == 0
+                    && shore_pow_on == 0
                     && batt_ok == 1
                     && sender_status == 1) as u8;
 
@@ -640,7 +640,7 @@ async fn parachute_heartbeat() -> () {
                     ring_pos_u8,
                     batt_read,
                     batt_ok,
-                    shore_pow_status,
+                    shore_pow_on,
                     sender_status,
                     ready,
                     0,
@@ -675,15 +675,15 @@ async fn parachute_heartbeat() -> () {
                     info!("Ready status changed to {}", ready);
                 }
 
-                if shore_pow_status != prev_shore_pow_status {
-                    info!("Shore power status changed to {}", shore_pow_status);
+                if shore_pow_on != prev_shore_pow_on {
+                    info!("Shore power status changed to {}", shore_pow_on);
                 }
                 if sender_status != prev_sender_status {
                     info!("Sender status changed to {}", sender_status);
                 }
 
                 prev_sender_status = sender_status;
-                prev_shore_pow_status = shore_pow_status;
+                prev_shore_pow_on = shore_pow_on;
                 prev_ready = ready;
                 prev_batt_ok = batt_ok;
             }

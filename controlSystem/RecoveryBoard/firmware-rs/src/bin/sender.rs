@@ -37,8 +37,8 @@ use firmware_rs::{
     buzzer::{active_beep, BuzzerMode, BUZZER_MODE_MTX},
     can::{
         can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_MTX, CAN_TX_CHANNEL, DROGUE_ACKNOWLEDGE_ID,
-        DROGUE_DEPLOY_ID, DROGUE_HEARTBEAT_ID, MAIN_ACKNOWLEDGE_ID, MAIN_DEPLOY_ID, MAIN_HEARTBEAT_ID,
-        SENDER_HEARTBEAT_ID,
+        DROGUE_DEPLOY_ID, DROGUE_HEARTBEAT_ID, MAIN_ACKNOWLEDGE_ID, MAIN_DEPLOY_ID,
+        MAIN_HEARTBEAT_ID, SENDER_HEARTBEAT_ID,
     },
     types::*,
     uart::{IO, UART_BUF_SIZE, UART_RX_BUF_CELL, UART_TX_BUF_CELL},
@@ -473,9 +473,9 @@ async fn telemetrum_heartbeat(mut rr_pin: Output<'static>) -> () {
     let mut prev_main_ok: bool = false;
     let mut prev_drogue_ok: bool = false;
     let mut prev_batt_ok: u8 = 0;
-    let mut prev_ers_status: u8 = 0;
+    let mut prev_ers_ok: u8 = 0;
     let mut prev_telemetrum_state: u8 = 0;
-    let mut prev_shore_pow_status: u8 = 0;
+    let mut prev_shore_pow_on: u8 = 0;
     let mut prev_rocket_ready: u8 = 0;
 
     loop {
@@ -523,15 +523,16 @@ async fn telemetrum_heartbeat(mut rr_pin: Output<'static>) -> () {
 
         let batt_ok = (batt_read > 99) as u8;
         let can_bus_ok = (main_ok && drogue_ok) as u8;
-        let ers_status = (can_bus_ok != 0 && main_status && drogue_status) as u8;
+        let ers_ok = (can_bus_ok != 0 && main_status && drogue_status) as u8;
 
         {
             let mut umb_on_unlocked = UMB_ON_MTX.lock().await;
             if let Some(umb_on_ref) = umb_on_unlocked.as_mut() {
-                let shore_pow_status = umb_on_ref.is_low() as u8;
+                let shore_pow_on = umb_on_ref.is_low() as u8;
+                set_state(SenderStateField::ShorePowerStatus(shore_pow_on == 1)).await;
 
                 let rocket_ready = (force_rocket_ready
-                    || (shore_pow_status == 0 && batt_ok == 1 && ers_status == 1))
+                    || (shore_pow_on == 0 && batt_ok == 1 && ers_ok == 1))
                     as u8;
 
                 if rocket_ready == 1 {
@@ -562,9 +563,9 @@ async fn telemetrum_heartbeat(mut rr_pin: Output<'static>) -> () {
                     telemetrum_state,
                     batt_read,
                     batt_ok,
-                    shore_pow_status,
+                    shore_pow_on,
                     can_bus_ok,
-                    ers_status,
+                    ers_ok,
                     rocket_ready,
                     0,
                 ];
@@ -585,8 +586,8 @@ async fn telemetrum_heartbeat(mut rr_pin: Output<'static>) -> () {
                     info!("Battery ok changed to {}", batt_ok);
                 }
 
-                if shore_pow_status != prev_shore_pow_status {
-                    info!("Shore power status changed to {}", shore_pow_status);
+                if shore_pow_on != prev_shore_pow_on {
+                    info!("Shore power status changed to {}", shore_pow_on);
                 }
 
                 if main_ok != prev_main_ok {
@@ -597,8 +598,8 @@ async fn telemetrum_heartbeat(mut rr_pin: Output<'static>) -> () {
                     info!("Drogue ok changed to {}", drogue_ok);
                 }
 
-                if ers_status != prev_ers_status {
-                    info!("Ers status changed to {}", ers_status);
+                if ers_ok != prev_ers_ok {
+                    info!("Ers status changed to {}", ers_ok);
                 }
 
                 if rocket_ready != prev_rocket_ready {
@@ -607,10 +608,10 @@ async fn telemetrum_heartbeat(mut rr_pin: Output<'static>) -> () {
 
                 prev_telemetrum_state = telemetrum_state;
                 prev_batt_ok = batt_ok;
-                prev_shore_pow_status = shore_pow_status;
+                prev_shore_pow_on = shore_pow_on;
                 prev_main_ok = main_ok;
                 prev_drogue_ok = drogue_ok;
-                prev_ers_status = ers_status;
+                prev_ers_ok = ers_ok;
                 prev_rocket_ready = rocket_ready;
             }
         }
