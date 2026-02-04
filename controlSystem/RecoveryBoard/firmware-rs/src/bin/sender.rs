@@ -134,10 +134,10 @@ impl core::fmt::Display for SenderStateField {
                 core::write!(f, "Force Rocket Ready: {}", if val { "YES" } else { "NO" })
             }
             Self::DrogueStatus(val) => {
-                core::write!(f, "Drogue Status: {}", if val { "OK" } else { "ERR" })
+                core::write!(f, "Drogue Status: {}", if val { "OK" } else { "NOT READY" })
             }
             Self::MainStatus(val) => {
-                core::write!(f, "Main Status: {}", if val { "OK" } else { "ERR" })
+                core::write!(f, "Main Status: {}", if val { "OK" } else { "NOT READY" })
             }
             Self::ShorePowerStatus(val) => {
                 core::write!(f, "Shore Power: {}", if val { "ON" } else { "OFF" })
