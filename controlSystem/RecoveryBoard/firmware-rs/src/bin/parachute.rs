@@ -613,7 +613,7 @@ async fn parachute_heartbeat() -> () {
 
                 set_state(ChuteStateField::ShorePowerStatus(shore_pow_on == 1)).await;
 
-                let ready = (ring_pos_u8 == 2
+                let ready = (ring_pos_u8 == 3
                     && shore_pow_on == 0
                     && batt_ok == 1
                     && sender_status == 1) as u8;
