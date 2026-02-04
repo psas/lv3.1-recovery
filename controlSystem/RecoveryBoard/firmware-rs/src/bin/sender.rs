@@ -405,7 +405,7 @@ async fn can_reader(mut can_rx: CanRx<'static>) -> () {
         match can_rx.read().await {
             Ok(envelope) => match envelope.frame.id() {
                 Id::Standard(id) if id.as_raw() == MAIN_HEARTBEAT_ID => {
-                    let status = envelope.frame.data()[0];
+                    let status = envelope.frame.data()[5];
                     set_state(SenderStateField::MainLastSeen(envelope.ts.as_millis())).await;
                     set_state(SenderStateField::MainStatus(status > 0)).await;
                     if status != prev_main_status {
@@ -417,7 +417,7 @@ async fn can_reader(mut can_rx: CanRx<'static>) -> () {
                     MAIN_ACKNOWLEDGE.store(true, core::sync::atomic::Ordering::Relaxed);
                 }
                 Id::Standard(id) if id.as_raw() == DROGUE_HEARTBEAT_ID => {
-                    let status = envelope.frame.data()[0];
+                    let status = envelope.frame.data()[5];
                     set_state(SenderStateField::DrogueLastSeen(envelope.ts.as_millis())).await;
                     set_state(SenderStateField::DrogueStatus(status > 0)).await;
                     if status != prev_drogue_status {
