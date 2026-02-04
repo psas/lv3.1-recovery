@@ -515,8 +515,8 @@ async fn telemetrum_heartbeat(mut rr_pin: Output<'static>) -> () {
             telemetrum_state = telemetrum_state.wrapping_add(2u8.pow(6)); // bit 1
         }
 
-        let main_ok = time_now - main_last_seen < 2000;
-        let drogue_ok = time_now - drogue_last_seen < 2000;
+        let main_ok = (time_now - main_last_seen < 2000) && main_status;
+        let drogue_ok = (time_now - drogue_last_seen < 2000) && drogue_status;
 
         let batt_read =
             BATT_READ_WATCH.receiver().expect("Could not get batt_read receiver").changed().await;
