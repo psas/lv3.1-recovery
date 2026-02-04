@@ -28,12 +28,19 @@ pub enum RingPosition {
 #[derive(Clone)]
 pub struct SensorReadings {
     pub sensor1: u16,
+    pub sensor1_state: SensorState,
     pub sensor2: u16,
+    pub sensor2_state: SensorState,
 }
 
 impl SensorReadings {
-    pub fn new(sensor1: u16, sensor2: u16) -> Self {
-        Self { sensor1, sensor2 }
+    pub fn new(
+        sensor1: u16,
+        sensor1_state: SensorState,
+        sensor2: u16,
+        sensor2_state: SensorState,
+    ) -> Self {
+        Self { sensor1, sensor1_state, sensor2, sensor2_state }
     }
 }
 
@@ -51,13 +58,31 @@ impl SensorLimits {
     }
 }
 
-#[derive(PartialEq)]
-enum SensorState {
+#[derive(PartialEq, Clone)]
+pub enum SensorState {
     Active,
     Unactive,
     Under,
     Over,
     Inbetween,
+}
+
+impl core::fmt::Display for SensorState {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match *self {
+            Self::Active => {
+                core::write!(f, "Active")
+            }
+            Self::Unactive => {
+                core::write!(f, "Unactive")
+            }
+            Self::Under => {
+                core::write!(f, "Under")
+            }
+            Self::Over => core::write!(f, "Over"),
+            Self::Inbetween => core::write!(f, "Inbetween"),
+        }
+    }
 }
 
 pub struct Ring {
@@ -131,13 +156,18 @@ impl Ring {
             }
         }
 
-        let readings = SensorReadings::new(sensor1_read, sensor2_read);
+        let sensor1_state = get_sensor_state(sensor1_read, &self.sensor1_limits);
+        let sensor2_state = get_sensor_state(sensor2_read, &self.sensor2_limits);
+
+        let readings = SensorReadings::new(
+            sensor1_read,
+            sensor1_state.clone(),
+            sensor2_read,
+            sensor2_state.clone(),
+        );
 
         sensor_reading_sender.send(readings);
         motor_isense_sender.send(motor_isense_read);
-
-        let sensor1_state = get_sensor_state(sensor1_read, &self.sensor1_limits);
-        let sensor2_state = get_sensor_state(sensor2_read, &self.sensor2_limits);
 
         let ring_position = get_ring_position(sensor1_state, sensor2_state);
 
