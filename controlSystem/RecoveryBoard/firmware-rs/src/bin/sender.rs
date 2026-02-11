@@ -535,12 +535,12 @@ async fn telemetrum_heartbeat(mut rr_pin: Output<'static>) -> () {
                     || (shore_pow_on == 0 && batt_ok == 1 && ers_ok == 1))
                     as u8;
 
-                if rocket_ready == 1 {
-                    rr_pin.set_high();
-                    set_state(SenderStateField::RocketReady(true)).await;
-                } else {
-                    rr_pin.set_low();
+                if rocket_ready == 0 {
+                    rr_pin.set_high(); // PMOS -> RocketReady going high blocks current
                     set_state(SenderStateField::RocketReady(false)).await;
+                } else {
+                    rr_pin.set_low(); // PMOS -> RocketReady going low allows current to pass through
+                    set_state(SenderStateField::RocketReady(true)).await;
                 }
 
                 {
