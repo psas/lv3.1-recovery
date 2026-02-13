@@ -2,7 +2,7 @@
 #define ERS_KEEPER_H
 
 #include <arbiter.h>
-#include "ers-config-defaults.h"
+#include "ers-config.h"
 
 /**
  * @note ERS "Keeper" module, to hold and share most ERS board run time data.
