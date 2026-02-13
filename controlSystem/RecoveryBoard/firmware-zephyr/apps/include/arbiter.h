@@ -4,7 +4,7 @@
 #include <zephyr/shell/shell.h>
 
 // To provide `enum hall_sensor_instances`:
-#include "ers-config-defaults.h"
+#include "ers-config.h"
 
 /**
  * @brief TODO [ ] complete this stub comment block.
