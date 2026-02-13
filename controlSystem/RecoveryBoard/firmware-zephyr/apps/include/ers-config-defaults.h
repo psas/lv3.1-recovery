@@ -51,10 +51,15 @@ HALL_SENSOR_COUNT
 #define  LIMIT_NAME_3  HALL_LIMIT_V_BETWEEN
 #define  LIMIT_NAME_4  HALL_LIMIT_V_ACTIVE
 
-#define  LIMIT_VAR_1  hall_limit_v_under
-#define  LIMIT_VAR_2  hall_limit_v_inactive
-#define  LIMIT_VAR_3  hall_limit_v_between
-#define  LIMIT_VAR_4  hall_limit_v_active
+#define  LIMIT_VARNAME_1  hall_limit_v_under
+#define  LIMIT_VARNAME_2  hall_limit_v_inactive
+#define  LIMIT_VARNAME_3  hall_limit_v_between
+#define  LIMIT_VARNAME_4  hall_limit_v_active
+
+#define SETTING_KEYNAME_HLIMIT_1 "setting" ## LIMIT_VARNAME_1
+#define SETTING_KEYNAME_HLIMIT_2 "setting" ## LIMIT_VARNAME_2
+#define SETTING_KEYNAME_HLIMIT_3 "setting" ## LIMIT_VARNAME_3
+#define SETTING_KEYNAME_HLIMIT_4 "setting" ## LIMIT_VARNAME_4
 
 #define  STATE_NAME_1  HALL_STATE_V_UNDER
 #define  STATE_NAME_2  HALL_STATE_V_INACTIVE
@@ -81,10 +86,10 @@ HALL_SENSOR_LIMIT_COUNT
 #define LIMIT_NAME(prefix, infix, name) CONCAT_A_B_C(prefix, infix, name)
 
 #define HALL_SENSOR_INST(idx, limit1, limit2, limit3, limit4) \
-HALL_SENSOR_CONSTRUCT(LIMIT_NAME(LIMIT_NAME_1, _S, idx), LIMIT_NAME(LIMIT_VAR_1, _S, idx), limit1) \
-HALL_SENSOR_CONSTRUCT(LIMIT_NAME(LIMIT_NAME_2, _S, idx), LIMIT_NAME(LIMIT_VAR_2, _S, idx), limit2) \
-HALL_SENSOR_CONSTRUCT(LIMIT_NAME(LIMIT_NAME_3, _S, idx), LIMIT_NAME(LIMIT_VAR_3, _S, idx), limit3) \
-HALL_SENSOR_CONSTRUCT(LIMIT_NAME(LIMIT_NAME_4, _S, idx), LIMIT_NAME(LIMIT_VAR_4, _S, idx), limit4)
+HALL_SENSOR_CONSTRUCT(LIMIT_NAME(LIMIT_NAME_1, _S, idx), LIMIT_NAME(LIMIT_VARNAME_1, _S, idx), limit1) \
+HALL_SENSOR_CONSTRUCT(LIMIT_NAME(LIMIT_NAME_2, _S, idx), LIMIT_NAME(LIMIT_VARNAME_2, _S, idx), limit2) \
+HALL_SENSOR_CONSTRUCT(LIMIT_NAME(LIMIT_NAME_3, _S, idx), LIMIT_NAME(LIMIT_VARNAME_3, _S, idx), limit3) \
+HALL_SENSOR_CONSTRUCT(LIMIT_NAME(LIMIT_NAME_4, _S, idx), LIMIT_NAME(LIMIT_VARNAME_4, _S, idx), limit4)
 
 /**
  * (C5) Hall sensor limit variable names

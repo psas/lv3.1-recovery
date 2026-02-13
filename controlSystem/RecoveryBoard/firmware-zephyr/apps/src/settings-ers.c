@@ -93,6 +93,12 @@ int load_immediate_value(const char *name, void *dest, size_t len)
 
 /**
  * @brief Retrieve a persistent setting from the key named by parameter 'name'.
+ *
+ * @note This pair of 'store' and 'retrieve' routines provides a general purpose
+ *  setter/getter API pair to MCU flash.  Callers provide the Zephyr "setting"
+ *  string wise name, a key name, and this module averts the need to implement
+ *  some multiple store and retrieve setting functions which differ only in
+ *  setting key name.
  */
 
 int32_t retrieve_ers_setting(const char* name, void *val, const uint32_t size)
