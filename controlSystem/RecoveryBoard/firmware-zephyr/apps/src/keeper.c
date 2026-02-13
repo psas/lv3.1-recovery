@@ -343,13 +343,13 @@ int32_t cmd_save_hall_limits_to_flash(const struct shell *shell, size_t argc, ch
 	// TODO [ ] Develop a readable way to capture follolwing return values in a bitwise
 	//  fashion, for aggregate check of success or failure of all flash store
 	//  operations:
-	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_HLIMIT_1), &v_under_limit,
+	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_HLIMIT_1), (const void *)v_under_limit,
 				sizeof(v_under_limit));
-	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_HLIMIT_2), &inactive_limit,
+	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_HLIMIT_2), (const void *)inactive_limit,
 				sizeof(inactive_limit));
-	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_HLIMIT_3), &between_limit,
+	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_HLIMIT_3), (const void *)between_limit,
 				sizeof(between_limit));
-	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_HLIMIT_4), &active_limit,
+	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_HLIMIT_4), (const void *)active_limit,
 				sizeof(active_limit));
 	return rc;
 }
