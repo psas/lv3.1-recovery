@@ -201,8 +201,6 @@ void gpio_in_thread_entry(void *arg1, void *arg2, void *arg3)
 
 	while (1)
 	{
-		// LOG_INF("gpio_in stub");
-
 		val[ERS_SIG_ISO_DROGUE] = gpio_pin_get_dt(&iso_drogue);
 		val[ERS_SIG_ISO_MAIN] = gpio_pin_get_dt(&iso_main);
 		val[ERS_SIG_NOT_UMB_ON] = gpio_pin_get_dt(&not_umb_on);
@@ -219,6 +217,9 @@ void gpio_in_thread_entry(void *arg1, void *arg2, void *arg3)
 				);
 		}
 
+		// We need to invert shore power/umbilical cord present signal,
+		// per live test in LV3.1 avioncics system on 2026-02-08 SUN.
+		val[ERS_SIG_NOT_UMB_ON] = !(val[ERS_SIG_NOT_UMB_ON]);
 		ekset_not_umb_on(val[ERS_SIG_NOT_UMB_ON]);
 
 		k_msleep(ERS_GPIO_THREAD_SLEEP_MS);
