@@ -149,19 +149,19 @@ SHELL_SUBCMD_SET_CREATE(sub_section_hall, (hall));
 /* Create a set of one subcommands for 'hall' command */
 SHELL_SUBCMD_SET_CREATE(sub_section_hall_set, (hall, set));
 
-SHELL_SUBCMD_ADD((hall), show_limits, &sub_section_hall,
+SHELL_SUBCMD_ADD((hall), show, &sub_section_hall,
   "show Hall sensor limit values (ADC counts 0..4095)", arbiter_show_hall_state_limits, 1, 0);
 
-SHELL_SUBCMD_ADD((hall), set_limit_v_under, &sub_section_hall_set,
+SHELL_SUBCMD_ADD((hall), set_v_under, &sub_section_hall_set,
   "set Hall limit for state \"voltage under\":  hall v_under [s1|s2] [value]", cmd_set_limit_v_under, 3, 0);
 
-SHELL_SUBCMD_ADD((hall), set_limit_inactive, &sub_section_hall_set,
+SHELL_SUBCMD_ADD((hall), set_inactive, &sub_section_hall_set,
   "set Hall limit for state \"inactive\":  hall inactive [s1|s2] [value]", cmd_set_limit_inactive, 3, 0);
 
-SHELL_SUBCMD_ADD((hall), set_limit_between, &sub_section_hall_set,
+SHELL_SUBCMD_ADD((hall), set_between, &sub_section_hall_set,
   "set Hall limit for state \"between\":  hall between [s1|s2] [value]", cmd_set_limit_between, 3, 0);
 
-SHELL_SUBCMD_ADD((hall), set_limit_active, &sub_section_hall_set,
+SHELL_SUBCMD_ADD((hall), set_active, &sub_section_hall_set,
   "set Hall limit for state \"active\":  hall active [s1|s2] [value]", cmd_set_limit_active, 3, 0);
 
 
