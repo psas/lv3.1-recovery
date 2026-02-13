@@ -3,6 +3,15 @@
 
 #include <zephyr/shell/shell.h>
 
+// To provide `enum hall_sensor_instances`:
+#include "ers-config-defaults.h"
+
+/**
+ * @brief TODO [ ] complete this stub comment block.
+ */
+
+int32_t determine_which_sensor(const char *sensor_name, enum hall_sensor_instances *sensor_idx);
+
 enum lock_ring_position {
 	RING_LOCKED,
 	RING_BETWEEN_L_AND_U,

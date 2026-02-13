@@ -340,36 +340,17 @@ int32_t cmd_save_hall_limits_to_flash(const struct shell *shell, size_t argc, ch
 	get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_BETWEEN, &between_limit);
 	get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_ACTIVE, &active_limit);
 
-	// Call keeper to obtain hall limits:
-
-#if 0 // Put macro work on hold pending completion of integration tests 2026 Feb:
-// ---------------------------------------------------------------------
-#undef HALL_SENSOR_INST
-#define HALL_SENSOR_INST(idx, limit1, limit2, limit3, limit4) idx
-
-#define HALL_SENSOR_EACH_ID HALL_AND_SENSORS_DEFAULT_LIMIT_VALUES
-
-	// store_ers_setting(const char* name, const void *val, const uint32_t size)
-
-#define HALL_SENSOR_CONSTRUCT(limit_id, per_sensor_limit_id, lim_varname, \
-lim_value, lim_keyname, hall_state) \
-	rc = store_ers_setting(lim_keyname, lim_varname, sizeof(lim_varname)); \
-	if (rc < 0) { \
-		LOG_ERR("trouble storeing 'lim_varname' to flash, err %d", rc); \
-	}
-
-#undef HALL_SENSOR_INST
-// ---------------------------------------------------------------------
-#endif // 0
-
-	// TODO [ ] Develop a readable way to capture the return values in a bitwise
+	// TODO [ ] Develop a readable way to capture follolwing return values in a bitwise
 	//  fashion, for aggregate check of success or failure of all flash store
 	//  operations:
-	rc = store_ers_setting(SETTING_KEYNAME_HLIMIT_1, v_under_limit, sizeof(v_under_limit));
-	rc = store_ers_setting(SETTING_KEYNAME_HLIMIT_2, inactive_limit, sizeof(inactive_limit));
-	rc = store_ers_setting(SETTING_KEYNAME_HLIMIT_3, between_limit, sizeof(between_limit));
-	rc = store_ers_setting(SETTING_KEYNAME_HLIMIT_4, active_limit, sizeof(active_limit));
-
+	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_HLIMIT_1), &v_under_limit,
+				sizeof(v_under_limit));
+	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_HLIMIT_2), &inactive_limit,
+				sizeof(inactive_limit));
+	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_HLIMIT_3), &between_limit,
+				sizeof(between_limit));
+	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_HLIMIT_4), &active_limit,
+				sizeof(active_limit));
 	return rc;
 }
 
