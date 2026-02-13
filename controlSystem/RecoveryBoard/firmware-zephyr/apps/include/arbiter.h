@@ -59,7 +59,6 @@ int32_t cmd_set_limit_inactive(const struct shell *shell, size_t argc, char **ar
 int32_t cmd_set_limit_between(const struct shell *shell, size_t argc, char **argv);
 int32_t cmd_set_limit_active(const struct shell *shell, size_t argc, char **argv);
 
-int32_t cmd_save_hall_limits_to_flash(const struct shell *shell, size_t argc, char **argv);
 #endif // 0 . . . moving APIs to keeper module
 
 void cmd_set_default_limits(const struct shell *shell, size_t argc, char **argv);
