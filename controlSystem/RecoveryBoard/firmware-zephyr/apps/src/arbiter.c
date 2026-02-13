@@ -90,6 +90,8 @@ void arbiter_show_hall_state_limits(const struct shell *shell)
 	shell_fprintf(shell, SHELL_NORMAL, " inactive limit sensor 2: %u\n", inactive_limit);
 	shell_fprintf(shell, SHELL_NORMAL, "  between limit sensor 2: %u\n", between_limit);
 	shell_fprintf(shell, SHELL_NORMAL, "   active limit sensor 2: %u\n", active_limit);
+
+	shell_fprintf(shell, SHELL_NORMAL, "- DEV 0212 - keyname '%s'\n", SETTING_KEYNAME_S2_HL1);
 }
 
 /**
