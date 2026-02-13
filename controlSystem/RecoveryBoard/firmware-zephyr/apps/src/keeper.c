@@ -342,6 +342,8 @@ int32_t cmd_save_hall_limits_to_flash(const struct shell *shell, size_t argc, ch
 
 	// Call keeper to obtain hall limits:
 
+#if 0 // Put macro work on hold pending completion of integration tests 2026 Feb:
+// ---------------------------------------------------------------------
 #undef HALL_SENSOR_INST
 #define HALL_SENSOR_INST(idx, limit1, limit2, limit3, limit4) idx
 
@@ -357,10 +359,19 @@ lim_value, lim_keyname, hall_state) \
 	}
 
 #undef HALL_SENSOR_INST
+// ---------------------------------------------------------------------
+#endif // 0
+
+	// TODO [ ] Develop a readable way to capture the return values in a bitwise
+	//  fashion, for aggregate check of success or failure of all flash store
+	//  operations:
+	rc = store_ers_setting(SETTING_KEYNAME_HLIMIT_1, v_under_limit, sizeof(v_under_limit));
+	rc = store_ers_setting(SETTING_KEYNAME_HLIMIT_2, inactive_limit, sizeof(inactive_limit));
+	rc = store_ers_setting(SETTING_KEYNAME_HLIMIT_3, between_limit, sizeof(between_limit));
+	rc = store_ers_setting(SETTING_KEYNAME_HLIMIT_4, active_limit, sizeof(active_limit));
 
 	return rc;
 }
-
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // - DATA GROUP - (3) locking ring
