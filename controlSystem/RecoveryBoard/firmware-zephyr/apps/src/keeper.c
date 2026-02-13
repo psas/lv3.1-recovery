@@ -370,8 +370,16 @@ int32_t cmd_retrieve_hall_limits_from_flash(const struct shell *shell, size_t ar
 	rc = retrieve_ers_setting(STRINGIFY(SETTING_KEYNAME_HLIMIT_4), &active_limit,
 					sizeof(active_limit));
 
+	// TODO [ ] Name each limit in this response part of this command:
 	shell_fprintf(shell, SHELL_NORMAL, "Retrieved Hall limits: %u, %u, %u, %u",
 			v_under_limit, inactive_limit, between_limit, active_limit);
+
+	// Store retrieved Hall sensor limits to SRAM for run time use:
+	set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_UNDER, v_under_limit);
+	set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_INACTIVE, inactive_limit);
+	set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_BETWEEN, between_limit);
+	set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_ACTIVE, active_limit);
+
 	return rc;
 }
 
