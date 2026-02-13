@@ -12,7 +12,7 @@
 LOG_MODULE_REGISTER(keeper, LOG_LEVEL_INF);
 
 #include <arbiter.h>
-#include <ers-config-defaults.h>
+#include <ers-config.h>
 #include <keeper.h>
 #include "settings-ers.h"
 
