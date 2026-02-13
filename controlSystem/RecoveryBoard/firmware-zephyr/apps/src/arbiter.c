@@ -15,7 +15,7 @@ LOG_MODULE_REGISTER(arbiter, CONFIG_ARBITER_LOG_LEVEL);
 
 #include <arbiter.h>
 #include <ers-can.h>
-#include <ers-config-defaults.h>
+#include <ers-config.h>
 #include <ers-dac.h>
 #include <gpio-in.h>
 #include <keeper.h>
