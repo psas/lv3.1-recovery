@@ -354,6 +354,27 @@ int32_t cmd_save_hall_limits_to_flash(const struct shell *shell, size_t argc, ch
 	return rc;
 }
 
+int32_t cmd_retrieve_hall_limits_from_flash(const struct shell *shell, size_t argc, char **argv)
+{
+	uint32_t v_under_limit, inactive_limit, between_limit, active_limit;
+	int32_t rc = 0;
+
+	// Call keeper to obtain hall limits:
+	// shell_fprintf(shell, SHELL_NORMAL, "- STUB -\n");
+	rc = retrieve_ers_setting(STRINGIFY(SETTING_KEYNAME_HLIMIT_1), &v_under_limit,
+					sizeof(v_under_limit));
+	rc = retrieve_ers_setting(STRINGIFY(SETTING_KEYNAME_HLIMIT_2), &inactive_limit,
+					sizeof(inactive_limit));
+	rc = retrieve_ers_setting(STRINGIFY(SETTING_KEYNAME_HLIMIT_3), &between_limit,
+					sizeof(between_limit));
+	rc = retrieve_ers_setting(STRINGIFY(SETTING_KEYNAME_HLIMIT_4), &active_limit,
+					sizeof(active_limit));
+
+	shell_fprintf(shell, SHELL_NORMAL, "Retrieved Hall limits: %u, %u, %u, %u",
+			v_under_limit, inactive_limit, between_limit, active_limit);
+	return rc;
+}
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // - DATA GROUP - (3) locking ring
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
