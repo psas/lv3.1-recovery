@@ -124,6 +124,8 @@ ERS firmware TODO list:
 
 [ ] Create a timer based LED work element.
 
-[ ] complete the API cmd_save_hall_limits_to_flash().
+[ ] Complete the API cmd_save_hall_limits_to_flash().
 
-[ ] shorten header file name `ers-config-defaults.h` to `ers-config.h`.
+[ ] Shorten header file name `ers-config-defaults.h` to `ers-config.h`.
+
+[ ] Add command to turn on and turn off buzzer "mark" type audio pattern.
