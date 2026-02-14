@@ -53,7 +53,7 @@ static int cmd_wrapper_read_adc_in1(const struct shell *shell, size_t argc, char
 }
 
 //----------------------------------------------------------------------
-// - SECTION - ERS diagnotics
+// - COMMAND SET - diagnotics
 //----------------------------------------------------------------------
 
 static int cmd_diag_periodic_on(const struct shell *shell, size_t argc, char *argv[])
@@ -90,7 +90,34 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 SHELL_CMD_REGISTER(diag, &ers_cmds_diag, "- ERS - diagnostics", NULL);
 
 //----------------------------------------------------------------------
-// - SECTION - ERS ADC commands
+// - COMMAND SET - status LED
+//----------------------------------------------------------------------
+
+static int cmd_status_led_on(const struct shell *shell, size_t argc, char *argv[])
+{
+	shell_fprintf(shell, SHELL_NORMAL, "- STUB - enable ERS status LED\n\r");
+	return 0;
+}
+
+static int cmd_status_led_off(const struct shell *shell, size_t argc, char *argv[])
+{
+	shell_fprintf(shell, SHELL_NORMAL, "- STUB - disable ERS status LED\n\r");
+	return 0;
+}
+
+SHELL_STATIC_SUBCMD_SET_CREATE(
+        cmds_status_led,
+        SHELL_CMD_ARG(on, NULL, "enable ERS status LED",
+                cmd_status_led_on, 0, 0),
+        SHELL_CMD_ARG(off, NULL, "disable ERS status LED",
+                cmd_status_led_off, 0, 0),
+        SHELL_SUBCMD_SET_END
+);
+
+SHELL_CMD_REGISTER(led, &cmds_status_led, "- ERS - status LED", NULL);
+
+//----------------------------------------------------------------------
+// - COMMAND SET - ADC commands
 //----------------------------------------------------------------------
 
 static int cmd_wrapper_read_adc_all(const struct shell *shell, size_t argc, char *argv[])
@@ -136,7 +163,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 SHELL_CMD_REGISTER(ers, &ers_cmds, "- ERS - development commands", NULL);
 
 //----------------------------------------------------------------------
-// - SECTION - ERS Hall sensor commands
+// - COMMAND SET - Hall sensor commands
 //----------------------------------------------------------------------
 
 /**
@@ -289,7 +316,7 @@ SHELL_CMD_REGISTER(ring, &sub_section_ring, "- ERS - lock ring commands", NULL);
 // clang-format on
 
 //----------------------------------------------------------------------
-// - SECTION - DAC commands
+// - COMMAND SET - DAC commands
 //----------------------------------------------------------------------
 
 static int cmd_dac_show_range(const struct shell *shell, size_t argc, char *argv[])
@@ -394,6 +421,8 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
                 cmd_dac_get_setting_for_lock_unlock, 0, 0),
         SHELL_SUBCMD_SET_END
 );
+// TODO [ ] consider renaming `cmd_dac_get_setting_for_lock_unlock` to `cmd_dac_retrieve...`
+//           to match the settings' module API names 'store' and 'retrieve'.
 
 SHELL_CMD_REGISTER(dac, &cmds_dac, "- ERS - DAC info and set commands", NULL);
 

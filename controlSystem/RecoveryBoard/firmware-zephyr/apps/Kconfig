@@ -83,6 +83,10 @@ module = ERS_SETTINGS
 module-str = ERS settings module
 source "subsys/logging/Kconfig.template.log_config"
 
+module = STATUS_LED
+module-str = ERS status led
+source "subsys/logging/Kconfig.template.log_config"
+
 # Following Kconfig inclusion needed to support Zephyr logging template macros
 source "Kconfig.zephyr"
 
