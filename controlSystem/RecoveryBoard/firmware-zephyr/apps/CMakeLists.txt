@@ -18,7 +18,6 @@ project(ers_drogue_board)
 
 target_include_directories(app PRIVATE
     include
-    # ${ERS_REPO_ROOT}/shell-module/include
     shell-module/include
 )
 
@@ -34,4 +33,5 @@ target_sources(app PRIVATE
     src/pwm.c
     src/settings-ers.c
     src/shell-support.c
+    src/status-led.c
 )

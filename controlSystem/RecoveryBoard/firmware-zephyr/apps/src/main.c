@@ -19,6 +19,7 @@
 #include <ers-pwm.h>
 #include <settings-ers.h>
 #include <shell-support.h>
+#include <status-led.h>
 
 LOG_MODULE_REGISTER(ers_main, LOG_LEVEL_INF);
 
@@ -31,35 +32,6 @@ LOG_MODULE_REGISTER(ers_main, LOG_LEVEL_INF);
 //----------------------------------------------------------------------
 // - SECTION - routines
 //----------------------------------------------------------------------
-
-#include <zephyr/drivers/gpio.h>
-// static const struct pwm_dt_spec pwm_led0 = PWM_DT_SPEC_GET(DT_ALIAS(pwm_led0));
-#define LED0_NODE DT_ALIAS(led0)
-static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
-
-int32_t dev_configure_led(void)
-{
-	int32_t rc = 0;
-
-        if (!gpio_is_ready_dt(&led)) {
-                return -ENODEV;
-        }
-
-        rc = gpio_pin_configure_dt(&led, GPIO_OUTPUT_ACTIVE);
-	return rc;
-}
-
-int32_t dev_toggle_led(void)
-{
-	static bool led_state = true;
-
-	int32_t rc = gpio_pin_toggle_dt(&led);
-	if (rc < 0) {
-		return rc;
-	}
-	led_state = !led_state;
-	return rc;
-}
 
 int main(void)
 {
@@ -99,7 +71,7 @@ int main(void)
 	rc = pwm_init();
 	LOG_INF("ERS PWM module init returns %d", rc);
 
-	rc = dev_configure_led();
+	rc = status_led_init();
 	LOG_INF("- DEV 0108 - routine to configure led0 returns %d", rc);
 
 	LOG_INF("main() entering 'while (1)' loop . . .");
@@ -128,7 +100,6 @@ int main(void)
 		rc = pwm_play_melody();
 		// TODO [ ] . . . do something with rc.
 
-		rc = dev_toggle_led();
 		k_msleep(ERS_MAIN_LOOP_PERIOD_MS);
 	}
 
