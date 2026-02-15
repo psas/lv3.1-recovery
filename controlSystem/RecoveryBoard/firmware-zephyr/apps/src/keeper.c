@@ -14,7 +14,14 @@ LOG_MODULE_REGISTER(keeper, LOG_LEVEL_INF);
 #include <arbiter.h>
 #include <ers-config.h>
 #include <keeper.h>
+#include <status-led.h>
 #include "settings-ers.h"
+
+/**
+ * @defgroup status LED
+ */
+
+static atomic_t status_led_config = ATOMIC_INIT(true);
 
 /**
  * @defgroup digital_inputs
@@ -774,7 +781,8 @@ void ekget_ready_state(uint32_t* value)
 
 /**
  * @brief ERS firmware sends periodic diagnostic and state info over the debug
- *   UART.  This pair of routines enables and disables this at run time.
+ *   UART.  This trio of routines controls these diagnostics in some simple
+ *   frequency, enable and disable ways.
  */
 
 void ek_sys_diag_periodic(void)
@@ -790,6 +798,25 @@ void ek_sys_diag_quiet(void)
 void ek_get_sys_diag_mode(uint32_t* value)
 {
 	*value = atomic_get(&ers_diag_flag_fs);
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - DATA GROUP - (7) status LED settings
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+void ek_enable_status_led(void)
+{
+	atomic_set(&status_led_config, (atomic_val_t)true);
+}
+
+void ek_disable_status_led(void)
+{
+	atomic_set(&status_led_config, (atomic_val_t)false);
+}
+
+void ek_get_status_led_config(uint32_t* config)
+{
+	*config = atomic_get(&status_led_config);
 }
 
 //----------------------------------------------------------------------
