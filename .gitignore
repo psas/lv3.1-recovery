@@ -42,3 +42,14 @@ fp-info-cache
 *.b##.DS_Store
 .DS_Store
 
+# 2026-02-15 - ERS Zephyr work related git ignores . . .
+# Python3 virtual environment related:
+*venv
+# Vim related:
+*.swp
+# Zephyr source tree directories:
+bootloader
+modules
+tools
+zephyr
+
