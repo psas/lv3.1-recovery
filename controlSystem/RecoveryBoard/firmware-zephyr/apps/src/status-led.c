@@ -53,7 +53,8 @@ void status_led_timer_handler(struct k_timer *dummy)
 	if (!(config && STATUS_LED_ENABLE_BIT)) {
 // TODO [ ] add second timer to monitor run-time status LED config, so that
 //   this timer may turn itsef off and other modules may restart it. 
-		int32_t rc = gpio_pin_set_dt(&led, 1);
+		rc = gpio_pin_set_dt(&led, 1);
+		// TODO [ ] Check `rc` or annotate it as unused.
 		return;
 	}
 
