@@ -30,6 +30,7 @@ LOG_MODULE_REGISTER(shell_support, LOG_LEVEL_INF);
 #include <ers-util.h>
 #include <keeper.h>
 #include <motor-control.h>
+#include "settings-ers.h"
 
 #define SHELL_SUPPORT_THREAD_STACK_SIZE 512
 #define SHELL_SUPPORT_THREAD_PRIORITY 5
@@ -316,6 +317,61 @@ SHELL_SUBCMD_ADD((ring), unlock, &sub_section_ring, "unlock ring", cmd_unlock_ri
 
 SHELL_CMD_REGISTER(ring, &sub_section_ring, "- ERS - lock ring commands", NULL);
 // clang-format on
+
+//----------------------------------------------------------------------
+// - COMMAND SET - motor related commands
+//----------------------------------------------------------------------
+
+static int cmd_motor_show_use_count(const struct shell *shell, size_t argc, char *argv[])
+{
+	LOG_INF("- STUBCOMMAND - show moter uer count.");
+        uint32_t value = 0;
+        int32_t rc = 0;
+
+	rc = retrieve_ers_setting(KEY_NAME_LOCK_COUNT, &value, sizeof(value));
+	if (rc != 0) {
+                shell_fprintf(shell, SHELL_NORMAL, "Failed to read motor use count from flash,"
+			       " err %d\n\r", rc);
+	} else {
+                shell_fprintf(shell, SHELL_NORMAL, "Motor actuations at %u count\n\r", value);
+	}
+
+	return 0;
+}
+
+static int cmd_motor_set_use_count(const struct shell *shell, size_t argc, char *argv[])
+{
+	LOG_INF("- IN PROGRESS COMMAND - set moter use count.");
+
+        uint32_t value = 0;
+        char *endptr, *str;
+        int32_t rc = 0;
+
+	str = argv[1];
+	value = strtol(str, &endptr, BASE_10);
+
+	// TOOD [ ] Sanity check outcome of `strtol()`.
+        shell_fprintf(shell, SHELL_NORMAL, "setting motor use count to %u\n", value);
+
+        rc = store_ers_setting(KEY_NAME_LOCK_COUNT, (const void *)value, sizeof(value));
+        if (rc != 0) {
+                LOG_ERR("Failed to store motor use (lock|unlock ring) events, err %d", rc);
+        }
+
+	return 0;
+}
+
+SHELL_STATIC_SUBCMD_SET_CREATE(
+        cmds_motor_use,
+        SHELL_CMD_ARG(show, NULL, "show motor use count",
+                cmd_motor_show_use_count, 1, 0),
+        SHELL_CMD_ARG(set, NULL, "set motor use count (for when motor is replaced)",
+                cmd_motor_set_use_count, 2, 0),
+	// TODO [ ] add command to show max current allowed by DAC module.
+        SHELL_SUBCMD_SET_END
+);
+
+SHELL_CMD_REGISTER(motor, &cmds_motor_use, "- ERS - motor use info", NULL);
 
 //----------------------------------------------------------------------
 // - COMMAND SET - DAC commands
