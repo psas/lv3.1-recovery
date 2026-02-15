@@ -5,7 +5,10 @@
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/logging/log.h>
+
 LOG_MODULE_REGISTER(status_led, CONFIG_STATUS_LED_LOG_LEVEL);
+
+#include "keeper.h"
 
 //----------------------------------------------------------------------
 // - SECTION - defines
@@ -37,20 +40,30 @@ int32_t configure_led(void)
 	return rc;
 }
 
-#if 1
+#define STATUS_LED_ENABLE_BIT 0x00000001
+
 // int32_t dev_toggle_led(void)
 void status_led_timer_handler(struct k_timer *dummy)
 {
 	static bool led_state = true;
+	uint32_t config = 0;
+	int32_t rc = 0;
 
-	int32_t rc = gpio_pin_toggle_dt(&led);
+	ek_get_status_led_config(&config);
+	if (!(config && STATUS_LED_ENABLE_BIT)) {
+// TODO [ ] add second timer to monitor run-time status LED config, so that
+//   this timer may turn itsef off and other modules may restart it. 
+		int32_t rc = gpio_pin_set_dt(&led, 1);
+		return;
+	}
+
+	rc = gpio_pin_toggle_dt(&led);
 	if (rc < 0) {
 		// return rc;
 	}
 	led_state = !led_state;
 	// return rc;
 }
-#endif
 
 K_TIMER_DEFINE(status_led_timer, status_led_timer_handler, NULL);
 

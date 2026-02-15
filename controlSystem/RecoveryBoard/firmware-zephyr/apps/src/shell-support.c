@@ -95,13 +95,15 @@ SHELL_CMD_REGISTER(diag, &ers_cmds_diag, "- ERS - diagnostics", NULL);
 
 static int cmd_status_led_on(const struct shell *shell, size_t argc, char *argv[])
 {
-	shell_fprintf(shell, SHELL_NORMAL, "- STUB - enable ERS status LED\n\r");
+	shell_fprintf(shell, SHELL_NORMAL, "Enable ERS status LED . . .\n\r");
+	ek_enable_status_led();
 	return 0;
 }
 
 static int cmd_status_led_off(const struct shell *shell, size_t argc, char *argv[])
 {
-	shell_fprintf(shell, SHELL_NORMAL, "- STUB - disable ERS status LED\n\r");
+	shell_fprintf(shell, SHELL_NORMAL, "Disable ERS status LED . . . \n\r");
+	ek_disable_status_led();
 	return 0;
 }
 

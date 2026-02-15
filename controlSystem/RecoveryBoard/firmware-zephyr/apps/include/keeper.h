@@ -217,4 +217,10 @@ void ek_sys_diag_periodic(void);
 void ek_sys_diag_quiet(void);
 void ek_get_sys_diag_mode(uint32_t* value);
 
+// Status LED
+
+void ek_enable_status_led(void);
+void ek_disable_status_led(void);
+void ek_get_status_led_config(uint32_t* config);
+
 #endif // ERS_KEEPER_H
