@@ -126,6 +126,7 @@ impl<'a> Iterator for SenderStateIter<'a> {
 
 impl core::fmt::Display for SenderStateField {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let time_now_ms = Instant::now().as_millis();
         match *self {
             Self::RocketReady(val) => {
                 core::write!(f, "Rocket Ready: {}", if val { "YES" } else { "NO" })
@@ -142,10 +143,16 @@ impl core::fmt::Display for SenderStateField {
             Self::ShorePowerStatus(val) => {
                 core::write!(f, "Shore Power: {}", if val { "ON" } else { "OFF" })
             }
-            Self::DrogueLastSeen(val) => core::write!(f, "Drogue last seen: {}ms", val),
-            Self::MainLastSeen(val) => core::write!(f, "Main last seen: {}ms", val),
-            Self::IsoDrogueLastSeen(val) => core::write!(f, "Iso drogue last seen: {}ms", val),
-            Self::IsoMainLastSeen(val) => core::write!(f, "Iso main last seen: {}ms", val),
+            Self::DrogueLastSeen(val) => {
+                core::write!(f, "Drogue last seen: {}ms", time_now_ms - val)
+            }
+            Self::MainLastSeen(val) => core::write!(f, "Main last seen: {}ms", time_now_ms - val),
+            Self::IsoDrogueLastSeen(val) => {
+                core::write!(f, "Iso drogue last seen: {}ms", time_now_ms - val)
+            }
+            Self::IsoMainLastSeen(val) => {
+                core::write!(f, "Iso main last seen: {}ms", time_now_ms - val)
+            }
         }
     }
 }
@@ -318,13 +325,10 @@ async fn cli(uart: BufferedUart<'static>) {
                     let mut buf = [0u8; 64];
                     let mut state_unlocked = SYSTEM_STATE_MTX.lock().await;
                     if let Some(state) = state_unlocked.as_mut() {
-                        let time_now = Instant::now().as_millis();
-                        let ts = format_no_std::show(
-                            &mut buf,
-                            format_args!("Current time: {}ms\r\n", time_now),
-                        )
-                        .unwrap();
-                        io.write(ts.as_bytes()).await.unwrap();
+                        let id =
+                            format_no_std::show(&mut buf, format_args!("Id: {}\r\n", "Sender"))
+                                .unwrap();
+                        io.write(id.as_bytes()).await.unwrap();
                         for field in state.iter() {
                             let s = format_no_std::show(&mut buf, format_args!("{}\r\n", field))
                                 .unwrap();

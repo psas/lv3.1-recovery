@@ -102,9 +102,20 @@ impl<'a> Iterator for ChuteStateIter<'a> {
 
 impl core::fmt::Display for ChuteStateField {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let time_now = Instant::now().as_millis();
         match *self {
             Self::Id(val) => {
-                core::write!(f, "Id: {}", val)
+                core::write!(
+                    f,
+                    "Id: {}",
+                    if val == 1 {
+                        "Drogue"
+                    } else if val == 2 {
+                        "Main"
+                    } else {
+                        "Unknown"
+                    }
+                )
             }
             Self::Ready(val) => {
                 core::write!(f, "Ready: {}", if val { "YES" } else { "NO" })
@@ -112,7 +123,7 @@ impl core::fmt::Display for ChuteStateField {
             Self::ShorePowerStatus(val) => {
                 core::write!(f, "Shore Power: {}", if val { "ON" } else { "OFF" })
             }
-            Self::SenderLastSeen(val) => core::write!(f, "Sender last seen: {}ms", val),
+            Self::SenderLastSeen(val) => core::write!(f, "Sender last seen: {}ms", time_now - val),
         }
     }
 }
@@ -296,13 +307,6 @@ pub async fn cli(uart: BufferedUart<'static>) {
                     let mut buf = [0u8; 64];
                     let mut state_unlocked = SYSTEM_STATE_MTX.lock().await;
                     if let Some(state) = state_unlocked.as_mut() {
-                        let time_now = Instant::now().as_millis();
-                        let ts = format_no_std::show(
-                            &mut buf,
-                            format_args!("Current time: {}ms\r\n", time_now),
-                        )
-                        .unwrap();
-                        io.write(ts.as_bytes()).await.unwrap();
                         for field in state.iter() {
                             let s = format_no_std::show(&mut buf, format_args!("{}\r\n", field))
                                 .unwrap();
