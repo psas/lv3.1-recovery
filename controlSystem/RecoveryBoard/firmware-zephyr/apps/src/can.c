@@ -17,7 +17,8 @@
 #include <zephyr/sys/byteorder.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(ers_can_module, CONFIG_CAN_LOG_LEVEL);
+// LOG_MODULE_REGISTER(ers_can, CONFIG_CAN_LOG_LEVEL);
+LOG_MODULE_REGISTER(ers_can, LOG_LEVEL_ERR);
 
 #include <ers-app-config.h>
 #include <keeper.h>
@@ -68,7 +69,7 @@ struct k_thread rx_thread_data;
 
 const struct device *const can_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_canbus));
 
-// TODO [x] Review whether both of these message queues needed:
+// TODO [x] Review whether this message queues needed:
 CAN_MSGQ_DEFINE(counter_msgq, 2);
 
 #if defined(ERS_BOARD_VARIANT_SENDER)
@@ -116,7 +117,7 @@ static uint8_t ers_small_payload_fs[1] = {0};
 void clear_flag_can_ok_work_handler(struct k_work *work)
 {
     // LOG_INF("CAN module timer expired!");
-    ekset_can_bus_ok(0);
+    ekset_can_bus_ok(0);                    // in "clear CANBus OK flag" work handler
 }
 
 K_WORK_DEFINE(clear_flag_can_ok_work, clear_flag_can_ok_work_handler);
@@ -163,11 +164,9 @@ void prep_and_send_ack_unlock_command(void)
                 .dlc = sizeof(ers_small_payload_fs)
         };
 
-// LOG_INF("M7");
 	can_send(can_dev, &ers_acknowledge_frame, K_FOREVER,
 		 tx_irq_callback,
 		 "ERS acklowledge frame");
-// LOG_INF("M8");
 }
 
 void prep_and_send_status_frame_work_handler(struct k_work *work)
@@ -195,7 +194,7 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
 	ekget_not_umb_on(&not_umb_on);
 
 	// (5)
-	uint32_t can_bus_ok_flag = 0;
+	uint32_t can_bus_ok_flag = 0;            // define local var in "prep and send status frame"
 	ekget_can_bus_ok(&can_bus_ok_flag);
 
 	// ring status: 0 = uninitialized, 1 = unlocked, 2 = in between, 3 = locked, 4 = error
@@ -219,7 +218,7 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
 	can_send(can_dev, &ers_status_frame, K_FOREVER,
 		 tx_irq_callback,
 		 "ERS status frame");
-
+#if 0
         LOG_INF("                  ringst battrd battok pwrsts canok  ready  reserv reserv");
 	LOG_INF("drogue CAN frame:  0x%02X   0x%02X   0x%02X   0x%02X   0x%02X   0x%02X   0x%02X"
 	"   0x%02X",
@@ -231,6 +230,7 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
 	  ers_state_vars_fs[IDX_DROGUE_READY],
 	  ers_state_vars_fs[IDX_RESERVED_01],
 	  ers_state_vars_fs[IDX_RESERVED_02]);
+#endif // 0 . . . 2026-02-15
 }
 
 K_WORK_DEFINE(prep_and_send_status_frame_work, prep_and_send_status_frame_work_handler);
@@ -250,33 +250,35 @@ void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 	int32_t rc = 0;
 
 	const struct can_filter filter_sender_heartbeat = {
-		.flags = CAN_FILTER_IDE,
+		// .flags = CAN_FILTER_IDE,
+		.flags = 0,
 		.id = MSG_ID_TELEMETRUM_SENDER,
-		.mask = CAN_EXT_ID_MASK
+		// .mask = CAN_EXT_ID_MASK
+		.mask = CAN_STD_ID_MASK
 	};
 
 	const struct can_filter filter_drogue_heartbeat = {
-		.flags = CAN_FILTER_IDE,
+		.flags = 0,
 		.id = MSG_ID_DROGUE_HEARTBEAT,
-		.mask = CAN_EXT_ID_MASK
+		.mask = CAN_STD_ID_MASK
 	};
 
 	const struct can_filter filter_main_heartbeat = {
-		.flags = CAN_FILTER_IDE,
+		.flags = 0,
 		.id = MSG_ID_MAIN_HEARTBEAT,
-		.mask = CAN_EXT_ID_MASK
+		.mask = CAN_STD_ID_MASK
 	};
 
 	const struct can_filter filter_unlock_drogue_chute = {
-		.flags = CAN_FILTER_IDE,
+		.flags = 0,
 		.id = MSG_ID_UNLOCK_DROGUE_CHUTE,
-		.mask = CAN_EXT_ID_MASK
+		.mask = CAN_STD_ID_MASK
 	};
 
 	const struct can_filter filter_unlock_main_chute = {
-		.flags = CAN_FILTER_IDE,
+		.flags = 0,
 		.id = MSG_ID_UNLOCK_MAIN_CHUTE,
-		.mask = CAN_EXT_ID_MASK
+		.mask = CAN_STD_ID_MASK
 	};
 
 	struct can_frame frame;
@@ -294,17 +296,16 @@ void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 		k_msgq_get(&counter_msgq, &frame, K_FOREVER);
 
 		if (IS_ENABLED(CONFIG_CAN_ACCEPT_RTR) && (frame.flags & CAN_FRAME_RTR) != 0U) {
-			LOG_INF("M1");
+			// LOG_INF("M2");
 			continue;
 		}
 
 		if (frame.id == MSG_ID_TELEMETRUM_SENDER) {
 			k_timer_start(&telemetrum_check_timer, K_SECONDS(2), K_SECONDS(2));
-			// LOG_INF("RX %X - telemetrum heartbeat", frame.id);
+			LOG_INF("RX %X - telemetrum heartbeat", frame.id);
 			ekset_can_bus_ok(1);
 		}
 
-#if 1
 		switch (frame.id)
 		{
 		case MSG_ID_TELEMETRUM_SENDER:
@@ -341,7 +342,6 @@ void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 		default:
 			LOG_WRN("RX %X <- unrecognized CAN frame id", frame.id);
 		}
-#endif
 	}
 }
 
