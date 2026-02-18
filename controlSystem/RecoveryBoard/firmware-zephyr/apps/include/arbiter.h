@@ -31,10 +31,11 @@ enum lock_ring_position {
 //           known.
 
 enum lock_ring_state {
+	RING_STATE_UNKNOWN,
 	RING_STATE_UNLOCKED,
 	RING_STATE_BETWEEN,
 	RING_STATE_LOCKED,
-	RING_STATE_UNKNOWN
+	RING_STATE_ERROR
 };
 
 /**
