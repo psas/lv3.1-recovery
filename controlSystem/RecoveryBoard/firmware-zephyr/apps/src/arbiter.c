@@ -11,7 +11,8 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/shell/shell.h>
 
-LOG_MODULE_REGISTER(arbiter, CONFIG_ARBITER_LOG_LEVEL);
+// LOG_MODULE_REGISTER(arbiter, CONFIG_ARBITER_LOG_LEVEL);
+LOG_MODULE_REGISTER(arbiter, LOG_LEVEL_ERR);
 
 #include <arbiter.h>
 #include <ers-can.h>
@@ -452,12 +453,14 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 		char *str_ptr = ring_pos_to_str(ring_position);
 
 		rc = arbiter_determine_ring_state(&ring_position);
+#if 0
 		LOG_INF("ring state:  %s (%d)", str_ptr, ring_position);
+#endif
 #endif
 
 // TODO [ ] Call battery state determination code
 		rc = calc_battery_voltage();
-		LOG_INF("calc battery voltage returns status %d", rc);
+		// LOG_INF("calc battery voltage returns status %d", rc);
 
 		rc = determine_batt_ok();
 
@@ -470,7 +473,9 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 		ekget_can_bus_ok(&can_bus_ok);
 		ekget_ring_status(&ring_state);
 
-		LOG_INF("- DEV 0105 - determining ERS ready state . . .");
+		// LOG_INF("- DEV 0105 - determining ERS ready state . . .");
+		LOG_INF("- DEV 0105 - batt_ok %d, can_ok %d, ring_state %d",
+			battery_ok, can_bus_ok, ring_state);
 		if (battery_ok && can_bus_ok && (ring_state == RING_STATE_LOCKED)) {
 			ekset_ready_state(true);
 		} else {
