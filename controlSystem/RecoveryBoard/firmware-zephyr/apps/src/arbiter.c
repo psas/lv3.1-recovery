@@ -147,6 +147,51 @@ int32_t adc_reading_to_hall_state(const enum hall_sensor_instances sensor_idx,
 	return 0;
 }
 
+#define DEV_ARB_MESG_SIZE 256
+
+void arb_mesg(char *fmt, ...)
+{
+	int32_t rc = 0;
+	static char lbuf[DEV_ARB_MESG_SIZE] = {0};
+	memset(lbuf, 0, sizeof(lbuf));
+
+	int n = 0;
+	size_t size = 0;
+	char *p = lbuf;
+	va_list ap;
+
+	/* Determine required size.  */
+
+	va_start(ap, fmt);
+	n = vsnprintf(p, size, fmt, ap);
+	va_end(ap);
+
+	if (n < 0) {
+		LOG_ERR("Failed to format diag message, vsnpirntf() returns %d", n);
+		return;
+	}
+
+	size = (size_t) n + 1;      /* One extra byte for '\0' */
+	// p = malloc(size);
+	// if (p == NULL)
+	// return NULL;
+	if (size > DEV_ARB_MESG_SIZE) {
+		LOG_WRN("Messages truncated, is %d chars, only able to show %d",
+			size, DEV_ARB_MESG_SIZE);
+		size = DEV_ARB_MESG_SIZE;
+	}
+
+	va_start(ap, fmt);
+	n = vsnprintf(p, size, fmt, ap);
+	va_end(ap);
+
+	ek_get_sys_diag_mode(&rc);
+	if (rc == true) {
+		// LOG_INF("%s", p);
+		LOG_INF("(s %d) %s", size, p);
+	}
+}
+
 /**
  * @brief Routine to determine lock ring position.
  *
@@ -186,7 +231,7 @@ int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 		return rc;
 	}
 
-LOG_INF("readings, states: %u %u  %d %d", hall_1_reading, hall_2_reading, hall_1_state, hall_2_state);
+	arb_mesg("readings, states: %u %u  %d %d", hall_1_reading, hall_2_reading, hall_1_state, hall_2_state);
 
 /*
    Hall2   Vun   Ina   Bet   Act   Ovr 
@@ -204,14 +249,14 @@ determinations.
 
 	// Look for possible "between" sensor values pairs first:
 	if ((hall_1_state == HALL_STATE_V_BETWEEN) || (hall_2_state == HALL_STATE_V_BETWEEN)) {
-		LOG_INF("H1");
+		arb_mesg("H1");
 		*ring_position = RING_POS_BETWEEN_L_AND_U;
 		goto qualify_validity;
 	}
 
 	// Cover error possibilities:
 	if (hall_1_state == hall_2_state) {
-		LOG_INF("H2");
+		arb_mesg("H2");
 		*ring_position = RING_POS_UNKNOWN;
 		goto done;
 	}
@@ -221,7 +266,7 @@ determinations.
 	    ((hall_2_state == HALL_STATE_V_UNDER) ||
 	     (hall_2_state == HALL_STATE_V_OVER)))
 	{
-		LOG_INF("H3");
+		arb_mesg("H3");
 		*ring_position = RING_POS_LOCKED;
 		goto done;
 	}
@@ -231,7 +276,7 @@ determinations.
 	    ((hall_1_state == HALL_STATE_V_UNDER) ||
 	     (hall_1_state == HALL_STATE_V_OVER)))
 	{
-		LOG_INF("H4");
+		arb_mesg("H4");
 		*ring_position = RING_POS_UNLOCKED;
 		goto done;
 	}
@@ -241,7 +286,7 @@ determinations.
 	    ((hall_2_state == HALL_STATE_V_UNDER) ||
 	     (hall_2_state == HALL_STATE_V_OVER)))
 	{
-		LOG_INF("H5");
+		arb_mesg("H5");
 		*ring_position = RING_POS_UNLOCKED;
 		goto done;
 	}
@@ -251,24 +296,24 @@ determinations.
 	    ((hall_1_state == HALL_STATE_V_UNDER) ||
 	     (hall_1_state == HALL_STATE_V_OVER)))
 	{
-		LOG_INF("H6");
+		arb_mesg("H6");
 		*ring_position = RING_POS_LOCKED;
 		goto done;
 	}
 
 qualify_validity:
 	if ((hall_1_state == HALL_STATE_V_BETWEEN) && (hall_2_state == HALL_STATE_V_BETWEEN)) {
-		LOG_INF("both hall in between");
+		arb_mesg("both hall in between");
 		*ring_position = RING_POS_BETWEEN_FULLY_QUALIFIED;
 	}
 
 	if ((hall_1_state == HALL_STATE_V_ACTIVE) && (hall_2_state == HALL_STATE_V_INACTIVE)) {
-		LOG_INF("ring unlocked, fully qualified");
+		arb_mesg("ring unlocked, fully qualified");
 		*ring_position = RING_POS_UNLOCKED_FULLY_QUALIFIED;
 	}
 
 	if ((hall_1_state == HALL_STATE_V_INACTIVE) && (hall_2_state == HALL_STATE_V_ACTIVE)) {
-		LOG_INF("ring locked, fully qualified");
+		arb_mesg("ring locked, fully qualified");
 		*ring_position = RING_POS_LOCKED_FULLY_QUALIFIED;
 	}
 
@@ -469,7 +514,7 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 		ekget_ring_status(&ring_state);
 
 		// LOG_INF("- DEV 0105 - determining ERS ready state . . .");
-		LOG_INF("- DEV 0105 - batt_ok %d, can_ok %d, ring_state %d",
+		arb_mesg("- DEV 0105 - batt_ok %d, can_ok %d, ring_state %d",
 			battery_ok, can_bus_ok, ring_state);
 		if (battery_ok && can_bus_ok && (ring_state == RING_STATE_LOCKED)) {
 // TODO [ ] Check that rocket ready state should be determined here, as there appears to be

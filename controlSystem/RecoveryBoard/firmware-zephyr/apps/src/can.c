@@ -309,13 +309,13 @@ void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 		switch (frame.id)
 		{
 		case MSG_ID_TELEMETRUM_SENDER:
-			LOG_INF("RX %X - telemetrum heartbeat", frame.id);
+			// LOG_INF("RX %X - telemetrum heartbeat", frame.id);
 			break;
 		case MSG_ID_DROGUE_HEARTBEAT:
-			LOG_INF("RX %X - drogue chute heartbeat", frame.id);
+			// LOG_INF("RX %X - drogue chute heartbeat", frame.id);
 			break;
 		case MSG_ID_MAIN_HEARTBEAT:
-			LOG_INF("RX %X - main chute heartbeat", frame.id);
+			// LOG_INF("RX %X - main chute heartbeat", frame.id);
 			break;
 #if defined(ERS_BOARD_VARIANT_DROGUE_CHUTE)
 		case MSG_ID_UNLOCK_DROGUE_CHUTE:

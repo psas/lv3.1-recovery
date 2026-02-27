@@ -216,6 +216,37 @@ SHELL_CMD_REGISTER(hall, &sub_section_hall,
 //           or doubling effect when the shell "sees" log messages from Zephyr's
 //          logging system.
 
+static int cmd_show_locking_ring_state(const struct shell *shell, size_t argc, char *argv[])
+{
+        ARG_UNUSED(argc);
+        ARG_UNUSED(argv);
+	enum lock_ring_state ring_state = RING_STATE_UNKNOWN;
+	int32_t rc = 0;
+
+	// ekget_ring_status(enum lock_ring_state *value);
+	ekget_ring_status(&ring_state);
+
+	switch (ring_state) {
+		case RING_STATE_UNKNOWN:
+			shell_fprintf(shell, SHELL_NORMAL, "ring in 'unknown' state\n");
+			break;
+		case RING_STATE_UNLOCKED:
+			shell_fprintf(shell, SHELL_NORMAL, "ring in 'unlocked' state\n");
+			break;
+		case RING_STATE_BETWEEN:
+			shell_fprintf(shell, SHELL_NORMAL, "ring in 'between' state\n");
+			break;
+		case RING_STATE_LOCKED:
+			shell_fprintf(shell, SHELL_NORMAL, "ring in 'locked' state\n");
+			break;
+		case RING_STATE_ERROR:
+			shell_fprintf(shell, SHELL_NORMAL, "ring state detection error\n");
+			break;
+		default:
+			shell_fprintf(shell, SHELL_NORMAL, "show ring state command error\n");
+	}
+}
+
 static int cmd_show_locking_ring_pos(const struct shell *shell, size_t argc, char *argv[])
 {
         ARG_UNUSED(argc);
@@ -302,7 +333,10 @@ static int cmd_unlock_ring(const struct shell *shell, size_t argc, char *argv[])
 // clang-format off
 SHELL_SUBCMD_SET_CREATE(sub_section_ring, (ring));
 
-SHELL_SUBCMD_ADD((ring), position, &sub_section_ring, "show locking ring position",
+SHELL_SUBCMD_ADD((ring), state, &sub_section_ring, "show lock ring state",
+  cmd_show_locking_ring_state, 1, 0);
+
+SHELL_SUBCMD_ADD((ring), position, &sub_section_ring, "show lock ring position",
   cmd_show_locking_ring_pos, 1, 0);
 
 SHELL_SUBCMD_ADD((ring), dishow, &sub_section_ring, "show ring position detection internal in ms",
