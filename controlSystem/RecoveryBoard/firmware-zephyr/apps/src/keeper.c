@@ -844,9 +844,11 @@ static int32_t initialize_system_state_vars(void)
 	uint32_t count = 0;
 	int32_t rc = 0;
 
-	atomic_set(&ring_pos_interval, (atomic_val_t)RING_LOCKED);
+	// TODO [ ] Create a clear or shared symbol to hold the time-wise interval for ERS
+	//          firmware to determine and update lock ring position.
+	atomic_set(&ring_pos_interval, (atomic_val_t)100);
 
-	summary_state.ring_position = ATOMIC_INIT(RING_POSITION_UNKNOWN);
+	summary_state.ring_position = ATOMIC_INIT(RING_POS_UNKNOWN);
 	summary_state.battery_voltage =  ATOMIC_INIT(0); 
 	summary_state.battery_ok = ATOMIC_INIT(0); 
 	summary_state.shore_power_ok = ATOMIC_INIT(0);

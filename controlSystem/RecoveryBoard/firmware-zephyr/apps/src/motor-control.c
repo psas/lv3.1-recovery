@@ -277,15 +277,15 @@ int32_t mc_lock_ring(void)
 	rc = mc_drive_deploy2_high();
 	if (rc != 0) { LOG_ERR("Trouble set DEPLOY1, DEPLOY1!"); }
 
-	enum lock_ring_position ring_pos = RING_POSITION_UNKNOWN;
+	enum lock_ring_position ring_pos = RING_POS_UNKNOWN;
 	uint32_t i;
 
 	for (i = 0; i < COUNT_CHECKS; i++)
 	{
 		get_detected_ring_position(&ring_pos);
 
-		if ((ring_pos == RING_LOCKED) ||
-		    (ring_pos == RING_LOCKED_FULLY_QUALIFIED))
+		if ((ring_pos == RING_POS_LOCKED) ||
+		    (ring_pos == RING_POS_LOCKED_FULLY_QUALIFIED))
 		{
 			break;
 		}
@@ -330,15 +330,15 @@ int32_t mc_unlock_ring(void)
 	rc = mc_drive_deploy1_high();
 	if (rc != 0) { LOG_ERR("Trouble set DEPLOY1, DEPLOY1!"); }
 
-	enum lock_ring_position ring_pos = RING_POSITION_UNKNOWN;
+	enum lock_ring_position ring_pos = RING_POS_UNKNOWN;
 	uint32_t i;
 
 	for (i = 0; i < COUNT_CHECKS; i++)
 	{
 		get_detected_ring_position(&ring_pos);
 
-		if ((ring_pos == RING_UNLOCKED) ||
-		    (ring_pos == RING_UNLOCKED_FULLY_QUALIFIED))
+		if ((ring_pos == RING_POS_UNLOCKED) ||
+		    (ring_pos == RING_POS_UNLOCKED_FULLY_QUALIFIED))
 		{
 			LOG_INF("Stopping motor on ring position = %d", ring_pos);
 			break;
