@@ -12,7 +12,7 @@
 #include <zephyr/shell/shell.h>
 
 // LOG_MODULE_REGISTER(arbiter, CONFIG_ARBITER_LOG_LEVEL);
-LOG_MODULE_REGISTER(arbiter, LOG_LEVEL_ERR);
+LOG_MODULE_REGISTER(arbiter, LOG_LEVEL_INF);
 
 #include <arbiter.h>
 #include <ers-can.h>
@@ -29,7 +29,7 @@ LOG_MODULE_REGISTER(arbiter, LOG_LEVEL_ERR);
 // Select an ERS battery voltage "ok" threshold of 9.0 VDC, in tenths of a volt:
 #define BATTERY_VOLTAGE_OK_THRESHOLD_TENTHS_V 90
 
-#define ERS_ARBITER_SLEEP_PERIOD_MS 2000
+#define ERS_ARBITER_SLEEP_PERIOD_MS 1000
 
 #define RING_POS_PERIOD_MS 2000
 
@@ -42,7 +42,7 @@ LOG_MODULE_REGISTER(arbiter, LOG_LEVEL_ERR);
 K_THREAD_STACK_DEFINE(arbiter_thread_stack, CONFIG_ARBITER_THREAD_STACK_SIZE);
 struct k_thread arbiter_thread_data;
 
-static enum lock_ring_position ring_position_fs = RING_POSITION_UNKNOWN;
+static enum lock_ring_position ring_position_fs = RING_POS_UNKNOWN;
 
 //----------------------------------------------------------------------
 // - SECTION - routines
@@ -157,7 +157,7 @@ int32_t adc_reading_to_hall_state(const enum hall_sensor_instances sensor_idx,
  *  of the first "position" parameter.
  *
  * @note Calling code is responsible for setting parameter ring_position to
- *    a sensible starting value, namely 'RING_POSITION_UNKNOWN'.
+ *    a sensible starting value, namely 'RING_POS_UNKNOWN'.
  */
 
 int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position)
@@ -205,14 +205,14 @@ determinations.
 	// Look for possible "between" sensor values pairs first:
 	if ((hall_1_state == HALL_STATE_V_BETWEEN) || (hall_2_state == HALL_STATE_V_BETWEEN)) {
 		LOG_INF("H1");
-		*ring_position = RING_BETWEEN_L_AND_U;
+		*ring_position = RING_POS_BETWEEN_L_AND_U;
 		goto qualify_validity;
 	}
 
 	// Cover error possibilities:
 	if (hall_1_state == hall_2_state) {
 		LOG_INF("H2");
-		*ring_position = RING_POSITION_UNKNOWN;
+		*ring_position = RING_POS_UNKNOWN;
 		goto done;
 	}
 
@@ -222,7 +222,7 @@ determinations.
 	     (hall_2_state == HALL_STATE_V_OVER)))
 	{
 		LOG_INF("H3");
-		*ring_position = RING_LOCKED;
+		*ring_position = RING_POS_LOCKED;
 		goto done;
 	}
 
@@ -232,7 +232,7 @@ determinations.
 	     (hall_1_state == HALL_STATE_V_OVER)))
 	{
 		LOG_INF("H4");
-		*ring_position = RING_UNLOCKED;
+		*ring_position = RING_POS_UNLOCKED;
 		goto done;
 	}
 
@@ -242,7 +242,7 @@ determinations.
 	     (hall_2_state == HALL_STATE_V_OVER)))
 	{
 		LOG_INF("H5");
-		*ring_position = RING_UNLOCKED;
+		*ring_position = RING_POS_UNLOCKED;
 		goto done;
 	}
 
@@ -252,24 +252,24 @@ determinations.
 	     (hall_1_state == HALL_STATE_V_OVER)))
 	{
 		LOG_INF("H6");
-		*ring_position = RING_LOCKED;
+		*ring_position = RING_POS_LOCKED;
 		goto done;
 	}
 
 qualify_validity:
 	if ((hall_1_state == HALL_STATE_V_BETWEEN) && (hall_2_state == HALL_STATE_V_BETWEEN)) {
 		LOG_INF("both hall in between");
-		*ring_position = RING_BETWEEN_FULLY_QUALIFIED;
+		*ring_position = RING_POS_BETWEEN_FULLY_QUALIFIED;
 	}
 
 	if ((hall_1_state == HALL_STATE_V_ACTIVE) && (hall_2_state == HALL_STATE_V_INACTIVE)) {
 		LOG_INF("ring unlocked, fully qualified");
-		*ring_position = RING_UNLOCKED_FULLY_QUALIFIED;
+		*ring_position = RING_POS_UNLOCKED_FULLY_QUALIFIED;
 	}
 
 	if ((hall_1_state == HALL_STATE_V_INACTIVE) && (hall_2_state == HALL_STATE_V_ACTIVE)) {
 		LOG_INF("ring locked, fully qualified");
-		*ring_position = RING_LOCKED_FULLY_QUALIFIED;
+		*ring_position = RING_POS_LOCKED_FULLY_QUALIFIED;
 	}
 
 	/**
@@ -283,19 +283,19 @@ qualify_validity:
 
 	switch (*ring_position)
 	{
-	case RING_UNLOCKED:
-	case RING_UNLOCKED_FULLY_QUALIFIED:
+	case RING_POS_UNLOCKED:
+	case RING_POS_UNLOCKED_FULLY_QUALIFIED:
 		ring_state = RING_STATE_UNLOCKED;
 		break;
-	case RING_BETWEEN_L_AND_U:
-	case RING_BETWEEN_FULLY_QUALIFIED:
+	case RING_POS_BETWEEN_L_AND_U:
+	case RING_POS_BETWEEN_FULLY_QUALIFIED:
 		ring_state = RING_STATE_BETWEEN;
 		break;
-	case RING_LOCKED:
-	case RING_LOCKED_FULLY_QUALIFIED:
+	case RING_POS_LOCKED:
+	case RING_POS_LOCKED_FULLY_QUALIFIED:
 		ring_state = RING_STATE_LOCKED;
 		break;
-	case RING_POSITION_UNKNOWN:
+	case RING_POS_UNKNOWN:
 	default:
 		ring_state = RING_STATE_UNKNOWN;
 	}
@@ -310,25 +310,25 @@ done:
 char *ring_pos_to_str(const enum lock_ring_position pos)
 {
         switch (pos) {
-        case RING_LOCKED:
+        case RING_POS_LOCKED:
                 return "ring locked";
 		break;
-        case RING_BETWEEN_L_AND_U:
+        case RING_POS_BETWEEN_L_AND_U:
                 return "ring between";
 		break;
-        case RING_UNLOCKED:
+        case RING_POS_UNLOCKED:
                 return "ring unlocked";
 		break;
-        case RING_LOCKED_FULLY_QUALIFIED:
+        case RING_POS_LOCKED_FULLY_QUALIFIED:
                 return "ring locked (fully qualified)";
 		break;
-        case RING_BETWEEN_FULLY_QUALIFIED:
+        case RING_POS_BETWEEN_FULLY_QUALIFIED:
                 return "ring between (fully qualified)";
 		break;
-        case RING_UNLOCKED_FULLY_QUALIFIED:
+        case RING_POS_UNLOCKED_FULLY_QUALIFIED:
                 return "ring unlocked (fully qualified)";
 		break;
-	case RING_POSITION_UNKNOWN:
+	case RING_POS_UNKNOWN:
         default:
                 return "ring position unknown";
         }
@@ -443,19 +443,19 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
         ARG_UNUSED(arg2);
         ARG_UNUSED(arg3);
 
+	enum lock_ring_position ring_position = RING_POS_UNKNOWN;
+	char *str_ptr = ring_pos_to_str(ring_position);
+	uint32_t battery_ok = 0;
+	uint32_t can_bus_ok = 0;
+	enum lock_ring_state ring_state = RING_STATE_UNKNOWN;
+
 	static uint32_t loop_count = 0;
 	int32_t rc = 0;
 
 	while (1) {
 #ifdef DEV_DETERMINE_RING_POSITION_IN_MAIN_LOOP
-		enum lock_ring_position ring_position = RING_POSITION_UNKNOWN;
-		// char lbuf[50] = {0};
-		char *str_ptr = ring_pos_to_str(ring_position);
-
 		rc = arbiter_determine_ring_state(&ring_position);
-#if 0
-		LOG_INF("ring state:  %s (%d)", str_ptr, ring_position);
-#endif
+		// LOG_INF("ring state:  %s (%d)", str_ptr, ring_position);
 #endif
 
 // TODO [ ] Call battery state determination code
@@ -463,11 +463,6 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 		// LOG_INF("calc battery voltage returns status %d", rc);
 
 		rc = determine_batt_ok();
-
-		// 1 = if battery OK and locked and has received Telemetrum Sender message within the last 2 seconds
-		uint32_t battery_ok = 0;
-		uint32_t can_bus_ok = 0;
-		enum lock_ring_state ring_state = RING_STATE_UNKNOWN;
 
 		ekget_batt_ok(&battery_ok);
 		ekget_can_bus_ok(&can_bus_ok);
@@ -477,6 +472,8 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 		LOG_INF("- DEV 0105 - batt_ok %d, can_ok %d, ring_state %d",
 			battery_ok, can_bus_ok, ring_state);
 		if (battery_ok && can_bus_ok && (ring_state == RING_STATE_LOCKED)) {
+// TODO [ ] Check that rocket ready state should be determined here, as there appears to be
+//          such logic in the ERS CAN module.
 			ekset_ready_state(true);
 		} else {
 			ekset_ready_state(false);

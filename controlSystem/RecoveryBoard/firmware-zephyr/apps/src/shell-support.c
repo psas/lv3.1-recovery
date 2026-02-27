@@ -221,7 +221,7 @@ static int cmd_show_locking_ring_pos(const struct shell *shell, size_t argc, cha
         ARG_UNUSED(argc);
         ARG_UNUSED(argv);
 
-	enum lock_ring_position ring_position = RING_POSITION_UNKNOWN;
+	enum lock_ring_position ring_position = RING_POS_UNKNOWN;
 	int32_t rc = arbiter_determine_ring_state(&ring_position);
 	if (rc == 0)
 	{
