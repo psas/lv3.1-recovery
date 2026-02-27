@@ -216,6 +216,8 @@ void ekget_ready_state(uint32_t* value);
 void ek_sys_diag_periodic(void);
 void ek_sys_diag_quiet(void);
 void ek_get_sys_diag_mode(uint32_t* value);
+void ek_set_shell_address(const uint32_t addr);
+void ek_get_shell_address(uint32_t *addr);
 
 // Status LED
 

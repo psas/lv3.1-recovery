@@ -77,6 +77,14 @@ static int cmd_diag_periodic_off(const struct shell *shell, size_t argc, char *a
 	return 0;
 }
 
+static int cmd_diag_show_shell_addr(const struct shell *shell, size_t argc, char *argv[])
+{
+	shell_fprintf(shell, SHELL_NORMAL, "- DEV 0226 - shell has addr 0x%08X\n",
+			(uint32_t)&shell);
+	ek_set_shell_address((const uint32_t)&shell);
+	return 0;
+}
+
 SHELL_STATIC_SUBCMD_SET_CREATE(
 	ers_cmds_diag,
 	SHELL_CMD_ARG(on, NULL,
@@ -85,6 +93,9 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 	SHELL_CMD_ARG(off, NULL,
 		"disable ERS periodic diagnostics",
 		cmd_diag_periodic_off, 0, 0),
+	SHELL_CMD_ARG(shell-addr, NULL,
+		"show programmatic address of shell struct",
+		cmd_diag_show_shell_addr, 0, 0),
 	SHELL_SUBCMD_SET_END
 	);
 
@@ -244,7 +255,9 @@ static int cmd_show_locking_ring_state(const struct shell *shell, size_t argc, c
 			break;
 		default:
 			shell_fprintf(shell, SHELL_NORMAL, "show ring state command error\n");
+			rc = -EINVAL;
 	}
+	return rc;
 }
 
 static int cmd_show_locking_ring_pos(const struct shell *shell, size_t argc, char *argv[])
