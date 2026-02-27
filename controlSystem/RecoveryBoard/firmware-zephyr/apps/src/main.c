@@ -80,6 +80,7 @@ int main(void)
 	{
 		loop_count++;
 		ek_get_sys_diag_mode(&rc);
+		rc = 0; // - DEV 0226 -
 		if (rc > 0)
 		{
 			LOG_INF("- MARK -");
