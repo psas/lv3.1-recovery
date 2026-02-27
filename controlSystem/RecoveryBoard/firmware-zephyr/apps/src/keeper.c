@@ -125,6 +125,13 @@ struct ers_config_and_state {
 // Support run time toggling of diagnostics which share UART with Zephyr shell:
 static atomic_t ers_diag_flag_fs = ATOMIC_INIT(0);
 
+// - DEV 0226 -
+static atomic_t ers_shell_address_fs = ATOMIC_INIT(0);
+
+//----------------------------------------------------------------------
+// - SECTION - module concurrency and state
+//----------------------------------------------------------------------
+
 // Provide a mutex to assure that both Hall sensors are updated without anyone
 // reading their latest values in the middle of this pair of updates:
 struct k_mutex hall_sensors_mtx;
@@ -799,6 +806,16 @@ void ek_sys_diag_quiet(void)
 void ek_get_sys_diag_mode(uint32_t* value)
 {
 	*value = atomic_get(&ers_diag_flag_fs);
+}
+
+void ek_set_shell_address(const uint32_t addr)
+{
+	atomic_set(&ers_shell_address_fs, (atomic_val_t)addr);
+}
+
+void ek_get_shell_address(uint32_t *addr)
+{
+	*addr = atomic_get(&ers_shell_address_fs);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
