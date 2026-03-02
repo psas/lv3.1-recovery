@@ -6,4 +6,8 @@ use crate::types::FlashType;
 pub const MOTOR_ACT_SECTOR_OFFSET: u32 = 0x3F000; // Secctor 64 Addr: 0x0803_F000
 pub const MOTOR_ACT_SECTOR_SIZE: u32 = 4096; // Sector size is 4Kbytes
 
+// Sensor limits sector
+pub const SENSOR_LIMIT_SECTOR_OFFSET: u32 = 0x03E000;
+pub const SENSOR_LIMIT_SECTOR_SIZE: u32 = 4096;
+
 pub static FLASH_MTX: FlashType = Mutex::new(None);

@@ -34,9 +34,15 @@ use firmware_rs::{
         can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_MTX, CAN_TX_CHANNEL, DROGUE_ACKNOWLEDGE_ID,
         DROGUE_DEPLOY_ID, MAIN_ACKNOWLEDGE_ID, MAIN_DEPLOY_ID, SENDER_HEARTBEAT_ID,
     },
-    flash::{FLASH_MTX, MOTOR_ACT_SECTOR_OFFSET, MOTOR_ACT_SECTOR_SIZE},
+    flash::{
+        FLASH_MTX, MOTOR_ACT_SECTOR_OFFSET, MOTOR_ACT_SECTOR_SIZE, SENSOR_LIMIT_SECTOR_OFFSET,
+        SENSOR_LIMIT_SECTOR_SIZE,
+    },
     motor::{Motor, MotorType, MOTOR_DRIVE_CURR_MA, MOTOR_DRIVE_DUR_MS},
-    ring::{read_pos_sensor, Ring, RingPosition, RING_MTX, RING_POSITION_WATCH, SENSOR_READ_WATCH},
+    ring::{
+        read_pos_sensor, Ring, RingPosition, SensorLimits, RING_MTX, RING_POSITION_WATCH,
+        SENSOR_READ_WATCH,
+    },
     types::*,
     uart::{IO, UART_BUF_SIZE, UART_RX_BUF_CELL, UART_TX_BUF_CELL},
 };
@@ -148,19 +154,17 @@ static MOTOR_MTX: MotorType = Mutex::new(None);
 async fn main(spawner: Spawner) {
     let p = embassy_stm32::init(Default::default());
 
-    #[cfg(main)]
-    {
-        info!("main")
-    }
-
-    #[cfg(drogue)]
-    {
-        info!("drogue")
-    }
-
     let umb_on = Input::new(p.PA8, Pull::Up);
     let _can_shdn = Output::new(p.PA10, Level::Low, Speed::Medium);
     let _can_silent = Output::new(p.PA9, Level::Low, Speed::Medium);
+
+    let flash = Flash::new_blocking(p.FLASH);
+
+    {
+        // Init the flash mutex
+        // Ring depends on it being available to construct
+        *(FLASH_MTX.lock().await) = Some(flash);
+    }
 
     // Set up PWM driver
     let buzz_pin = PwmPin::new(p.PB15, OutputType::PushPull);
@@ -216,10 +220,8 @@ async fn main(spawner: Spawner) {
         sys_state.id = 2;
     }
 
-    let flash = Flash::new_blocking(p.FLASH);
-
     let motor = Motor::new(p.PB4, p.PB5, p.PB6, p.PB7, dac);
-    let ring = Ring::new(p.PA0, p.PA1, p.PB1);
+    let ring = Ring::new(p.PA0, p.PA1, p.PB1).await;
 
     {
         // Put peripherals into mutex if shared among tasks.
@@ -230,7 +232,6 @@ async fn main(spawner: Spawner) {
         *(SYSTEM_STATE_MTX.lock().await) = Some(sys_state);
         *(RING_MTX.lock().await) = Some(ring);
         *(MOTOR_MTX.lock().await) = Some(motor);
-        *(FLASH_MTX.lock().await) = Some(flash);
     }
 
     unwrap!(spawner.spawn(blink_led(p.PB14)));
@@ -269,11 +270,10 @@ pub async fn cli(uart: BufferedUart<'static>) {
             .unwrap();
 
         while let Ok(line) = editor.readline(prompt, &mut io).await {
-            // WARN: Passing more than 5 args panics
-            let args: heapless::Vec<&str, 5> = line.split_whitespace().collect();
+            let args: heapless::Vec<&str, 10> = line.split_whitespace().collect();
 
             if args.len() > 3usize {
-                error!("Only two arguments allowed");
+                error!("Only 2 arguments max allowed");
                 continue;
             }
 
@@ -297,6 +297,9 @@ pub async fn cli(uart: BufferedUart<'static>) {
                         " --poll: Print the sensor value and ring state every second.\r\n\n",
                         "acts: Print the number of motor actuations stored in flash\r\n\n",
                         "erase: Erase motor actuation count data from flash\r\n\n",
+                        "limits: Set or read the current sensor limits\r\n\
+                            --print: Print the current sensor limits\r\n\
+                            Usage: limits over1,under1,active1,unactive1,over2,under2,active2,unactive2",
                     ];
                     for line in lines {
                         io.write(line.as_bytes()).await.unwrap();
@@ -487,6 +490,113 @@ pub async fn cli(uart: BufferedUart<'static>) {
                         .unwrap();
 
                         io.write(s.as_bytes()).await.unwrap();
+                    }
+                }
+                "limits" => {
+                    if args.contains(&"--print") {
+                        let mut wbuf = [0u8; 256];
+                        let mut ring_unlocked = RING_MTX.lock().await;
+                        if let Some(ring) = ring_unlocked.as_mut() {
+                            let s = format_no_std::show(
+                                &mut wbuf,
+                                format_args!(
+                                    "Sensor 1: over {} - under {} - active {} - unactive {}\r\n\
+                                    Sensor 2: over {} - under {} - active {} - unactive {}\r\n",
+                                    ring.sensor1_limits.over,
+                                    ring.sensor1_limits.under,
+                                    ring.sensor1_limits.active,
+                                    ring.sensor1_limits.unactive,
+                                    ring.sensor2_limits.over,
+                                    ring.sensor2_limits.under,
+                                    ring.sensor2_limits.active,
+                                    ring.sensor2_limits.unactive
+                                ),
+                            )
+                            .unwrap();
+
+                            io.write(s.as_bytes()).await.unwrap();
+                        }
+                    } else {
+                        if args.len() < 2 {
+                            error!("No args passed to limits command");
+                            io.write(b"Please provide a comma separated list of sensor limits\r\n")
+                                .await
+                                .unwrap();
+                            continue;
+                        }
+
+                        let limits: heapless::Vec<&str, 15> = args[1].split(',').collect();
+
+                        if limits.len() != 8 {
+                            error!("Exactly 8 sensor limits not recieved with limits command");
+                            io.write(
+                                b"Exactly 8 sensor limits must be provided for limits command\r\n",
+                            )
+                            .await
+                            .unwrap();
+                            continue;
+                        }
+
+                        let sensor1_limits: SensorLimits;
+                        let sensor2_limits: SensorLimits;
+
+                        let parse = |i: usize| -> Result<u16, _> { limits[i].parse::<u16>() };
+
+                        if let (Ok(o), Ok(u), Ok(a), Ok(un), Ok(o2), Ok(u2), Ok(a2), Ok(un2)) = (
+                            parse(0),
+                            parse(1),
+                            parse(2),
+                            parse(3),
+                            parse(4),
+                            parse(5),
+                            parse(6),
+                            parse(7),
+                        ) {
+                            sensor1_limits = SensorLimits::new(o, u, a, un);
+                            sensor2_limits = SensorLimits::new(o2, u2, a2, un2);
+                        } else {
+                            error!("Error converting args to u16. Please try again");
+                            io.write(b"Error converting args to u16. Please try again\r\n")
+                                .await
+                                .unwrap();
+                            continue;
+                        }
+
+                        fn u16_to_2u8(b: u16) -> [u8; 2] {
+                            [(b >> 8) as u8, b as u8]
+                        }
+
+                        let mut fbuf = [0u8; (SENSOR_LIMIT_SECTOR_SIZE / 8) as usize];
+
+                        fbuf[0..2].copy_from_slice(&u16_to_2u8(sensor1_limits.over));
+                        fbuf[2..4].copy_from_slice(&u16_to_2u8(sensor1_limits.under));
+                        fbuf[4..6].copy_from_slice(&u16_to_2u8(sensor1_limits.active));
+                        fbuf[6..8].copy_from_slice(&u16_to_2u8(sensor1_limits.unactive));
+                        fbuf[8..10].copy_from_slice(&u16_to_2u8(sensor2_limits.over));
+                        fbuf[10..12].copy_from_slice(&u16_to_2u8(sensor2_limits.under));
+                        fbuf[12..14].copy_from_slice(&u16_to_2u8(sensor2_limits.active));
+                        fbuf[14..16].copy_from_slice(&u16_to_2u8(sensor2_limits.unactive));
+
+                        let mut flash_unlocked = FLASH_MTX.lock().await;
+                        if let Some(flash) = flash_unlocked.as_mut() {
+                            // Sector must be erased before writing or SEQ err will be thrown
+                            if let Err(e) = flash.blocking_erase(
+                                SENSOR_LIMIT_SECTOR_OFFSET,
+                                SENSOR_LIMIT_SECTOR_OFFSET + SENSOR_LIMIT_SECTOR_SIZE,
+                            ) {
+                                error!("Error erasing memory: {}", e);
+                            }
+                            if let Err(e) = flash.blocking_write(SENSOR_LIMIT_SECTOR_OFFSET, &fbuf)
+                            {
+                                error!("Error writing sensor limits to memory: {}", e);
+                            }
+                        }
+
+                        let mut ring_unlocked = RING_MTX.lock().await;
+                        if let Some(ring) = ring_unlocked.as_mut() {
+                            ring.sensor1_limits = sensor1_limits;
+                            ring.sensor2_limits = sensor2_limits;
+                        }
                     }
                 }
                 "version" => {

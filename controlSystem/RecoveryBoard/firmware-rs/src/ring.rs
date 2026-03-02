@@ -1,3 +1,5 @@
+use defmt::error;
+use defmt::info;
 use embassy_stm32::peripherals::PA0;
 use embassy_stm32::peripherals::PA1;
 use embassy_stm32::peripherals::PB1;
@@ -8,6 +10,9 @@ use embassy_sync::watch::Watch;
 use embassy_time::Timer;
 
 use crate::adc::ADC_MTX;
+use crate::flash::FLASH_MTX;
+use crate::flash::SENSOR_LIMIT_SECTOR_OFFSET;
+use crate::flash::SENSOR_LIMIT_SECTOR_SIZE;
 
 pub type RingType = Mutex<ThreadModeRawMutex, Option<Ring>>;
 
@@ -45,15 +50,15 @@ impl SensorReadings {
 }
 
 #[derive(Default)]
-struct SensorLimits {
-    over: u16,
-    under: u16,
-    active: u16,
-    unactive: u16,
+pub struct SensorLimits {
+    pub over: u16,
+    pub under: u16,
+    pub active: u16,
+    pub unactive: u16,
 }
 
 impl SensorLimits {
-    fn new(over: u16, under: u16, active: u16, unactive: u16) -> Self {
+    pub fn new(over: u16, under: u16, active: u16, unactive: u16) -> Self {
         Self { over, under, active, unactive }
     }
 }
@@ -89,14 +94,48 @@ pub struct Ring {
     pa0: Peri<'static, PA0>,
     pa1: Peri<'static, PA1>,
     pb1: Peri<'static, PB1>,
-    sensor1_limits: SensorLimits,
-    sensor2_limits: SensorLimits,
+    pub sensor1_limits: SensorLimits,
+    pub sensor2_limits: SensorLimits,
 }
 
 impl Ring {
-    pub fn new(pa0: Peri<'static, PA0>, pa1: Peri<'static, PA1>, pb1: Peri<'static, PB1>) -> Self {
-        let sensor1_limits = SensorLimits::new(3700, 600, 2100, 900);
-        let sensor2_limits = SensorLimits::new(3700, 600, 1300, 900);
+    pub async fn new(
+        pa0: Peri<'static, PA0>,
+        pa1: Peri<'static, PA1>,
+        pb1: Peri<'static, PB1>,
+    ) -> Self {
+        let sensor1_limits: SensorLimits;
+        let sensor2_limits: SensorLimits;
+
+        let mut flash_unlocked = FLASH_MTX.lock().await;
+        if let Some(flash) = flash_unlocked.as_mut() {
+            let mut buf = [0u8; (SENSOR_LIMIT_SECTOR_SIZE / 8) as usize];
+
+            if let Err(e) = flash.blocking_read(SENSOR_LIMIT_SECTOR_OFFSET, &mut buf) {
+                error!("Error reading sensor limits from flash: {}", e);
+            }
+
+            fn two_u8_to_u16(b1: u8, b0: u8) -> u16 {
+                ((b1 as u16) << 8) + b0 as u16
+            }
+
+            sensor1_limits = SensorLimits::new(
+                two_u8_to_u16(buf[0], buf[1]),
+                two_u8_to_u16(buf[2], buf[3]),
+                two_u8_to_u16(buf[4], buf[5]),
+                two_u8_to_u16(buf[6], buf[7]),
+            );
+            sensor2_limits = SensorLimits::new(
+                two_u8_to_u16(buf[8], buf[9]),
+                two_u8_to_u16(buf[10], buf[11]),
+                two_u8_to_u16(buf[12], buf[13]),
+                two_u8_to_u16(buf[14], buf[15]),
+            )
+        } else {
+            error!("Error reading sensor limits from flash. Using default values");
+            sensor1_limits = SensorLimits::new(3700, 600, 2100, 900);
+            sensor2_limits = SensorLimits::new(3700, 600, 1300, 900);
+        }
 
         Self { pa0, pa1, pb1, sensor1_limits, sensor2_limits }
     }
