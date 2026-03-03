@@ -83,6 +83,10 @@ The motor driver is imported from the local `motor.rs` module. It uses pins B4 f
 
 The ring driver is imported from the local `ring.rs` module. It's mainly responsible for reading the position of the ring and determining if it's locked or unlocked using two hall sensors. Therefore, it takes in pins A0, A1, and PB1. These are the two hall sensors, and the motor_isense, respectively.
 
+#### Flash
+
+The driver that handles saving and retrieving data stored in flash.
+
 ### Tasks
 
 Tasks in Embassy are similar to threads. They allow different functions to be ran essentially concurrently. See the [embassy docs](https://embassy.dev/book/) for more info. The parachute boards have a total of 6 tasks that the exector manages.
@@ -97,17 +101,20 @@ PWM's the buzzer on startup and regularly during operation to indicate the board
 
 #### `cli`
 
-Manages user input over UART via a cli-like interface. Several commands are available.
+Manages user input over UART via a cli-like interface. Several Commands are available:
 
-- `help`: Display all available commands and a short explanation of each.
-
-- `state`: Print the internal state.
-
+- `help`: Display all available commands
+- `state`: Print internal system state
+- `batt`: Display current battery voltage
+- `beep`: Toggle periodic beeping
+- `version`: Display firmware version information
 - `l`: Move the ring towards the lock position. Adding the `--force` flag will ignore the sensor readings and drive the motor until timeout. Adding the `--pulse` flag will drive the motor for only 100ms rather than the full duration.
-
 - `u` Similar to l, this will move the ring towards the unlocked position instead. The `--force` and `--pulse` flags are the same as for `l`.
-
 - `pos`: Prints the current sensor readings and ring state. Adding `--poll` will repeatedly print the readings and ring state until the user interrupts it with any input.
+- `acts`: Print the count of motor actuations stored in flash memory
+- `erase`: Erase motor actuation count data from flash memory
+- `limits`: Changes the hall sensor voltage thresholds stored in flash that are used to determine ring position. Pass an argument formatted like over1,under1,active1,unactive1,over2,under2,active2,unactive2. There must be exactly 8 values separated by commas. 
+
 
 The cli task uses the [noline](https://docs.rs/noline/latest/noline/) crate to manage its interface.
 
@@ -160,10 +167,10 @@ The sender board maintains comprehensive system state:
 - `drogue_status`: Bool indicating drogue parachute board health
 - `main_status`: Bool indicating main parachute board health
 - `shore_power_status`: Bool indicating if shore power is connected
-- `drogue_last_seen`: U64 timestamp of last drogue status message
-- `main_last_seen`: U64 timestamp of last main status message
-- `iso_drogue_last_seen`: U64 timestamp of last drogue deployment signal
-- `iso_main_last_seen`: U64 timestamp of last main deployment signal
+- `drogue_last_seen`: U64 time delta of last drogue status message
+- `main_last_seen`: U64 time delta of last main status message
+- `iso_drogue_last_seen`: U64 time delta of last drogue deployment signal
+- `iso_main_last_seen`: U64 time delta of last main deployment signal
 
 State is managed through a `set_state()` function that takes `SenderStateField` enum variants:
 
@@ -211,18 +218,16 @@ Controls the buzzer to provide audible status indications. Different beep patter
 
 #### `cli`
 
-Provides a command-line interface over UART for system monitoring and control:
+Provides a command-line interface over UART for system monitoring and control. Several commands are available:
 
 - `help`: Display all available commands
 - `state`: Print internal system state
 - `drogue`: Send drogue deployment command
-- `main`: Send main deployment command  
+- `main`: Send main deployment command
 - `rr`: Toggle Rocket Ready signal override
 - `batt`: Display current battery voltage
 - `beep`: Toggle periodic beeping
 - `version`: Display firmware version information
-- `acts`: Print the count of motor actuations stored in flash memory
-- `erase`: Erase motor actuation count data from flash memory
 
 #### `read_battery`
 

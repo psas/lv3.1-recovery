@@ -210,7 +210,8 @@ Container for raw ADC readings from both hall sensors:
 
 #### `SensorLimits`
 
-Calibration thresholds for interpreting sensor readings:
+Calibration thresholds for interpreting sensor readings.
+Stored in flash memory and adjusted via the `limits` cli command.
 
 **Fields:**
 - `over`: Upper threshold for "over-range" detection
