@@ -3,8 +3,8 @@ import time
 
 # Replace '/dev/ttyACM0' with the appropriate port for your SLCAN device (COM1, /dev/tty.usbmodem, etc) and set the desired bitrate (10, 20, 50, 100, 125, 250, 500, 800, 1000 kbps)
 
-# channel = "/dev/ttyACM1"
-channel = "/dev/ttyACM2"
+channel = "/dev/ttyACM1"
+# channel = "/dev/ttyACM2"
 # bitrate = 125000
 bitrate = 1000000
 
@@ -33,7 +33,10 @@ toggle = 0
 while time.time() < end_time:
     message = bus.recv(timeout=end_time - time.time())
     if message:
-        print(f"Received message: {message}")
+        if message.arbitration_id == 0x0710:
+            print(f"Received message: \033[092m{message}\033[0m")
+        else:
+            print(f"Received message: {message}")
 
     i = i + 1
     # print(f"- MARK - {i}")
