@@ -435,7 +435,6 @@ int32_t keeper_retrieve_hall_2_limits(void)
 
 int32_t cmd_retrieve_hall_limits_from_flash(const struct shell *shell, size_t argc, char **argv)
 {
-	uint32_t v_under_limit, inactive_limit, between_limit, active_limit;
 	int32_t rc = 0;
 
 	rc = keeper_retrieve_hall_1_limits();

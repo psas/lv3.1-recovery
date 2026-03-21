@@ -489,7 +489,7 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
         ARG_UNUSED(arg3);
 
 	enum lock_ring_position ring_position = RING_POS_UNKNOWN;
-	char *str_ptr = ring_pos_to_str(ring_position);
+	// char *str_ptr = ring_pos_to_str(ring_position);
 	uint32_t battery_ok = 0;
 	uint32_t can_bus_ok = 0;
 	enum lock_ring_state ring_state = RING_STATE_UNKNOWN;
