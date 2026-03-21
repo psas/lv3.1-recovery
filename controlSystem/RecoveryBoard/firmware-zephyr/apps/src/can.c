@@ -53,11 +53,13 @@ struct k_thread rx_thread_data;
 #define MSG_ID_ACKNOLEDGE_MAIN_UNLOCK   0x201
 // clang-format on
 
-// TODO [ ] Come up with some pound defines or similar to select a status
-//  message ID for the ERS firmware variant needed:
-
-// #if ERS_BOARD_VARIANT == ERS_DROGUE_CHUTE_CONTROLLER . . .
+#if defined(ERS_BOARD_VARIANT_DROGUE_CHUTE)
 #define MSG_ID_STATUS_AND_HEARTBEAT MSG_ID_DROGUE_HEARTBEAT
+#elif defined(ERS_BOARD_VARIANT_MAIN_CHUTE)
+#define MSG_ID_STATUS_AND_HEARTBEAT MSG_ID_MAIN_HEARTBEAT
+#else
+#error "Need one of board variant 'drogue' or 'main' chute specified for build!"
+#endif
 
 #define HEARTBEAT_PERIOD_S 1
 // TODO [ ] Choose a more clear name for CANBus health check period in seconds:
@@ -220,7 +222,7 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
 		 "ERS status frame");
 
 //----------------------------------------------------------------------
-// THE MESSAGE
+// the message The Message THE MESSAGE
 //----------------------------------------------------------------------
 
 #if 0
