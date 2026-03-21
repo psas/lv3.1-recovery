@@ -320,15 +320,15 @@ int32_t mc_unlock_ring(void)
 	LOG_INF("M1 - DEPLOY1 high");
 	// (1) make sure BDS63150 is on, not in power saving mode:
 	rc = mc_set_not_motor_ps(0x0);
-	if (rc != 0) { LOG_ERR("Trouble motor_ps!"); }
+	if (rc != 0) { LOG_ERR("Trouble setting not_motor_ps low, err %d", rc); }
 
 	// (2) set DAC to produce minimal current needed to turn over lock ring motor:
 	rc = dac_set_output(DEV_DAC_SETTING_IN_SITU);
-	if (rc != 0) { LOG_ERR("Trouble set DAC out!"); }
+	if (rc != 0) { LOG_ERR("Trouble setting DAC out, err %d", rc); }
 
 	// (3) apply logic levels to BDS63150 IN1, IN2 pins for H-bridge output:
 	rc = mc_drive_deploy1_high();
-	if (rc != 0) { LOG_ERR("Trouble set DEPLOY1, DEPLOY1!"); }
+	if (rc != 0) { LOG_ERR("Trouble driving DEPLOY1 high, err %d", rc); }
 
 	enum lock_ring_position ring_pos = RING_POS_UNKNOWN;
 	uint32_t i;
