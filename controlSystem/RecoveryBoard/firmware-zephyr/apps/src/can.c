@@ -218,6 +218,11 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
 	can_send(can_dev, &ers_status_frame, K_FOREVER,
 		 tx_irq_callback,
 		 "ERS status frame");
+
+//----------------------------------------------------------------------
+// THE MESSAGE
+//----------------------------------------------------------------------
+
 #if 0
         LOG_INF("                  ringst battrd battok pwrsts canok  ready  reserv reserv");
 	LOG_INF("drogue CAN frame:  0x%02X   0x%02X   0x%02X   0x%02X   0x%02X   0x%02X   0x%02X"
