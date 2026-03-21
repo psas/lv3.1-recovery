@@ -438,47 +438,11 @@ int32_t cmd_retrieve_hall_limits_from_flash(const struct shell *shell, size_t ar
 	uint32_t v_under_limit, inactive_limit, between_limit, active_limit;
 	int32_t rc = 0;
 
-#if 0
-	// Call keeper to obtain hall limits:
-	// shell_fprintf(shell, SHELL_NORMAL, "- STUB -\n");
-	rc = retrieve_ers_setting(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_1), &v_under_limit,
-					sizeof(v_under_limit));
-	rc = retrieve_ers_setting(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_2), &inactive_limit,
-					sizeof(inactive_limit));
-	rc = retrieve_ers_setting(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_3), &between_limit,
-					sizeof(between_limit));
-	rc = retrieve_ers_setting(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_4), &active_limit,
-					sizeof(active_limit));
-
-	// Store retrieved Hall sensor limits to SRAM for run time use:
-	set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_UNDER, v_under_limit);
-	set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_INACTIVE, inactive_limit);
-	set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_BETWEEN, between_limit);
-	set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_ACTIVE, active_limit);
-#endif // 0
-
 	rc = keeper_retrieve_hall_1_limits();
 
 	// TODO [ ] Name each limit in this response part of this command:
 //	shell_fprintf(shell, SHELL_NORMAL, "Retrieved Hall sensor 1 limits: %u, %u, %u, %u",
 //			v_under_limit, inactive_limit, between_limit, active_limit);
-
-#if 0
-	rc = retrieve_ers_setting(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_1), &v_under_limit,
-					sizeof(v_under_limit));
-	rc = retrieve_ers_setting(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_2), &inactive_limit,
-					sizeof(inactive_limit));
-	rc = retrieve_ers_setting(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_3), &between_limit,
-					sizeof(between_limit));
-	rc = retrieve_ers_setting(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_4), &active_limit,
-					sizeof(active_limit));
-
-	// Store retrieved Hall sensor limits to SRAM for run time use:
-	set_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_UNDER, v_under_limit);
-	set_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_INACTIVE, inactive_limit);
-	set_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_BETWEEN, between_limit);
-	set_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_ACTIVE, active_limit);
-#endif
 
 	rc = keeper_retrieve_hall_2_limits();
 

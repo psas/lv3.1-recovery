@@ -85,6 +85,11 @@ int32_t cmd_set_limit_active(const struct shell *shell, size_t argc, char **argv
 int32_t cmd_save_hall_limits_to_flash(const struct shell *shell, size_t argc, char **argv);
 int32_t cmd_retrieve_hall_limits_from_flash(const struct shell *shell, size_t argc, char **argv);
 
+// Helper functions to allow for calling Hall cut-off value retrieval from the
+// ERS app as well as from the CLI of the app:
+int32_t keeper_retrieve_hall_1_limits(void);
+int32_t keeper_retrieve_hall_2_limits(void);
+
 //----------------------------------------------------------------------
 // - SECTION - ERS readings
 //----------------------------------------------------------------------

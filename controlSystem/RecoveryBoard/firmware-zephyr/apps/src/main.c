@@ -72,7 +72,21 @@ int main(void)
 	LOG_INF("ERS PWM module init returns %d", rc);
 
 	rc = status_led_init();
-	LOG_INF("- DEV 0108 - routine to configure led0 returns %d", rc);
+	LOG_INF("routine to configure led0 returns %d", rc);
+
+	rc = keeper_retrieve_hall_1_limits();
+	if (rc != 0) {
+		LOG_ERR("Failed to retrieve Hall sensor 1 cut-off values, err = %d", rc);
+	} else {
+		LOG_INF("Hall sensor 1 cut-off values retrieved");
+	}
+
+	rc = keeper_retrieve_hall_2_limits();
+	if (rc != 0) {
+		LOG_ERR("Failed to retrieve Hall sensor 2 cut-off values, err = %d", rc);
+	} else {
+		LOG_INF("Hall sensor 2 cut-off values retrieved");
+	}
 
 	LOG_INF("main() entering 'while (1)' loop . . .");
 
