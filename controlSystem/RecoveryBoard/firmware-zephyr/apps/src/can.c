@@ -88,7 +88,7 @@ enum ers_state_var_indeces {
 #if defined(ERS_BOARD_VARIANT_DROGUE_CHUTE)
 #warning "- NOTICE - builing ERS board firmware variant 'Drogue'."
 #elif defined(ERS_BOARD_VARIANT_MAIN_CHUTE)
-#warning "- NOTICE - builing ERS board firmware variant 'Drogue'."
+#warning "- NOTICE - builing ERS board firmware variant 'Main'."
 #endif
 enum ers_state_var_indeces {
 	IDX_DROGUE_RING_STATE,
@@ -324,15 +324,16 @@ void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 			break;
 #if defined(ERS_BOARD_VARIANT_DROGUE_CHUTE)
 		case MSG_ID_UNLOCK_DROGUE_CHUTE:
+			LOG_INF("RX %X - got cmd unlock drogue chute", frame.id);
 #elif defined(ERS_BOARD_VARIANT_MAIN_CHUTE)
 		case MSG_ID_UNLOCK_MAIN_CHUTE:
+			LOG_INF("RX %X - got cmd unlock main chute", frame.id);
 #else
 #error "Need one of board variant 'drogue' or 'main' chute specified for build!"
 #endif
 
 // TODO [ ] Add needed test before calling unlock API.  Test per ERS Google doc is:
 // "If !UMB_ON = 1 (no umbilical voltage) and the the RING_STATUS = 2 (it’s locked)"
-			LOG_INF("RX %X - unlock drogue chute", frame.id);
 			rc = mc_unlock_ring();
 			if (rc != 0)
 			{
@@ -341,9 +342,11 @@ void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 
 			prep_and_send_ack_unlock_command();
 			break;
-		case MSG_ID_UNLOCK_MAIN_CHUTE:
-			LOG_INF("RX %X - unlock main chute", frame.id);
-			break;
+#if defined(ERS_BOARD_VARIANT_MAIN_CHUTE)
+//		case MSG_ID_UNLOCK_MAIN_CHUTE:
+//			LOG_INF("RX %X - unlock main chute", frame.id);
+//			break;
+#endif
 		default:
 			LOG_WRN("RX %X <- unrecognized CAN frame id", frame.id);
 		}

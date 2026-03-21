@@ -108,11 +108,8 @@ int32_t retrieve_ers_setting(const char* name, void *val, const uint32_t size)
 	rc = load_immediate_value(name, val, size);
 	if (rc == -ENOENT) {
 		// LOG_ERR("Key '%s' not yet initialized, read status %d", name, rc);
-	} else if (rc == 0) {
-		uint32_t* val_ptr = (uint32_t *)val;
-		// LOG_INF("key '%s' holds %u", name, *val_ptr);
-	} else {
-		// LOG_ERR("Failed to load immediate value, err %d", rc);
+	} else if (rc < 0) {
+		LOG_ERR("Failed to load immediate value, err %d", rc);
 	}
 	return rc;
 }
@@ -123,10 +120,9 @@ int32_t store_ers_setting(const char* name, const void *val, const uint32_t size
 
 	LOG_INF("save '%s' key directly: ", name);
 	rc = settings_save_one(name, &val, sizeof(val));
-	if (rc) {
-		// LOG_ERR("Fail to store value for '%s', err %d", name, rc);
-	} else {
-		// LOG_INF("Stored value %u to key '%s'", (uint32_t)val, name);
+	// if (rc) {
+	if (rc < 0) {
+		LOG_ERR("Fail to store value for '%s', err %d", name, rc);
 	}
 	return rc;
 }
