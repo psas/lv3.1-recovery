@@ -29,9 +29,9 @@ LOG_MODULE_REGISTER(arbiter, LOG_LEVEL_INF);
 // Select an ERS battery voltage "ok" threshold of 9.0 VDC, in tenths of a volt:
 #define BATTERY_VOLTAGE_OK_THRESHOLD_TENTHS_V 90
 
-#define ERS_ARBITER_SLEEP_PERIOD_MS 1000
+#define ERS_ARBITER_SLEEP_PERIOD_MS 89
 
-#define RING_POS_PERIOD_MS 2000
+#define RING_POS_PERIOD_MS 100
 
 #define DEV_DETERMINE_RING_POSITION_IN_MAIN_LOOP
 
