@@ -26,7 +26,8 @@ use embassy_stm32::{
     },
     usart::{
         BufferedInterruptHandler, BufferedUart, Config as UartConfig, DataBits, Parity, StopBits,
-    }, wdg,
+    },
+    wdg,
 };
 use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex};
 use embassy_time::{Instant, Timer};
@@ -255,12 +256,11 @@ async fn main(spawner: Spawner) {
     unwrap!(spawner.spawn(can_writer(can_tx)));
     unwrap!(spawner.spawn(can_reader(can_rx)));
 
-    let mut i_wdg = wdg::IndependentWatchdog::new(p.IWDG, 10);
+    let mut i_wdg = wdg::IndependentWatchdog::new(p.IWDG, 20_000_000);
     i_wdg.unleash();
-
     loop {
         i_wdg.pet();
-        Timer::after_micros(8).await;
+        Timer::after_secs(1).await;
     }
 }
 

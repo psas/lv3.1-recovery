@@ -252,11 +252,11 @@ async fn main(spawner: Spawner) {
     unwrap!(spawner.spawn(can_reader(can_rx)));
     unwrap!(spawner.spawn(parachute_heartbeat()));
 
-    let mut i_wdg = wdg::IndependentWatchdog::new(p.IWDG, 10);
+    let mut i_wdg = wdg::IndependentWatchdog::new(p.IWDG, 20_000_000);
     i_wdg.unleash();
     loop {
         i_wdg.pet();
-        Timer::after_micros(8).await;
+        Timer::after_secs(1).await;
     }
 }
 
