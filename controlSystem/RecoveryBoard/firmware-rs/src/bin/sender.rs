@@ -26,7 +26,7 @@ use embassy_stm32::{
     },
     usart::{
         BufferedInterruptHandler, BufferedUart, Config as UartConfig, DataBits, Parity, StopBits,
-    },
+    }, wdg,
 };
 use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex};
 use embassy_time::{Instant, Timer};
@@ -255,8 +255,13 @@ async fn main(spawner: Spawner) {
     unwrap!(spawner.spawn(can_writer(can_tx)));
     unwrap!(spawner.spawn(can_reader(can_rx)));
 
-    // Keep main from returning. Needed for can_tx/can_rx or they get dropped
-    core::future::pending::<()>().await;
+    let mut i_wdg = wdg::IndependentWatchdog::new(p.IWDG, 10);
+    i_wdg.unleash();
+
+    loop {
+        i_wdg.pet();
+        Timer::after_micros(8).await;
+    }
 }
 
 async fn deploy(can_id: u16) {
