@@ -1,6 +1,6 @@
 use embassy_stm32::{
     adc::Adc,
-    can::Can,
+    can::{BufferedCan, Can},
     dac::Dac,
     flash::{Blocking, Flash},
     gpio::Input,
@@ -13,9 +13,11 @@ use embassy_sync::{
     mutex::Mutex,
 };
 
+use crate::can::CAN_BUF_SIZE;
+
 pub type PwmType = Mutex<ThreadModeRawMutex, Option<SimplePwm<'static, TIM15>>>;
 pub type UmbOnType = Mutex<ThreadModeRawMutex, Option<Input<'static>>>;
-pub type CanType = Mutex<ThreadModeRawMutex, Option<Can<'static>>>;
+pub type CanType = Mutex<ThreadModeRawMutex, Option<BufferedCan<'static, CAN_BUF_SIZE, CAN_BUF_SIZE>>>;
 pub type AdcType = Mutex<CriticalSectionRawMutex, Option<Adc<'static, ADC1>>>;
 pub type DacType = Mutex<ThreadModeRawMutex, Option<Dac<'static, DAC1, Async>>>;
 pub type FlashType = Mutex<ThreadModeRawMutex, Option<Flash<'static, Blocking>>>;

@@ -11,7 +11,7 @@ use embassy_stm32::{
     can::{
         filter::Mask32,
         frame::Header,
-        Can, CanRx, Fifo, Frame,
+        BufferedCanRx, Can, Fifo, Frame,
         Id::{self, Standard},
         Rx0InterruptHandler, Rx1InterruptHandler, SceInterruptHandler, StandardId,
         TxInterruptHandler,
@@ -37,9 +37,9 @@ use firmware_rs::{
     blink::blink_led,
     buzzer::{active_beep, BuzzerMode, BUZZER_MODE_MTX},
     can::{
-        can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_MTX, CAN_TX_CHANNEL, DROGUE_ACKNOWLEDGE_ID,
-        DROGUE_DEPLOY_ID, DROGUE_HEARTBEAT_ID, MAIN_ACKNOWLEDGE_ID, MAIN_DEPLOY_ID,
-        MAIN_HEARTBEAT_ID, SENDER_HEARTBEAT_ID,
+        can_writer, CanTxChannelMsg, CAN_BITRATE, CAN_BUF_SIZE, CAN_MTX, CAN_RX_BUF, CAN_TX_BUF,
+        CAN_TX_CHANNEL, DROGUE_ACKNOWLEDGE_ID, DROGUE_DEPLOY_ID, DROGUE_HEARTBEAT_ID,
+        MAIN_ACKNOWLEDGE_ID, MAIN_DEPLOY_ID, MAIN_HEARTBEAT_ID, SENDER_HEARTBEAT_ID,
     },
     types::*,
     uart::{IO, UART_BUF_SIZE, UART_RX_BUF_CELL, UART_TX_BUF_CELL},
@@ -202,8 +202,8 @@ async fn main(spawner: Spawner) {
 
     // Set up CAN driver
     let mut can = Can::new(p.CAN, p.PA11, p.PA12, CanIrqs);
-    can.modify_filters().enable_bank(0, Fifo::Fifo0, Mask32::accept_all());
     can.modify_config().set_bitrate(CAN_BITRATE).set_loopback(false).set_silent(false);
+    can.modify_filters().enable_bank(0, Fifo::Fifo0, Mask32::accept_all());
 
     // Set up ADC driver
     let mut adc = Adc::new(p.ADC1, AdcIrqs);
@@ -248,13 +248,17 @@ async fn main(spawner: Spawner) {
     // enable at last minute so other tasks can still spawn if can bus is down
     can.enable().await;
     let (can_tx, can_rx) = can.split();
+    let can_txb =
+        can_tx.buffered(CAN_TX_BUF.init(embassy_stm32::can::TxBuf::<CAN_BUF_SIZE>::new()));
+    let can_rxb =
+        can_rx.buffered(CAN_RX_BUF.init(embassy_stm32::can::RxBuf::<CAN_BUF_SIZE>::new()));
 
     {
         *(CAN_MTX.lock().await) = Some(can);
     }
 
-    unwrap!(spawner.spawn(can_writer(can_tx)));
-    unwrap!(spawner.spawn(can_reader(can_rx)));
+    unwrap!(spawner.spawn(can_writer(can_txb)));
+    unwrap!(spawner.spawn(can_reader(can_rxb)));
 
     let mut i_wdg = wdg::IndependentWatchdog::new(p.IWDG, 20_000_000);
     i_wdg.unleash();
@@ -407,11 +411,12 @@ async fn cli(uart: BufferedUart<'static>) {
 }
 
 #[embassy_executor::task]
-async fn can_reader(mut can_rx: CanRx<'static>) -> () {
+async fn can_reader(can_rx: BufferedCanRx<'static, CAN_BUF_SIZE>) -> () {
+    let rdr = can_rx.reader();
     let mut prev_main_status: u8 = 0;
     let mut prev_drogue_status: u8 = 0;
     loop {
-        match can_rx.read().await {
+        match rdr.receive().await {
             Ok(envelope) => match envelope.frame.id() {
                 Id::Standard(id) if id.as_raw() == MAIN_HEARTBEAT_ID => {
                     let status = envelope.frame.data()[5];
