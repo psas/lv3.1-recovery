@@ -3,7 +3,7 @@ use embassy_stm32::{
     dac::{Dac, Value},
     gpio::{Input, Level, Output, Pull, Speed},
     mode::Async,
-    peripherals::{DAC1, PB4, PB5, PB6, PB7},
+    peripherals::{PB4, PB5, PB6, PB7},
     Peri,
 };
 use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex};
@@ -11,8 +11,10 @@ use embassy_time::{with_timeout, Duration};
 
 use crate::{
     flash::{FLASH_MTX, MOTOR_ACT_SECTOR_OFFSET, MOTOR_ACT_SECTOR_SIZE},
-    ring::{RingPosition, MOTOR_ISENSE_WATCH, RING_POSITION_WATCH},
+    parachute::ring::{RingPosition, MOTOR_ISENSE_WATCH, RING_POSITION_WATCH},
 };
+
+pub static MOTOR_MTX: MotorType = Mutex::new(None);
 
 pub const MOTOR_DRIVE_DUR_MS: u64 = 1000;
 pub const MOTOR_DRIVE_CURR_MA: u16 = 1000;
@@ -22,7 +24,7 @@ pub struct Motor {
     pub deploy2: Output<'static>,
     pub ps: Output<'static>,
     pub motor_fail: Input<'static>,
-    pub dac: Dac<'static, DAC1, Async>,
+    pub dac: Dac<'static, Async>,
 }
 
 pub enum MotorMode {
@@ -39,7 +41,7 @@ impl Motor {
         pb5: Peri<'static, PB5>,
         pb6: Peri<'static, PB6>,
         pb7: Peri<'static, PB7>,
-        dac: Dac<'static, DAC1, Async>,
+        dac: Dac<'static, Async>,
     ) -> Self {
         let deploy1 = Output::new(pb4, Level::Low, Speed::Medium);
         let deploy2 = Output::new(pb5, Level::Low, Speed::Medium);

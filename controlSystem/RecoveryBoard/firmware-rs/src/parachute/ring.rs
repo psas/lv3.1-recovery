@@ -1,18 +1,17 @@
-use defmt::error;
-use defmt::info;
-use embassy_stm32::peripherals::PA0;
-use embassy_stm32::peripherals::PA1;
-use embassy_stm32::peripherals::PB1;
-use embassy_stm32::Peri;
-use embassy_sync::blocking_mutex::raw::ThreadModeRawMutex;
-use embassy_sync::mutex::Mutex;
-use embassy_sync::watch::Watch;
+use defmt::{error, info, Format};
+use embassy_stm32::{
+    adc::SampleTime,
+    peripherals::{PA0, PA1, PB1},
+    Peri,
+};
+use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex, watch::Watch};
 use embassy_time::Timer;
+use ufmt::{uDisplay, uwrite};
 
-use crate::adc::ADC_MTX;
-use crate::flash::FLASH_MTX;
-use crate::flash::SENSOR_LIMIT_SECTOR_OFFSET;
-use crate::flash::SENSOR_LIMIT_SECTOR_SIZE;
+use crate::{
+    adc::ADC_MTX,
+    flash::{FLASH_MTX, SENSOR_LIMIT_SECTOR_OFFSET, SENSOR_LIMIT_SECTOR_SIZE},
+};
 
 pub type RingType = Mutex<ThreadModeRawMutex, Option<Ring>>;
 
@@ -49,12 +48,28 @@ impl SensorReadings {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Format)]
 pub struct SensorLimits {
     pub over: u16,
     pub under: u16,
     pub active: u16,
     pub unactive: u16,
+}
+
+impl uDisplay for SensorLimits {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        uwrite!(
+            f,
+            "over: {}\r\nunder: {}\r\nactive: {}\r\nunactive: {}\r\n",
+            self.over,
+            self.under,
+            self.active,
+            self.unactive
+        )
+    }
 }
 
 impl SensorLimits {
@@ -72,21 +87,54 @@ pub enum SensorState {
     Inbetween,
 }
 
-impl core::fmt::Display for SensorState {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+impl uDisplay for RingPosition {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        match *self {
+            RingPosition::Locked => uwrite!(f, "Locked\r\n"),
+            RingPosition::Unlocked => uwrite!(f, "Unlocked\r\n"),
+            RingPosition::Inbetween => uwrite!(f, "Inbetween\r\n"),
+            RingPosition::Error => uwrite!(f, "Error\r\n"),
+        }
+    }
+}
+
+impl uDisplay for SensorState {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
         match *self {
             Self::Active => {
-                core::write!(f, "Active")
+                uwrite!(f, "Active\r\n")
             }
             Self::Unactive => {
-                core::write!(f, "Unactive")
+                uwrite!(f, "Unactive\r\n")
             }
             Self::Under => {
-                core::write!(f, "Under")
+                uwrite!(f, "Under\r\n")
             }
-            Self::Over => core::write!(f, "Over"),
-            Self::Inbetween => core::write!(f, "Inbetween"),
+            Self::Over => uwrite!(f, "Over\r\n"),
+            Self::Inbetween => uwrite!(f, "Inbetween\r\n"),
         }
+    }
+}
+
+impl uDisplay for SensorReadings {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        uwrite!(
+            f,
+            "Sensor 1:\r\n- state: {}\r\n- value: {}\r\nSensor 2:\r\n- state: {}\r\n- value: {}\r\n",
+            self.sensor1_state,
+            self.sensor1,
+            self.sensor2_state,
+            self.sensor2
+        )
     }
 }
 
@@ -130,7 +178,9 @@ impl Ring {
                 two_u8_to_u16(buf[10], buf[11]),
                 two_u8_to_u16(buf[12], buf[13]),
                 two_u8_to_u16(buf[14], buf[15]),
-            )
+            );
+            info!("sensor1: {}", sensor1_limits);
+            info!("sensor2: {}", sensor2_limits)
         } else {
             error!("Error reading sensor limits from flash. Using default values");
             sensor1_limits = SensorLimits::new(3700, 600, 2100, 900);
@@ -189,9 +239,9 @@ impl Ring {
         {
             let mut adc_unlocked = ADC_MTX.lock().await;
             if let Some(adc) = adc_unlocked.as_mut() {
-                sensor1_read = adc.read(&mut self.pa0).await;
-                sensor2_read = adc.read(&mut self.pa1).await;
-                motor_isense_read = adc.read(&mut self.pb1).await;
+                sensor1_read = adc.read(&mut self.pa0, SampleTime::CYCLES239_5).await;
+                sensor2_read = adc.read(&mut self.pa1, SampleTime::CYCLES239_5).await;
+                motor_isense_read = adc.read(&mut self.pb1, SampleTime::CYCLES239_5).await;
             }
         }
 

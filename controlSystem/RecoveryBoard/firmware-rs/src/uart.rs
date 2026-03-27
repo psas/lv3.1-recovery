@@ -1,62 +1,62 @@
-use embassy_stm32::usart::BufferedUart;
-use embedded_io_async::ErrorKind;
+use defmt::Format;
+use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, pipe};
+use embedded_io::{ErrorKind, Write as SyncWrite};
 use static_cell::ConstStaticCell;
 
-pub const UART_BUF_SIZE: usize = 1024;
-
+pub const UART_BUF_SIZE: usize = 128;
 pub static UART_TX_BUF_CELL: ConstStaticCell<[u8; UART_BUF_SIZE]> =
     ConstStaticCell::new([0u8; UART_BUF_SIZE]);
-
 pub static UART_RX_BUF_CELL: ConstStaticCell<[u8; UART_BUF_SIZE]> =
     ConstStaticCell::new([0u8; UART_BUF_SIZE]);
+pub const MAX_RESPONSE_LENGTH: usize = 1024;
+pub const MAX_CMD_LENGTH: usize = 128;
 
-pub struct IO {
-    pub stdio: BufferedUart<'static>,
+pub struct UartWriter {
+    pub writer: pipe::Writer<'static, CriticalSectionRawMutex, MAX_RESPONSE_LENGTH>,
 }
 
-impl IO {
-    pub fn new(stdio: BufferedUart<'static>) -> Self {
-        Self { stdio }
+#[derive(Debug, Format)]
+pub struct UartWriterError(pipe::TryWriteError);
+
+impl From<pipe::TryWriteError> for UartWriterError {
+    fn from(value: pipe::TryWriteError) -> Self {
+        Self(value)
     }
 }
 
-#[derive(Debug)]
-pub struct Error(());
+impl core::error::Error for UartWriterError {}
 
-impl embedded_io_async::Error for Error {
+impl core::fmt::Display for UartWriterError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::write!(f, "an error occured within the buffer writer")
+    }
+}
+
+impl embedded_io::Error for UartWriterError {
     fn kind(&self) -> ErrorKind {
-        ErrorKind::Other
+        embedded_io::ErrorKind::Other
     }
 }
 
-impl embedded_io_async::ErrorType for IO {
-    type Error = Error;
+impl embedded_io::ErrorType for UartWriter {
+    type Error = UartWriterError;
 }
 
-impl embedded_io_async::Read for IO {
-    async fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
-        match self.stdio.read(buf).await {
-            Ok(bytes_read) => Ok(bytes_read),
-            Err(_) => Err(self::Error(())),
-        }
+impl SyncWrite for UartWriter {
+    fn write(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
+        Ok(self.writer.try_write(buf)?)
+    }
+
+    fn flush(&mut self) -> Result<(), Self::Error> {
+        // For this implementation, flushing is a no-op
+        Ok(())
     }
 }
 
-impl embedded_io_async::Write for IO {
-    async fn write(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
-        match self.stdio.write(buf).await {
-            Ok(bytes_written) => {
-                Ok(bytes_written)
-            }
-            Err(_) => Err(self::Error(())),
-        }
-    }
+impl ufmt::uWrite for UartWriter {
+    type Error = UartWriterError;
 
-    async fn flush(&mut self) -> Result<(), Self::Error> {
-        if (self.stdio.flush().await).is_err() {
-            Err(Error(()))
-        } else {
-            Ok(())
-        }
+    fn write_str(&mut self, s: &str) -> Result<(), Self::Error> {
+        self.write(s.as_bytes()).map(|_| ())
     }
 }
