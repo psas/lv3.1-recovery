@@ -25,34 +25,6 @@ pub async fn can_reader(can_rx: BufferedCanRx<'static, CAN_BUF_SIZE>) -> () {
                     #[cfg(drogue)]
                     {
                         use crate::can::DROGUE_ACKNOWLEDGE_ID;
-                        let frame =
-                            Frame::new_data(StandardId::new(DROGUE_ACKNOWLEDGE_ID).unwrap(), &[1])
-                                .unwrap();
-                        let acknowledge_msg = CanTxChannelMsg::new(true, frame);
-                        CAN_TX_CHANNEL.send(acknowledge_msg).await;
-
-                        let mut motor_unlocked = MOTOR_MTX.lock().await;
-                        if let Some(motor) = motor_unlocked.as_mut() {
-                            motor
-                                .drive(
-                                    RingPosition::Unlocked,
-                                    MOTOR_DRIVE_DUR_MS,
-                                    false,
-                                    MOTOR_DRIVE_CURR_MA,
-                                )
-                                .await;
-                        }
-                    }
-                }
-                Id::Standard(id) if id.as_raw() == MAIN_DEPLOY_ID => {
-                    #[cfg(main)]
-                    {
-                        use crate::can::MAIN_ACKNOWLEDGE_ID;
-                        let frame =
-                            Frame::new_data(StandardId::new(MAIN_ACKNOWLEDGE_ID).unwrap(), &[1])
-                                .unwrap();
-                        let acknowledge_msg = CanTxChannelMsg::new(true, frame);
-                        CAN_TX_CHANNEL.send(acknowledge_msg).await;
                         {
                             let mut motor_unlocked = MOTOR_MTX.lock().await;
                             if let Some(motor) = motor_unlocked.as_mut() {
@@ -66,6 +38,35 @@ pub async fn can_reader(can_rx: BufferedCanRx<'static, CAN_BUF_SIZE>) -> () {
                                     .await;
                             }
                         }
+                        let frame =
+                            Frame::new_data(StandardId::new(DROGUE_ACKNOWLEDGE_ID).unwrap(), &[1])
+                                .unwrap();
+                        let acknowledge_msg = CanTxChannelMsg::new(true, frame);
+                        CAN_TX_CHANNEL.send(acknowledge_msg).await;
+                    }
+                }
+                Id::Standard(id) if id.as_raw() == MAIN_DEPLOY_ID => {
+                    #[cfg(main)]
+                    {
+                        use crate::can::MAIN_ACKNOWLEDGE_ID;
+                        {
+                            let mut motor_unlocked = MOTOR_MTX.lock().await;
+                            if let Some(motor) = motor_unlocked.as_mut() {
+                                motor
+                                    .drive(
+                                        RingPosition::Unlocked,
+                                        MOTOR_DRIVE_DUR_MS,
+                                        false,
+                                        MOTOR_DRIVE_CURR_MA,
+                                    )
+                                    .await;
+                            }
+                        }
+                        let frame =
+                            Frame::new_data(StandardId::new(MAIN_ACKNOWLEDGE_ID).unwrap(), &[1])
+                                .unwrap();
+                        let acknowledge_msg = CanTxChannelMsg::new(true, frame);
+                        CAN_TX_CHANNEL.send(acknowledge_msg).await;
                     }
                 }
                 Id::Standard(id) if id.as_raw() == SENDER_HEARTBEAT_ID => {
