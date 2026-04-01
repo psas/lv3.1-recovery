@@ -11,7 +11,7 @@ use embassy_time::{with_timeout, Duration};
 
 use crate::{
     flash::{FLASH_MTX, MOTOR_ACT_SECTOR_OFFSET, MOTOR_ACT_SECTOR_SIZE},
-    parachute::ring::{RingPosition, MOTOR_ISENSE_WATCH, RING_POSITION_WATCH},
+    parachute::ring::{RingPosition, MOTOR_ISENSE_SIGNAL, RING_POSITION_WATCH},
 };
 
 pub static MOTOR_MTX: MotorType = Mutex::new(None);
@@ -99,13 +99,12 @@ impl Motor {
     async fn read_ring_pos_until_condition(&mut self, position: RingPosition) {
         let mut ring_pos_receiver =
             RING_POSITION_WATCH.receiver().expect("Could not get ring_pos rcvr");
-        let mut isense_receiver = MOTOR_ISENSE_WATCH.receiver().expect("Could not get isense rcvr");
         const BUFSIZE: usize = 64; // INFO If running the motor for longer, increase this
         let mut buf = [0u16; BUFSIZE];
         let mut count = 0usize;
         loop {
             if count < BUFSIZE {
-                buf[count] = isense_receiver.changed().await;
+                buf[count] = MOTOR_ISENSE_SIGNAL.wait().await;
             }
             let ring_position = ring_pos_receiver.changed().await;
             count = count.wrapping_add(1);

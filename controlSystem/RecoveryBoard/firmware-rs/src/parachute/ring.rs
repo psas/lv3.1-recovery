@@ -4,7 +4,7 @@ use embassy_stm32::{
     peripherals::{PA0, PA1, PB1},
     Peri,
 };
-use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex, watch::Watch};
+use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex, signal::Signal, watch::Watch};
 use embassy_time::Timer;
 use ufmt::{uDisplay, uwrite};
 
@@ -19,7 +19,7 @@ pub static RING_MTX: RingType = Mutex::new(None);
 
 pub static RING_POSITION_WATCH: Watch<ThreadModeRawMutex, RingPosition, 5> = Watch::new();
 pub static SENSOR_READ_WATCH: Watch<ThreadModeRawMutex, SensorReadings, 5> = Watch::new();
-pub static MOTOR_ISENSE_WATCH: Watch<ThreadModeRawMutex, u16, 1> = Watch::new();
+pub static MOTOR_ISENSE_SIGNAL: Signal<ThreadModeRawMutex, u16> = Signal::new();
 
 #[derive(defmt::Format, PartialEq, Clone)]
 pub enum RingPosition {
@@ -193,7 +193,6 @@ impl Ring {
     pub async fn broadcast_ring_position(&mut self) {
         let ring_position_sender = RING_POSITION_WATCH.sender();
         let sensor_reading_sender = SENSOR_READ_WATCH.sender();
-        let motor_isense_sender = MOTOR_ISENSE_WATCH.sender();
 
         fn get_sensor_state(adc_val: u16, limit: &SensorLimits) -> SensorState {
             if adc_val >= limit.over {
@@ -256,7 +255,7 @@ impl Ring {
         );
 
         sensor_reading_sender.send(readings);
-        motor_isense_sender.send(motor_isense_read);
+        MOTOR_ISENSE_SIGNAL.signal(motor_isense_read);
 
         let ring_position = get_ring_position(sensor1_state, sensor2_state);
 

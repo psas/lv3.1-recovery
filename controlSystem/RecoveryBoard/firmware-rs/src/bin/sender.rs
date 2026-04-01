@@ -1,6 +1,8 @@
 #![no_std]
 #![no_main]
 
+use core::sync::atomic::Ordering::Relaxed;
+
 use defmt::*;
 use embassy_executor::Spawner;
 use embassy_stm32::{
@@ -30,11 +32,14 @@ use firmware_rs::{
     blink::blink_led,
     buzzer::{active_beep, BuzzerMode, BUZZER_MODE_MTX},
     can::{
-        can_writer, CAN_BITRATE, CAN_BUF_SIZE, CAN_MTX, CAN_RX_BUF, CAN_TX_BUF, DROGUE_DEPLOY_ID,
-        MAIN_DEPLOY_ID,
+        can_writer, CAN_BITRATE, CAN_BUF_SIZE, CAN_MTX, CAN_RX_BUF, CAN_TX_BUF,
+        DROGUE_ACKNOWLEDGE_ID, DROGUE_DEPLOY_ID, MAIN_DEPLOY_ID,
     },
     sender::{
-        can::{can_reader, send_deploy_msg, send_heartbeat, HeartbeatContext, CAN_SIGNAL},
+        can::{
+            can_reader, send_deploy_msg, send_heartbeat, HeartbeatContext, CAN_SIGNAL,
+            DROGUE_ACKNOWLEDGE, MAIN_ACKNOWLEDGE,
+        },
         cli::{self, serial_read_task, serial_write_task},
         cmd::{async_cmd_handler, SenderCmd, ASYNC_CMD_CHANNEL},
         state::SenderState,
@@ -303,13 +308,22 @@ async fn handle_iso_rising_edge(mut iso: ExtiInput<'static, Async>, can_id: u16)
     // waits for a rising edge on the specified gpio and responds by firing
     // a can msg with the specified id as long as shore power is off.
     loop {
+        info!("awaiting signal from telemetrum");
         iso.wait_for_rising_edge().await;
+        info!("telemetrum signalling to deploy: {}", can_id);
         let time_now = Instant::now().as_millis();
-        // telemetrum is signaling to deploy
+        if can_id == DROGUE_DEPLOY_ID {
+            info!("setting drogue acknowledge to false");
+            DROGUE_ACKNOWLEDGE.store(false, Relaxed);
+        } else {
+            info!("setting main acknowledge to false");
+            MAIN_ACKNOWLEDGE.store(false, Relaxed);
+        }
         {
             let mut shore_power_on_unlocked = SHORE_POW_ON_MTX.lock().await;
             if let Some(spo_ref) = shore_power_on_unlocked.as_mut() {
                 if spo_ref.is_high() {
+                    info!("sending deploy message");
                     send_deploy_msg(can_id).await;
                 }
             }

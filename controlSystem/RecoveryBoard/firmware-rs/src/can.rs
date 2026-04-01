@@ -52,18 +52,16 @@ pub async fn can_writer(can_tx: BufferedCanTx<'static, CAN_BUF_SIZE>) -> () {
     loop {
         let frame = CAN_TX_CHANNEL.receive().await;
         if frame.blocking {
+            info!("writing to CAN");
             wrt.write(frame.frame).await;
-        }
-        if !frame.blocking {
-            if let Err(e) = wrt.try_write(frame.frame) {
-                error!("Could not send CAN message: {}", e);
-                let mut can_unlocked = CAN_MTX.lock().await;
-                if let Some(can) = can_unlocked.as_mut() {
-                    // Try to recover from bus_off mode
-                    can.modify_config();
-                    can.enable().await;
-                }
-            };
+        } else if let Err(e) = wrt.try_write(frame.frame) {
+            error!("Could not send CAN message: {}", e);
+            let mut can_unlocked = CAN_MTX.lock().await;
+            if let Some(can) = can_unlocked.as_mut() {
+                // Try to recover from bus_off mode
+                can.modify_config();
+                can.enable().await;
+            }
         }
     }
 }

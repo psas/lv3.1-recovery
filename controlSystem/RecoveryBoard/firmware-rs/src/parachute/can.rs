@@ -1,4 +1,4 @@
-use defmt::error;
+use defmt::{error, info};
 use embassy_stm32::can::{frame::Header, BufferedCanRx, Frame, Id, StandardId};
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, signal::Signal};
 
@@ -25,9 +25,11 @@ pub async fn can_reader(can_rx: BufferedCanRx<'static, CAN_BUF_SIZE>) -> () {
                     #[cfg(drogue)]
                     {
                         use crate::can::DROGUE_ACKNOWLEDGE_ID;
+                        info!("received deploy CAN message");
                         {
                             let mut motor_unlocked = MOTOR_MTX.lock().await;
                             if let Some(motor) = motor_unlocked.as_mut() {
+                                info!("driving motor to unlock");
                                 motor
                                     .drive(
                                         RingPosition::Unlocked,
@@ -36,6 +38,7 @@ pub async fn can_reader(can_rx: BufferedCanRx<'static, CAN_BUF_SIZE>) -> () {
                                         MOTOR_DRIVE_CURR_MA,
                                     )
                                     .await;
+                                info!("done driving motor")
                             }
                         }
                         let frame =
@@ -43,15 +46,18 @@ pub async fn can_reader(can_rx: BufferedCanRx<'static, CAN_BUF_SIZE>) -> () {
                                 .unwrap();
                         let acknowledge_msg = CanTxChannelMsg::new(true, frame);
                         CAN_TX_CHANNEL.send(acknowledge_msg).await;
+                        info!("acknowledge CAN message sent");
                     }
                 }
                 Id::Standard(id) if id.as_raw() == MAIN_DEPLOY_ID => {
                     #[cfg(main)]
                     {
                         use crate::can::MAIN_ACKNOWLEDGE_ID;
+                        info!("received deploy CAN message");
                         {
                             let mut motor_unlocked = MOTOR_MTX.lock().await;
                             if let Some(motor) = motor_unlocked.as_mut() {
+                                info!("driving motor to unlock");
                                 motor
                                     .drive(
                                         RingPosition::Unlocked,
@@ -60,6 +66,7 @@ pub async fn can_reader(can_rx: BufferedCanRx<'static, CAN_BUF_SIZE>) -> () {
                                         MOTOR_DRIVE_CURR_MA,
                                     )
                                     .await;
+                                info!("done driving motor")
                             }
                         }
                         let frame =
@@ -67,6 +74,7 @@ pub async fn can_reader(can_rx: BufferedCanRx<'static, CAN_BUF_SIZE>) -> () {
                                 .unwrap();
                         let acknowledge_msg = CanTxChannelMsg::new(true, frame);
                         CAN_TX_CHANNEL.send(acknowledge_msg).await;
+                        info!("acknowledge CAN message sent");
                     }
                 }
                 Id::Standard(id) if id.as_raw() == SENDER_HEARTBEAT_ID => {
