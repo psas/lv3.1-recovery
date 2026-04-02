@@ -272,6 +272,6 @@ pub async fn read_pos_sensor() {
                 ring.broadcast_ring_position().await;
             }
         }
-        Timer::after_millis(50).await;
+        Timer::after_millis(15).await;
     }
 }
