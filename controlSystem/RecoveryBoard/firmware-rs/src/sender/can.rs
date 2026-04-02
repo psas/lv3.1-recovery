@@ -44,7 +44,6 @@ pub async fn can_reader(can_rx: BufferedCanRx<'static, CAN_BUF_SIZE>) -> () {
                     prev_main_ready = status;
                 }
                 Id::Standard(id) if id.as_raw() == MAIN_ACKNOWLEDGE_ID => {
-                    info!("storing main acknowledgement in atomic");
                     MAIN_ACKNOWLEDGE.store(true, core::sync::atomic::Ordering::Relaxed);
                 }
                 Id::Standard(id) if id.as_raw() == DROGUE_HEARTBEAT_ID => {
@@ -57,7 +56,6 @@ pub async fn can_reader(can_rx: BufferedCanRx<'static, CAN_BUF_SIZE>) -> () {
                     prev_drogue_ready = status;
                 }
                 Id::Standard(id) if id.as_raw() == DROGUE_ACKNOWLEDGE_ID => {
-                    info!("storing drogue acknowledgement in atomic");
                     DROGUE_ACKNOWLEDGE.store(true, core::sync::atomic::Ordering::Relaxed);
                 }
                 _ => {}
@@ -87,8 +85,6 @@ pub async fn send_deploy_msg(can_id: u16) -> Result<(), FrameCreateError> {
                     CAN_TX_CHANNEL.send(msg).await;
                     Timer::after_millis(100).await;
                 }
-                info!("Drogue release acknowledged, storing false in atomic");
-                DROGUE_ACKNOWLEDGE.store(false, Ordering::Relaxed);
             }
             MAIN_DEPLOY_ID => {
                 info!("Releasing main");
@@ -97,8 +93,6 @@ pub async fn send_deploy_msg(can_id: u16) -> Result<(), FrameCreateError> {
                     CAN_TX_CHANNEL.send(msg).await;
                     Timer::after_millis(100).await;
                 }
-                info!("Main release acknowledged, storing false in atomic");
-                MAIN_ACKNOWLEDGE.store(false, Ordering::Relaxed);
             }
             _ => {}
         }
