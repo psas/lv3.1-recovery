@@ -174,7 +174,7 @@ async fn main(spawner: Spawner) {
         {
             let mut shore_pow_on_unlocked = SHORE_POW_ON_MTX.lock().await;
             if let Some(spo_ref) = shore_pow_on_unlocked.as_mut() {
-                let shore_pow_on = spo_ref.is_high();
+                let shore_pow_on = spo_ref.is_low();
                 state.shore_pow_on = shore_pow_on
             } else {
                 error!("shore power mutex not initialized");
