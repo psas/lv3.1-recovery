@@ -281,7 +281,7 @@ async fn main(spawner: Spawner) {
 
         // ==================================================================================
         // send heartbeat message
-        if next_iter_start.as_millis() - last_heartbeat_time > HEARTBEAT_INTERVAL_MS {
+        if time_now - last_heartbeat_time > HEARTBEAT_INTERVAL_MS {
             // create heartbeat context
             let mut sender_state: u8 = 0;
 
