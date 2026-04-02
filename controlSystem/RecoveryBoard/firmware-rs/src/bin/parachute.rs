@@ -2,8 +2,7 @@
 #![no_main]
 
 use core::str::FromStr;
-
-use defmt::*;
+use defmt::{error, info, panic, unwrap};
 use embassy_executor::Spawner;
 use embassy_stm32::{
     adc::{Adc, InterruptHandler as AdcInterruptHandler},
@@ -110,16 +109,18 @@ async fn main(spawner: Spawner) {
     uart_config.data_bits = DataBits::DataBits8;
     uart_config.stop_bits = StopBits::STOP1;
 
-    let uart = BufferedUart::new(
-        p.USART2,
-        p.PA3,
-        p.PA2,
-        UART_TX_BUF_CELL.take(),
-        UART_RX_BUF_CELL.take(),
-        UsartIrqs,
-        uart_config,
-    )
-    .expect("Uart Config Error");
+    let uart = unwrap!(
+        BufferedUart::new(
+            p.USART2,
+            p.PA3,
+            p.PA2,
+            UART_TX_BUF_CELL.take(),
+            UART_RX_BUF_CELL.take(),
+            UsartIrqs,
+            uart_config,
+        ),
+        "Uart Config Error"
+    );
 
     let (uart_tx, uart_rx) = uart.split();
 
@@ -128,6 +129,7 @@ async fn main(spawner: Spawner) {
     let motor = Motor::new(p.PB4, p.PB5, p.PB6, p.PB7, dac);
     let ring = Ring::new(p.PA0, p.PA1, p.PB1).await;
 
+    #[allow(unused)] // It is immediately used. RA doesn't know because of cfg directives
     let mut prompt = "BOARD_ENV_ERR";
 
     #[cfg(drogue)]
@@ -140,7 +142,13 @@ async fn main(spawner: Spawner) {
         prompt = "main@ers> "
     }
 
-    let (chute_cli, serial_write_ctx, serial_read_ctx) = cli::init(uart_tx, uart_rx, prompt);
+    let (chute_cli, serial_write_ctx, serial_read_ctx) = match cli::init(uart_tx, uart_rx, prompt) {
+        Ok(ctx) => ctx,
+        Err(e) => {
+            error!("Failed to create CLI: {}", e);
+            panic!()
+        }
+    };
 
     {
         // Put peripherals into mutex if shared among tasks.
@@ -177,9 +185,10 @@ async fn main(spawner: Spawner) {
     let mut next_iter_start = Instant::now();
     let mut last_heartbeat_time = 0u64;
     let mut ring_pos_rcvr =
-        RING_POSITION_WATCH.receiver().expect("unable to get ring position receiver");
+        unwrap!(RING_POSITION_WATCH.receiver(), "unable to get ring position receiver");
 
-    let mut batt_read_rcvr = BATT_READ_WATCH.receiver().expect("unable to get batt read receiver");
+    let mut batt_read_rcvr =
+        unwrap!(BATT_READ_WATCH.receiver(), "unable to get batt read receiver");
 
     let mut state = ChuteState::default();
 
@@ -194,7 +203,7 @@ async fn main(spawner: Spawner) {
         state.shore_power_on = shore_power_on;
 
         if CAN_SIGNAL.signaled() {
-            let sig = CAN_SIGNAL.try_take().expect("CAN signaled but main was unable to read it");
+            let sig = unwrap!(CAN_SIGNAL.try_take(), "CAN signaled but main was unable to read it");
             state.sender_last_seen = sig;
         }
 
@@ -242,15 +251,23 @@ async fn main(spawner: Spawner) {
                     let _ = uwrite!(cli.writer(), "{}", batt_read);
                 }
                 ChuteCmd::Beep => {
-                    async_cmd_sender.try_send(AsyncCmd::Beep).unwrap();
+                    if async_cmd_sender.try_send(AsyncCmd::Beep).is_err() {
+                        error!("Could not send beep command to async handler");
+                    }
                 }
                 ChuteCmd::L { force, pulse } => {
-                    async_cmd_sender.try_send(AsyncCmd::L { force, pulse }).unwrap();
+                    if async_cmd_sender.try_send(AsyncCmd::L { force, pulse }).is_err() {
+                        error!("unable to send lock command to async handler")
+                    }
                 }
                 ChuteCmd::U { force, pulse } => {
-                    async_cmd_sender.try_send(AsyncCmd::U { force, pulse }).unwrap();
+                    if async_cmd_sender.try_send(AsyncCmd::U { force, pulse }).is_err() {
+                        error!("unable to send unlock commmand to async handler");
+                    };
                 }
-                ChuteCmd::Pos => uwrite!(cli.writer(), "{}", ring_pos).unwrap(),
+                ChuteCmd::Pos => {
+                    let _ = uwrite!(cli.writer(), "{}", ring_pos);
+                }
                 ChuteCmd::Acts => {
                     let mut bytes = [0u8; (MOTOR_ACT_SECTOR_SIZE / 8) as usize];
 
@@ -270,7 +287,9 @@ async fn main(spawner: Spawner) {
                     let _ = uwrite!(cli.writer(), "{}", bytes[0] + 1);
                 }
                 ChuteCmd::Erase => {
-                    async_cmd_sender.try_send(AsyncCmd::Erase).unwrap();
+                    if async_cmd_sender.try_send(AsyncCmd::Erase).is_err() {
+                        error!("unable to send erase command to async handler");
+                    }
                 }
                 ChuteCmd::Limits { print, set } => {
                     if print {
@@ -321,7 +340,13 @@ async fn main(spawner: Spawner) {
                             info!("lims: {}", lims);
                             let limits: heapless::Vec<heapless::String<32>, 10> = lims
                                 .split(',')
-                                .map(|s| heapless::String::from_str(s).unwrap())
+                                .map(|s| match heapless::String::from_str(s) {
+                                    Ok(sh) => sh,
+                                    Err(_) => {
+                                        error!("unable to create String from {}", s);
+                                        panic!()
+                                    }
+                                })
                                 .collect();
 
                             if limits.len() != 8 {
@@ -335,7 +360,12 @@ async fn main(spawner: Spawner) {
                                     info!("{}", lim.as_str());
                                 }
 
-                                async_cmd_sender.try_send(AsyncCmd::SetLimits { limits }).unwrap();
+                                if async_cmd_sender
+                                    .try_send(AsyncCmd::SetLimits { limits })
+                                    .is_err()
+                                {
+                                    error!("could not send limits command to async handler");
+                                }
                             }
                         } else {
                             let _ = uwrite!(cli.writer(), "no limits provided");
@@ -369,7 +399,9 @@ async fn main(spawner: Spawner) {
                 ready,
             );
 
-            send_heartbeat(heartbeat_ctx).await;
+            if (send_heartbeat(heartbeat_ctx).await).is_err() {
+                panic!()
+            };
             last_heartbeat_time = time_now;
         }
     }

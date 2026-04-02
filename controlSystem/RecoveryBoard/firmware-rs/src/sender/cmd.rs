@@ -27,13 +27,20 @@ pub enum SenderCmd {
     Version,
 }
 
-
 #[embassy_executor::task]
 pub async fn async_cmd_handler() {
     loop {
         match ASYNC_CMD_CHANNEL.receive().await {
-            SenderCmd::Drogue => send_deploy_msg(DROGUE_DEPLOY_ID).await,
-            SenderCmd::Main => send_deploy_msg(MAIN_DEPLOY_ID).await,
+            SenderCmd::Drogue => {
+                if (send_deploy_msg(DROGUE_DEPLOY_ID).await).is_err() {
+                    panic!()
+                };
+            }
+            SenderCmd::Main => {
+                if (send_deploy_msg(MAIN_DEPLOY_ID).await).is_err() {
+                    panic!()
+                }
+            }
             SenderCmd::Beep => {
                 let mut buzz_mode_unlocked = BUZZER_MODE_MTX.lock().await;
                 if let Some(mode) = buzz_mode_unlocked.as_mut() {

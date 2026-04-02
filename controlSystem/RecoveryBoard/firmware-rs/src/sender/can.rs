@@ -1,7 +1,9 @@
 use core::sync::atomic::{AtomicBool, Ordering};
 
-use defmt::{error, info, unwrap};
-use embassy_stm32::can::{frame::Header, BufferedCanRx, Frame, Id, StandardId};
+use defmt::{error, info};
+use embassy_stm32::can::{
+    enums::FrameCreateError, frame::Header, BufferedCanRx, Frame, Id, StandardId,
+};
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, signal::Signal};
 use embassy_time::Timer;
 
@@ -72,33 +74,41 @@ pub async fn can_reader(can_rx: BufferedCanRx<'static, CAN_BUF_SIZE>) -> () {
     }
 }
 
-pub async fn send_deploy_msg(can_id: u16) {
-    let id = unwrap!(StandardId::new(can_id));
-    let header = Header::new(Id::Standard(id), 1, false);
-    let frame = unwrap!(Frame::new(header, &[1; 0]));
+pub async fn send_deploy_msg(can_id: u16) -> Result<(), FrameCreateError> {
+    if let Some(id) = StandardId::new(can_id) {
+        let header = Header::new(Id::Standard(id), 1, false);
+        let frame = Frame::new(header, &[1; 0])?;
 
-    match can_id {
-        DROGUE_DEPLOY_ID => {
-            info!("Releasing drogue");
-            while !DROGUE_ACKNOWLEDGE.load(Ordering::Relaxed) {
-                let msg = CanTxChannelMsg::new(true, frame);
-                CAN_TX_CHANNEL.send(msg).await;
-                Timer::after_millis(100).await;
+        match can_id {
+            DROGUE_DEPLOY_ID => {
+                info!("Releasing drogue");
+                while !DROGUE_ACKNOWLEDGE.load(Ordering::Relaxed) {
+                    let msg = CanTxChannelMsg::new(true, frame);
+                    CAN_TX_CHANNEL.send(msg).await;
+                    Timer::after_millis(100).await;
+                }
+                info!("Drogue release acknowledged, storing false in atomic");
+                DROGUE_ACKNOWLEDGE.store(false, Ordering::Relaxed);
             }
-            info!("Drogue release acknowledged, storing false in atomic");
-            DROGUE_ACKNOWLEDGE.store(false, Ordering::Relaxed);
-        }
-        MAIN_DEPLOY_ID => {
-            info!("Releasing main");
-            while !MAIN_ACKNOWLEDGE.load(Ordering::Relaxed) {
-                let msg = CanTxChannelMsg::new(true, frame);
-                CAN_TX_CHANNEL.send(msg).await;
-                Timer::after_millis(100).await;
+            MAIN_DEPLOY_ID => {
+                info!("Releasing main");
+                while !MAIN_ACKNOWLEDGE.load(Ordering::Relaxed) {
+                    let msg = CanTxChannelMsg::new(true, frame);
+                    CAN_TX_CHANNEL.send(msg).await;
+                    Timer::after_millis(100).await;
+                }
+                info!("Main release acknowledged, storing false in atomic");
+                MAIN_ACKNOWLEDGE.store(false, Ordering::Relaxed);
             }
-            info!("Main release acknowledged, storing false in atomic");
-            MAIN_ACKNOWLEDGE.store(false, Ordering::Relaxed);
+            _ => {}
         }
-        _ => {}
+        Ok(())
+    } else {
+        // This really isnt a frame create error, it's that Id::new returned None.
+        // However this should never happen as we should always be passing valid CAN IDs right?
+        // TODO: Custom err type?
+        error!("unable to create valid CAN ID from provided value: {}", can_id);
+        Err(FrameCreateError::InvalidCanId)
     }
 }
 
@@ -134,7 +144,7 @@ impl HeartbeatContext {
     }
 }
 
-pub async fn send_heartbeat(ctx: HeartbeatContext) -> () {
+pub async fn send_heartbeat(ctx: HeartbeatContext) -> Result<(), FrameCreateError> {
     let ers_ready = ctx.can_bus_ok && ctx.drogue_ready && ctx.main_ready;
     let status_buf = [
         ctx.sender_state,
@@ -147,11 +157,20 @@ pub async fn send_heartbeat(ctx: HeartbeatContext) -> () {
         0,
     ];
 
-    let id = StandardId::new(SENDER_HEARTBEAT_ID).unwrap();
-    let header = Header::new(Id::Standard(id), 8, false);
-    let frame = Frame::new(header, &status_buf).unwrap();
+    if let Some(id) = StandardId::new(SENDER_HEARTBEAT_ID) {
+        // This will always be Some as the ID should never change and is certainly valid
+        let header = Header::new(Id::Standard(id), 8, false);
+        let frame = Frame::new(header, &status_buf)?;
 
-    let msg: CanTxChannelMsg = CanTxChannelMsg::new(false, frame);
+        let msg: CanTxChannelMsg = CanTxChannelMsg::new(false, frame);
 
-    CAN_TX_CHANNEL.send(msg).await;
+        CAN_TX_CHANNEL.send(msg).await;
+        Ok(())
+    } else {
+        // This really isnt a frame create error, it's that Id::new returned None.
+        // However this should never happen as we should always be passing valid CAN IDs right?
+        // TODO: Custom err type?
+        error!("unable to create valid CAN ID from provided value: {}", SENDER_HEARTBEAT_ID);
+        Err(FrameCreateError::InvalidCanId)
+    }
 }

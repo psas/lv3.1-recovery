@@ -1,5 +1,8 @@
-use defmt::{error, info};
-use embassy_stm32::can::{frame::Header, BufferedCanRx, Frame, Id, StandardId};
+#![allow(unused)]
+use defmt::{error, info, unwrap};
+use embassy_stm32::can::{
+    enums::FrameCreateError, frame::Header, BufferedCanRx, Frame, Id, StandardId,
+};
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, signal::Signal};
 
 use crate::{
@@ -41,12 +44,15 @@ pub async fn can_reader(can_rx: BufferedCanRx<'static, CAN_BUF_SIZE>) -> () {
                                 info!("done driving motor")
                             }
                         }
-                        let frame =
-                            Frame::new_data(StandardId::new(DROGUE_ACKNOWLEDGE_ID).unwrap(), &[1])
-                                .unwrap();
-                        let acknowledge_msg = CanTxChannelMsg::new(true, frame);
-                        CAN_TX_CHANNEL.send(acknowledge_msg).await;
-                        info!("acknowledge CAN message sent");
+                        if let Some(id) = StandardId::new(DROGUE_ACKNOWLEDGE_ID) {
+                            let frame = unwrap!(Frame::new_data(id, &[1]));
+                            let acknowledge_msg = CanTxChannelMsg::new(true, frame);
+                            CAN_TX_CHANNEL.send(acknowledge_msg).await;
+                            info!("acknowledge CAN message sent");
+                        } else {
+                            error!("Failed to create CAN Id from {}", DROGUE_ACKNOWLEDGE_ID);
+                            panic!()
+                        }
                     }
                 }
                 Id::Standard(id) if id.as_raw() == MAIN_DEPLOY_ID => {
@@ -69,12 +75,15 @@ pub async fn can_reader(can_rx: BufferedCanRx<'static, CAN_BUF_SIZE>) -> () {
                                 info!("done driving motor")
                             }
                         }
-                        let frame =
-                            Frame::new_data(StandardId::new(MAIN_ACKNOWLEDGE_ID).unwrap(), &[1])
-                                .unwrap();
-                        let acknowledge_msg = CanTxChannelMsg::new(true, frame);
-                        CAN_TX_CHANNEL.send(acknowledge_msg).await;
-                        info!("acknowledge CAN message sent");
+                        if let Some(id) = StandardId::new(MAIN_ACKNOWLEDGE_ID) {
+                            let frame = unwrap!(Frame::new_data(id, &[1]));
+                            let acknowledge_msg = CanTxChannelMsg::new(true, frame);
+                            CAN_TX_CHANNEL.send(acknowledge_msg).await;
+                            info!("acknowledge CAN message sent");
+                        } else {
+                            error!("failed to create CAN Id from {}", MAIN_ACKNOWLEDGE_ID);
+                            panic!()
+                        }
                     }
                 }
                 Id::Standard(id) if id.as_raw() == SENDER_HEARTBEAT_ID => {
@@ -114,7 +123,7 @@ impl HeartbeatCtx {
     }
 }
 
-pub async fn send_heartbeat(ctx: HeartbeatCtx) {
+pub async fn send_heartbeat(ctx: HeartbeatCtx) -> Result<(), FrameCreateError> {
     let ring_pos_u8: u8 = match ctx.ring_pos {
         RingPosition::Unlocked => 1,
         RingPosition::Inbetween => 2,
@@ -136,20 +145,42 @@ pub async fn send_heartbeat(ctx: HeartbeatCtx) {
     #[cfg(main)]
     {
         use crate::can::MAIN_HEARTBEAT_ID;
-        let id = StandardId::new(MAIN_HEARTBEAT_ID).unwrap();
-        let header = Header::new(Id::Standard(id), 8, false);
-        let frame = Frame::new(header, &status_buf).unwrap();
-        let msg: CanTxChannelMsg = CanTxChannelMsg::new(false, frame);
-        CAN_TX_CHANNEL.send(msg).await;
+        if let Some(id) = StandardId::new(MAIN_HEARTBEAT_ID) {
+            let header = Header::new(Id::Standard(id), 8, false);
+            let frame = Frame::new(header, &status_buf)?;
+            let msg: CanTxChannelMsg = CanTxChannelMsg::new(false, frame);
+            CAN_TX_CHANNEL.send(msg).await;
+            Ok(())
+        } else {
+            // This really isnt a frame create error, it's that Id::new returned None.
+            // However this should never happen as we should always be passing valid CAN IDs right?
+            // TODO: Custom err type?
+            error!("unable to create CAN id from {}", MAIN_HEARTBEAT_ID);
+            Err(FrameCreateError::InvalidCanId)
+        }
     }
 
     #[cfg(drogue)]
     {
         use crate::can::DROGUE_HEARTBEAT_ID;
-        let id = StandardId::new(DROGUE_HEARTBEAT_ID).unwrap();
-        let header = Header::new(Id::Standard(id), 8, false);
-        let frame = Frame::new(header, &status_buf).unwrap();
-        let msg: CanTxChannelMsg = CanTxChannelMsg::new(false, frame);
-        CAN_TX_CHANNEL.send(msg).await;
+        if let Some(id) = StandardId::new(DROGUE_HEARTBEAT_ID) {
+            let header = Header::new(Id::Standard(id), 8, false);
+            let frame = Frame::new(header, &status_buf)?;
+            let msg: CanTxChannelMsg = CanTxChannelMsg::new(false, frame);
+            CAN_TX_CHANNEL.send(msg).await;
+            Ok(())
+        } else {
+            // This really isnt a frame create error, it's that Id::new returned None.
+            // However this should never happen as we should always be passing valid CAN IDs right?
+            // TODO: Custom err type?
+            error!("unable to create CAN id from {}", DROGUE_HEARTBEAT_ID);
+            Err(FrameCreateError::InvalidCanId)
+        }
+    }
+
+    #[cfg(not(any(drogue, main)))]
+    {
+        // needed to build sender due to return type
+        Ok(())
     }
 }

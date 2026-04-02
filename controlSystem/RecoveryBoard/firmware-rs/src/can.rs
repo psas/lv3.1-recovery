@@ -1,4 +1,4 @@
-use defmt::*;
+use defmt::{error, info, panic, unwrap};
 use embassy_stm32::can::{BufferedCanTx, Can, Frame, StandardId};
 use embassy_sync::{
     blocking_mutex::raw::{CriticalSectionRawMutex, ThreadModeRawMutex},
@@ -18,9 +18,9 @@ pub const MAIN_ACKNOWLEDGE_ID: u16 = 0x201;
 pub const SENDER_HEARTBEAT_ID: u16 = 0x700;
 
 pub const CAN_BUF_SIZE: usize = 64;
+
 pub static CAN_RX_BUF: StaticCell<embassy_stm32::can::RxBuf<CAN_BUF_SIZE>> = StaticCell::new();
 pub static CAN_TX_BUF: StaticCell<embassy_stm32::can::TxBuf<CAN_BUF_SIZE>> = StaticCell::new();
-
 pub static CAN_TX_CHANNEL: Channel<CriticalSectionRawMutex, CanTxChannelMsg, 10> = Channel::new();
 pub static CAN_MTX: Mutex<ThreadModeRawMutex, Option<Can>> = Mutex::new(None);
 
@@ -37,10 +37,15 @@ impl CanTxChannelMsg {
 
 #[embassy_executor::task]
 pub async fn echo_can(mut can: Can<'static>) -> () {
-    let tx_frame = Frame::new_data(unwrap!(StandardId::new(123 as _)), &[123]).unwrap();
-    can.write(&tx_frame).await;
+    if let Some(id) = StandardId::new(123 as _) {
+        let tx_frame = unwrap!(Frame::new_data(id, &[123]));
+        can.write(&tx_frame).await;
+    } else {
+        error!("unable to create CAN Id from {}", 123);
+        panic!()
+    }
     loop {
-        let envelope = can.read().await.unwrap();
+        let envelope = unwrap!(can.read().await);
         can.write(&envelope.frame).await;
         Timer::after_millis(1000).await;
     }

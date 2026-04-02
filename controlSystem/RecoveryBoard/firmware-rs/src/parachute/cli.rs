@@ -1,4 +1,5 @@
-use defmt::error;
+use core::fmt;
+use defmt::{error, Format};
 use embassy_stm32::usart::{BufferedUartRx, BufferedUartTx};
 use embassy_sync::{
     blocking_mutex::raw::CriticalSectionRawMutex,
@@ -15,6 +16,22 @@ use crate::{
 
 const HISTORY_SIZE: usize = 1024;
 
+#[derive(Debug, Format)]
+pub struct CliError {}
+
+impl core::error::Error for CliError {}
+
+impl core::fmt::Display for CliError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "an error occured in the cli")
+    }
+}
+
+impl From<UartWriterError> for CliError {
+    fn from(_: UartWriterError) -> Self {
+        CliError {}
+    }
+}
 pub struct ChuteCli {
     reader: pipe::Reader<'static, CriticalSectionRawMutex, MAX_CMD_LENGTH>,
     inner_cli: Cli<&'static mut UartWriter, UartWriterError, &'static mut [u8], &'static mut [u8]>,
@@ -55,7 +72,10 @@ pub fn init(
     uart_tx: BufferedUartTx<'static>,
     uart_rx: BufferedUartRx<'static>,
     prompt: &'static str,
-) -> (&'static mut ChuteCli, &'static mut SerialWriteContext, &'static mut SerialReadContext) {
+) -> Result<
+    (&'static mut ChuteCli, &'static mut SerialWriteContext, &'static mut SerialReadContext),
+    CliError,
+> {
     static CMD_BUF: StaticCell<[u8; MAX_CMD_LENGTH]> = StaticCell::new();
     static HIST_BUF: StaticCell<[u8; HISTORY_SIZE]> = StaticCell::new();
 
@@ -87,11 +107,10 @@ pub fn init(
             .prompt(prompt)
             .command_buffer(CMD_BUF.init([0u8; MAX_CMD_LENGTH]).as_mut_slice())
             .history_buffer(HIST_BUF.init([0u8; HISTORY_SIZE]).as_mut_slice())
-            .build()
-            .unwrap(),
+            .build()?,
     });
 
-    (uart_cli, serial_write_ctx, serial_read_ctx)
+    Ok((uart_cli, serial_write_ctx, serial_read_ctx))
 }
 
 #[embassy_executor::task]

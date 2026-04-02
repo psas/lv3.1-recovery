@@ -3,7 +3,7 @@
 
 use core::sync::atomic::Ordering::Relaxed;
 
-use defmt::*;
+use defmt::{error, info, panic, unwrap};
 use embassy_executor::Spawner;
 use embassy_stm32::{
     adc::{Adc, InterruptHandler},
@@ -32,8 +32,8 @@ use firmware_rs::{
     blink::blink_led,
     buzzer::{active_beep, BuzzerMode, BUZZER_MODE_MTX},
     can::{
-        can_writer, CAN_BITRATE, CAN_BUF_SIZE, CAN_MTX, CAN_RX_BUF, CAN_TX_BUF,
-        DROGUE_ACKNOWLEDGE_ID, DROGUE_DEPLOY_ID, MAIN_DEPLOY_ID,
+        can_writer, CAN_BITRATE, CAN_BUF_SIZE, CAN_MTX, CAN_RX_BUF, CAN_TX_BUF, DROGUE_DEPLOY_ID,
+        MAIN_DEPLOY_ID,
     },
     sender::{
         can::{
@@ -104,20 +104,29 @@ async fn main(spawner: Spawner) {
     uart_config.parity = Parity::ParityNone;
     uart_config.data_bits = DataBits::DataBits8;
     uart_config.stop_bits = StopBits::STOP1;
-    let uart = BufferedUart::new(
-        p.USART2,
-        p.PA3,
-        p.PA2,
-        UART_TX_BUF_CELL.take(),
-        UART_RX_BUF_CELL.take(),
-        UsartIrqs,
-        uart_config,
-    )
-    .expect("Uart Config Error");
 
+    let uart = unwrap!(
+        BufferedUart::new(
+            p.USART2,
+            p.PA3,
+            p.PA2,
+            UART_TX_BUF_CELL.take(),
+            UART_RX_BUF_CELL.take(),
+            UsartIrqs,
+            uart_config,
+        ),
+        "Uart Config Error"
+    );
     let (uart_tx, uart_rx) = uart.split();
 
-    let (uart_cli, serial_write_ctx, serial_read_ctx) = cli::init(uart_tx, uart_rx, "sender@ers> ");
+    let (uart_cli, serial_write_ctx, serial_read_ctx) =
+        match cli::init(uart_tx, uart_rx, "sender@ers> ") {
+            Ok(ctx) => ctx,
+            Err(_) => {
+                error!("Failed to init CLI");
+                panic!()
+            }
+        };
 
     spawner.spawn(unwrap!(blink_led(p.PB14)));
     spawner.spawn(unwrap!(active_beep(pwm)));
@@ -126,7 +135,8 @@ async fn main(spawner: Spawner) {
     spawner.spawn(unwrap!(serial_read_task(serial_read_ctx)));
     spawner.spawn(unwrap!(i_wdg(p.IWDG)));
 
-    let mut batt_rcvr = BATT_READ_WATCH.receiver().expect("failed to create battery receiver");
+    let mut batt_rcvr =
+        unwrap!(BATT_READ_WATCH.receiver(), "failed to create batt_read_watch receiver");
 
     // enable CAN at last minute so other tasks can still spawn if can bus is down
     can.enable().await;
@@ -174,7 +184,7 @@ async fn main(spawner: Spawner) {
         let batt_read = batt_rcvr.get().await;
 
         if CAN_SIGNAL.signaled() {
-            let sig = CAN_SIGNAL.try_take().expect("CAN signaled but main failed to read");
+            let sig = unwrap!(CAN_SIGNAL.try_take(), "CAN signaled but main failed to read");
             state.drogue_last_seen = sig.drogue_last_seen;
             state.main_last_seen = sig.main_last_seen;
             state.drogue_ready = sig.drogue_ready;
@@ -182,15 +192,16 @@ async fn main(spawner: Spawner) {
         }
 
         if ISO_DROGUE_TS_SIGNAL.signaled() {
-            let sig = ISO_DROGUE_TS_SIGNAL
-                .try_take()
-                .expect("iso_drogue signaled but main failed to read");
+            let sig = unwrap!(
+                ISO_DROGUE_TS_SIGNAL.try_take(),
+                "iso_drogue signaled but main failed to read"
+            );
             state.iso_drogue_last_seen = sig;
         }
 
         if ISO_MAIN_TS_SIGNAL.signaled() {
             let sig =
-                ISO_MAIN_TS_SIGNAL.try_take().expect("iso_main signaled but main failed to read");
+                unwrap!(ISO_MAIN_TS_SIGNAL.try_take(), "iso_main signaled but main failed to read");
             state.iso_main_last_seen = sig;
         }
 
@@ -293,7 +304,9 @@ async fn main(spawner: Spawner) {
                 state.rocket_ready,
             );
 
-            send_heartbeat(ctx).await;
+            if send_heartbeat(ctx).await.is_err() {
+                panic!()
+            }
 
             last_heartbeat_time = time_now;
         }
@@ -324,7 +337,9 @@ async fn handle_iso_rising_edge(mut iso: ExtiInput<'static, Async>, can_id: u16)
             if let Some(spo_ref) = shore_power_on_unlocked.as_mut() {
                 if spo_ref.is_high() {
                     info!("sending deploy message");
-                    send_deploy_msg(can_id).await;
+                    if send_deploy_msg(can_id).await.is_err() {
+                        panic!()
+                    }
                 }
             }
         }

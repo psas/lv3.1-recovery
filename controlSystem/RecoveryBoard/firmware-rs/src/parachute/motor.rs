@@ -98,7 +98,7 @@ impl Motor {
 
     async fn read_ring_pos_until_condition(&mut self, position: RingPosition) {
         let mut ring_pos_receiver =
-            RING_POSITION_WATCH.receiver().expect("Could not get ring_pos rcvr");
+            unwrap!(RING_POSITION_WATCH.receiver(), "Could not get ring_pos rcvr");
         const BUFSIZE: usize = 64; // INFO If running the motor for longer, increase this
         let mut buf = [0u16; BUFSIZE];
         let mut count = 0usize;
