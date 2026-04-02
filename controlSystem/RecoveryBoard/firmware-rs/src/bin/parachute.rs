@@ -261,9 +261,14 @@ async fn main(spawner: Spawner) {
                     }
                 }
                 ChuteCmd::U { force, pulse } => {
-                    if async_cmd_sender.try_send(AsyncCmd::U { force, pulse }).is_err() {
-                        error!("unable to send unlock commmand to async handler");
-                    };
+                    if !state.shore_power_on {
+                        if async_cmd_sender.try_send(AsyncCmd::U { force, pulse }).is_err() {
+                            error!("unable to send unlock commmand to async handler");
+                        };
+                    } else {
+                        let _ =
+                            uwrite!(cli.writer(), "shore power is on - turn off to unlock ring");
+                    }
                 }
                 ChuteCmd::Pos => {
                     let _ = uwrite!(cli.writer(), "{}", ring_pos);

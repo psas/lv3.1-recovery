@@ -232,13 +232,25 @@ async fn main(spawner: Spawner) {
                     }
                 }
                 SenderCmd::Drogue => {
-                    if let Err(e) = async_cmd_sender.try_send(SenderCmd::Drogue) {
-                        error!("failed to send async cmd: {}", e);
+                    if !state.shore_pow_on {
+                        DROGUE_ACKNOWLEDGE.store(false, Relaxed);
+                        if let Err(e) = async_cmd_sender.try_send(SenderCmd::Drogue) {
+                            error!("failed to send async cmd: {}", e);
+                        }
+                    } else {
+                        let _ =
+                            uwrite!(cli.writer(), "shore power is on - turn off to unlock ring");
                     }
                 }
                 SenderCmd::Main => {
-                    if let Err(e) = async_cmd_sender.try_send(SenderCmd::Main) {
-                        error!("failed to send async cmd: {}", e);
+                    if !state.shore_pow_on {
+                        MAIN_ACKNOWLEDGE.store(false, Relaxed);
+                        if let Err(e) = async_cmd_sender.try_send(SenderCmd::Main) {
+                            error!("failed to send async cmd: {}", e);
+                        }
+                    } else {
+                        let _ =
+                            uwrite!(cli.writer(), "shore power is on - turn off to unlock ring");
                     }
                 }
                 SenderCmd::Rr => state.force_rocket_ready = !state.force_rocket_ready,
