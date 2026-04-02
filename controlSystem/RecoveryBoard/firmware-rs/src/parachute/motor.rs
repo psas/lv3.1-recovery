@@ -6,7 +6,7 @@ use embassy_stm32::{
     peripherals::{PB4, PB5, PB6, PB7},
     Peri,
 };
-use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex};
+use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex, watch::Receiver};
 use embassy_time::{with_timeout, Duration};
 
 use crate::{
@@ -25,6 +25,7 @@ pub struct Motor {
     pub ps: Output<'static>,
     pub motor_fail: Input<'static>,
     pub dac: Dac<'static, Async>,
+    pub ring_pos_receiver: Receiver<'static, ThreadModeRawMutex, RingPosition, 5>,
 }
 
 pub enum MotorMode {
@@ -47,8 +48,10 @@ impl Motor {
         let deploy2 = Output::new(pb5, Level::Low, Speed::Medium);
         let ps = Output::new(pb6, Level::High, Speed::Medium);
         let motor_fail = Input::new(pb7, Pull::Up);
+        let ring_pos_receiver =
+            unwrap!(RING_POSITION_WATCH.receiver(), "Could not get ring pos receiver for motor");
 
-        Self { deploy1, deploy2, ps, motor_fail, dac }
+        Self { deploy1, deploy2, ps, motor_fail, dac, ring_pos_receiver }
     }
 
     pub fn set_mode(&mut self, mode: MotorMode) {
@@ -96,9 +99,8 @@ impl Motor {
         self.dac.ch1().set(val);
     }
 
-    async fn read_ring_pos_until_condition(&mut self, position: RingPosition) {
-        let mut ring_pos_receiver =
-            unwrap!(RING_POSITION_WATCH.receiver(), "Could not get ring_pos rcvr");
+    async fn read_ring_pos_until(&mut self, position: RingPosition) {
+        // read the ring position until it is in the desired position then break
         const BUFSIZE: usize = 64; // INFO If running the motor for longer, increase this
         let mut buf = [0u16; BUFSIZE];
         let mut count = 0usize;
@@ -106,7 +108,7 @@ impl Motor {
             if count < BUFSIZE {
                 buf[count] = MOTOR_ISENSE_SIGNAL.wait().await;
             }
-            let ring_position = ring_pos_receiver.changed().await;
+            let ring_position = self.ring_pos_receiver.changed().await;
             count = count.wrapping_add(1);
             if ring_position == position {
                 break;
@@ -167,7 +169,7 @@ impl Motor {
                         error!("Motor limit timed out: {}", e);
                     }
                 } else {
-                    let limit = self.read_ring_pos_until_condition(RingPosition::Locked);
+                    let limit = self.read_ring_pos_until(RingPosition::Locked);
                     if let Err(e) = with_timeout(Duration::from_millis(duration_ms), limit).await {
                         error!("Motor limit timed out: {}", e);
                     }
@@ -181,7 +183,7 @@ impl Motor {
                         error!("Motor limit timed out: {}", e);
                     }
                 } else {
-                    let limit = self.read_ring_pos_until_condition(RingPosition::Unlocked);
+                    let limit = self.read_ring_pos_until(RingPosition::Unlocked);
                     if let Err(e) = with_timeout(Duration::from_millis(duration_ms), limit).await {
                         error!("Motor limit timed out: {}", e);
                     }
