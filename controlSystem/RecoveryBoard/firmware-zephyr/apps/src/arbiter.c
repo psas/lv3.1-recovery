@@ -4,16 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <math.h>
-#include <stdlib.h>
-
-#include <zephyr/kernel.h>
-#include <zephyr/logging/log.h>
-#include <zephyr/shell/shell.h>
-
-// LOG_MODULE_REGISTER(arbiter, CONFIG_ARBITER_LOG_LEVEL);
-LOG_MODULE_REGISTER(arbiter, LOG_LEVEL_INF);
-
 #include <arbiter.h>
 #include <ers-can.h>
 #include <ers-config.h>
@@ -21,6 +11,17 @@ LOG_MODULE_REGISTER(arbiter, LOG_LEVEL_INF);
 #include <gpio-in.h>
 #include <keeper.h>
 #include "settings-ers.h"
+
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/shell/shell.h>
+
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+// LOG_MODULE_REGISTER(arbiter, CONFIG_ARBITER_LOG_LEVEL);
+LOG_MODULE_REGISTER(arbiter, LOG_LEVEL_INF);
 
 //----------------------------------------------------------------------
 // - SECTION - defines

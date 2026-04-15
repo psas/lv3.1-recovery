@@ -38,8 +38,11 @@ int main(void)
 	static uint32_t loop_count = 0;
 	int32_t rc = 0;
 
-        rc = ers_init_gpio_in();
+	rc = ers_init_gpio_in();
 	LOG_INF("GPIO input pin initialization returns %d", rc);
+
+        rc = ers_init_shell_support();
+	LOG_INF("ERS command initialization returns %d", rc);
 
         rc = ers_init_motor_ctrl();
 	LOG_INF("motor control module init returns %d", rc);
@@ -94,6 +97,9 @@ int main(void)
 	{
 		loop_count++;
 		ek_get_sys_diag_mode(&rc);
+		// TODO [ ] Review call to check diagnostics mode and remove the
+		//          following unconditional clearing of 'rc' when mode
+		//          check is determined to be a sensible check:
 		rc = 0; // - DEV 0226 -
 		if (rc > 0)
 		{
@@ -113,7 +119,10 @@ int main(void)
 		// LOG_INF("motor_isense ADC_IN9 = %u", b);
 
 		rc = pwm_play_melody();
-		// TODO [ ] . . . do something with rc.
+		if (rc != 0)
+		{
+			LOG_ERR("Failed to actuate ERS buzzer, err %d", rc);
+		}
 
 		k_msleep(ERS_MAIN_LOOP_PERIOD_MS);
 	}
