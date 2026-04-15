@@ -27,11 +27,6 @@ LOG_MODULE_REGISTER(ers_can, LOG_LEVEL_ERR);
 K_THREAD_STACK_DEFINE(rx_thread_stack, CONFIG_CAN_RX_THREAD_STACK_SIZE);
 struct k_thread rx_thread_data;
 
-#define LED_MSG_ID 0x10
-#define COUNTER_MSG_ID 0x12345
-#define SET_LED 1
-#define RESET_LED 0
-
 #define SLEEP_TIME K_MSEC(250)
 
 /**
@@ -406,6 +401,9 @@ int32_t ers_init_can(void)
 				 K_THREAD_STACK_SIZEOF(rx_thread_stack),
 				 rx_thread_entry, NULL, NULL, NULL,
 				 CONFIG_CAN_RX_THREAD_PRIORITY, 0, K_NO_WAIT);
+
+	k_thread_name_set(rx_tid, "thread-can");
+
 	if (!rx_tid) {
 		LOG_ERR("ERROR spawning rx thread");
 	}

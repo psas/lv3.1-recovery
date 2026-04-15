@@ -4,19 +4,20 @@
  * ERS board firmware source file motor-control.c
  */
 
-#include <string.h>
-
-#include <zephyr/kernel.h>
-#include <zephyr/device.h>
-#include <zephyr/drivers/gpio.h>
-
-#include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(ers_motor_ctrl, LOG_LEVEL_INF);
-
 #include <arbiter.h>
 #include <ers-dac.h>
 #include <keeper.h>
 #include "settings-ers.h"
+
+#include <zephyr/kernel.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/logging/log.h>
+
+#include <stdio.h>
+#include <string.h>
+
+LOG_MODULE_REGISTER(ers_motor_ctrl, LOG_LEVEL_INF);
 
 //----------------------------------------------------------------------
 // - SECTION - file scoped

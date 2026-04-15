@@ -27,7 +27,7 @@ LOG_MODULE_REGISTER(ers_adc, CONFIG_ADC_LOG_LEVEL);
 
 #define ADC_READ_PERIOD_MS 10
 
-#undef DEV_ERS_ADC_PERIODIC_REPORTING
+// #undef DEV_ERS_ADC_PERIODIC_REPORTING
 
 // TODO [ ] review whether timeout needed and whether there was an issue for
 //   which timeout not implemented here, and if so document that reason:
@@ -82,6 +82,7 @@ struct k_mutex adc_mtx;
 int32_t adc_read_channels(const enum ers_adc_values idx_begin,
 			  const enum ers_adc_values idx_end)
 {
+
         int32_t rc = k_mutex_lock(&adc_mtx, K_MSEC(1500));
 	if (rc != 0)
 	{
@@ -278,6 +279,9 @@ int32_t adc_init(void)
 					  K_THREAD_STACK_SIZEOF(adc_thread_stack),
 					  adc_thread_entry, NULL, NULL, NULL,
 					  CONFIG_ADC_THREAD_PRIORITY, 0, K_NO_WAIT);
+
+	k_thread_name_set(adc_tid, "adc_thread");
+
 	if (!adc_tid)
 	{
 		LOG_ERR("ERROR spawning ADC thread\n");
