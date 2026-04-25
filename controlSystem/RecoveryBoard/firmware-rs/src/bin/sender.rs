@@ -211,11 +211,13 @@ async fn main(spawner: Spawner) {
         let ers_ready = can_bus_ok && state.drogue_ready && state.main_ready;
 
         let rocket_ready =
-            state.force_rocket_ready || (state.shore_pow_on && (batt_read > 99) && ers_ready);
+            state.force_rocket_ready || (!state.shore_pow_on && (batt_read > 99) && ers_ready);
 
-        if rocket_ready {
-            rocket_ready_pin.set_high();
-        }
+        rocket_ready_pin.set_level(if rocket_ready {
+            Level::Low // Active low
+        } else {
+            Level::High
+        });
 
         state.rocket_ready = rocket_ready;
 
@@ -253,21 +255,19 @@ async fn main(spawner: Spawner) {
                             uwrite!(cli.writer(), "shore power is on - turn off to unlock ring");
                     }
                 }
-                SenderCmd::Rr => state.force_rocket_ready = !state.force_rocket_ready,
+                SenderCmd::Rr => {
+                    state.force_rocket_ready = !state.force_rocket_ready;
+                    let _ =
+                        uwrite!(cli.writer(), "Force rocket ready: {}", state.force_rocket_ready,);
+                }
                 SenderCmd::Batt => {
-                    if let Err(e) = uwrite!(cli.writer(), "{}", batt_read) {
-                        error!("failed to write from uart: {}", e);
-                    }
+                    let _ = uwrite!(cli.writer(), "{}", batt_read);
                 }
                 SenderCmd::Beep => {
-                    if let Err(e) = async_cmd_sender.try_send(SenderCmd::Beep) {
-                        error!("failed to send async cmd: {}", e);
-                    }
+                    let _ = async_cmd_sender.try_send(SenderCmd::Beep);
                 }
                 SenderCmd::Version => {
-                    if let Err(e) = uwrite!(cli.writer(), "{}", env!("CARGO_PKG_VERSION")) {
-                        error!("failed to write from uart: {}", e);
-                    }
+                    let _ = uwrite!(cli.writer(), "{}", env!("CARGO_PKG_VERSION"));
                 }
             }
             Ok(())
