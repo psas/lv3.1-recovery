@@ -1,6 +1,5 @@
 /*
-* This module is for project wide CAN related code. It defines several constants, creates a
-* [channel](https://docs.embassy.dev/embassy-sync/git/default/channel/struct.Channel.html),
+* This module is for project wide CAN related code. It defines several constants, creates a channel,
 * defines the `CanTxChannelMsg` struct, and defines two tasks, `echo_can` and `can_writer`.⏎
 *
 * CAN IDs follow a numbering scheme:

@@ -1,3 +1,5 @@
+/* Sender board specifc CAN code */
+
 use core::sync::atomic::{AtomicBool, Ordering};
 
 use defmt::{error, info};

@@ -1,7 +1,6 @@
 /*
 * Provides control and management of the parachute deployment motor system. It handles motor
 * direction, current limiting, and position-based control with safety features.
-
 */
 
 use defmt::*;

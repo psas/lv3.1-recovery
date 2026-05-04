@@ -1,7 +1,7 @@
 /*
 * Shared UART specfic code
 * UART has been set up to work with the crate
-* [embedded-cli-rs](https://github.com/funbiscuit/embedded-cli-rs/tree/main)
+* embedded-cli-rs https://github.com/funbiscuit/embedded-cli-rs/tree/main
 */
 
 use defmt::Format;
