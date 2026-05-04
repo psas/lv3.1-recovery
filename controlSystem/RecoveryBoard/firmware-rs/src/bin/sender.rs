@@ -146,7 +146,8 @@ async fn main(spawner: Spawner) {
     let can_txb = can_tx.buffered(CAN_TX_BUF.init(TxBuf::<CAN_BUF_SIZE>::new()));
     let can_rxb = can_rx.buffered(CAN_RX_BUF.init(RxBuf::<CAN_BUF_SIZE>::new()));
 
-    let buzz_mode = BuzzerMode::Low;
+    #[allow(unused_mut, unused_assignments)] // suppress warning when not compiling with disable_beep cfg
+    let mut buzz_mode = BuzzerMode::Low;
 
     #[cfg(disable_beep)]
     {

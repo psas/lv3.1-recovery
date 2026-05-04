@@ -152,7 +152,8 @@ async fn main(spawner: Spawner) {
         }
     };
 
-    let buzz_mode = BuzzerMode::Low;
+    #[allow(unused_mut, unused_assignments)] // suppress warning when not compiling with disable_beep cfg
+    let mut buzz_mode = BuzzerMode::Low;
 
     #[cfg(disable_beep)]
     {
