@@ -1,3 +1,5 @@
+/* Parachute board specific state code */
+
 use embassy_time::Instant;
 use ufmt::uwrite;
 
@@ -46,6 +48,7 @@ impl<'a> Iterator for ChuteStateIter<'a> {
 }
 
 impl core::fmt::Display for ChuteStateField {
+    // impl display for state fields so they can be printed out by defmt
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let time_now = Instant::now().as_millis();
         match *self {
@@ -61,6 +64,7 @@ impl core::fmt::Display for ChuteStateField {
 }
 
 impl ufmt::uDisplay for ChuteStateField {
+    // impl udisplay for state fields so they can be printed out over uart
     fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
     where
         W: ufmt::uWrite + ?Sized,

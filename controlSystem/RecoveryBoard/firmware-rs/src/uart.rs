@@ -1,3 +1,9 @@
+/*
+* Shared UART specfic code
+* UART has been set up to work with the crate
+* [embedded-cli-rs](https://github.com/funbiscuit/embedded-cli-rs/tree/main)
+*/
+
 use defmt::Format;
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, pipe};
 use embedded_io::{ErrorKind, Write as SyncWrite};

@@ -1,10 +1,18 @@
+/*
+* The ring position sensor module provides monitoring and position detection for the
+* parachute deployment ring system. It uses hall effect sensors to determine the ring's position
+* (locked, unlocked, or intermediate states) and monitors motor current consumption.
+*/
+
 use defmt::{error, info, Format};
 use embassy_stm32::{
     adc::SampleTime,
     peripherals::{PA0, PA1, PB1},
     Peri,
 };
-use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex, signal::Signal, watch::Watch};
+use embassy_sync::{
+    blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex, signal::Signal, watch::Watch,
+};
 use embassy_time::Timer;
 use ufmt::{uDisplay, uwrite};
 
@@ -17,8 +25,13 @@ pub type RingType = Mutex<ThreadModeRawMutex, Option<Ring>>;
 
 pub static RING_MTX: RingType = Mutex::new(None);
 
+// Broadcasts ring position state
 pub static RING_POSITION_WATCH: Watch<ThreadModeRawMutex, RingPosition, 5> = Watch::new();
+
+// Broadcasts raw sensor readings from both hall sensors for debugging
 pub static SENSOR_READ_WATCH: Watch<ThreadModeRawMutex, SensorReadings, 5> = Watch::new();
+
+// Broadcasts motor current sense readings
 pub static MOTOR_ISENSE_SIGNAL: Signal<ThreadModeRawMutex, u16> = Signal::new();
 
 #[derive(defmt::Format, PartialEq, Clone)]
@@ -31,6 +44,7 @@ pub enum RingPosition {
 
 #[derive(Clone)]
 pub struct SensorReadings {
+    // Container for raw ADC readings from both hall sensors:
     pub sensor1: u16,
     pub sensor1_state: SensorState,
     pub sensor2: u16,
@@ -139,11 +153,11 @@ impl uDisplay for SensorReadings {
 }
 
 pub struct Ring {
-    pa0: Peri<'static, PA0>,
-    pa1: Peri<'static, PA1>,
-    pb1: Peri<'static, PB1>,
-    pub sensor1_limits: SensorLimits,
-    pub sensor2_limits: SensorLimits,
+    pa0: Peri<'static, PA0>,          // First hall effect sensor input
+    pa1: Peri<'static, PA1>,          // Second hall effect sensor input
+    pb1: Peri<'static, PB1>,          // Motor current sense input
+    pub sensor1_limits: SensorLimits, // calibration limits for sensor 1
+    pub sensor2_limits: SensorLimits, // calibration limits for sensor 2
 }
 
 impl Ring {
@@ -191,6 +205,21 @@ impl Ring {
     }
 
     pub async fn broadcast_ring_position(&mut self) {
+        /* Send the current ring position to the watch sync primitive
+         * because the adc will be locked during this time for ring position monitoring,
+         * we also grab motor isense readings and raw sensor values for broadcast.
+         *
+         * Operation:
+         * 1. Acquires ADC mutex for sensor reading access
+         * 2. Reads all three analog inputs:
+         *   - Sensor 1 (PA0) - Hall effect position
+         *   - Sensor 2 (PA1) - Hall effect position
+         *   - Motor current sense (PB1)
+         * 3. Broadcasts raw readings via watch signals
+         * 4. Interprets sensor states using calibrated thresholds
+         * 5. Determines ring position based on sensor state combination
+         * 6. Broadcasts final ring position
+         */
         let ring_position_sender = RING_POSITION_WATCH.sender();
         let sensor_reading_sender = SENSOR_READ_WATCH.sender();
 

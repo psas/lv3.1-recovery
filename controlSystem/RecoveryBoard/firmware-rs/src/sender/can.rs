@@ -27,6 +27,13 @@ pub static CAN_SIGNAL: Signal<CriticalSectionRawMutex, CanState> = Signal::new()
 
 #[embassy_executor::task]
 pub async fn can_reader(can_rx: BufferedCanRx<'static, CAN_BUF_SIZE>) -> () {
+    /*
+    Processes incoming CAN messages:
+    - Updates parachute board status and timestamps from status messages
+    - Records deployment acknowledgments from parachute boards
+    - Tracks communication health with parachute boards
+    */
+
     let rdr = can_rx.reader();
     let mut prev_main_ready: u8 = 0;
     let mut prev_drogue_ready: u8 = 0;

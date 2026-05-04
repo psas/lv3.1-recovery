@@ -1,3 +1,12 @@
+/*
+The buzzer module manages the audible feedback that all 3 boards use to indicate their status.
+It uses an enum to determine which mode it should be in: High, Low, or Off. It uses PWM to control
+the buzzer, and thus depends on a PWM driver to be passed in by the bin files. When the task begins,
+it plays a short melody. Then it enters a loop that unlocks the mutex that contains its mode enum.
+It matches the mode enum and will play a quicker, higher-pitched beep if its in High mode, or a less frequent,
+lower pitched beep if its in Low mode.
+*/
+
 use defmt::Format;
 use embassy_stm32::{peripherals::TIM15, time::Hertz, timer::simple_pwm::SimplePwm};
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex};

@@ -25,6 +25,6 @@ To write a test, follow the structure of the `blinky` test. It must have the `#[
 
 Then after you've written the test, run:
 
-```bash
+```sh
 cargo test -r --test <testname>
 ```

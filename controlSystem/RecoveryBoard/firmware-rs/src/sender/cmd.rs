@@ -1,3 +1,5 @@
+/* Sender board specific cli commands code */
+
 use crate::{
     buzzer::{BuzzerMode, BUZZER_MODE_MTX},
     can::{DROGUE_DEPLOY_ID, MAIN_DEPLOY_ID},
@@ -29,6 +31,10 @@ pub enum SenderCmd {
 
 #[embassy_executor::task]
 pub async fn async_cmd_handler() {
+    /* This task is more or less a hack to get the sync embedded-cli-rs crate to play nice with our
+     * async runtime. It will await commands coming in on the channel and dispatch any async code
+     * needed to handle said command.
+     */
     loop {
         match ASYNC_CMD_CHANNEL.receive().await {
             SenderCmd::Drogue => {

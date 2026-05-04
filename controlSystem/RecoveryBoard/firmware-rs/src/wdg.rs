@@ -1,3 +1,5 @@
+/* Watchdog task for both boards */
+
 use embassy_stm32::{peripherals::IWDG, wdg::IndependentWatchdog, Peri};
 use embassy_time::Timer;
 

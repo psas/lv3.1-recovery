@@ -1,3 +1,5 @@
+/* Parachute board specifc CAN code */
+
 #![allow(unused)]
 use defmt::{error, info, unwrap};
 use embassy_stm32::can::{
@@ -20,6 +22,25 @@ pub static CAN_SIGNAL: Signal<CriticalSectionRawMutex, u64> = Signal::new();
 
 #[embassy_executor::task]
 pub async fn can_reader(can_rx: BufferedCanRx<'static, CAN_BUF_SIZE>) -> () {
+    /* handles waiting for CAN messages to come in on the CAN bus and responds
+    appropriately. It behaves differently depending on whether the board was
+    flashed with the BOARD environment variable set to `"main"` or `"drogue"`
+
+    - If the task receives a message with an ID matching `DROGUE_DEPLOY_ID`,
+        and it was flashed with the drogue BOARD environment variable,
+        it will unlock the motor mutex and drive the motor to unlock the ring.
+        Otherwise, it will do nothing.
+
+    - If the task receives a message with an ID matching `MAIN_DEPLOY_ID`,
+        and it was flashed with the main BOARD environment variable,
+        it will unlock the motor mutex and drive the motor to unlock the ring.
+        Otherwise, it will do nothing.
+
+    - If the task receives a message with an ID matching `SENDER_HEARTBEAT_ID`,
+        it will update its internal `sender_last_seen` state field with the timestamp
+        of the message.
+    */
+
     let rdr = can_rx.reader();
     loop {
         match rdr.receive().await {
@@ -104,6 +125,7 @@ pub async fn can_reader(can_rx: BufferedCanRx<'static, CAN_BUF_SIZE>) -> () {
 }
 
 pub struct HeartbeatCtx {
+    // Data struct for heartbeat params
     ring_pos: RingPosition,
     batt_read: u8,
     shore_pow_on: bool,
@@ -124,6 +146,10 @@ impl HeartbeatCtx {
 }
 
 pub async fn send_heartbeat(ctx: HeartbeatCtx) -> Result<(), FrameCreateError> {
+    /* Send the periodic status CAN message
+     * The ID of the CAN msg this function sends will depend on the BOARD environment variable used
+     * when flashing
+     */
     let ring_pos_u8: u8 = match ctx.ring_pos {
         RingPosition::Unlocked => 1,
         RingPosition::Inbetween => 2,

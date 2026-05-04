@@ -7,7 +7,7 @@ Embassy requires Rust nightly, but `rust-toolchain.toml` should handle this for 
 
 You will also need to install the target platform:
 
-```bash
+```sh
 rustup target add thumbv6m-none-eabi
 ```
 
@@ -19,7 +19,7 @@ In this case, you may need to build probe-rs from source.
 
 With all the dependencies installed, you should now be able to navigate to the directory containing the Cargo.toml file and run:
 
-```rust
+```sh
 cargo run --bin blinky --release
 ```
 
@@ -27,7 +27,7 @@ If you are flashing blinky directly onto one of the ERS boards, you will need to
 
 After it builds, terminal output should look like this if everything went according to plan:
 
-```bash
+```sh
 Finished `release` profile [optimized + debuginfo] target(s) in 0.21s
 Running `probe-rs run --chip STM32F091RCTX target/thumbv6m-none-eabi/release/blinky`
 Erasing ✔ 100% [####################]  16.00 KiB @  46.76 KiB/s (took 0s)
@@ -46,7 +46,7 @@ and the led should be blinking.
 If you are planning on flashing, you can just call the commands in the Flashing section after this and building will be handled automatically.
 If you need to build separately for some reason, run:
 
-```bash
+```sh
 cargo build -r --bin blinky
 ```
 
@@ -58,18 +58,30 @@ The commands to flash the binaries are as follows:
 
 *Sender*:
 
-```rust
+```sh
 cargo sender
 ```
 
 *Drogue parachute*:
 
-```rust
+```sh
 BOARD=drogue cargo parachute
 ```
 
 *Main parachute*:
 
-```rust
+```sh
 BOARD=main cargo parachute
 ```
+
+## Note on CLI usage with picocom
+
+Be sure to configure picocom to remap outgoing deletes to backspaces, or you will not be able to backspace properly.
+
+Example command: 
+
+```sh
+picocom -b 115200 -e "b" /dev/tty{USB0} --omap delbs
+```
+
+Replace {USB0} with where the device has been enumerated to

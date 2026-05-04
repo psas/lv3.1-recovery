@@ -1,3 +1,5 @@
+/* Project wide type definitions */
+
 use embassy_stm32::{
     adc::Adc,
     can::BufferedCan,
@@ -9,7 +11,8 @@ use embassy_stm32::{
     timer::simple_pwm::SimplePwm,
 };
 use embassy_sync::{
-    blocking_mutex::raw::{CriticalSectionRawMutex, ThreadModeRawMutex}, mutex::Mutex
+    blocking_mutex::raw::{CriticalSectionRawMutex, ThreadModeRawMutex},
+    mutex::Mutex,
 };
 
 use crate::can::CAN_BUF_SIZE;
@@ -21,4 +24,3 @@ pub type CanType =
 pub type AdcType = Mutex<CriticalSectionRawMutex, Option<Adc<'static, ADC1>>>;
 pub type DacType = Mutex<ThreadModeRawMutex, Option<Dac<'static, Async>>>;
 pub type FlashType = Mutex<ThreadModeRawMutex, Option<Flash<'static, Blocking>>>;
-

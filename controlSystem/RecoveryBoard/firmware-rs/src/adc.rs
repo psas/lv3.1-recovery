@@ -1,3 +1,18 @@
+/*
+The adc module defines shared analog-to-digital converter functionalities between boards.
+
+It creates a [Watch](https://docs.rs/embassy-sync/latest/embassy_sync/watch/)
+signal that holds the most recent battery reading, and the mutex that is used by the parachute board
+to ensure safe access to the adc driver.
+
+This module defines two tasks, `read_battery` and `read_battery_from_ref`.
+
+The former is used by the sender board as it can pass the adc driver directly.
+
+The latter is used by the parachute boards because the adc is used to both read the battery and read
+the ring position in the parachute boards.
+*/
+
 use crate::types::*;
 use embassy_stm32::{
     adc::{Adc, SampleTime},

@@ -1,3 +1,5 @@
+/* Sender board specific state code */
+
 use embassy_time::Instant;
 use ufmt::uwrite;
 
@@ -79,6 +81,7 @@ impl<'a> Iterator for SenderStateIter<'a> {
 }
 
 impl core::fmt::Display for SenderStateField {
+    // impl display for the state fields so they can be written by defmt
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let time_now_ms = Instant::now().as_millis();
         match *self {
@@ -112,6 +115,7 @@ impl core::fmt::Display for SenderStateField {
 }
 
 impl ufmt::uDisplay for SenderStateField {
+    // impl udisplay for state fields so they can be written over uart
     fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
     where
         W: ufmt::uWrite + ?Sized,

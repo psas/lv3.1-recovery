@@ -1,3 +1,5 @@
+/* Parachute boards main entrypoint */
+
 #![no_std]
 #![no_main]
 
@@ -317,6 +319,7 @@ async fn main(spawner: Spawner) {
                         }
 
                         fn two_u8_to_u16(b1: u8, b0: u8) -> u16 {
+                            // combine two u8s into one u16
                             ((b1 as u16) << 8) + b0 as u16
                         }
 

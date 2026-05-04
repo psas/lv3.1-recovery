@@ -1,3 +1,5 @@
+/* Parachute board specific cli commands code */
+
 use defmt::{error, info, Format};
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel};
 use embedded_cli::Command;
@@ -84,10 +86,13 @@ pub enum AsyncCmd {
 
 #[embassy_executor::task]
 pub async fn async_cmd_handler() {
+    /* This task is more or less a hack to get the sync embedded-cli-rs crate to play nice with our
+     * async runtime. It will await commands coming in on the channel and dispatch any async code
+     * needed to handle said command.
+     */
     loop {
         match ASYNC_CMD_CHANNEL.receive().await {
             AsyncCmd::Beep => {
-                info!("received beep cmd");
                 let mut buzz_mode_unlocked = BUZZER_MODE_MTX.lock().await;
                 if let Some(mode) = buzz_mode_unlocked.as_mut() {
                     match mode {
@@ -132,8 +137,10 @@ pub async fn async_cmd_handler() {
                 let sensor1_limits: SensorLimits;
                 let sensor2_limits: SensorLimits;
 
+                // helper closure to parse incoming limits from str to u16
                 let parse = |i: usize| -> Result<u16, _> { limits[i].parse::<u16>() };
 
+                // Try to convert the incoming strings to u16s and create sensor limit structs
                 if let (Ok(o), Ok(u), Ok(a), Ok(un), Ok(o2), Ok(u2), Ok(a2), Ok(un2)) =
                     (parse(0), parse(1), parse(2), parse(3), parse(4), parse(5), parse(6), parse(7))
                 {
@@ -145,9 +152,11 @@ pub async fn async_cmd_handler() {
                 }
 
                 fn u16_to_2u8(b: u16) -> [u8; 2] {
+                    // create two u8s from a u16
                     [(b >> 8) as u8, b as u8]
                 }
 
+                // copy limits into a buffer to be stored into flash
                 let mut fbuf = [0u8; (SENSOR_LIMIT_SECTOR_SIZE / 8) as usize];
 
                 fbuf[0..2].copy_from_slice(&u16_to_2u8(sensor1_limits.over));

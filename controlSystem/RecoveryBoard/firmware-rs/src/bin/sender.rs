@@ -1,3 +1,5 @@
+/* Sender board main entrypoint */
+
 #![no_std]
 #![no_main]
 

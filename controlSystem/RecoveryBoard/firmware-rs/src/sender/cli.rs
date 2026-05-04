@@ -1,3 +1,8 @@
+/* Sender board specific cli code
+* This code is nearly identical to the parachute cli code, save for the commands that it accepts.
+* It is written to work with the embedded-cli-rs crate
+*/
+
 use core::fmt;
 use defmt::{error, Format};
 use embassy_stm32::usart::{BufferedUartRx, BufferedUartTx};
@@ -75,6 +80,8 @@ pub fn init(
     prompt: &'static str,
 ) -> Result<(&'static mut SenderCli, &'static mut SerialWriteContext, &'static mut SerialReadContext), CliError>
 {
+    // initialize the cli. Makes heavy use of static cells to ensure the lifetimes of the pipes and
+    // cli itself are long enough
     static CMD_BUF: StaticCell<[u8; MAX_CMD_LENGTH]> = StaticCell::new();
     static HIST_BUF: StaticCell<[u8; HISTORY_SIZE]> = StaticCell::new();
 
@@ -114,6 +121,7 @@ pub fn init(
 
 #[embassy_executor::task]
 pub async fn serial_write_task(ctx: &'static mut SerialWriteContext) {
+    // read from cli and write async to uart
     let mut buf = [0u8; 1];
     loop {
         ctx.reader_from_cli.read(&mut buf).await;
@@ -125,6 +133,7 @@ pub async fn serial_write_task(ctx: &'static mut SerialWriteContext) {
 
 #[embassy_executor::task]
 pub async fn serial_read_task(ctx: &'static mut SerialReadContext) {
+    // read from uart and write sync to the cli
     let mut buf = [0u8; 1];
     loop {
         if let Err(e) = ctx.uart_rx.read(&mut buf).await {
