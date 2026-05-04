@@ -31,3 +31,11 @@ To flash the main board, run `BOARD=main cargo parachute`.
 This is the code for the sender board, which is the central controller for the ERS system. It monitors parachute board status, handles deployment commands, and communicates rocket readiness.
 
 To flash, run `cargo sender`
+
+## Disabling The Beeping
+
+The boards will emit a periodic beep. If this is bothering you during development, set `DISABLE_BEEP=true` when flashing any board and it will disable the beeps.
+
+For example:
+
+`DISABLE_BEEP=true cargo sender`

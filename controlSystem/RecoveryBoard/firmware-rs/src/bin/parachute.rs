@@ -152,13 +152,20 @@ async fn main(spawner: Spawner) {
         }
     };
 
+    let buzz_mode = BuzzerMode::Low;
+
+    #[cfg(disable_beep)]
+    {
+        buzz_mode = BuzzerMode::Off;
+    }
+
     {
         // Put peripherals into mutex if shared among tasks.
         // Inner scope so that mutex is unlocked when out of scope
         *(ADC_MTX.lock().await) = Some(adc);
         *(RING_MTX.lock().await) = Some(ring);
         *(MOTOR_MTX.lock().await) = Some(motor);
-        *(BUZZER_MODE_MTX.lock().await) = Some(BuzzerMode::Off);
+        *(BUZZER_MODE_MTX.lock().await) = Some(buzz_mode);
     }
 
     spawner.spawn(unwrap!(blink_led(p.PB14)));

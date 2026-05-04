@@ -146,12 +146,19 @@ async fn main(spawner: Spawner) {
     let can_txb = can_tx.buffered(CAN_TX_BUF.init(TxBuf::<CAN_BUF_SIZE>::new()));
     let can_rxb = can_rx.buffered(CAN_RX_BUF.init(RxBuf::<CAN_BUF_SIZE>::new()));
 
+    let buzz_mode = BuzzerMode::Low;
+
+    #[cfg(disable_beep)]
+    {
+        buzz_mode = BuzzerMode::Off;
+    }
+
     {
         // Put peripherals into mutex if shared among tasks.
         // Inner scope so that mutex is unlocked when out of scope
         *(SHORE_POW_ON_MTX.lock().await) = Some(shore_pow_on_pin);
         *(CAN_MTX.lock().await) = Some(can);
-        *(BUZZER_MODE_MTX.lock().await) = Some(BuzzerMode::Off);
+        *(BUZZER_MODE_MTX.lock().await) = Some(buzz_mode);
     }
 
     spawner.spawn(unwrap!(can_writer(can_txb)));
