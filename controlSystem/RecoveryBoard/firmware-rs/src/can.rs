@@ -53,14 +53,11 @@ pub async fn echo_can(mut can: Can<'static>) -> () {
     if let Some(id) = StandardId::new(123 as _) {
         let tx_frame = unwrap!(Frame::new_data(id, &[123]));
         can.write(&tx_frame).await;
-    } else {
-        error!("unable to create CAN Id from {}", 123);
-        panic!()
-    }
-    loop {
-        let envelope = unwrap!(can.read().await);
-        can.write(&envelope.frame).await;
-        Timer::after_millis(1000).await;
+        loop {
+            let envelope = unwrap!(can.read().await);
+            can.write(&envelope.frame).await;
+            Timer::after_millis(1000).await;
+        }
     }
 }
 

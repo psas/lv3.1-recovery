@@ -38,13 +38,15 @@ pub async fn async_cmd_handler() {
     loop {
         match ASYNC_CMD_CHANNEL.receive().await {
             SenderCmd::Drogue => {
-                if (send_deploy_msg(DROGUE_DEPLOY_ID).await).is_err() {
-                    panic!()
+                if let Err(e) = send_deploy_msg(DROGUE_DEPLOY_ID).await {
+                    error!("Error sending deploy msg: {}", e);
+                    continue;
                 };
             }
             SenderCmd::Main => {
-                if (send_deploy_msg(MAIN_DEPLOY_ID).await).is_err() {
-                    panic!()
+                if let Err(e) = (MAIN_DEPLOY_ID.await) {
+                    error!("Error sending deploy msg: {}", e);
+                    continue;
                 }
             }
             SenderCmd::Beep => {

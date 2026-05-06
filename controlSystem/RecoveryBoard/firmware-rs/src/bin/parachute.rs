@@ -360,7 +360,7 @@ async fn main(spawner: Spawner) {
                                     Ok(sh) => sh,
                                     Err(_) => {
                                         error!("unable to create String from {}", s);
-                                        panic!()
+                                        return;
                                     }
                                 })
                                 .collect();
@@ -415,9 +415,11 @@ async fn main(spawner: Spawner) {
                 ready,
             );
 
-            if (send_heartbeat(heartbeat_ctx).await).is_err() {
-                panic!()
+            if let Err(e) = send_heartbeat(heartbeat_ctx).await {
+                error!("Error sending heartbeat: {}", e);
+                continue;
             };
+
             last_heartbeat_time = time_now;
         }
     }

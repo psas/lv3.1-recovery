@@ -124,9 +124,9 @@ async fn main(spawner: Spawner) {
     let (uart_cli, serial_write_ctx, serial_read_ctx) =
         match cli::init(uart_tx, uart_rx, "sender@ers> ") {
             Ok(ctx) => ctx,
-            Err(_) => {
-                error!("Failed to init CLI");
-                panic!()
+            Err(e) => {
+                error!("Failed to init CLI: {}", e);
+                panic!();
             }
         };
 
@@ -327,8 +327,9 @@ async fn main(spawner: Spawner) {
                 state.rocket_ready,
             );
 
-            if send_heartbeat(ctx).await.is_err() {
-                panic!()
+            if Err(e) = send_heartbeat(ctx).await {
+                error!("Error sending heartbeat: {}", e);
+                continue;
             }
 
             last_heartbeat_time = time_now;

@@ -72,7 +72,7 @@ pub async fn can_reader(can_rx: BufferedCanRx<'static, CAN_BUF_SIZE>) -> () {
                             info!("acknowledge CAN message sent");
                         } else {
                             error!("Failed to create CAN Id from {}", DROGUE_ACKNOWLEDGE_ID);
-                            panic!()
+                            continue;
                         }
                     }
                 }
@@ -103,7 +103,7 @@ pub async fn can_reader(can_rx: BufferedCanRx<'static, CAN_BUF_SIZE>) -> () {
                             info!("acknowledge CAN message sent");
                         } else {
                             error!("failed to create CAN Id from {}", MAIN_ACKNOWLEDGE_ID);
-                            panic!()
+                            continue;
                         }
                     }
                 }
