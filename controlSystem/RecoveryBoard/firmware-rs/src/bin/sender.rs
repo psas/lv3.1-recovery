@@ -146,7 +146,8 @@ async fn main(spawner: Spawner) {
     let can_txb = can_tx.buffered(CAN_TX_BUF.init(TxBuf::<CAN_BUF_SIZE>::new()));
     let can_rxb = can_rx.buffered(CAN_RX_BUF.init(RxBuf::<CAN_BUF_SIZE>::new()));
 
-    #[allow(unused_mut, unused_assignments)] // suppress warning when not compiling with disable_beep cfg
+    #[allow(unused_mut, unused_assignments)]
+    // suppress warning when not compiling with disable_beep cfg
     let mut buzz_mode = BuzzerMode::Low;
 
     #[cfg(disable_beep)]
@@ -345,6 +346,13 @@ async fn handle_iso_rising_edge(mut iso: ExtiInput<'static, Async>, can_id: u16)
     loop {
         info!("awaiting signal from telemetrum");
         iso.wait_for_rising_edge().await;
+        Timer::after_millis(10).await;
+        if iso.is_low() {
+            // Stratologger will pulse for 100us on startup to check continuity
+            // We should ignore this
+            continue;
+        }
+
         info!("telemetrum signalling to deploy: {}", can_id);
         let time_now = Instant::now().as_millis();
         if can_id == DROGUE_DEPLOY_ID {
@@ -357,11 +365,14 @@ async fn handle_iso_rising_edge(mut iso: ExtiInput<'static, Async>, can_id: u16)
         {
             let mut shore_power_on_unlocked = SHORE_POW_ON_MTX.lock().await;
             if let Some(spo_ref) = shore_power_on_unlocked.as_mut() {
-                if spo_ref.is_high() {
-                    info!("sending deploy message");
-                    if send_deploy_msg(can_id).await.is_err() {
-                        panic!()
-                    }
+                if spo_ref.is_low() {
+                    // Shore power is on when spo is low, so we shouldn't deploy
+                    continue;
+                }
+                info!("sending deploy message");
+                if let Err(e) = send_deploy_msg(can_id).await {
+                    error!("Error sending deployment message: {}", e);
+                    Timer::after_millis(100).await;
                 }
             }
         }
