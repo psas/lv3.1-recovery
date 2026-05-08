@@ -327,7 +327,7 @@ async fn main(spawner: Spawner) {
                 state.rocket_ready,
             );
 
-            if Err(e) = send_heartbeat(ctx).await {
+            if let Err(e) = send_heartbeat(ctx).await {
                 error!("Error sending heartbeat: {}", e);
                 continue;
             }

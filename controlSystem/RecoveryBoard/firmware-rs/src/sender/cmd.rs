@@ -44,7 +44,7 @@ pub async fn async_cmd_handler() {
                 };
             }
             SenderCmd::Main => {
-                if let Err(e) = (MAIN_DEPLOY_ID.await) {
+                if let Err(e) = send_deploy_msg(MAIN_DEPLOY_ID).await {
                     error!("Error sending deploy msg: {}", e);
                     continue;
                 }

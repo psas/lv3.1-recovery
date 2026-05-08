@@ -8,7 +8,7 @@
 * - **0x7XX**: System status and heartbeat messages
 */
 
-use defmt::{error, info, panic, unwrap};
+use defmt::{error, info, unwrap};
 use embassy_stm32::can::{BufferedCanTx, Can, Frame, StandardId};
 use embassy_sync::{
     blocking_mutex::raw::{CriticalSectionRawMutex, ThreadModeRawMutex},

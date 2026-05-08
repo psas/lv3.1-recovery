@@ -360,7 +360,7 @@ async fn main(spawner: Spawner) {
                                     Ok(sh) => sh,
                                     Err(_) => {
                                         error!("unable to create String from {}", s);
-                                        return;
+                                        panic!()
                                     }
                                 })
                                 .collect();
