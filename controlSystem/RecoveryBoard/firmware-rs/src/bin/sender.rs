@@ -70,13 +70,13 @@ bind_interrupts!(struct ExtiIrqs {
     ExtiInterruptHandler<embassy_stm32::interrupt::typelevel::EXTI4_15>;
 });
 
-static SHORE_POW_ON_MTX: ShorePowOnType = Mutex::new(None);
+static SHORE_POW_PIN_MTX: ShorePowOnType = Mutex::new(None);
 
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
     let p = embassy_stm32::init(Default::default());
 
-    let shore_pow_on_pin = Input::new(p.PA8, Pull::Up);
+    let shore_pow_pin = Input::new(p.PA8, Pull::Up);
     let iso_main = ExtiInput::new(p.PA6, p.EXTI6, Pull::Down, ExtiIrqs);
     let iso_drogue = ExtiInput::new(p.PA5, p.EXTI5, Pull::Down, ExtiIrqs);
     let _can_shdn = Output::new(p.PA10, Level::Low, Speed::Medium);
@@ -158,7 +158,7 @@ async fn main(spawner: Spawner) {
     {
         // Put peripherals into mutex if shared among tasks.
         // Inner scope so that mutex is unlocked when out of scope
-        *(SHORE_POW_ON_MTX.lock().await) = Some(shore_pow_on_pin);
+        *(SHORE_POW_PIN_MTX.lock().await) = Some(shore_pow_pin);
         *(CAN_MTX.lock().await) = Some(can);
         *(BUZZER_MODE_MTX.lock().await) = Some(buzz_mode);
     }
@@ -183,7 +183,7 @@ async fn main(spawner: Spawner) {
         // ==================================================================================
         // update state
         {
-            let mut shore_pow_on_unlocked = SHORE_POW_ON_MTX.lock().await;
+            let mut shore_pow_on_unlocked = SHORE_POW_PIN_MTX.lock().await;
             if let Some(spo_ref) = shore_pow_on_unlocked.as_mut() {
                 let shore_pow_on = spo_ref.is_low();
                 state.shore_pow_on = shore_pow_on
@@ -354,29 +354,38 @@ async fn handle_iso_rising_edge(mut iso: ExtiInput<'static, Async>, can_id: u16)
             continue;
         }
 
-        info!("telemetrum signalling to deploy: {}", can_id);
+        info!(
+            "telemetrum signalling to deploy {}",
+            if can_id == DROGUE_DEPLOY_ID {
+                "drogue"
+            } else {
+                "main"
+            }
+        );
+
         let time_now = Instant::now().as_millis();
         if can_id == DROGUE_DEPLOY_ID {
-            info!("setting drogue acknowledge to false");
             DROGUE_ACKNOWLEDGE.store(false, Relaxed);
         } else {
-            info!("setting main acknowledge to false");
             MAIN_ACKNOWLEDGE.store(false, Relaxed);
         }
+
         {
-            let mut shore_power_on_unlocked = SHORE_POW_ON_MTX.lock().await;
-            if let Some(spo_ref) = shore_power_on_unlocked.as_mut() {
-                if spo_ref.is_low() {
-                    // Shore power is on when spo is low, so we shouldn't deploy
+            let mut shore_power_pin_unlocked = SHORE_POW_PIN_MTX.lock().await;
+            if let Some(spp_ref) = shore_power_pin_unlocked.as_mut() {
+                if spp_ref.is_low() {
+                    // Shore power is on when spp is low, so we shouldn't deploy
                     continue;
-                }
-                info!("sending deploy message");
-                if let Err(e) = send_deploy_msg(can_id).await {
-                    error!("Error sending deployment message: {}", e);
-                    Timer::after_millis(100).await;
                 }
             }
         }
+
+        info!("sending deploy message");
+        if let Err(e) = send_deploy_msg(can_id).await {
+            error!("Error sending deployment message: {}", e);
+            Timer::after_millis(100).await;
+        }
+
         // record last deployment signal time
         match can_id {
             DROGUE_DEPLOY_ID => {
