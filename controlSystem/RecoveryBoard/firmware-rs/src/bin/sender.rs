@@ -349,6 +349,7 @@ async fn handle_iso_rising_edge(mut iso: ExtiInput<'static, Async>, can_id: u16)
         iso.wait_for_rising_edge().await;
         Timer::after_millis(10).await;
         if iso.is_low() {
+            info!("ignoring < 10ms signal");
             // Stratologger will pulse for 100us on startup to check continuity
             // We should ignore this
             continue;
