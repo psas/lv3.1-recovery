@@ -81,7 +81,7 @@ Be sure to configure picocom to remap outgoing deletes to backspaces, or you wil
 Example command: 
 
 ```sh
-picocom -b 115200 -e "b" /dev/tty{USB0} --omap delbs
+picocom -b 115200 /dev/tty{USB0} --omap delbs
 ```
 
 Replace {USB0} with where the device has been enumerated to
