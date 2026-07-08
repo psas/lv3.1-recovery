@@ -1,0 +1,4 @@
+(fp_lib_table
+	(version 7)
+	(lib (name "psas-footprints") (type "KiCad") (uri "${PSAS_LIBRARIES}/psas-kicad-main/psas-footprints") (options "") (descr ""))
+)
