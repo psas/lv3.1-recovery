@@ -19,9 +19,20 @@ void setup() {
     pinMode(silence, OUTPUT);
     pinMode(shutdown, OUTPUT);
     pinMode(reciever, OUTPUT);
-    pinMode(transmitter, OUTPUT);
+    pinMode(transmitter, INPUT);
+
+    digitalWrite(debug_light, HIGH);
 }
 
 void loop() {
-    
+    int lock_signal = digitalRead(SWITCH_2);
+    int unlock_signal = digitalRead(SWITCH_4);
+
+    if (lock_signal == 0) {
+        //send CAN message through reciever
+    }
+
+    if (unlock_signal == 0) {
+        //send CAN message through reciever
+    }
 }
