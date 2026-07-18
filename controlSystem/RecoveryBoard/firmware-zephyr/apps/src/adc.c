@@ -27,12 +27,25 @@ LOG_MODULE_REGISTER(ers_adc, CONFIG_ADC_LOG_LEVEL);
 
 #define ADC_READ_PERIOD_MS 10
 
-// #undef DEV_ERS_ADC_PERIODIC_REPORTING
+// Per Zephyr's include/zephyr/logging/log.h there are four levels of logging:
+//
+// - LOG_ERR
+// - LOG_WRN
+// - LOG_INF
+// - LOG_DBG
+//
+// Development logging messages are probably most like informational (LOG_INF)
+// or debugging (LOG_DBG) messages, but in the Zephyr ERS firmware development
+// there have been multiple instances where a development message is useful
+// at a finer granularity than Zephyr's logging levels provide.  For this reason
+// the following symbol(s) are either defined or undefined, allowing for
+// specific, often feature-wise messages and groups of messages to be enabled
+// independent from other development time messages.
+//
+// These symbols and their corresponding messages may be completely removed
+// from final release code.
 
-// TODO [ ] review whether timeout needed and whether there was an issue for
-//   which timeout not implemented here, and if so document that reason:
-// #define ERS_ADC_READ_TIMEOUT 1500
-// static struct k_timeout_t ers_adc_read_timeout K_MSEC(ERS_ADC_READ_TIMEOUT);
+#undef DEV_ERS_ADC_PERIODIC_REPORTING
 
 #define MOTOR_ISENSE_READ_PERIOD_MS 50
 
@@ -60,9 +73,6 @@ struct k_thread adc_thread_data;
 K_THREAD_STACK_DEFINE(adc_thread_stack, CONFIG_ADC_THREAD_STACK_SIZE);
 
 struct k_mutex adc_mtx;
-
-// static uint32_t hall_adc_count_1_fs = 0;
-// static uint32_t hall_adc_count_2_fs = 0;
 
 //----------------------------------------------------------------------
 // - SECTION - routines
@@ -109,9 +119,6 @@ int32_t adc_read_channels(const enum ers_adc_values idx_begin,
         {
                 int32_t val_mv;
 
-// TODO [ ] See about replacing this custom symbol with use of Zephyr module
-//          level logging.  See ERS Zephyr firmware files 'Kconfig' and
-//          'ers-log-levels.conf' for some details.
 #ifdef DEV_ERS_ADC_PERIODIC_REPORTING
                 LOG_INF("- %s, channel %d: ",
                              adc_channels[i].dev->name,

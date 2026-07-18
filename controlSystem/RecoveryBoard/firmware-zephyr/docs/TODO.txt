@@ -84,7 +84,7 @@ ERS firmware TODO list:
     [-] add a timer and Zephyr work queue submission to read motor current channel
     [ ] add a command to show motor current and current reading interval
 
-[ ] Implement the code differences to support main chute board, should be only
+[x] Implement the code differences to support main chute board, should be only
      difference in two or a few CAN message IDs.
 
 2026-01-03
@@ -107,12 +107,7 @@ ERS firmware TODO list:
 [x] Amend the README in firmware-zephyr directory with instructions to start a
      debugging session.
 
-[ ] Amend settings to optionally store Hall sensor cutoff values to flash.  These
-     need to be calibrated per ERS board, would be helpful to have them persist
-     across power cyclings.  (In case these values need to change in the field
-     where firmware builds and flashing may be harder to perform, this persistnet
-     storage would remove the need to recompile the firmware.  But it also adds
-     to code to be tested for correctness.)
+[x] Add commands to store Hall sensor cutoff values to flash.  These
 
 [ ] Find out whether Zephyr ADC channel scanning API requires all configured
      analog inputs (channels) to be measured in order to obtain correct readings.
@@ -126,6 +121,6 @@ ERS firmware TODO list:
 
 [ ] Complete the API cmd_save_hall_limits_to_flash().
 
-[ ] Shorten header file name `ers-config-defaults.h` to `ers-config.h`.
+[x] Shorten header file name `ers-config-defaults.h` to `ers-config.h`.
 
 [ ] Add command to turn on and turn off buzzer "mark" type audio pattern.

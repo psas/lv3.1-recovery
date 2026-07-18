@@ -1,5 +1,6 @@
 /**
- *  ERS Zephyr firmware - status LED module
+ * @file
+ * @note ERS Zephyr firmware - status LED module
  */
 
 #include <zephyr/kernel.h>
@@ -16,6 +17,7 @@ LOG_MODULE_REGISTER(status_led, CONFIG_STATUS_LED_LOG_LEVEL);
 
 #define LED_START_DURATION_MS 1000
 #define LED_PERIOD_MS 500
+#define STATUS_LED_ENABLE_BIT 0x01
 
 //----------------------------------------------------------------------
 // - SECTION - file scoped
@@ -40,30 +42,26 @@ int32_t configure_led(void)
 	return rc;
 }
 
-#define STATUS_LED_ENABLE_BIT 0x00000001
-
-// int32_t dev_toggle_led(void)
 void status_led_timer_handler(struct k_timer *dummy)
 {
-	static bool led_state = true;
-	uint32_t config = 0;
+	uint32_t led_state = 0;
 	int32_t rc = 0;
 
-	ek_get_status_led_config(&config);
-	if (!(config && STATUS_LED_ENABLE_BIT)) {
-// TODO [ ] add second timer to monitor run-time status LED config, so that
-//   this timer may turn itsef off and other modules may restart it. 
+#if CONFIG_APP_CONTROLS_ERS_STATUS_LED
+	ek_get_status_led_config(&led_state);
+	if (!(led_state && STATUS_LED_ENABLE_BIT)) {
 		rc = gpio_pin_set_dt(&led, 1);
-		// TODO [ ] Check `rc` or annotate it as unused.
-		return;
+		if (rc != 0) {
+			LOG_ERR("Failed to turn on status LED, err %d", rc);
+		}
 	}
-
+#else
 	rc = gpio_pin_toggle_dt(&led);
 	if (rc < 0) {
-		// return rc;
+		LOG_ERR("Failed to toggle status LED, err %d", rc);
 	}
 	led_state = !led_state;
-	// return rc;
+#endif
 }
 
 K_TIMER_DEFINE(status_led_timer, status_led_timer_handler, NULL);

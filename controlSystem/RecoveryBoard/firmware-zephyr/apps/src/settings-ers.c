@@ -2,6 +2,12 @@
  * Copyright (c) 2025 Portland State Aerospace Society
  *
  * SPDX-License-Identifier: Apache-2.0
+ *
+ * @brief ERS module which uses Zephyr's settings sub-system to write and to
+ *  read values using flash memory as a non-volatile store.
+ *
+ * @note Comments in this app use 'store' and 'retrieve' to refer to flash
+ *  write and flash read operations.
  */
 
 #include <stdio.h>

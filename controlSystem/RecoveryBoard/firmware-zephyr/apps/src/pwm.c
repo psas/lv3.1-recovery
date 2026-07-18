@@ -85,7 +85,7 @@ static int32_t buzzer_heartbeat(void)
 {
 	static uint32_t call_count = 0;
 
-	if (call_count > 2)
+	if (call_count > 3)
 	{
 		return 0;
 	}

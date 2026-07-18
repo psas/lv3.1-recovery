@@ -58,41 +58,41 @@ static atomic_t dac_value_fs = ATOMIC_INIT(0);
 // - SECTION - routines
 //----------------------------------------------------------------------
 
-int32_t dac_set_output(const uint32_t value)
+int32_t dac_write_output_reg(const uint32_t value)
 {
 // Following two const variables from Zephyr 3.7.1 DAC sample app:
 	const int32_t dac_values = 1U << DAC_RESOLUTION;
 	const int32_t sleep_time = 4096 / dac_values > 0 ? 4096 / dac_values : 1;
 	int32_t rc = 0;
 
-	if (dac_initialized_fs < 1)
-	{
+	if (dac_initialized_fs < 1) {
 		LOG_ERR("DAC device not yet initialized, ers_init_dac() called?");
 		return -ENODEV;
 	}
 
-	if (value > DAC_COUNT_HIGHEST_VAL)
-	{
+	if (value > DAC_COUNT_HIGHEST_VAL) {
 		LOG_ERR("DAC value %u to write too large, 0..%u possible",
 			value, DAC_COUNT_HIGHEST_VAL);
 		return -EINVAL;
 	}
 
 	rc = dac_write_value(dac_dev, DAC_CHANNEL_ID, value);
-	atomic_set(&dac_value_fs, (atomic_val_t)value);
-	k_sleep(K_MSEC(sleep_time));
+	if (rc != 0) {
+		LOG_ERR("Failed to write output value %d to DAC, err %d", value, rc);
+	} else {
+		atomic_set(&dac_value_fs, (atomic_val_t)value);
+		k_sleep(K_MSEC(sleep_time));
+	}
+
 	return rc;
 }
 
 int32_t dac_present_value(uint32_t *dac_setting)
 {
-	if (dac_initialized_fs)
-	{
+	if (dac_initialized_fs) {
 		*dac_setting = atomic_get(&dac_value_fs);
 		return 0;
-	}
-	else
-	{
+	} else {
 		return -EINVAL;
 	}
 }

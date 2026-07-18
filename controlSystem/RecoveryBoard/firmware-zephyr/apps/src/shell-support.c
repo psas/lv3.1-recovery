@@ -463,7 +463,15 @@ static int cmd_dac_show_dac_setting(const struct shell *shell, size_t argc, char
 	return 0;
 }
 
-static int cmd_dac_set_output(const struct shell *shell, size_t argc, char *argv[])
+/**
+ * @brief Command to write a DAC output value to DAC control register.
+ * @param @p shell Pointer to Zephyr shell instance.
+ * @param argc Count of arguments following command toke.
+ * @param @p argv Array of command arguments.
+ * @return 0 on success, negative errno as returned by dac_write_output_reg().
+ */
+
+static int cmd_dac_write_output_value(const struct shell *shell, size_t argc, char *argv[])
 {
         ARG_UNUSED(argc);
         ARG_UNUSED(argv);
@@ -475,11 +483,21 @@ static int cmd_dac_set_output(const struct shell *shell, size_t argc, char *argv
 	int32_t rc = 0;
 
 	shell_fprintf(shell, SHELL_NORMAL, "to DAC writing value %u . . .\n", value);
-	rc = dac_set_output(value);
-	return 0;
+	rc = dac_write_output_reg(value);
+	if (rc != 0) {
+		LOG_ERR("Failed to write value %u directly to DAC, err %d", value, rc);
+	}
+	return rc;
 }
 
-static int cmd_dac_store_setting_for_lock_unlock(const struct shell *shell, size_t argc, char *argv[])
+/**
+ * @brief
+ * @param
+ * @retval
+ * @return
+ */
+
+static int cmd_dac_set_lock_ring_current_limit(const struct shell *shell, size_t argc, char *argv[])
 {
         ARG_UNUSED(argc);
         ARG_UNUSED(argv);
@@ -495,7 +513,7 @@ static int cmd_dac_store_setting_for_lock_unlock(const struct shell *shell, size
 	return 0;
 }
 
-static int cmd_dac_get_setting_for_lock_unlock(const struct shell *shell, size_t argc, char *argv[])
+static int cmd_dac_get_lock_ring_current_limit(const struct shell *shell, size_t argc, char *argv[])
 {
         ARG_UNUSED(argc);
         ARG_UNUSED(argv);
@@ -517,17 +535,15 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
                 cmd_dac_show_dac_setting, 0, 0),
         SHELL_CMD_ARG(set, NULL,
                 "set DAC output",
-                cmd_dac_set_output, 0, 0),
+                cmd_dac_write_output_value, 0, 0),
         SHELL_CMD_ARG(set_lock_unlock_current, NULL,
-                "store DAC setting for ring lock and unlock",
-                cmd_dac_store_setting_for_lock_unlock, 0, 0),
+                "set DAC value to limit lock ring motor current",
+                cmd_dac_set_lock_ring_current_limit, 0, 0),
         SHELL_CMD_ARG(show_lock_unlock_current, NULL,
-                "show DAC setting for ring lock and unlock",
-                cmd_dac_get_setting_for_lock_unlock, 0, 0),
+                "show DAC value to limit lock ring motor current",
+                cmd_dac_get_lock_ring_current_limit, 0, 0),
         SHELL_SUBCMD_SET_END
 );
-// TODO [ ] consider renaming `cmd_dac_get_setting_for_lock_unlock` to `cmd_dac_retrieve...`
-//           to match the settings' module API names 'store' and 'retrieve'.
 
 SHELL_CMD_REGISTER(dac, &cmds_dac, "- ERS - DAC info and set commands", NULL);
 

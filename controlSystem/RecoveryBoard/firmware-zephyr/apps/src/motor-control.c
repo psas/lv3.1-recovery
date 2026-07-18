@@ -271,7 +271,7 @@ int32_t mc_lock_ring(void)
 	if (rc != 0) { LOG_ERR("Trouble motor_ps!"); }
 
 	// (2) set DAC to produce minimal current needed to turn over lock ring motor:
-	rc = dac_set_output(DEV_DAC_SETTING_IN_SITU);
+	rc = dac_write_output_reg(DEV_DAC_SETTING_IN_SITU);
 	if (rc != 0) { LOG_ERR("Trouble set DAC out!"); }
 
 	// (3) apply logic levels to BDS63150 IN1, IN2 pins for H-bridge output:
@@ -299,7 +299,7 @@ int32_t mc_lock_ring(void)
 
 	// (4) reduce current to motor to way low:
 	LOG_INF("M1 - DAC output low . . .");
-	rc = dac_set_output(5);
+	rc = dac_write_output_reg(5);
 	if (rc != 0) { LOG_ERR("Trouble set DAC out to near zero!"); }
 
 	rc = mc_update_lock_count();
@@ -324,7 +324,7 @@ int32_t mc_unlock_ring(void)
 	if (rc != 0) { LOG_ERR("Trouble setting not_motor_ps low, err %d", rc); }
 
 	// (2) set DAC to produce minimal current needed to turn over lock ring motor:
-	rc = dac_set_output(DEV_DAC_SETTING_IN_SITU);
+	rc = dac_write_output_reg(DEV_DAC_SETTING_IN_SITU);
 	if (rc != 0) { LOG_ERR("Trouble setting DAC out, err %d", rc); }
 
 	// (3) apply logic levels to BDS63150 IN1, IN2 pins for H-bridge output:
@@ -351,7 +351,7 @@ int32_t mc_unlock_ring(void)
 
 	// (4) reduce current to motor to very low:
 	LOG_INF("M1 - DAC output low . . .");
-	rc = dac_set_output(5);
+	rc = dac_write_output_reg(5);
 	if (rc != 0) { LOG_ERR("Trouble set DAC out to near zero!"); }
 
 	rc = mc_update_unlock_count();
