@@ -1,3 +1,9 @@
+/*
+* Flash memory related constants that are used project wide. See the
+* stm32 reference manual https://www.st.com/en/microcontrollers-microprocessors/stm32f091rc.html#documentation
+* for more info about the sectors
+*/
+
 use embassy_sync::mutex::Mutex;
 
 use crate::types::FlashType;

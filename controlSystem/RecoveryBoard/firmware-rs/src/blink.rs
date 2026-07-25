@@ -1,3 +1,5 @@
+// This module defines the task that blinks the LED on all 3 boards to indicate operational status.
+
 use embassy_stm32::{
     gpio::Output, peripherals::PB14, Peri
 };

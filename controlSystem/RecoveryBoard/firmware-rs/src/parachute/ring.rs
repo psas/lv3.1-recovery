@@ -1,26 +1,38 @@
-use defmt::error;
-use defmt::info;
-use embassy_stm32::peripherals::PA0;
-use embassy_stm32::peripherals::PA1;
-use embassy_stm32::peripherals::PB1;
-use embassy_stm32::Peri;
-use embassy_sync::blocking_mutex::raw::ThreadModeRawMutex;
-use embassy_sync::mutex::Mutex;
-use embassy_sync::watch::Watch;
-use embassy_time::Timer;
+/*
+* The ring position sensor module provides monitoring and position detection for the
+* parachute deployment ring system. It uses hall effect sensors to determine the ring's position
+* (locked, unlocked, or intermediate states) and monitors motor current consumption.
+*/
 
-use crate::adc::ADC_MTX;
-use crate::flash::FLASH_MTX;
-use crate::flash::SENSOR_LIMIT_SECTOR_OFFSET;
-use crate::flash::SENSOR_LIMIT_SECTOR_SIZE;
+use defmt::{error, info, Format};
+use embassy_stm32::{
+    adc::SampleTime,
+    peripherals::{PA0, PA1, PB1},
+    Peri,
+};
+use embassy_sync::{
+    blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex, signal::Signal, watch::Watch,
+};
+use embassy_time::Timer;
+use ufmt::{uDisplay, uwrite};
+
+use crate::{
+    adc::ADC_MTX,
+    flash::{FLASH_MTX, SENSOR_LIMIT_SECTOR_OFFSET, SENSOR_LIMIT_SECTOR_SIZE},
+};
 
 pub type RingType = Mutex<ThreadModeRawMutex, Option<Ring>>;
 
 pub static RING_MTX: RingType = Mutex::new(None);
 
+// Broadcasts ring position state
 pub static RING_POSITION_WATCH: Watch<ThreadModeRawMutex, RingPosition, 5> = Watch::new();
+
+// Broadcasts raw sensor readings from both hall sensors for debugging
 pub static SENSOR_READ_WATCH: Watch<ThreadModeRawMutex, SensorReadings, 5> = Watch::new();
-pub static MOTOR_ISENSE_WATCH: Watch<ThreadModeRawMutex, u16, 1> = Watch::new();
+
+// Broadcasts motor current sense readings
+pub static MOTOR_ISENSE_SIGNAL: Signal<ThreadModeRawMutex, u16> = Signal::new();
 
 #[derive(defmt::Format, PartialEq, Clone)]
 pub enum RingPosition {
@@ -32,6 +44,7 @@ pub enum RingPosition {
 
 #[derive(Clone)]
 pub struct SensorReadings {
+    // Container for raw ADC readings from both hall sensors:
     pub sensor1: u16,
     pub sensor1_state: SensorState,
     pub sensor2: u16,
@@ -49,12 +62,28 @@ impl SensorReadings {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Format)]
 pub struct SensorLimits {
     pub over: u16,
     pub under: u16,
     pub active: u16,
     pub unactive: u16,
+}
+
+impl uDisplay for SensorLimits {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        uwrite!(
+            f,
+            "over: {}\r\nunder: {}\r\nactive: {}\r\nunactive: {}\r\n",
+            self.over,
+            self.under,
+            self.active,
+            self.unactive
+        )
+    }
 }
 
 impl SensorLimits {
@@ -72,30 +101,63 @@ pub enum SensorState {
     Inbetween,
 }
 
-impl core::fmt::Display for SensorState {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+impl uDisplay for RingPosition {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
         match *self {
-            Self::Active => {
-                core::write!(f, "Active")
-            }
-            Self::Unactive => {
-                core::write!(f, "Unactive")
-            }
-            Self::Under => {
-                core::write!(f, "Under")
-            }
-            Self::Over => core::write!(f, "Over"),
-            Self::Inbetween => core::write!(f, "Inbetween"),
+            RingPosition::Locked => uwrite!(f, "Locked\r\n"),
+            RingPosition::Unlocked => uwrite!(f, "Unlocked\r\n"),
+            RingPosition::Inbetween => uwrite!(f, "Inbetween\r\n"),
+            RingPosition::Error => uwrite!(f, "Error\r\n"),
         }
     }
 }
 
+impl uDisplay for SensorState {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        match *self {
+            Self::Active => {
+                uwrite!(f, "Active\r\n")
+            }
+            Self::Unactive => {
+                uwrite!(f, "Unactive\r\n")
+            }
+            Self::Under => {
+                uwrite!(f, "Under\r\n")
+            }
+            Self::Over => uwrite!(f, "Over\r\n"),
+            Self::Inbetween => uwrite!(f, "Inbetween\r\n"),
+        }
+    }
+}
+
+impl uDisplay for SensorReadings {
+    fn fmt<W>(&self, f: &mut ufmt::Formatter<'_, W>) -> Result<(), W::Error>
+    where
+        W: ufmt::uWrite + ?Sized,
+    {
+        uwrite!(
+            f,
+            "Sensor 1:\r\n- state: {}\r\n- value: {}\r\nSensor 2:\r\n- state: {}\r\n- value: {}\r\n",
+            self.sensor1_state,
+            self.sensor1,
+            self.sensor2_state,
+            self.sensor2
+        )
+    }
+}
+
 pub struct Ring {
-    pa0: Peri<'static, PA0>,
-    pa1: Peri<'static, PA1>,
-    pb1: Peri<'static, PB1>,
-    pub sensor1_limits: SensorLimits,
-    pub sensor2_limits: SensorLimits,
+    pa0: Peri<'static, PA0>,          // First hall effect sensor input
+    pa1: Peri<'static, PA1>,          // Second hall effect sensor input
+    pb1: Peri<'static, PB1>,          // Motor current sense input
+    pub sensor1_limits: SensorLimits, // calibration limits for sensor 1
+    pub sensor2_limits: SensorLimits, // calibration limits for sensor 2
 }
 
 impl Ring {
@@ -130,7 +192,9 @@ impl Ring {
                 two_u8_to_u16(buf[10], buf[11]),
                 two_u8_to_u16(buf[12], buf[13]),
                 two_u8_to_u16(buf[14], buf[15]),
-            )
+            );
+            info!("sensor1: {}", sensor1_limits);
+            info!("sensor2: {}", sensor2_limits)
         } else {
             error!("Error reading sensor limits from flash. Using default values");
             sensor1_limits = SensorLimits::new(3700, 600, 2100, 900);
@@ -141,9 +205,23 @@ impl Ring {
     }
 
     pub async fn broadcast_ring_position(&mut self) {
+        /* Send the current ring position to the watch sync primitive
+         * because the adc will be locked during this time for ring position monitoring,
+         * we also grab motor isense readings and raw sensor values for broadcast.
+         *
+         * Operation:
+         * 1. Acquires ADC mutex for sensor reading access
+         * 2. Reads all three analog inputs:
+         *   - Sensor 1 (PA0) - Hall effect position
+         *   - Sensor 2 (PA1) - Hall effect position
+         *   - Motor current sense (PB1)
+         * 3. Broadcasts raw readings via watch signals
+         * 4. Interprets sensor states using calibrated thresholds
+         * 5. Determines ring position based on sensor state combination
+         * 6. Broadcasts final ring position
+         */
         let ring_position_sender = RING_POSITION_WATCH.sender();
         let sensor_reading_sender = SENSOR_READ_WATCH.sender();
-        let motor_isense_sender = MOTOR_ISENSE_WATCH.sender();
 
         fn get_sensor_state(adc_val: u16, limit: &SensorLimits) -> SensorState {
             if adc_val >= limit.over {
@@ -189,9 +267,9 @@ impl Ring {
         {
             let mut adc_unlocked = ADC_MTX.lock().await;
             if let Some(adc) = adc_unlocked.as_mut() {
-                sensor1_read = adc.read(&mut self.pa0).await;
-                sensor2_read = adc.read(&mut self.pa1).await;
-                motor_isense_read = adc.read(&mut self.pb1).await;
+                sensor1_read = adc.read(&mut self.pa0, SampleTime::CYCLES239_5).await;
+                sensor2_read = adc.read(&mut self.pa1, SampleTime::CYCLES239_5).await;
+                motor_isense_read = adc.read(&mut self.pb1, SampleTime::CYCLES239_5).await;
             }
         }
 
@@ -206,7 +284,7 @@ impl Ring {
         );
 
         sensor_reading_sender.send(readings);
-        motor_isense_sender.send(motor_isense_read);
+        MOTOR_ISENSE_SIGNAL.signal(motor_isense_read);
 
         let ring_position = get_ring_position(sensor1_state, sensor2_state);
 
@@ -223,6 +301,6 @@ pub async fn read_pos_sensor() {
                 ring.broadcast_ring_position().await;
             }
         }
-        Timer::after_millis(50).await;
+        Timer::after_millis(15).await;
     }
 }

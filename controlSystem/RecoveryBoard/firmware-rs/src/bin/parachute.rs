@@ -1,19 +1,23 @@
+/* Parachute boards main entrypoint */
+
 #![no_std]
 #![no_main]
 
-use defmt::*;
+use core::str::FromStr;
+use defmt::{error, info, panic, unwrap};
 use embassy_executor::Spawner;
 use embassy_stm32::{
-    adc::{Adc, InterruptHandler, SampleTime},
+    adc::{Adc, InterruptHandler as AdcInterruptHandler},
     bind_interrupts,
     can::{
-        filter::Mask32, BufferedCanRx, Can, Fifo, Id, Rx0InterruptHandler, Rx1InterruptHandler,
-        SceInterruptHandler, TxInterruptHandler,
+        filter::Mask32, Can, Fifo, Rx0InterruptHandler, Rx1InterruptHandler, RxBuf,
+        SceInterruptHandler, TxBuf, TxInterruptHandler,
     },
     dac::Dac,
+    dma::InterruptHandler as DmaInterruptHandler,
     flash::Flash,
     gpio::{Input, Level, Output, OutputType, Pull, Speed},
-    peripherals::{ADC1, CAN, USART2},
+    peripherals::{ADC1, CAN, DMA1_CH3, DMA1_CH4, USART2},
     time::Hertz,
     timer::{
         low_level::CountingMode,
@@ -22,32 +26,29 @@ use embassy_stm32::{
     usart::{
         BufferedInterruptHandler, BufferedUart, Config as UartConfig, DataBits, Parity, StopBits,
     },
-    wdg,
 };
-use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, mutex::Mutex};
-use embassy_time::{with_timeout, Duration, Instant, TimeoutError, Timer};
-use embedded_io_async::{Read, Write};
+use embassy_time::{Duration, Instant, Timer};
 use firmware_rs::{
     adc::{read_battery_from_ref, ADC_MTX, BATT_READ_WATCH},
     blink::blink_led,
     buzzer::{active_beep, BuzzerMode, BUZZER_MODE_MTX},
-    can::{
-        can_writer, CAN_BITRATE, CAN_BUF_SIZE, CAN_MTX, CAN_RX_BUF, CAN_TX_BUF, DROGUE_DEPLOY_ID,
-        MAIN_DEPLOY_ID, SENDER_HEARTBEAT_ID,
-    },
+    can::{can_writer, CAN_BITRATE, CAN_BUF_SIZE, CAN_MTX, CAN_RX_BUF, CAN_TX_BUF},
     flash::{
         FLASH_MTX, MOTOR_ACT_SECTOR_OFFSET, MOTOR_ACT_SECTOR_SIZE, SENSOR_LIMIT_SECTOR_OFFSET,
         SENSOR_LIMIT_SECTOR_SIZE,
     },
-    motor::{Motor, MotorType, MOTOR_DRIVE_CURR_MA, MOTOR_DRIVE_DUR_MS},
-    ring::{
-        read_pos_sensor, Ring, RingPosition, SensorLimits, RING_MTX, RING_POSITION_WATCH,
-        SENSOR_READ_WATCH,
+    parachute::{
+        can::{can_reader, send_heartbeat, HeartbeatCtx, CAN_SIGNAL},
+        cli::{self, serial_read_task, serial_write_task},
+        cmd::{async_cmd_handler, AsyncCmd, ChuteCmd, ASYNC_CMD_CHANNEL},
+        motor::{Motor, MOTOR_MTX},
+        ring::{read_pos_sensor, Ring, RingPosition, SensorLimits, RING_MTX, RING_POSITION_WATCH},
+        state::ChuteState,
     },
-    types::*,
-    uart::{IO, UART_BUF_SIZE, UART_RX_BUF_CELL, UART_TX_BUF_CELL},
+    uart::{UART_RX_BUF_CELL, UART_TX_BUF_CELL},
+    wdg::i_wdg,
 };
-use noline::builder::EditorBuilder;
+use ufmt::uwrite;
 use {defmt_rtt as _, panic_probe as _};
 
 bind_interrupts!(struct CanIrqs {
@@ -57,105 +58,20 @@ bind_interrupts!(struct CanIrqs {
     SceInterruptHandler<CAN>,
     TxInterruptHandler<CAN>;
 });
-bind_interrupts!(struct AdcIrqs { ADC1_COMP => InterruptHandler<ADC1>; });
+bind_interrupts!(struct AdcIrqs { ADC1_COMP => AdcInterruptHandler<ADC1>; });
+bind_interrupts!(struct DacIrqs {
+    DMA1_CH2_3_DMA2_CH1_2 => DmaInterruptHandler<DMA1_CH3>;
+    DMA1_CH4_7_DMA2_CH3_5 => DmaInterruptHandler<DMA1_CH4>;
+});
 bind_interrupts!(struct UsartIrqs { USART2 => BufferedInterruptHandler<USART2>; });
 
-#[derive(Default)]
-pub struct ChuteState {
-    pub id: u8,
-    pub ready: bool,
-    pub shore_power_status: bool,
-    pub sender_last_seen: u64,
-}
-
-#[derive(Debug)]
-pub enum ChuteStateField {
-    Id(u8),
-    Ready(bool),
-    ShorePowerStatus(bool),
-    SenderLastSeen(u64),
-}
-
-pub struct ChuteStateIter<'a> {
-    state_fields: &'a ChuteState,
-    index: usize,
-}
-
-impl ChuteState {
-    pub fn iter(&self) -> ChuteStateIter<'_> {
-        ChuteStateIter { state_fields: self, index: 0 }
-    }
-}
-
-impl<'a> Iterator for ChuteStateIter<'a> {
-    type Item = ChuteStateField;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let result = match self.index {
-            0 => Some(ChuteStateField::Id(self.state_fields.id)),
-            1 => Some(ChuteStateField::Ready(self.state_fields.ready)),
-            2 => Some(ChuteStateField::ShorePowerStatus(self.state_fields.shore_power_status)),
-            3 => Some(ChuteStateField::SenderLastSeen(self.state_fields.sender_last_seen)),
-            _ => None,
-        };
-
-        if result.is_some() {
-            self.index += 1;
-        }
-
-        result
-    }
-}
-
-impl core::fmt::Display for ChuteStateField {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let time_now = Instant::now().as_millis();
-        match *self {
-            Self::Id(val) => {
-                core::write!(
-                    f,
-                    "Id: {}",
-                    if val == 1 {
-                        "Drogue"
-                    } else if val == 2 {
-                        "Main"
-                    } else {
-                        "Unknown"
-                    }
-                )
-            }
-            Self::Ready(val) => {
-                core::write!(f, "Ready: {}", if val { "YES" } else { "NO" })
-            }
-            Self::ShorePowerStatus(val) => {
-                core::write!(f, "Shore Power: {}", if val { "ON" } else { "OFF" })
-            }
-            Self::SenderLastSeen(val) => core::write!(f, "Sender last seen: {}ms", time_now - val),
-        }
-    }
-}
-
-async fn set_state(update: ChuteStateField) {
-    let mut unlocked = SYSTEM_STATE_MTX.lock().await;
-    if let Some(state) = unlocked.as_mut() {
-        match update {
-            ChuteStateField::Id(val) => state.id = val,
-            ChuteStateField::Ready(val) => state.ready = val,
-            ChuteStateField::ShorePowerStatus(val) => state.shore_power_status = val,
-            ChuteStateField::SenderLastSeen(val) => state.sender_last_seen = val,
-        }
-    }
-}
-
-static UMB_ON_MTX: UmbOnType = Mutex::new(None);
-static SYSTEM_STATE_MTX: Mutex<ThreadModeRawMutex, Option<ChuteState>> = Mutex::new(None);
-static MOTOR_MTX: MotorType = Mutex::new(None);
+const MAIN_LOOP_INTERVAL_MS: u64 = 10;
 
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
     let p = embassy_stm32::init(Default::default());
 
-    let umb_on = Input::new(p.PA8, Pull::Up);
+    let shore_pow_on_pin = Input::new(p.PA8, Pull::Up);
     let _can_shdn = Output::new(p.PA10, Level::Low, Speed::Medium);
     let _can_silent = Output::new(p.PA9, Level::Low, Speed::Medium);
 
@@ -179,8 +95,6 @@ async fn main(spawner: Spawner) {
         CountingMode::EdgeAlignedUp,
     );
 
-    let buzzer_mode = BuzzerMode::Off;
-
     // Set up CAN driver
     let mut can = Can::new(p.CAN, p.PA11, p.PA12, CanIrqs);
     can.modify_filters().enable_bank(0, Fifo::Fifo0, Mask32::accept_all());
@@ -188,7 +102,6 @@ async fn main(spawner: Spawner) {
 
     // Set up ADC driver
     let mut adc = Adc::new(p.ADC1, AdcIrqs);
-    adc.set_sample_time(SampleTime::CYCLES239_5);
     adc.set_resolution(embassy_stm32::adc::Resolution::BITS12);
 
     // Set up UART driver
@@ -197,623 +110,317 @@ async fn main(spawner: Spawner) {
     uart_config.parity = Parity::ParityNone;
     uart_config.data_bits = DataBits::DataBits8;
     uart_config.stop_bits = StopBits::STOP1;
-    let uart = BufferedUart::new(
-        p.USART2,
-        p.PA3,
-        p.PA2,
-        UART_TX_BUF_CELL.take(),
-        UART_RX_BUF_CELL.take(),
-        UsartIrqs,
-        uart_config,
-    )
-    .expect("Uart Config Error");
 
-    let dac = Dac::new(p.DAC1, p.DMA1_CH3, p.DMA1_CH4, p.PA4, p.PA5);
-    let mut sys_state = ChuteState::default();
+    let uart = unwrap!(
+        BufferedUart::new(
+            p.USART2,
+            p.PA3,
+            p.PA2,
+            UART_TX_BUF_CELL.take(),
+            UART_RX_BUF_CELL.take(),
+            UsartIrqs,
+            uart_config,
+        ),
+        "Uart Config Error"
+    );
 
-    #[cfg(drogue)]
-    {
-        sys_state.id = 1;
-    }
+    let (uart_tx, uart_rx) = uart.split();
 
-    #[cfg(main)]
-    {
-        sys_state.id = 2;
-    }
+    let dac = Dac::new(p.DAC1, p.DMA1_CH3, p.DMA1_CH4, DacIrqs, p.PA4, p.PA5);
 
     let motor = Motor::new(p.PB4, p.PB5, p.PB6, p.PB7, dac);
     let ring = Ring::new(p.PA0, p.PA1, p.PB1).await;
 
+    #[allow(unused)] // It is immediately used. RA doesn't know because of cfg directives
+    let mut prompt = "BOARD_ENV_ERR";
+
+    #[cfg(drogue)]
+    {
+        prompt = "drogue@ers> "
+    }
+
+    #[cfg(main)]
+    {
+        prompt = "main@ers> "
+    }
+
+    let (chute_cli, serial_write_ctx, serial_read_ctx) = match cli::init(uart_tx, uart_rx, prompt) {
+        Ok(ctx) => ctx,
+        Err(e) => {
+            error!("Failed to create CLI: {}", e);
+            panic!()
+        }
+    };
+
+    #[allow(unused_mut, unused_assignments)] // suppress warning when not compiling with disable_beep cfg
+    let mut buzz_mode = BuzzerMode::Low;
+
+    #[cfg(disable_beep)]
+    {
+        buzz_mode = BuzzerMode::Off;
+    }
+
     {
         // Put peripherals into mutex if shared among tasks.
         // Inner scope so that mutex is unlocked when out of scope
-        *(BUZZER_MODE_MTX.lock().await) = Some(buzzer_mode);
         *(ADC_MTX.lock().await) = Some(adc);
-        *(UMB_ON_MTX.lock().await) = Some(umb_on);
-        *(SYSTEM_STATE_MTX.lock().await) = Some(sys_state);
         *(RING_MTX.lock().await) = Some(ring);
         *(MOTOR_MTX.lock().await) = Some(motor);
+        *(BUZZER_MODE_MTX.lock().await) = Some(buzz_mode);
     }
 
-    unwrap!(spawner.spawn(blink_led(p.PB14)));
-    unwrap!(spawner.spawn(active_beep(pwm)));
-    unwrap!(spawner.spawn(cli(uart)));
-    unwrap!(spawner.spawn(read_battery_from_ref(p.PB0)));
-    unwrap!(spawner.spawn(read_pos_sensor()));
+    spawner.spawn(unwrap!(blink_led(p.PB14)));
+    spawner.spawn(unwrap!(active_beep(pwm)));
+    spawner.spawn(unwrap!(read_battery_from_ref(p.PB0)));
+    spawner.spawn(unwrap!(read_pos_sensor()));
+    spawner.spawn(unwrap!(serial_write_task(serial_write_ctx)));
+    spawner.spawn(unwrap!(serial_read_task(serial_read_ctx)));
+    spawner.spawn(unwrap!(async_cmd_handler()));
+    spawner.spawn(unwrap!(i_wdg(p.IWDG)));
 
-    // enable at last minute so other tasks can still spawn if can bus is down
+    // enable can at last minute so other tasks can still spawn if can bus is down
     can.enable().await;
     let (can_tx, can_rx) = can.split();
-    let can_txb =
-        can_tx.buffered(CAN_TX_BUF.init(embassy_stm32::can::TxBuf::<CAN_BUF_SIZE>::new()));
-    let can_rxb =
-        can_rx.buffered(CAN_RX_BUF.init(embassy_stm32::can::RxBuf::<CAN_BUF_SIZE>::new()));
+    let can_txb = can_tx.buffered(CAN_TX_BUF.init(TxBuf::<CAN_BUF_SIZE>::new()));
+    let can_rxb = can_rx.buffered(CAN_RX_BUF.init(RxBuf::<CAN_BUF_SIZE>::new()));
 
     {
         *(CAN_MTX.lock().await) = Some(can);
     }
 
-    unwrap!(spawner.spawn(can_writer(can_txb)));
-    unwrap!(spawner.spawn(can_reader(can_rxb)));
-    unwrap!(spawner.spawn(parachute_heartbeat()));
+    spawner.spawn(unwrap!(can_writer(can_txb)));
+    spawner.spawn(unwrap!(can_reader(can_rxb)));
 
-    let mut i_wdg = wdg::IndependentWatchdog::new(p.IWDG, 20_000_000);
-    i_wdg.unleash();
-    loop {
-        i_wdg.pet();
-        Timer::after_secs(1).await;
-    }
-}
-
-#[embassy_executor::task]
-pub async fn cli(uart: BufferedUart<'static>) {
-    let prompt = "> ";
-    let mut io = IO::new(uart);
-    let mut buffer = [0; UART_BUF_SIZE];
-    let mut history = [0; UART_BUF_SIZE];
-    loop {
-        let mut editor = EditorBuilder::from_slice(&mut buffer)
-            .with_slice_history(&mut history)
-            .build_async(&mut io)
-            .await
-            .unwrap();
-
-        while let Ok(line) = editor.readline(prompt, &mut io).await {
-            let args: heapless::Vec<&str, 10> = line.split_whitespace().collect();
-
-            if args.len() > 3usize {
-                error!("Only 2 arguments max allowed");
-                continue;
-            }
-
-            if args.is_empty() {
-                error!("args empty");
-                continue;
-            }
-
-            match args[0] {
-                "help" => {
-                    let lines = [
-                        "help: Display this message.\r\n\n",
-                        "state: Print internal state.\r\n\n",
-                        "l: Move the ring towards the lock position.\r\n",
-                        " --force: Ignore sensor readings, continue until timeout.\r\n",
-                        " --pulse: Do a 100ms step instead of a full swing.\r\n\n",
-                        "u: Move the ring towards the unlocked position.\r\n",
-                        " --force: Ignore sensor readings, continue until timeout.\r\n",
-                        " --pulse: Do a 100ms step instead of a full swing.\r\n\n",
-                        "pos: Print the current sensor readings and ring state.\r\n",
-                        " --poll: Print the sensor value and ring state every second.\r\n\n",
-                        "acts: Print the number of motor actuations stored in flash\r\n\n",
-                        "erase: Erase motor actuation count data from flash\r\n\n",
-                        "limits: Set or read the current sensor limits\r\n\
-                            --print: Print the current sensor limits\r\n\
-                            Usage: limits over1,under1,active1,unactive1,over2,under2,active2,unactive2",
-                    ];
-                    for line in lines {
-                        io.write(line.as_bytes()).await.unwrap();
-                    }
-                    io.flush().await.unwrap();
-                }
-                "state" => {
-                    let mut buf = [0u8; 64];
-                    let mut state_unlocked = SYSTEM_STATE_MTX.lock().await;
-                    if let Some(state) = state_unlocked.as_mut() {
-                        for field in state.iter() {
-                            let s = format_no_std::show(&mut buf, format_args!("{}\r\n", field))
-                                .unwrap();
-                            io.write(s.as_bytes()).await.unwrap();
-                        }
-                    }
-                }
-                "batt" => {
-                    let mut buf = [0u8; 16];
-
-                    let batt_read = BATT_READ_WATCH
-                        .receiver()
-                        .expect("Could not get batt_read receiver")
-                        .changed()
-                        .await;
-
-                    let s =
-                        format_no_std::show(&mut buf, format_args!("{}\r\n", batt_read)).unwrap();
-
-                    io.write(s.as_bytes()).await.unwrap();
-                }
-                "l" => {
-                    let mut motor_unlocked = MOTOR_MTX.lock().await;
-                    if let Some(motor) = motor_unlocked.as_mut() {
-                        motor
-                            .drive(
-                                RingPosition::Locked,
-                                if args.contains(&"--pulse") {
-                                    100
-                                } else {
-                                    MOTOR_DRIVE_DUR_MS
-                                },
-                                args.contains(&"--force"),
-                                MOTOR_DRIVE_CURR_MA,
-                            )
-                            .await;
-                    }
-                }
-                "u" => {
-                    let mut motor_unlocked = MOTOR_MTX.lock().await;
-                    if let Some(motor) = motor_unlocked.as_mut() {
-                        motor
-                            .drive(
-                                RingPosition::Unlocked,
-                                if args.contains(&"--pulse") {
-                                    100
-                                } else {
-                                    MOTOR_DRIVE_DUR_MS
-                                },
-                                args.contains(&"--force"),
-                                MOTOR_DRIVE_CURR_MA,
-                            )
-                            .await;
-                    }
-                }
-                "pos" => {
-                    let mut wbuf = [0u8; 128];
-
-                    let mut ring_pos_rcvr = RING_POSITION_WATCH
-                        .receiver()
-                        .expect("Could not get ring_pos receiver for pos cmd");
-                    let mut sensor_readings_rcvr = SENSOR_READ_WATCH
-                        .receiver()
-                        .expect("Could not get sensor readings receiver for pos cmd");
-
-                    if args.contains(&"--poll") {
-                        let mut buf = [0u8; 1];
-                        while let Err(TimeoutError) =
-                            with_timeout(Duration::from_secs(1), io.read(&mut buf)).await
-                        {
-                            match ring_pos_rcvr.try_get() {
-                                Some(RingPosition::Locked) => {
-                                    io.write(b"Ring Locked\r\n").await.unwrap();
-                                }
-                                Some(RingPosition::Unlocked) => {
-                                    io.write(b"Ring Unlocked\r\n").await.unwrap();
-                                }
-                                Some(RingPosition::Inbetween) => {
-                                    io.write(b"Ring Inbetween\r\n").await.unwrap();
-                                }
-                                Some(RingPosition::Error) => {
-                                    io.write(b"Ring Error\r\n").await.unwrap();
-                                }
-                                None => {
-                                    io.write(b"Ring Not Initialized\r\n").await.unwrap();
-                                }
-                            }
-
-                            if let Some(sensor_readings) = sensor_readings_rcvr.try_get() {
-                                let s = format_no_std::show(
-                                    &mut wbuf,
-                                    format_args!(
-                                        "Sensor 1: val: {}, state: {}\r\nSensor 2: val: {}, state: {}\r\n",
-                                        sensor_readings.sensor1,
-                                        sensor_readings.sensor1_state,
-                                        sensor_readings.sensor2,
-                                        sensor_readings.sensor2_state
-                                    ),
-                                )
-                                .unwrap();
-
-                                io.write(s.as_bytes()).await.unwrap();
-                            }
-                        }
-                    } else {
-                        match ring_pos_rcvr.try_get() {
-                            Some(RingPosition::Locked) => {
-                                io.write(b"Ring Locked\r\n").await.unwrap();
-                            }
-                            Some(RingPosition::Unlocked) => {
-                                io.write(b"Ring Unlocked\r\n").await.unwrap();
-                            }
-                            Some(RingPosition::Inbetween) => {
-                                io.write(b"Ring Inbetween\r\n").await.unwrap();
-                            }
-                            Some(RingPosition::Error) => {
-                                io.write(b"Ring Error\r\n").await.unwrap();
-                            }
-                            None => {
-                                io.write(b"Ring Not Initialized\r\n").await.unwrap();
-                            }
-                        }
-
-                        if let Some(sensor_readings) = sensor_readings_rcvr.try_get() {
-                            let s = format_no_std::show(
-                                &mut wbuf,
-                                format_args!(
-                                    "Sensor 1: val = {}, state = {}\r\nSensor 2: val = {}, state = {}\r\n",
-                                    sensor_readings.sensor1, sensor_readings.sensor1_state, sensor_readings.sensor2, sensor_readings.sensor2_state
-                                ),
-                            )
-                            .unwrap();
-
-                            io.write(s.as_bytes()).await.unwrap();
-                        }
-                    }
-                }
-                "beep" => {
-                    let mut buzzer_mode_unlocked = BUZZER_MODE_MTX.lock().await;
-                    if let Some(mode) = buzzer_mode_unlocked.as_mut() {
-                        match mode {
-                            BuzzerMode::Off => {
-                                *mode = BuzzerMode::Low;
-                            }
-                            _ => {
-                                *mode = BuzzerMode::Off;
-                            }
-                        }
-                    }
-                }
-                "erase" => {
-                    let mut motor_unlocked = MOTOR_MTX.lock().await;
-                    if let Some(motor) = motor_unlocked.as_mut() {
-                        motor.erase_actuation_data().await;
-                    }
-                }
-                "acts" => {
-                    let mut flash_unlocked = FLASH_MTX.lock().await;
-                    if let Some(flash) = flash_unlocked.as_mut() {
-                        let mut bytes = [0u8; (MOTOR_ACT_SECTOR_SIZE / 8) as usize];
-                        let mut buf = [0u8; 64];
-
-                        if let Err(e) = flash.blocking_read(MOTOR_ACT_SECTOR_OFFSET, &mut bytes) {
-                            error!("Error reading flash: {}", e);
-                            let s = format_no_std::show(
-                                &mut buf,
-                                format_args!("Error reading flash: {:?}\r\n", e),
-                            )
-                            .unwrap();
-
-                            io.write(s.as_bytes()).await.unwrap();
-                        }
-
-                        let s = format_no_std::show(
-                            &mut buf,
-                            format_args!("Actuations: {}\r\n", bytes[0] + 1), // Data starts at 255
-                        )
-                        .unwrap();
-
-                        io.write(s.as_bytes()).await.unwrap();
-                    }
-                }
-                "limits" => {
-                    if args.contains(&"--print") {
-                        let mut wbuf = [0u8; 256];
-                        let mut ring_unlocked = RING_MTX.lock().await;
-                        if let Some(ring) = ring_unlocked.as_mut() {
-                            let s = format_no_std::show(
-                                &mut wbuf,
-                                format_args!(
-                                    "Sensor 1: over {} - under {} - active {} - unactive {}\r\n\
-                                    Sensor 2: over {} - under {} - active {} - unactive {}\r\n",
-                                    ring.sensor1_limits.over,
-                                    ring.sensor1_limits.under,
-                                    ring.sensor1_limits.active,
-                                    ring.sensor1_limits.unactive,
-                                    ring.sensor2_limits.over,
-                                    ring.sensor2_limits.under,
-                                    ring.sensor2_limits.active,
-                                    ring.sensor2_limits.unactive
-                                ),
-                            )
-                            .unwrap();
-
-                            io.write(s.as_bytes()).await.unwrap();
-                        }
-                    } else {
-                        if args.len() < 2 {
-                            error!("No args passed to limits command");
-                            io.write(b"Please provide a comma separated list of sensor limits\r\n")
-                                .await
-                                .unwrap();
-                            continue;
-                        }
-
-                        let limits: heapless::Vec<&str, 15> = args[1].split(',').collect();
-
-                        if limits.len() != 8 {
-                            error!("Exactly 8 sensor limits not recieved with limits command");
-                            io.write(
-                                b"Exactly 8 sensor limits must be provided for limits command\r\n",
-                            )
-                            .await
-                            .unwrap();
-                            continue;
-                        }
-
-                        let sensor1_limits: SensorLimits;
-                        let sensor2_limits: SensorLimits;
-
-                        let parse = |i: usize| -> Result<u16, _> { limits[i].parse::<u16>() };
-
-                        if let (Ok(o), Ok(u), Ok(a), Ok(un), Ok(o2), Ok(u2), Ok(a2), Ok(un2)) = (
-                            parse(0),
-                            parse(1),
-                            parse(2),
-                            parse(3),
-                            parse(4),
-                            parse(5),
-                            parse(6),
-                            parse(7),
-                        ) {
-                            sensor1_limits = SensorLimits::new(o, u, a, un);
-                            sensor2_limits = SensorLimits::new(o2, u2, a2, un2);
-                        } else {
-                            error!("Error converting args to u16. Please try again");
-                            io.write(b"Error converting args to u16. Please try again\r\n")
-                                .await
-                                .unwrap();
-                            continue;
-                        }
-
-                        fn u16_to_2u8(b: u16) -> [u8; 2] {
-                            [(b >> 8) as u8, b as u8]
-                        }
-
-                        let mut fbuf = [0u8; (SENSOR_LIMIT_SECTOR_SIZE / 8) as usize];
-
-                        fbuf[0..2].copy_from_slice(&u16_to_2u8(sensor1_limits.over));
-                        fbuf[2..4].copy_from_slice(&u16_to_2u8(sensor1_limits.under));
-                        fbuf[4..6].copy_from_slice(&u16_to_2u8(sensor1_limits.active));
-                        fbuf[6..8].copy_from_slice(&u16_to_2u8(sensor1_limits.unactive));
-                        fbuf[8..10].copy_from_slice(&u16_to_2u8(sensor2_limits.over));
-                        fbuf[10..12].copy_from_slice(&u16_to_2u8(sensor2_limits.under));
-                        fbuf[12..14].copy_from_slice(&u16_to_2u8(sensor2_limits.active));
-                        fbuf[14..16].copy_from_slice(&u16_to_2u8(sensor2_limits.unactive));
-
-                        let mut flash_unlocked = FLASH_MTX.lock().await;
-                        if let Some(flash) = flash_unlocked.as_mut() {
-                            // Sector must be erased before writing or SEQ err will be thrown
-                            if let Err(e) = flash.blocking_erase(
-                                SENSOR_LIMIT_SECTOR_OFFSET,
-                                SENSOR_LIMIT_SECTOR_OFFSET + SENSOR_LIMIT_SECTOR_SIZE,
-                            ) {
-                                error!("Error erasing memory: {}", e);
-                            }
-                            if let Err(e) = flash.blocking_write(SENSOR_LIMIT_SECTOR_OFFSET, &fbuf)
-                            {
-                                error!("Error writing sensor limits to memory: {}", e);
-                            }
-                        }
-
-                        let mut ring_unlocked = RING_MTX.lock().await;
-                        if let Some(ring) = ring_unlocked.as_mut() {
-                            ring.sensor1_limits = sensor1_limits;
-                            ring.sensor2_limits = sensor2_limits;
-                        }
-                    }
-                }
-                "version" => {
-                    let mut buf = [0u8; 8];
-                    let version_details = env!("CARGO_PKG_VERSION");
-
-                    let s = format_no_std::show(&mut buf, format_args!("{}\r\n", version_details))
-                        .unwrap();
-
-                    io.write(s.as_bytes()).await.unwrap();
-                }
-                _ => {
-                    io.write(b"Invalid command\r\n").await.unwrap();
-                }
-            }
-        }
-    }
-}
-
-#[embassy_executor::task]
-async fn can_reader(can_rx: BufferedCanRx<'static, CAN_BUF_SIZE>) -> () {
-    let rdr = can_rx.reader();
-    loop {
-        match rdr.receive().await {
-            Ok(envelope) => match envelope.frame.id() {
-                Id::Standard(id) if id.as_raw() == DROGUE_DEPLOY_ID => {
-                    #[cfg(drogue)]
-                    {
-                        let frame =
-                            Frame::new_data(StandardId::new(DROGUE_ACKNOWLEDGE_ID).unwrap(), &[1])
-                                .unwrap();
-                        let acknowledge_msg = CanTxChannelMsg::new(true, frame);
-                        CAN_TX_CHANNEL.send(acknowledge_msg).await;
-
-                        let mut motor_unlocked = MOTOR_MTX.lock().await;
-                        if let Some(motor) = motor_unlocked.as_mut() {
-                            motor
-                                .drive(
-                                    RingPosition::Unlocked,
-                                    MOTOR_DRIVE_DUR_MS,
-                                    false,
-                                    MOTOR_DRIVE_CURR_MA,
-                                )
-                                .await;
-                        }
-                    }
-                }
-                Id::Standard(id) if id.as_raw() == MAIN_DEPLOY_ID => {
-                    #[cfg(main)]
-                    {
-                        let frame =
-                            Frame::new_data(StandardId::new(MAIN_ACKNOWLEDGE_ID).unwrap(), &[1])
-                                .unwrap();
-                        let acknowledge_msg = CanTxChannelMsg::new(true, frame);
-                        CAN_TX_CHANNEL.send(acknowledge_msg).await;
-                        {
-                            let mut motor_unlocked = MOTOR_MTX.lock().await;
-                            if let Some(motor) = motor_unlocked.as_mut() {
-                                motor
-                                    .drive(
-                                        RingPosition::Unlocked,
-                                        MOTOR_DRIVE_DUR_MS,
-                                        false,
-                                        MOTOR_DRIVE_CURR_MA,
-                                    )
-                                    .await;
-                            }
-                        }
-                    }
-                }
-                Id::Standard(id) if id.as_raw() == SENDER_HEARTBEAT_ID => {
-                    set_state(ChuteStateField::SenderLastSeen(envelope.ts.as_millis())).await;
-                }
-                _ => {}
-            },
-
-            Err(e) => {
-                error!("CAN Read Error: {}", e);
-                let mut can_unlocked = CAN_MTX.lock().await;
-                if let Some(can) = can_unlocked.as_mut() {
-                    can.sleep().await;
-                }
-            }
-        }
-    }
-}
-
-#[embassy_executor::task]
-async fn parachute_heartbeat() -> () {
-    let mut prev_ready: u8 = 0;
-    let mut prev_batt_ok: u8 = 0;
-    let mut prev_sender_status: u8 = 0;
-    let mut prev_shore_pow_on: u8 = 0;
-
+    // Set up main control loop
+    let mut next_iter_start = Instant::now();
+    let mut last_heartbeat_time = 0u64;
     let mut ring_pos_rcvr =
-        RING_POSITION_WATCH.receiver().expect("Could not get ring pos receiver for heartbeat task");
+        unwrap!(RING_POSITION_WATCH.receiver(), "unable to get ring position receiver");
 
     let mut batt_read_rcvr =
-        BATT_READ_WATCH.receiver().expect("Could not get batt read receiver for heartbeat task");
+        unwrap!(BATT_READ_WATCH.receiver(), "unable to get batt read receiver");
+
+    let mut state = ChuteState::default();
 
     loop {
+        next_iter_start += Duration::from_millis(MAIN_LOOP_INTERVAL_MS);
+        Timer::at(next_iter_start).await;
         let time_now = Instant::now().as_millis();
-        let sender_last_seen: u64;
 
-        {
-            let mut state_unlocked = SYSTEM_STATE_MTX.lock().await;
-            if let Some(state) = state_unlocked.as_mut() {
-                sender_last_seen = state.sender_last_seen;
-            } else {
-                error!("Could not read state for heartbeat");
-                continue;
-            }
+        // =========================================================================
+        // update state
+        let shore_power_on = shore_pow_on_pin.is_low();
+        state.shore_power_on = shore_power_on;
+
+        if CAN_SIGNAL.signaled() {
+            let sig = unwrap!(CAN_SIGNAL.try_take(), "CAN signaled but main was unable to read it");
+            state.sender_last_seen = sig;
         }
 
-        let ring_pos_u8: u8 = match ring_pos_rcvr.try_get() {
-            Some(RingPosition::Unlocked) => 1,
-            Some(RingPosition::Inbetween) => 2,
-            Some(RingPosition::Locked) => 3,
-            Some(RingPosition::Error) => 4,
-            None => 0,
-        };
+        let batt_read = batt_read_rcvr.get().await;
+        let batt_ok = batt_read > 99;
+        let sender_can_ok = time_now - state.sender_last_seen < 2000;
+        let ring_pos = ring_pos_rcvr.get().await;
 
-        let batt_read = batt_read_rcvr.changed().await;
-        let batt_ok: u8 = (batt_read > 99) as u8;
+        state.ready =
+            ring_pos == RingPosition::Locked && !shore_power_on && batt_ok && sender_can_ok;
 
-        let sender_status: u8 = ((time_now - sender_last_seen) < 2000) as u8;
+        let async_cmd_sender = ASYNC_CMD_CHANNEL.sender();
 
+        // ==================================================================================
+        // update buzzer mode
         {
-            let mut umb_on_unlocked = UMB_ON_MTX.lock().await;
-            if let Some(umb_on_ref) = umb_on_unlocked.as_mut() {
-                let shore_pow_on = umb_on_ref.is_low() as u8;
-
-                set_state(ChuteStateField::ShorePowerStatus(shore_pow_on == 1)).await;
-
-                let ready =
-                    (ring_pos_u8 == 3 && shore_pow_on == 0 && batt_ok == 1 && sender_status == 1)
-                        as u8;
-
-                set_state(ChuteStateField::Ready(ready == 1)).await;
-
-                {
-                    let mut buzz_mode_unlocked = BUZZER_MODE_MTX.lock().await;
-                    if let Some(mode) = buzz_mode_unlocked.as_mut() {
-                        match mode {
-                            BuzzerMode::Off => {}
-                            _ => {
-                                if ready > 0 {
-                                    *mode = BuzzerMode::High;
-                                } else {
-                                    *mode = BuzzerMode::Low;
-                                }
-                            }
+            let mut buzz_mode_unlocked = BUZZER_MODE_MTX.lock().await;
+            if let Some(mode) = buzz_mode_unlocked.as_mut() {
+                match mode {
+                    BuzzerMode::Off => {}
+                    _ => {
+                        if state.ready {
+                            *mode = BuzzerMode::High;
+                        } else {
+                            *mode = BuzzerMode::Low;
                         }
                     }
                 }
-
-                let status_buf = [
-                    ring_pos_u8,
-                    batt_read,
-                    batt_ok,
-                    shore_pow_on,
-                    sender_status,
-                    ready,
-                    0,
-                    0,
-                ];
-
-                #[cfg(main)]
-                {
-                    use firmware_rs::can::MAIN_HEARTBEAT_ID;
-                    let id = StandardId::new(MAIN_HEARTBEAT_ID).unwrap();
-                    let header = Header::new(Id::Standard(id), 8, false);
-                    let frame = Frame::new(header, &status_buf).unwrap();
-                    let msg: CanTxChannelMsg = CanTxChannelMsg::new(false, frame);
-                    CAN_TX_CHANNEL.send(msg).await;
-                }
-
-                #[cfg(drogue)]
-                {
-                    use firmware_rs::can::DROGUE_HEARTBEAT_ID;
-                    let id = StandardId::new(DROGUE_HEARTBEAT_ID).unwrap();
-                    let header = Header::new(Id::Standard(id), 8, false);
-                    let frame = Frame::new(header, &status_buf).unwrap();
-                    let msg: CanTxChannelMsg = CanTxChannelMsg::new(false, frame);
-                    CAN_TX_CHANNEL.send(msg).await;
-                }
-
-                if batt_ok != prev_batt_ok {
-                    info!("Battery ok changed to {}", batt_ok);
-                }
-
-                if ready != prev_ready {
-                    info!("Ready status changed to {}", ready);
-                }
-
-                if shore_pow_on != prev_shore_pow_on {
-                    info!("Shore power status changed to {}", shore_pow_on);
-                }
-                if sender_status != prev_sender_status {
-                    info!("Sender status changed to {}", sender_status);
-                }
-
-                prev_sender_status = sender_status;
-                prev_shore_pow_on = shore_pow_on;
-                prev_ready = ready;
-                prev_batt_ok = batt_ok;
             }
         }
-        Timer::after_secs(1).await;
+
+        // =========================================================================
+        // process pending commands
+        let _ = chute_cli.process_pending_commands(|cli, command| {
+            // NOTE: Any command that writes a response back to uart must be sync as
+            // we don't have access to the cli writer anywhere other than here.
+            // Prefetching can be used to get around this limitation e.g. the batt or state cmds.
+            match command {
+                ChuteCmd::State => {
+                    for field in state.iter() {
+                        let _ = uwrite!(cli.writer(), "{}", field);
+                    }
+                }
+                ChuteCmd::Batt => {
+                    let _ = uwrite!(cli.writer(), "{}", batt_read);
+                }
+                ChuteCmd::Beep => {
+                    if async_cmd_sender.try_send(AsyncCmd::Beep).is_err() {
+                        error!("Could not send beep command to async handler");
+                    }
+                }
+                ChuteCmd::L { force, pulse } => {
+                    if async_cmd_sender.try_send(AsyncCmd::L { force, pulse }).is_err() {
+                        error!("unable to send lock command to async handler")
+                    }
+                }
+                ChuteCmd::U { force, pulse } => {
+                    if !state.shore_power_on {
+                        if async_cmd_sender.try_send(AsyncCmd::U { force, pulse }).is_err() {
+                            error!("unable to send unlock commmand to async handler");
+                        };
+                    } else {
+                        let _ =
+                            uwrite!(cli.writer(), "shore power is on - turn off to unlock ring");
+                    }
+                }
+                ChuteCmd::Pos => {
+                    let _ = uwrite!(cli.writer(), "{}", ring_pos);
+                }
+                ChuteCmd::Acts => {
+                    let mut bytes = [0u8; (MOTOR_ACT_SECTOR_SIZE / 8) as usize];
+
+                    // Nothing should be accessing the flash except at startup or in another
+                    // command, so try_lock should be safe here
+                    if let Ok(mut flash_unlocked) = FLASH_MTX.try_lock() {
+                        if let Some(flash) = flash_unlocked.as_mut() {
+                            if let Err(e) = flash.blocking_read(MOTOR_ACT_SECTOR_OFFSET, &mut bytes)
+                            {
+                                error!("error reading flash: {}", e);
+                            }
+                        }
+                    } else {
+                        error!("failed to unlock flash mutex");
+                    }
+
+                    let _ = uwrite!(cli.writer(), "{}", bytes[0] + 1);
+                }
+                ChuteCmd::Erase => {
+                    if async_cmd_sender.try_send(AsyncCmd::Erase).is_err() {
+                        error!("unable to send erase command to async handler");
+                    }
+                }
+                ChuteCmd::Limits { print, set } => {
+                    if print {
+                        let mut buf = [0u8; (SENSOR_LIMIT_SECTOR_SIZE / 8) as usize];
+
+                        // Nothing should be accessing the flash except at startup or in another
+                        // command, so try_lock should be safe here
+                        if let Ok(mut flash_unlocked) = FLASH_MTX.try_lock() {
+                            if let Some(flash) = flash_unlocked.as_mut() {
+                                if let Err(e) =
+                                    flash.blocking_read(SENSOR_LIMIT_SECTOR_OFFSET, &mut buf)
+                                {
+                                    let _ = uwrite!(cli.writer(), "unable to read flash");
+                                    error!("error reading flash: {}", e);
+                                }
+                            }
+                        } else {
+                            let _ = uwrite!(cli.writer(), "unable to access flash mutex");
+                            error!("failed to unlock flash mutex");
+                        }
+
+                        fn two_u8_to_u16(b1: u8, b0: u8) -> u16 {
+                            // combine two u8s into one u16
+                            ((b1 as u16) << 8) + b0 as u16
+                        }
+
+                        let sensor1_limits = SensorLimits::new(
+                            two_u8_to_u16(buf[0], buf[1]),
+                            two_u8_to_u16(buf[2], buf[3]),
+                            two_u8_to_u16(buf[4], buf[5]),
+                            two_u8_to_u16(buf[6], buf[7]),
+                        );
+                        let sensor2_limits = SensorLimits::new(
+                            two_u8_to_u16(buf[8], buf[9]),
+                            two_u8_to_u16(buf[10], buf[11]),
+                            two_u8_to_u16(buf[12], buf[13]),
+                            two_u8_to_u16(buf[14], buf[15]),
+                        );
+
+                        let _ = uwrite!(
+                            cli.writer(),
+                            "Sensor 1:\r\n{}Sensor 2:\r\n{}",
+                            sensor1_limits,
+                            sensor2_limits
+                        );
+                    } else {
+                        info!("{}", set);
+                        if let Some(lims) = set {
+                            info!("lims: {}", lims);
+                            let limits: heapless::Vec<heapless::String<32>, 10> = lims
+                                .split(',')
+                                .map(|s| match heapless::String::from_str(s) {
+                                    Ok(sh) => sh,
+                                    Err(_) => {
+                                        error!("unable to create String from {}", s);
+                                        panic!()
+                                    }
+                                })
+                                .collect();
+
+                            if limits.len() != 8 {
+                                let _ = uwrite!(
+                                    cli.writer(),
+                                    "Error: Expected 8 values but received {}",
+                                    limits.len()
+                                );
+                            } else {
+                                for lim in &limits {
+                                    info!("{}", lim.as_str());
+                                }
+
+                                if async_cmd_sender
+                                    .try_send(AsyncCmd::SetLimits { limits })
+                                    .is_err()
+                                {
+                                    error!("could not send limits command to async handler");
+                                }
+                            }
+                        } else {
+                            let _ = uwrite!(cli.writer(), "no limits provided");
+                        }
+                    }
+                }
+                ChuteCmd::Version => {
+                    if let Err(e) = uwrite!(cli.writer(), "{}", env!("CARGO_PKG_VERSION")) {
+                        error!("failed to write from uart: {}", e);
+                    }
+                }
+            }
+            Ok(())
+        });
+
+        // =========================================================================
+        // heartbeat
+        if time_now - last_heartbeat_time > 1000 {
+            let sender_ok = (time_now - state.sender_last_seen) < 2000;
+
+            let ready = ring_pos == RingPosition::Locked
+                && shore_pow_on_pin.is_high()
+                && batt_ok
+                && sender_ok;
+
+            let heartbeat_ctx = HeartbeatCtx::new(
+                ring_pos,
+                batt_read,
+                shore_pow_on_pin.is_high(),
+                sender_ok,
+                ready,
+            );
+
+            if let Err(e) = send_heartbeat(heartbeat_ctx).await {
+                error!("Error sending heartbeat: {}", e);
+                continue;
+            };
+
+            last_heartbeat_time = time_now;
+        }
     }
 }
