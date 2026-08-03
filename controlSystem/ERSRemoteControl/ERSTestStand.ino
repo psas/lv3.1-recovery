@@ -36,19 +36,19 @@ twai_frame_t unlock_main = {
     .buffer_len = sizeof(send_buff),  // Length of data to transmit
 };
 
-twai_frame_t lock_drogue = {
-    .header.id = 0x1,           // Message ID
-    .header.ide = true,         // Use 29-bit extended ID format
-    .buffer = send_buff,        // Pointer to data to transmit
-    .buffer_len = sizeof(send_buff),  // Length of data to transmit
-};
+// twai_frame_t lock_drogue = {
+//     .header.id = 0x1,           // Message ID
+//     .header.ide = true,         // Use 29-bit extended ID format
+//     .buffer = send_buff,        // Pointer to data to transmit
+//     .buffer_len = sizeof(send_buff),  // Length of data to transmit
+// };
 
-twai_frame_t lock_main = {
-    .header.id = 0x1,           // Message ID
-    .header.ide = true,         // Use 29-bit extended ID format
-    .buffer = send_buff,        // Pointer to data to transmit
-    .buffer_len = sizeof(send_buff),  // Length of data to transmit
-};
+// twai_frame_t lock_main = {
+//     .header.id = 0x1,           // Message ID
+//     .header.ide = true,         // Use 29-bit extended ID format
+//     .buffer = send_buff,        // Pointer to data to transmit
+//     .buffer_len = sizeof(send_buff),  // Length of data to transmit
+// };
 
 
 void setup() {
