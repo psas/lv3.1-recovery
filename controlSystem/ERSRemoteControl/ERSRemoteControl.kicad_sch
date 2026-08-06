@@ -5032,6 +5032,10 @@
 		(uuid "0fda0c99-0690-4746-979e-9692a5facbd8")
 	)
 	(no_connect
+		(at 87.63 86.36)
+		(uuid "1129159e-61f0-4d82-b134-3423a02b585f")
+	)
+	(no_connect
 		(at 118.11 60.96)
 		(uuid "3182c415-68d8-4e88-84bf-aac9d89e3b76")
 	)
@@ -5068,6 +5072,10 @@
 		(uuid "6b661d2a-caf2-4333-8d40-5e1e0f0128ec")
 	)
 	(no_connect
+		(at 87.63 83.82)
+		(uuid "77c23dce-02f1-4dbf-810d-c762f06d01ca")
+	)
+	(no_connect
 		(at 118.11 66.04)
 		(uuid "8206230b-40ca-4fe4-888b-bb29396ca4e9")
 	)
@@ -5080,12 +5088,20 @@
 		(uuid "a03d1192-99c2-4e99-b086-361759c0e1c7")
 	)
 	(no_connect
+		(at 87.63 78.74)
+		(uuid "b09435c2-284e-4834-b82b-93e6327d8766")
+	)
+	(no_connect
 		(at 87.63 68.58)
 		(uuid "b913723b-d5ce-43b5-a331-007a20a246c2")
 	)
 	(no_connect
 		(at 118.11 68.58)
 		(uuid "d9219d12-ed11-456c-9f6a-54b6cf3bb188")
+	)
+	(no_connect
+		(at 87.63 81.28)
+		(uuid "e07a2890-092c-4c59-bfda-f9c015141388")
 	)
 	(no_connect
 		(at 87.63 45.72)
@@ -7252,7 +7268,7 @@
 				)
 			)
 		)
-		(property "DPN" "311-470KHRCT-ND"
+		(property "DPN" "RMCF0603FT470KCT-ND"
 			(at 121.92 149.86 0)
 			(hide yes)
 			(show_name no)
@@ -7274,7 +7290,7 @@
 				)
 			)
 		)
-		(property "MFR" "Yageo"
+		(property "MFR" "Stackpole Electronics Inc."
 			(at 121.92 149.86 0)
 			(hide yes)
 			(show_name no)
@@ -7285,7 +7301,7 @@
 				)
 			)
 		)
-		(property "MPN" "RC0603FR-07470KL"
+		(property "MPN" "RMCF0603FT470K"
 			(at 121.92 149.86 0)
 			(hide yes)
 			(show_name no)
@@ -7542,7 +7558,7 @@
 				)
 			)
 		)
-		(property "MFR" "Yageo"
+		(property "MFR" "Stackpole Electronics Inc."
 			(at 81.28 66.04 90)
 			(hide yes)
 			(show_name no)
@@ -7553,7 +7569,7 @@
 				)
 			)
 		)
-		(property "MPN" "RC0603FR-074K7L"
+		(property "MPN" "RMCF0603FT4K70"
 			(at 81.28 66.04 90)
 			(hide yes)
 			(show_name no)
@@ -7564,7 +7580,7 @@
 				)
 			)
 		)
-		(property "DPN" "311-4.70KHRCT-ND"
+		(property "DPN" "RMCF0603FT4K70CT-ND"
 			(at 81.28 66.04 90)
 			(hide yes)
 			(show_name no)
@@ -7932,7 +7948,7 @@
 				)
 			)
 		)
-		(property "MFR" "Yageo"
+		(property "MFR" "Stackpole Electronics Inc."
 			(at 63.5 43.18 0)
 			(hide yes)
 			(show_name no)
@@ -7943,7 +7959,7 @@
 				)
 			)
 		)
-		(property "MPN" "RC0603FR-074K7L"
+		(property "MPN" "RMCF0603FT4K70"
 			(at 63.5 43.18 0)
 			(hide yes)
 			(show_name no)
@@ -7954,7 +7970,7 @@
 				)
 			)
 		)
-		(property "DPN" "311-4.70KHRCT-ND"
+		(property "DPN" "RMCF0603FT4K70CT-ND"
 			(at 63.5 43.18 0)
 			(hide yes)
 			(show_name no)
@@ -9939,7 +9955,7 @@
 				)
 			)
 		)
-		(property "DPN" "445-14428-1-ND"
+		(property "DPN" "490-GRT21BC81C226ME13LCT-ND"
 			(at 55.88 152.4 0)
 			(hide yes)
 			(show_name no)
@@ -9972,7 +9988,7 @@
 				)
 			)
 		)
-		(property "MPN" "C2012X5R1V226M125AC"
+		(property "MPN" "GRT21BC81C226ME13L"
 			(at 55.88 152.4 0)
 			(hide yes)
 			(show_name no)
@@ -10252,7 +10268,7 @@
 				)
 			)
 		)
-		(property "MPN" "C2012X5R1V226M125AC"
+		(property "MPN" "GRT21BC81C226ME13L"
 			(at 142.24 152.4 0)
 			(hide yes)
 			(show_name no)
@@ -10263,7 +10279,7 @@
 				)
 			)
 		)
-		(property "DPN" "445-14428-1-ND"
+		(property "DPN" "490-GRT21BC81C226ME13LCT-ND"
 			(at 142.24 152.4 0)
 			(hide yes)
 			(show_name no)
@@ -10784,7 +10800,7 @@
 				)
 			)
 		)
-		(property "DPN" "311-4.70KHRCT-ND"
+		(property "DPN" "RMCF0603FT4K70CT-ND"
 			(at 161.29 152.4 0)
 			(hide yes)
 			(show_name no)
@@ -10806,7 +10822,7 @@
 				)
 			)
 		)
-		(property "MFR" "Yageo"
+		(property "MFR" "Stackpole Electronics Inc."
 			(at 161.29 152.4 0)
 			(hide yes)
 			(show_name no)
@@ -10817,7 +10833,7 @@
 				)
 			)
 		)
-		(property "MPN" "RC0603FR-074K7L"
+		(property "MPN" "RMCF0603FT4K70"
 			(at 161.29 152.4 0)
 			(hide yes)
 			(show_name no)
@@ -11699,7 +11715,7 @@
 				)
 			)
 		)
-		(property "MPN" "C2012X5R1V226M125AC"
+		(property "MPN" "GRT21BC81C226ME13L"
 			(at 151.13 152.4 0)
 			(hide yes)
 			(show_name no)
@@ -11710,7 +11726,7 @@
 				)
 			)
 		)
-		(property "DPN" "445-14428-1-ND"
+		(property "DPN" "490-GRT21BC81C226ME13LCT-ND"
 			(at 151.13 152.4 0)
 			(hide yes)
 			(show_name no)
@@ -12564,7 +12580,7 @@
 				)
 			)
 		)
-		(property "MFR" "Yageo"
+		(property "MFR" "Stackpole Electronics Inc."
 			(at 68.58 43.18 0)
 			(hide yes)
 			(show_name no)
@@ -12575,7 +12591,7 @@
 				)
 			)
 		)
-		(property "MPN" "RC0603FR-074K7L"
+		(property "MPN" "RMCF0603FT4K70"
 			(at 68.58 43.18 0)
 			(hide yes)
 			(show_name no)
@@ -12586,7 +12602,7 @@
 				)
 			)
 		)
-		(property "DPN" "311-4.70KHRCT-ND"
+		(property "DPN" "RMCF0603FT4K70CT-ND"
 			(at 68.58 43.18 0)
 			(hide yes)
 			(show_name no)
@@ -14205,7 +14221,7 @@
 				)
 			)
 		)
-		(property "DPN" "445-14428-1-ND"
+		(property "DPN" "490-GRT21BC81C226ME13LCT-ND"
 			(at 45.72 152.4 0)
 			(hide yes)
 			(show_name no)
@@ -14238,7 +14254,7 @@
 				)
 			)
 		)
-		(property "MPN" "C2012X5R1V226M125AC"
+		(property "MPN" "GRT21BC81C226ME13L"
 			(at 45.72 152.4 0)
 			(hide yes)
 			(show_name no)
@@ -15790,7 +15806,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
 			(at 80.01 149.86 0)
 			(hide yes)
 			(show_name no)
@@ -15823,7 +15839,7 @@
 				)
 			)
 		)
-		(property "MPN" "C2012X5R1V226M125AC"
+		(property "MPN" "GRT21BC71E106KE13K"
 			(at 80.01 149.86 0)
 			(hide yes)
 			(show_name no)
@@ -15834,7 +15850,7 @@
 				)
 			)
 		)
-		(property "DPN" "445-14428-1-ND"
+		(property "DPN" "490-GRT21BC71E106KE13KCT-ND"
 			(at 80.01 149.86 0)
 			(hide yes)
 			(show_name no)
@@ -16442,7 +16458,7 @@
 				)
 			)
 		)
-		(property "MPN" "C2012X5R1V226M125AC"
+		(property "MPN" "GRT21BC81C226ME13L"
 			(at 133.35 152.4 0)
 			(hide yes)
 			(show_name no)
@@ -16453,7 +16469,7 @@
 				)
 			)
 		)
-		(property "DPN" "445-14428-1-ND"
+		(property "DPN" "490-GRT21BC81C226ME13LCT-ND"
 			(at 133.35 152.4 0)
 			(hide yes)
 			(show_name no)
@@ -17158,7 +17174,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
 			(at 116.84 151.13 0)
 			(hide yes)
 			(show_name no)
@@ -17191,7 +17207,7 @@
 				)
 			)
 		)
-		(property "MPN" "C2012X5R1V226M125AC"
+		(property "MPN" "GRT21BC71E106KE13K"
 			(at 116.84 151.13 0)
 			(hide yes)
 			(show_name no)
@@ -17202,7 +17218,7 @@
 				)
 			)
 		)
-		(property "DPN" "445-14428-1-ND"
+		(property "DPN" "490-GRT21BC71E106KE13KCT-ND"
 			(at 116.84 151.13 0)
 			(hide yes)
 			(show_name no)
