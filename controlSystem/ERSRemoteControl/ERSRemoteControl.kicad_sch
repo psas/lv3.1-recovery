@@ -5,6 +5,129 @@
 	(uuid "23a85c09-d839-4092-87ba-e03c754c61e3")
 	(paper "A4")
 	(lib_symbols
+		(symbol "Connector:TestPoint_Square"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0.762)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "TP"
+				(at 0 3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "TestPoint_Square"
+				(at 0 2.032 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 5.08 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 5.08 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "test point"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "test point tp"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_fp_filters" "Pin* Test*"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "TestPoint_Square_0_1"
+				(rectangle
+					(start -0.762 0.762)
+					(end 0.762 -0.762)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "TestPoint_Square_1_1"
+				(pin passive line
+					(at 0 0 90)
+					(length 0)
+					(name "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "Connector:USB_C_Receptacle_USB2.0_14P"
 			(pin_names
 				(offset 1.016)
@@ -4290,107 +4413,6 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "psas-testpoint:Test-Point"
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "TP"
-				(at 0 2.54 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "Test-Point"
-				(at 0 2.54 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 2.54 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 2.54 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "Test-Point_0_1"
-				(rectangle
-					(start -1.27 1.27)
-					(end 1.27 -1.27)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "Test-Point_1_1"
-				(pin passive line
-					(at 0 0 90)
-					(length 0)
-					(name ""
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 	)
 	(text "Reset Button"
 		(exclude_from_sim no)
@@ -7717,7 +7739,7 @@
 		)
 	)
 	(symbol
-		(lib_id "psas-testpoint:Test-Point")
+		(lib_id "Connector:TestPoint_Square")
 		(at 118.11 78.74 0)
 		(mirror y)
 		(unit 1)
@@ -8030,7 +8052,7 @@
 		)
 	)
 	(symbol
-		(lib_id "psas-testpoint:Test-Point")
+		(lib_id "Connector:TestPoint_Square")
 		(at 208.28 77.47 0)
 		(mirror y)
 		(unit 1)
@@ -8328,7 +8350,7 @@
 		)
 	)
 	(symbol
-		(lib_id "psas-testpoint:Test-Point")
+		(lib_id "Connector:TestPoint_Square")
 		(at 91.44 158.75 0)
 		(unit 1)
 		(body_style 1)
@@ -8547,7 +8569,7 @@
 		)
 	)
 	(symbol
-		(lib_id "psas-testpoint:Test-Point")
+		(lib_id "Connector:TestPoint_Square")
 		(at 91.44 148.59 0)
 		(unit 1)
 		(body_style 1)
@@ -9780,7 +9802,7 @@
 		)
 	)
 	(symbol
-		(lib_id "psas-testpoint:Test-Point")
+		(lib_id "Connector:TestPoint_Square")
 		(at 173.99 77.47 0)
 		(mirror y)
 		(unit 1)
@@ -11224,7 +11246,7 @@
 		)
 	)
 	(symbol
-		(lib_id "psas-testpoint:Test-Point")
+		(lib_id "Connector:TestPoint_Square")
 		(at 118.11 71.12 0)
 		(mirror y)
 		(unit 1)
@@ -12458,7 +12480,7 @@
 		)
 	)
 	(symbol
-		(lib_id "psas-testpoint:Test-Point")
+		(lib_id "Connector:TestPoint_Square")
 		(at 76.2 171.45 0)
 		(unit 1)
 		(body_style 1)
@@ -12469,7 +12491,7 @@
 		(dnp no)
 		(uuid "7aac3632-60de-456b-8d41-4d6405ddb122")
 		(property "Reference" "TP3"
-			(at 74.93 173.99 0)
+			(at 77.978 172.72 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -12911,7 +12933,7 @@
 		)
 	)
 	(symbol
-		(lib_id "psas-testpoint:Test-Point")
+		(lib_id "Connector:TestPoint_Square")
 		(at 106.68 135.89 0)
 		(unit 1)
 		(body_style 1)
