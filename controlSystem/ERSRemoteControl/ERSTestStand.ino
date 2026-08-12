@@ -4,6 +4,10 @@
 #define SWITCH_4 4
 #define debug_light 38
 
+bool lock_state = 1;
+bool unlock_state = 1;
+bool last_lock_state = 1;
+bool last_unlock_state = 1;
 long previous = 0;
 
 void setup() {
@@ -13,33 +17,35 @@ void setup() {
     pinMode(SWITCH_3, INPUT);
     pinMode(SWITCH_4, INPUT);
     pinMode(debug_light, OUTPUT);
-    pinMode(mode, INPUT);
-    pinMode(silence, OUTPUT);
-    pinMode(shutdown, OUTPUT);
-    pinMode(reciever, OUTPUT);
-    pinMode(transmitter, INPUT);
 
     digitalWrite(debug_light, HIGH);
 }
 
-void loop() { // try using println if this doesn't work
-    int lock_signal_drogue = digitalRead(SWITCH_1);
-    int unlock_signal_drogue = digitalRead(SWITCH_3);
-    int lock_signal_main = digitalRead(SWITCH_2);
-    int unlock_signal_main = digitalRead(SWITCH_4);
+void loop() {
+    int lock_reading = digitalRead(SWITCH_1);
+    int unlock_reading = digitalRead(SWITCH_2);
 
-    if (unlock_signal_drogue == 0 || unlock_signal_main == 0) {
-        if (millis() - previous >= 100) {
-            Serial1.print(u\n);
-        }
+    if (lock_reading - last_lock_state < 0 || unlock_reading - last_unlock_state < 0) {
         previous = millis();
     }
 
-     if (lock_signal_drogue == 0 || lock_signal_main == 0) {
-        if (millis() - previous >= 100) {
-            Serial1.print(l\n);
+    if (millis() - previous) > 50) {
+        if (lock_reading != lock_state) {
+            lock_state = lock_reading;
+            if (lock_state == 0) {
+                Serial1.print(l\n);
+                delay(100);
+            }
         }
-        previous = millis();
+        if (unlock_reading != unlock_state) {
+            unlock_state = unlock_reading;
+            if (unlock_state == 0) {
+                Serial1.print(u\n);
+                delay(100);
+            }
+        }
     }
-    delay(50);
+
+    last_lock_state = lock_reading;
+    last_unlock_state = unlock_reading;
 }
