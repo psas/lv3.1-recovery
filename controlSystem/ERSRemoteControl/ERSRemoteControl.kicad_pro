@@ -623,13 +623,13 @@
           "group_by": true,
           "label": "Exclude from BOM",
           "name": "${EXCLUDE_FROM_BOM}",
-          "show": false
+          "show": true
         },
         {
           "group_by": true,
           "label": "Exclude from Board",
           "name": "${EXCLUDE_FROM_BOARD}",
-          "show": false
+          "show": true
         },
         {
           "group_by": true,
@@ -752,7 +752,7 @@
         "uuid": "23a85c09-d839-4092-87ba-e03c754c61e3"
       }
     ],
-    "used_designators": "R1-16,#FLG1-2,J1-9,L1,D1-3,#PWR1-43,C1-15,SW1-6,TP1-8,U1-2",
+    "used_designators": "",
     "variants": []
   },
   "sheets": [
