@@ -2144,195 +2144,6 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Device:R_US"
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(offset 0)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "R"
-				(at 2.54 0 90)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "R_US"
-				(at -2.54 0 90)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 1.016 -0.254 90)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" "Resistor, US symbol"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_keywords" "R res resistor"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_fp_filters" "R_*"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "R_US_0_1"
-				(polyline
-					(pts
-						(xy 0 2.286) (xy 0 2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 2.286) (xy 1.016 1.905) (xy 0 1.524) (xy -1.016 1.143) (xy 0 0.762)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 0.762) (xy 1.016 0.381) (xy 0 0) (xy -1.016 -0.381) (xy 0 -0.762)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 -0.762) (xy 1.016 -1.143) (xy 0 -1.524) (xy -1.016 -1.905) (xy 0 -2.286)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 -2.286) (xy 0 -2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "R_US_1_1"
-				(pin passive line
-					(at 0 3.81 270)
-					(length 1.27)
-					(name ""
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -3.81 90)
-					(length 1.27)
-					(name ""
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "RF_Module:ESP32-S3-WROOM-1"
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -5445,16 +5256,6 @@
 	)
 	(wire
 		(pts
-			(xy 127 40.64) (xy 132.08 40.64)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "5ecbb0c3-2400-49cc-ac41-d3f79a2728ce")
-	)
-	(wire
-		(pts
 			(xy 177.8 114.3) (xy 177.8 115.57)
 		)
 		(stroke
@@ -5712,16 +5513,6 @@
 			(type default)
 		)
 		(uuid "8522fdb9-5232-40d2-8bc1-2908f464d2a8")
-	)
-	(wire
-		(pts
-			(xy 132.08 43.18) (xy 127 43.18)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "895e7bb5-0afc-4c08-a6f7-e711484bea65")
 	)
 	(wire
 		(pts
@@ -6135,7 +5926,7 @@
 	)
 	(wire
 		(pts
-			(xy 113.03 43.18) (xy 119.38 43.18)
+			(xy 113.03 43.18) (xy 120.65 43.18)
 		)
 		(stroke
 			(width 0)
@@ -6215,6 +6006,16 @@
 	)
 	(wire
 		(pts
+			(xy 125.73 43.18) (xy 132.08 43.18)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d5c37d94-f16f-4d94-b07b-6c85c64aead1")
+	)
+	(wire
+		(pts
 			(xy 177.8 114.3) (xy 172.72 114.3)
 		)
 		(stroke
@@ -6252,6 +6053,16 @@
 			(type default)
 		)
 		(uuid "de0f65c4-e1ae-4a57-b676-b62f740945e4")
+	)
+	(wire
+		(pts
+			(xy 125.73 40.64) (xy 132.08 40.64)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "de7b40d7-12db-43a5-b91e-2a554f30e9c1")
 	)
 	(wire
 		(pts
@@ -6335,7 +6146,7 @@
 	)
 	(wire
 		(pts
-			(xy 113.03 40.64) (xy 119.38 40.64)
+			(xy 113.03 40.64) (xy 120.65 40.64)
 		)
 		(stroke
 			(width 0)
@@ -6752,7 +6563,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "039babce-06ab-49f4-af8e-9886eaf33d13")
-		(property "Reference" "J4"
+		(property "Reference" "J5"
 			(at 163.83 96.5199 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6891,7 +6702,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "J4")
+					(reference "J5")
 					(unit 1)
 				)
 			)
@@ -6908,7 +6719,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "050e9431-8bf1-4485-8bf0-40991cfb4f00")
-		(property "Reference" "#PWR036"
+		(property "Reference" "#PWR037"
 			(at 214.63 130.81 0)
 			(hide yes)
 			(show_name no)
@@ -6968,7 +6779,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR036")
+					(reference "#PWR037")
 					(unit 1)
 				)
 			)
@@ -8104,7 +7915,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "16c08604-771c-420b-bc3d-f2da7f9d355f")
-		(property "Reference" "#PWR030"
+		(property "Reference" "#PWR031"
 			(at 177.8 130.81 0)
 			(hide yes)
 			(show_name no)
@@ -8164,7 +7975,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR030")
+					(reference "#PWR031")
 					(unit 1)
 				)
 			)
@@ -8402,7 +8213,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "1d92f7d9-966b-4dea-bd56-c769adefae01")
-		(property "Reference" "#PWR042"
+		(property "Reference" "#PWR043"
 			(at 250.19 130.81 0)
 			(hide yes)
 			(show_name no)
@@ -8462,7 +8273,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR042")
+					(reference "#PWR043")
 					(unit 1)
 				)
 			)
@@ -8840,7 +8651,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "2e2041bd-5f2c-436d-9b2f-5f7c64f05787")
-		(property "Reference" "#PWR034"
+		(property "Reference" "#PWR035"
 			(at 212.09 93.98 0)
 			(hide yes)
 			(show_name no)
@@ -8900,7 +8711,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR034")
+					(reference "#PWR035")
 					(unit 1)
 				)
 			)
@@ -10074,7 +9885,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "47f99425-0ab8-4653-a5b1-40a3c106c01b")
-		(property "Reference" "#PWR040"
+		(property "Reference" "#PWR041"
 			(at 250.19 93.98 0)
 			(hide yes)
 			(show_name no)
@@ -10134,7 +9945,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR040")
+					(reference "#PWR041")
 					(unit 1)
 				)
 			)
@@ -10151,7 +9962,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "48e8d07a-5e57-42f5-ba60-2a6b1898acf3")
-		(property "Reference" "#PWR041"
+		(property "Reference" "#PWR042"
 			(at 250.19 109.22 0)
 			(hide yes)
 			(show_name no)
@@ -10211,7 +10022,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR041")
+					(reference "#PWR042")
 					(unit 1)
 				)
 			)
@@ -10228,7 +10039,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "4a35b157-2b73-4bae-8cfc-1ce86af80124")
-		(property "Reference" "#PWR027"
+		(property "Reference" "#PWR028"
 			(at 177.8 72.39 0)
 			(hide yes)
 			(show_name no)
@@ -10288,7 +10099,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR027")
+					(reference "#PWR028")
 					(unit 1)
 				)
 			)
@@ -10462,7 +10273,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "4da60d93-94eb-4f10-8082-82b9764c74cb")
-		(property "Reference" "#PWR037"
+		(property "Reference" "#PWR038"
 			(at 234.95 85.09 0)
 			(hide yes)
 			(show_name no)
@@ -10522,7 +10333,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR037")
+					(reference "#PWR038")
 					(unit 1)
 				)
 			)
@@ -10540,7 +10351,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "4ff84b19-e3f5-4be4-a757-af2a77797f92")
-		(property "Reference" "#PWR024"
+		(property "Reference" "#PWR025"
 			(at 146.05 160.02 0)
 			(hide yes)
 			(show_name no)
@@ -10600,7 +10411,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR024")
+					(reference "#PWR025")
 					(unit 1)
 				)
 			)
@@ -10774,7 +10585,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "58a91ee6-7bdf-403a-bf74-d511d8c24dcd")
-		(property "Reference" "J6"
+		(property "Reference" "J7"
 			(at 236.22 59.6899 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10913,7 +10724,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "J6")
+					(reference "J7")
 					(unit 1)
 				)
 			)
@@ -10930,7 +10741,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "5a519507-6622-4e9b-84d5-de198497f98d")
-		(property "Reference" "#PWR012"
+		(property "Reference" "#PWR011"
 			(at 63.5 73.66 0)
 			(hide yes)
 			(show_name no)
@@ -10990,7 +10801,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR012")
+					(reference "#PWR011")
 					(unit 1)
 				)
 			)
@@ -11690,7 +11501,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "6beeb2af-e17e-4a3a-98bc-82fd2311a072")
-		(property "Reference" "#PWR021"
+		(property "Reference" "#PWR024"
 			(at 137.16 152.4 0)
 			(hide yes)
 			(show_name no)
@@ -11750,7 +11561,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR021")
+					(reference "#PWR024")
 					(unit 1)
 				)
 			)
@@ -12312,7 +12123,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "7665c802-6e5f-44f6-b968-f841c16e762d")
-		(property "Reference" "C4"
+		(property "Reference" "C5"
 			(at 67.31 163.83 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -12451,7 +12262,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "C4")
+					(reference "C5")
 					(unit 1)
 				)
 			)
@@ -12468,7 +12279,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "76d62a7a-9767-4025-a7d1-a43f568e095f")
-		(property "Reference" "#PWR035"
+		(property "Reference" "#PWR036"
 			(at 214.63 109.22 0)
 			(hide yes)
 			(show_name no)
@@ -12528,7 +12339,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR035")
+					(reference "#PWR036")
 					(unit 1)
 				)
 			)
@@ -12766,7 +12577,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "7b66b1d5-c90a-4a61-9e61-7a44b04fece7")
-		(property "Reference" "#PWR038"
+		(property "Reference" "#PWR039"
 			(at 234.95 121.92 0)
 			(hide yes)
 			(show_name no)
@@ -12826,7 +12637,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR038")
+					(reference "#PWR039")
 					(unit 1)
 				)
 			)
@@ -12999,7 +12810,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "7ffb1e16-9397-4226-bffa-d1a8b4d10873")
-		(property "Reference" "#PWR014"
+		(property "Reference" "#PWR017"
 			(at 102.87 149.86 0)
 			(hide yes)
 			(show_name no)
@@ -13059,7 +12870,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR014")
+					(reference "#PWR017")
 					(unit 1)
 				)
 			)
@@ -13218,7 +13029,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "84f0e9e6-9ed5-481e-96df-58c40004cf71")
-		(property "Reference" "#PWR043"
+		(property "Reference" "#PWR013"
 			(at 66.04 153.67 0)
 			(hide yes)
 			(show_name no)
@@ -13278,7 +13089,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR043")
+					(reference "#PWR013")
 					(unit 1)
 				)
 			)
@@ -13295,7 +13106,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "8663bc92-bf4e-4969-bccb-26ed4538a318")
-		(property "Reference" "#PWR09"
+		(property "Reference" "#PWR010"
 			(at 58.42 73.66 0)
 			(hide yes)
 			(show_name no)
@@ -13355,7 +13166,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR09")
+					(reference "#PWR010")
 					(unit 1)
 				)
 			)
@@ -13373,7 +13184,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "8a161f9d-325a-4211-a501-b63bfc84985b")
-		(property "Reference" "J7"
+		(property "Reference" "J8"
 			(at 236.22 96.5199 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -13512,7 +13323,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "J7")
+					(reference "J8")
 					(unit 1)
 				)
 			)
@@ -13530,7 +13341,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "909a056b-9423-4bac-8600-b12b2d2c695a")
-		(property "Reference" "#PWR019"
+		(property "Reference" "#PWR020"
 			(at 119.38 152.4 0)
 			(hide yes)
 			(show_name no)
@@ -13590,7 +13401,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR019")
+					(reference "#PWR020")
 					(unit 1)
 				)
 			)
@@ -13608,7 +13419,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "92230047-822c-410b-a25d-60de48d29bc3")
-		(property "Reference" "#PWR026"
+		(property "Reference" "#PWR027"
 			(at 162.56 121.92 0)
 			(hide yes)
 			(show_name no)
@@ -13668,7 +13479,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR026")
+					(reference "#PWR027")
 					(unit 1)
 				)
 			)
@@ -14206,7 +14017,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "9f7e5b03-7782-46f2-a43a-dd4318b73600")
-		(property "Reference" "J8"
+		(property "Reference" "J3"
 			(at 60.96 132.08 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -14326,7 +14137,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "J8")
+					(reference "J3")
 					(unit 1)
 				)
 			)
@@ -14636,7 +14447,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "aa4af7d4-3e27-4eb4-b4e6-f1a2c3a03f09")
-		(property "Reference" "#PWR032"
+		(property "Reference" "#PWR033"
 			(at 199.39 121.92 0)
 			(hide yes)
 			(show_name no)
@@ -14696,7 +14507,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR032")
+					(reference "#PWR033")
 					(unit 1)
 				)
 			)
@@ -14870,7 +14681,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "accd3f11-29c7-418a-b5ae-3e90cc3fb8cf")
-		(property "Reference" "#PWR029"
+		(property "Reference" "#PWR030"
 			(at 177.8 109.22 0)
 			(hide yes)
 			(show_name no)
@@ -14930,7 +14741,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR029")
+					(reference "#PWR030")
 					(unit 1)
 				)
 			)
@@ -14948,7 +14759,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "b0409de7-26e0-4dfd-8348-50f7a7f4dfa3")
-		(property "Reference" "#PWR017"
+		(property "Reference" "#PWR018"
 			(at 107.95 165.1 0)
 			(hide yes)
 			(show_name no)
@@ -15008,7 +14819,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR017")
+					(reference "#PWR018")
 					(unit 1)
 				)
 			)
@@ -15103,7 +14914,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "b8fb218f-390c-410d-9e02-0dfea00fb3e2")
-		(property "Reference" "#PWR018"
+		(property "Reference" "#PWR019"
 			(at 113.03 134.62 0)
 			(hide yes)
 			(show_name no)
@@ -15163,7 +14974,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR018")
+					(reference "#PWR019")
 					(unit 1)
 				)
 			)
@@ -15181,7 +14992,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "ba748bd2-723e-4b00-b347-ebecbd1fff3f")
-		(property "Reference" "#PWR020"
+		(property "Reference" "#PWR021"
 			(at 128.27 152.4 0)
 			(hide yes)
 			(show_name no)
@@ -15241,7 +15052,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR020")
+					(reference "#PWR021")
 					(unit 1)
 				)
 			)
@@ -15258,7 +15069,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "ba7d9659-4ffe-40b6-8eb0-ea6d44b998b3")
-		(property "Reference" "#PWR039"
+		(property "Reference" "#PWR040"
 			(at 250.19 72.39 0)
 			(hide yes)
 			(show_name no)
@@ -15318,7 +15129,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR039")
+					(reference "#PWR040")
 					(unit 1)
 				)
 			)
@@ -15336,7 +15147,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "bc007202-fb2e-44f0-9e41-901b855b354c")
-		(property "Reference" "J5"
+		(property "Reference" "J6"
 			(at 200.66 96.5199 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -15475,7 +15286,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "J5")
+					(reference "J6")
 					(unit 1)
 				)
 			)
@@ -15493,7 +15304,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "bf866c41-b7a9-44d6-b95f-835eb7901ad8")
-		(property "Reference" "R2"
+		(property "Reference" "R1"
 			(at 54.61 139.7 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -15630,7 +15441,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "R2")
+					(reference "R1")
 					(unit 1)
 				)
 			)
@@ -15648,7 +15459,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "c34abe60-1aa7-4310-846d-d7e1047c1e51")
-		(property "Reference" "C5"
+		(property "Reference" "C4"
 			(at 45.72 139.7 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -15787,14 +15598,14 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "C5")
+					(reference "C4")
 					(unit 1)
 				)
 			)
 		)
 	)
 	(symbol
-		(lib_id "Device:R_US")
+		(lib_id "Device:R_Small_US")
 		(at 123.19 40.64 90)
 		(unit 1)
 		(body_style 1)
@@ -15826,7 +15637,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
-			(at 123.444 39.624 90)
+			(at 123.19 40.64 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -15847,7 +15658,7 @@
 				)
 			)
 		)
-		(property "Description" "Resistor, US symbol"
+		(property "Description" "Resistor, small US symbol"
 			(at 123.19 40.64 0)
 			(hide yes)
 			(show_name no)
@@ -15928,7 +15739,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "c8238e6f-c69e-40b2-8b30-cb3bd2ff3416")
-		(property "Reference" "#PWR028"
+		(property "Reference" "#PWR029"
 			(at 177.8 93.98 0)
 			(hide yes)
 			(show_name no)
@@ -15988,7 +15799,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR028")
+					(reference "#PWR029")
 					(unit 1)
 				)
 			)
@@ -16314,7 +16125,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "ccc51abb-fa5b-4043-abe6-f1ca6d515f67")
-		(property "Reference" "#PWR013"
+		(property "Reference" "#PWR014"
 			(at 82.55 180.34 0)
 			(hide yes)
 			(show_name no)
@@ -16374,7 +16185,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR013")
+					(reference "#PWR014")
 					(unit 1)
 				)
 			)
@@ -16966,7 +16777,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R_US")
+		(lib_id "Device:R_Small_US")
 		(at 123.19 43.18 270)
 		(unit 1)
 		(body_style 1)
@@ -16997,7 +16808,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
-			(at 122.936 44.196 90)
+			(at 123.19 43.18 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17018,7 +16829,7 @@
 				)
 			)
 		)
-		(property "Description" "Resistor, US symbol"
+		(property "Description" "Resistor, small US symbol"
 			(at 123.19 43.18 0)
 			(hide yes)
 			(show_name no)
@@ -17570,7 +17381,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "ddc91324-560a-4a31-b6a5-4f34efdfe68c")
-		(property "Reference" "R1"
+		(property "Reference" "R2"
 			(at 58.42 163.8299 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17709,7 +17520,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "R1")
+					(reference "R2")
 					(unit 1)
 				)
 			)
@@ -17726,7 +17537,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "ddff3d6e-9901-4c69-988e-60eb9d774551")
-		(property "Reference" "#PWR033"
+		(property "Reference" "#PWR034"
 			(at 212.09 72.39 0)
 			(hide yes)
 			(show_name no)
@@ -17786,7 +17597,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR033")
+					(reference "#PWR034")
 					(unit 1)
 				)
 			)
@@ -17960,7 +17771,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "e4f1afd2-a1ba-4bd7-b178-cb1cbc1ecd6b")
-		(property "Reference" "#PWR06"
+		(property "Reference" "#PWR09"
 			(at 55.88 181.61 0)
 			(hide yes)
 			(show_name no)
@@ -18020,7 +17831,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR06")
+					(reference "#PWR09")
 					(unit 1)
 				)
 			)
@@ -18292,7 +18103,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "e9db9dd2-2072-46e4-aca6-cb8018542c61")
-		(property "Reference" "#PWR031"
+		(property "Reference" "#PWR032"
 			(at 196.85 85.09 0)
 			(hide yes)
 			(show_name no)
@@ -18352,7 +18163,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR031")
+					(reference "#PWR032")
 					(unit 1)
 				)
 			)
@@ -18505,7 +18316,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "f0163123-e960-4fac-b29e-dda31d8acdfd")
-		(property "Reference" "#PWR011"
+		(property "Reference" "#PWR06"
 			(at 48.26 151.13 0)
 			(hide yes)
 			(show_name no)
@@ -18565,7 +18376,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR011")
+					(reference "#PWR06")
 					(unit 1)
 				)
 			)
@@ -18661,7 +18472,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "f390079d-f869-497c-a8d3-c3f1e8a21476")
-		(property "Reference" "#PWR025"
+		(property "Reference" "#PWR026"
 			(at 162.56 85.09 0)
 			(hide yes)
 			(show_name no)
@@ -18721,7 +18532,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR025")
+					(reference "#PWR026")
 					(unit 1)
 				)
 			)
@@ -18739,7 +18550,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "f97d2efd-c999-41ec-9f96-566608950db0")
-		(property "Reference" "#PWR010"
+		(property "Reference" "#PWR012"
 			(at 64.77 181.61 0)
 			(hide yes)
 			(show_name no)
@@ -18799,7 +18610,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "#PWR010")
+					(reference "#PWR012")
 					(unit 1)
 				)
 			)
@@ -18816,7 +18627,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "fbb5b1fd-f8bd-44f8-b700-b9c40fce9c8e")
-		(property "Reference" "J3"
+		(property "Reference" "J4"
 			(at 137.16 35.56 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18936,7 +18747,7 @@
 		(instances
 			(project "ERSRemoteControl"
 				(path "/23a85c09-d839-4092-87ba-e03c754c61e3"
-					(reference "J3")
+					(reference "J4")
 					(unit 1)
 				)
 			)
