@@ -268,15 +268,27 @@ int32_t mc_lock_ring(void)
 	LOG_INF("M1 - DEPLOY1 high");
 	// (1) make sure BDS63150 is on, not in power saving mode:
 	rc = mc_set_not_motor_ps(0x0);
-	if (rc != 0) { LOG_ERR("Trouble motor_ps!"); }
+	if (rc != 0) {
+// TODO [ ] Consider exiting on this error:
+	       	LOG_ERR("Failed to drive BDS63150 power mode pin, err %d", rc);
+		goto done;
+       	}
 
 	// (2) set DAC to produce minimal current needed to turn over lock ring motor:
 	rc = dac_write_output_reg(DEV_DAC_SETTING_IN_SITU);
-	if (rc != 0) { LOG_ERR("Trouble set DAC out!"); }
+	if (rc != 0) {
+// TODO [ ] Consider exiting on this error:
+	       	LOG_ERR("Failed to set DAC output level, err %d", rc);
+		goto done;
+       	}
 
 	// (3) apply logic levels to BDS63150 IN1, IN2 pins for H-bridge output:
 	rc = mc_drive_deploy2_high();
-	if (rc != 0) { LOG_ERR("Trouble set DEPLOY1, DEPLOY1!"); }
+	if (rc != 0) {
+// TODO [ ] Consider exiting on this error:
+	       	LOG_ERR("Failed to drive BDS63150 DEPLOY 1 and or 2 lines, err %d", rc);
+		goto done;
+       	}
 
 	enum lock_ring_position ring_pos = RING_POS_UNKNOWN;
 	uint32_t i;
@@ -311,6 +323,7 @@ int32_t mc_lock_ring(void)
 	LOG_INF("motor currents:");
 	show_motor_currents();
 
+done:
 	return rc;
 }
 
@@ -388,17 +401,20 @@ int32_t ers_init_motor_ctrl(void)
 	}
 
 	rc = mc_configure_not_motor_ps();
-	if (rc)
-	{
+	if (rc) {
 		LOG_ERR("Configure not_motor_ps signal out, err %d", rc);
 		return rc;
 	}
 
 	// Drive NOT_MOTOR_PS high to assure motor H-bridge is powered:
 	rc = mc_set_not_motor_ps(0);
-	LOG_INF("- DEV 1015 - setting not_motor_ps to 1 returns %d", rc);
+	if (rc < 0) {
+		LOG_ERR("Failed to drive not_motor_ps line, err %d", rc);
+		goto done;
+	}
 
 	motor_control_initialized_fs = true;
 
+done:
         return rc; 
 }

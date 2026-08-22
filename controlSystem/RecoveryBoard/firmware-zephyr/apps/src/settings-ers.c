@@ -60,7 +60,7 @@ static int direct_loader_immediate_value(const char *name, size_t len,
 			rc = read_cb(cb_arg, one_value->dest, len);
 			if (rc >= 0) {
 				one_value->fetched = 1;
-				LOG_INF("immediate load: OK.");
+				// LOG_INF("immediate load: OK.");
 				return 0;
 			}
 

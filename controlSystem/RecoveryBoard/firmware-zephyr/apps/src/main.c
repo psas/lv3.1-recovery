@@ -118,11 +118,12 @@ int main(void)
 		ekget_motor_isense(&b);
 		// LOG_INF("motor_isense ADC_IN9 = %u", b);
 
+#if 0
 		rc = pwm_play_melody();
-		if (rc != 0)
-		{
+		if (rc != 0) {
 			LOG_ERR("Failed to actuate ERS buzzer, err %d", rc);
 		}
+#endif // 0
 
 		k_msleep(ERS_MAIN_LOOP_PERIOD_MS);
 	}
