@@ -30,6 +30,12 @@ config GPIO_THREAD_STACK_SIZE
         help
           Select stack size for ERS GPIO thread
 
+config PWM_THREAD_STACK_SIZE
+        int "ERS PWM thread stack size"
+        default 512
+        help
+          Select stack size for ERS GPIO thread
+
 # ERS firmware thread priorities
 
 config ADC_THREAD_PRIORITY
@@ -56,6 +62,13 @@ config GPIO_THREAD_PRIORITY
         default 4
         help
           Priority of thread which primarily reads I/O pins of the ERS board.
+
+config PWM_THREAD_PRIORITY
+        int "ERS PWM thread priority"
+        default 6
+        help
+          Priority of thread to control PWM block, used to generate audible
+	  tones.
 
 # TODO [ ] Give all ERS firmware modules a Zephyr log config reference here:
 
