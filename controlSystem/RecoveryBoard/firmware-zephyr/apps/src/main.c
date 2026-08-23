@@ -13,10 +13,10 @@
 #include <ers-adc.h>
 #include <ers-can.h>
 #include <ers-dac.h>
+#include <ers-pwm.h>
 #include <gpio-in.h>
 #include <keeper.h>
 #include <motor-control.h>
-#include <ers-pwm.h>
 #include <settings-ers.h>
 #include <shell-support.h>
 #include <status-led.h>
@@ -89,6 +89,11 @@ int main(void)
 		LOG_ERR("Failed to retrieve Hall sensor 2 cut-off values, err = %d", rc);
 	} else {
 		LOG_INF("Hall sensor 2 cut-off values retrieved");
+	}
+
+	rc = pwm_play_pattern(PWM_APP_BANNER_PATTERN);
+	if (rc != 0) {
+		LOG_ERR("Failed to play audio start up pattern, err = %d", rc);
 	}
 
 	LOG_INF("main() entering 'while (1)' loop . . .");
