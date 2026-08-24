@@ -103,7 +103,7 @@ void arbiter_show_hall_state_limits(const struct shell *shell)
 void cmd_set_default_limits(const struct shell *shell, size_t argc, char **argv)
 {
 	LOG_INF("Setting Hall sensor limit default values . . .");
-	int32_t rc = set_hall_sensor_default_limits();
+	int32_t rc = keeper_set_hall_sensor_default_limits();
 	if (rc != 0) {
 		LOG_ERR("Failed to set hall limit default values, err %d", rc);
 	} else {
@@ -173,9 +173,6 @@ void arb_mesg(char *fmt, ...)
 	}
 
 	size = (size_t) n + 1;      /* One extra byte for '\0' */
-	// p = malloc(size);
-	// if (p == NULL)
-	// return NULL;
 	if (size > DEV_ARB_MESG_SIZE) {
 		LOG_WRN("Messages truncated, is %d chars, only able to show %d",
 			size, DEV_ARB_MESG_SIZE);
@@ -186,9 +183,8 @@ void arb_mesg(char *fmt, ...)
 	n = vsnprintf(p, size, fmt, ap);
 	va_end(ap);
 
-	ek_get_sys_diag_mode(&rc);
+	keeper_get_diag_mode(&rc);
 	if (rc == true) {
-		// LOG_INF("%s", p);
 		LOG_INF("(s %d) %s", size, p);
 	}
 }

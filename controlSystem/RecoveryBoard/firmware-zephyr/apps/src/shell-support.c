@@ -16,21 +16,22 @@
  *   RTOS is configured to run its shell facility.
  */
 
-#include <stdlib.h>
+#include "arbiter.h"
+#include "ers-adc.h"
+#include "ers-dac.h"
+#include "ers-util.h"
+#include "keeper.h"
+#include "motor-control.h"
+#include "settings-ers.h"
+#include "status-led.h"
 
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/shell/shell.h>
 
-LOG_MODULE_REGISTER(shell_support, LOG_LEVEL_INF);
+#include <stdlib.h>
 
-#include <arbiter.h>
-#include <ers-adc.h>
-#include <ers-dac.h>
-#include <ers-util.h>
-#include <keeper.h>
-#include <motor-control.h>
-#include "settings-ers.h"
+LOG_MODULE_REGISTER(shell_support, LOG_LEVEL_INF);
 
 #define SHELL_SUPPORT_THREAD_STACK_SIZE 512
 #define SHELL_SUPPORT_THREAD_PRIORITY 5
@@ -63,7 +64,7 @@ static int cmd_diag_periodic_on(const struct shell *shell, size_t argc, char *ar
         ARG_UNUSED(argc);
         ARG_UNUSED(argv);
 
-	ek_sys_diag_periodic();
+	keeper_set_diag_periodic();
 	return 0;
 }
 
@@ -73,15 +74,7 @@ static int cmd_diag_periodic_off(const struct shell *shell, size_t argc, char *a
         ARG_UNUSED(argc);
         ARG_UNUSED(argv);
 
-	ek_sys_diag_quiet();
-	return 0;
-}
-
-static int cmd_diag_show_shell_addr(const struct shell *shell, size_t argc, char *argv[])
-{
-	shell_fprintf(shell, SHELL_NORMAL, "- DEV 0226 - shell has addr 0x%08X\n",
-			(uint32_t)&shell);
-	ek_set_shell_address((const uint32_t)&shell);
+	keeper_clear_diag_periodic();
 	return 0;
 }
 
@@ -93,9 +86,6 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 	SHELL_CMD_ARG(off, NULL,
 		"disable ERS periodic diagnostics",
 		cmd_diag_periodic_off, 0, 0),
-	SHELL_CMD_ARG(shell-addr, NULL,
-		"show programmatic address of shell struct",
-		cmd_diag_show_shell_addr, 0, 0),
 	SHELL_SUBCMD_SET_END
 	);
 
@@ -105,18 +95,27 @@ SHELL_CMD_REGISTER(diag, &ers_cmds_diag, "- ERS - diagnostics", NULL);
 // - COMMAND SET - status LED
 //----------------------------------------------------------------------
 
+// TODO [ ] Amend "status LED on" command to "set LED pattern", which will
+//          require an argument for the pattern.
+
 static int cmd_status_led_on(const struct shell *shell, size_t argc, char *argv[])
 {
+	int32_t rc = 0;
 	shell_fprintf(shell, SHELL_NORMAL, "Enable ERS status LED . . .\n\r");
-	ek_enable_status_led();
-	return 0;
+	rc = status_led_set_pattern(STATUS_LED_HEARTBEAT);
+	if (rc < 0) {
+		shell_print(shell, "Failed to set status LED pattern, err %d", rc);
+	}
+	return rc;
 }
 
 static int cmd_status_led_off(const struct shell *shell, size_t argc, char *argv[])
 {
+	int32_t rc = 0;
 	shell_fprintf(shell, SHELL_NORMAL, "Disable ERS status LED . . . \n\r");
-	ek_disable_status_led();
-	return 0;
+	rc = status_led_set_pattern(STATUS_LED_OFF);
+
+	return rc;
 }
 
 SHELL_STATIC_SUBCMD_SET_CREATE(

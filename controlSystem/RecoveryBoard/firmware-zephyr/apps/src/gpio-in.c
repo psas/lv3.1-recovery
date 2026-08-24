@@ -206,7 +206,7 @@ void gpio_in_thread_entry(void *arg1, void *arg2, void *arg3)
 		val[ERS_SIG_NOT_UMB_ON] = gpio_pin_get_dt(&not_umb_on);
 		val[ERS_SIG_NOT_MOTOR_FAILA] = gpio_pin_get_dt(&not_motor_faila);
 
-		ek_get_sys_diag_mode(&rc);
+		keeper_get_diag_mode(&rc);
 		rc = 0; // - DEV 0226 -
 		if (rc > 0)
 		{

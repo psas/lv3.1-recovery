@@ -56,15 +56,42 @@ struct audio_pattern audio_pattern[] = {
 	},
 	{
 		.notes = {
-			{ .period = 1300000, .duration_ms = 220, },
-			{ .period = 1700000, .duration_ms = 220, },
-			{ .period = 2110000, .duration_ms = 220, },
-			{ .period = 2500000, .duration_ms = 220, },
 			{ .period = 2800000, .duration_ms = 220, },
+			{ .period = 2500000, .duration_ms = 220, },
+			{ .period = 2110000, .duration_ms = 220, },
+			{ .period = 1700000, .duration_ms = 220, },
+			{ .period = 1300000, .duration_ms = 220, },
 		},
 		.repetitions = 1,
 		.rep_count = 0,
 		.last_note = 4,
+		.note_idx = 0,
+	},
+	// Lumidelic "Mandala"
+	{
+		.notes = {
+			{ .period = 0, .duration_ms = 220, },
+			{ .period = 2700000, .duration_ms = 220, },
+			{ .period = 2170000, .duration_ms = 220, },
+			{ .period = 2000000, .duration_ms = 220, },
+
+			{ .period = 0, .duration_ms = 220, },
+			{ .period = 1800000, .duration_ms = 440, },
+			{ .period = 2700000, .duration_ms = 220, },
+#if 1
+			{ .period = 0, .duration_ms = 220, },
+			{ .period = 2700000, .duration_ms = 220, },
+			{ .period = 2170000, .duration_ms = 220, },
+			{ .period = 2000000, .duration_ms = 220, },
+
+			{ .period = 0, .duration_ms = 220, },
+			{ .period = 1800000, .duration_ms = 440, },
+			{ .period = 0, .duration_ms = 220, },
+#endif // 0
+		},
+		.repetitions = 1,
+		.rep_count = 0,
+		.last_note = 14,
 		.note_idx = 0,
 	},
 };
@@ -230,6 +257,10 @@ int32_t pwm_play_pattern(enum pwm_audio_pattern pattern)
 		break;
 	case PWM_APP_BANNER_PATTERN:
 		selected_pattern_fs = PWM_APP_BANNER_PATTERN;
+		pwm_state_fs = PWM_PLAYING;
+		break;
+	case PWM_APP_15_NOTES:
+		selected_pattern_fs = PWM_APP_15_NOTES;
 		pwm_state_fs = PWM_PLAYING;
 		break;
 	case PWM_APP_HEARTBEAT:

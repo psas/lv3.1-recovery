@@ -65,7 +65,7 @@ int main(void)
         rc = ers_init_shell_support();
 	LOG_INF("ERS command initialization returns %d", rc);
 
-	rc = ers_init_keeper();
+	rc = keeper_init();
 	LOG_INF("ERS data \"keeper\" initialization returns %d", rc);
 
 	rc = ers_init_arbiter();
@@ -91,9 +91,19 @@ int main(void)
 		LOG_INF("Hall sensor 2 cut-off values retrieved");
 	}
 
+	// Play start up, or 'banner' audio pattern:
+#if 0
 	rc = pwm_play_pattern(PWM_APP_BANNER_PATTERN);
 	if (rc != 0) {
 		LOG_ERR("Failed to play audio start up pattern, err = %d", rc);
+	}
+#endif
+
+	// Test of alternate audio pattern:
+	k_msleep(1000);
+	rc = pwm_play_pattern(PWM_APP_15_NOTES);
+	if (rc != 0) {
+		LOG_ERR("Failed to play 15-note audio pattern, err = %d", rc);
 	}
 
 	LOG_INF("main() entering 'while (1)' loop . . .");
@@ -101,7 +111,7 @@ int main(void)
 	while (1)
 	{
 		loop_count++;
-		ek_get_sys_diag_mode(&rc);
+		keeper_get_diag_mode(&rc);
 		// TODO [ ] Review call to check diagnostics mode and remove the
 		//          following unconditional clearing of 'rc' when mode
 		//          check is determined to be a sensible check:

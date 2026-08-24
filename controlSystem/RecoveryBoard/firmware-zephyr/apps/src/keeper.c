@@ -1,28 +1,22 @@
 /**
- * Copyright (c) 2025 Portland State Aerospace Society
- *
- * SPDX-License-Identifier: Apache-2.0
+ * @file
+ * @brief ERS keeper module, to hold and to share run time state.
  */
 
-#include <stdlib.h>
+// TODO [ ] Standardize public API names to begin with 'keeper_'.
+// TODO [x] Double quote local header filenames here and in all ERS sources.
+#include "arbiter.h"
+#include "ers-config.h"
+#include "keeper.h"
+#include "status-led.h"
+#include "settings-ers.h"
 
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
+#include <stdlib.h>
+
 LOG_MODULE_REGISTER(keeper, LOG_LEVEL_INF);
-
-// TODO [ ] Double quote local header filenames here and in all ERS sources.
-#include <arbiter.h>
-#include <ers-config.h>
-#include <keeper.h>
-#include <status-led.h>
-#include "settings-ers.h"
-
-/**
- * @defgroup status LED
- */
-
-static atomic_t status_led_config = ATOMIC_INIT(true);
 
 /**
  * @defgroup digital_inputs
@@ -79,6 +73,8 @@ struct hall_sensor_limits {
 
 static struct hall_sensor_limits hall_sensor_fs[HALL_SENSOR_COUNT];
 
+// TODO [ ] Determine whether var 'ring_pos_interval' actually used, only seems to be referenced
+//          in this file:
 // App determines lock ring position at this interval of time:
 static atomic_t ring_pos_interval = ATOMIC_INIT(0);
 
@@ -124,9 +120,6 @@ struct ers_config_and_state {
 
 // Support run time toggling of diagnostics which share UART with Zephyr shell:
 static atomic_t ers_diag_flag_fs = ATOMIC_INIT(0);
-
-// - DEV 0226 -
-static atomic_t ers_shell_address_fs = ATOMIC_INIT(0);
 
 //----------------------------------------------------------------------
 // - SECTION - module concurrency and state
@@ -814,55 +807,26 @@ void ekget_ready_state(uint32_t* value)
  *   frequency, enable and disable ways.
  */
 
-void ek_sys_diag_periodic(void)
+void keeper_set_diag_periodic(void)
 {
 	atomic_set(&ers_diag_flag_fs, (atomic_val_t)true);
 }
 
-void ek_sys_diag_quiet(void)
+void keeper_clear_diag_periodic(void)
 {
 	atomic_set(&ers_diag_flag_fs, (atomic_val_t)false);
 }
 
-void ek_get_sys_diag_mode(uint32_t* value)
+void keeper_get_diag_mode(uint32_t* value)
 {
 	*value = atomic_get(&ers_diag_flag_fs);
-}
-
-void ek_set_shell_address(const uint32_t addr)
-{
-	atomic_set(&ers_shell_address_fs, (atomic_val_t)addr);
-}
-
-void ek_get_shell_address(uint32_t *addr)
-{
-	*addr = atomic_get(&ers_shell_address_fs);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// - DATA GROUP - (7) status LED settings
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-void ek_enable_status_led(void)
-{
-	atomic_set(&status_led_config, (atomic_val_t)true);
-}
-
-void ek_disable_status_led(void)
-{
-	atomic_set(&status_led_config, (atomic_val_t)false);
-}
-
-void ek_get_status_led_config(uint32_t* config)
-{
-	*config = atomic_get(&status_led_config);
 }
 
 //----------------------------------------------------------------------
 // - SECTION - initialization
 //----------------------------------------------------------------------
 
-int32_t set_hall_sensor_default_limits(void)
+int32_t keeper_set_hall_sensor_default_limits(void)
 {
 	int32_t rc = set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_UNDER, HALL_LIMIT_V_UNDER_S1);
 	rc |= set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_INACTIVE, HALL_LIMIT_V_INACTIVE_S1);
@@ -893,7 +857,7 @@ static int32_t initialize_system_state_vars(void)
 	summary_state.can_bus_ok = ATOMIC_INIT(0);
 	summary_state.ready_flag = ATOMIC_INIT(0);
 
-	rc = set_hall_sensor_default_limits();
+	rc = keeper_set_hall_sensor_default_limits();
 
 	if (rc != 0)
 	{
@@ -901,14 +865,15 @@ static int32_t initialize_system_state_vars(void)
 		rc = -EINVAL;
 	}
 
-	//TODO [ ] Call settings module to read ring lock count and unlock count:
+	// Retrieve (read from flash) ring lock event count and unlock event count:
+
 	rc = retrieve_ers_setting(KEY_NAME_LOCK_COUNT, (void *)count, sizeof(count));
 	if (rc != 0) {
-		LOG_ERR("Failed to read ring lock events count from flash, err %d", rc);
+		LOG_ERR("Failed to retrieve ring lock event count, err %d", rc);
 		set_ring_lock_event_count(RING_LOCK_EVENT_STARTING_COUNT);
 		rc = store_ers_setting(KEY_NAME_LOCK_COUNT, (void *)count, sizeof(count));
 		if (rc != 0) {
-			LOG_ERR("Failed to write default ring lock count value, err %d", rc);
+			LOG_ERR("Failed to write ring lock count, err %d", rc);
 		}
 	} else {
 		set_ring_lock_event_count(count);
@@ -916,11 +881,11 @@ static int32_t initialize_system_state_vars(void)
 
 	rc = retrieve_ers_setting(KEY_NAME_UNLOCK_COUNT, (void *)count, sizeof(count));
 	if (rc != 0) {
-		LOG_ERR("Failed to read ring unlock events count from flash, err %d", rc);
+		LOG_ERR("Failed to retrieve ring unlock events count, err %d", rc);
 		set_ring_unlock_event_count(RING_UNLOCK_EVENT_STARTING_COUNT);
 		rc = store_ers_setting(KEY_NAME_UNLOCK_COUNT, (void *)count, sizeof(count));
 		if (rc != 0) {
-			LOG_ERR("Failed to write default ring unlock count value, err %d", rc);
+			LOG_ERR("Failed to write ring unlock count, err %d", rc);
 		}
 	} else {
 		set_ring_unlock_event_count(count);
@@ -929,7 +894,7 @@ static int32_t initialize_system_state_vars(void)
 	return rc;
 }
 
-int32_t ers_init_keeper(void)
+int32_t keeper_init(void)
 {
 	k_mutex_init(&hall_sensors_mtx);
 	initialize_system_state_vars();

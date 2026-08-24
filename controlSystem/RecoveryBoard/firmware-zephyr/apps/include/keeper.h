@@ -34,7 +34,7 @@
  * @return 0 without condition.
  */
 
-int32_t ers_init_keeper(void);
+int32_t keeper_init(void);
 
 //----------------------------------------------------------------------
 // - SECTION - ERS configuration
@@ -67,7 +67,7 @@ int32_t get_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
  * @brief Routine to restore hall sensor limits to default values.
  */
 
-int32_t set_hall_sensor_default_limits(void);
+int32_t keeper_set_hall_sensor_default_limits(void);
 
 /**
  * @brief Following four routines implement custom Zephyr shell commands.  As
@@ -218,16 +218,8 @@ void ekget_ready_state(uint32_t* value);
 
 // ERS diagnostics
 
-void ek_sys_diag_periodic(void);
-void ek_sys_diag_quiet(void);
-void ek_get_sys_diag_mode(uint32_t* value);
-void ek_set_shell_address(const uint32_t addr);
-void ek_get_shell_address(uint32_t *addr);
-
-// Status LED
-
-void ek_enable_status_led(void);
-void ek_disable_status_led(void);
-void ek_get_status_led_config(uint32_t* config);
+void keeper_set_diag_periodic(void);
+void keeper_clear_diag_periodic(void);
+void keeper_get_diag_mode(uint32_t* value);
 
 #endif // ERS_KEEPER_H
