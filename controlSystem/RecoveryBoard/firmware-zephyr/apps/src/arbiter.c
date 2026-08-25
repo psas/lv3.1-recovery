@@ -30,10 +30,10 @@ LOG_MODULE_REGISTER(arbiter, LOG_LEVEL_INF);
 // Select an ERS battery voltage "ok" threshold of 9.0 VDC, in tenths of a volt:
 #define BATTERY_VOLTAGE_OK_THRESHOLD_TENTHS_V 90
 
-#define ERS_ARBITER_SLEEP_PERIOD_MS 89
+// TODO [ ] Remove this symbol, after verifying that arbiter main loop works as expected:
+// #define RING_POS_PERIOD_MS 100
 
-#define RING_POS_PERIOD_MS 100
-
+// TODO [ ] Remove this symbol, after verifying that arbiter main loop works as expected:
 #define DEV_DETERMINE_RING_POSITION_IN_MAIN_LOOP
 
 //----------------------------------------------------------------------
@@ -43,7 +43,8 @@ LOG_MODULE_REGISTER(arbiter, LOG_LEVEL_INF);
 K_THREAD_STACK_DEFINE(arbiter_thread_stack, CONFIG_ARBITER_THREAD_STACK_SIZE);
 struct k_thread arbiter_thread_data;
 
-static enum lock_ring_position ring_position_fs = RING_POS_UNKNOWN;
+// TODO [ ] Remove this variable, after verifying that arbiter main loop works as expected:
+// static enum lock_ring_position ring_position_fs = RING_POS_UNKNOWN;
 
 //----------------------------------------------------------------------
 // - SECTION - routines
@@ -376,6 +377,7 @@ char *arbiter_ring_pos_to_str(const enum lock_ring_position pos)
         }
 }
 
+#if 0
 //----------------------------------------------------------------------
 // - SECTION - arbiter scheduled elements
 //----------------------------------------------------------------------
@@ -386,7 +388,6 @@ void determine_ring_pos_work_handler(struct k_work *work)
 {
 	static uint32_t call_count = 0;
 
-	// call arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 	call_count++;
 	int32_t rc = arbiter_determine_ring_state(&ring_position_fs);
 	if (rc != 0) {
@@ -442,13 +443,20 @@ int32_t arbiter_set_ring_pos_detection_interval(const uint32_t timeout_ms)
 
 	return 0;
 }
+#endif // 0
+
+int32_t arbiter_set_ring_pos_detection_interval(const uint32_t timeout_ms)
+{
+	LOG_WRN("- DEV 0825 - stub function");
+	return -1;
+}
 
 /**
  * @brief Routine to apply a threshold test to latest battery voltage and to
  *   update a flag to indicate whether batter voltage ok.
  */
 
-int32_t determine_batt_ok(void)
+static int32_t determine_batt_ok(void)
 {
 	int32_t batt_voltage_in_tenths_v = 0;
 	ekget_batt_read_dv(&batt_voltage_in_tenths_v);
@@ -495,16 +503,21 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 	int32_t rc = 0;
 
 	while (1) {
-#ifdef DEV_DETERMINE_RING_POSITION_IN_MAIN_LOOP
 		rc = arbiter_determine_ring_state(&ring_position);
-		// LOG_INF("ring state:  %s (%d)", str_ptr, ring_position);
-#endif
+		if (rc < 0) {
+			LOG_ERR("Failed to determine lock ring position, err %d", rc);
+		}
 
-// TODO [ ] Call battery state determination code
 		rc = calc_battery_voltage();
 		// LOG_INF("calc battery voltage returns status %d", rc);
+		if (rc < 0) {
+			LOG_ERR("Failed to calculate battery voltage, err %d", rc);
+		}
 
 		rc = determine_batt_ok();
+		if (rc < 0) {
+			LOG_ERR("Failed to determine if battery ok, err %d", rc);
+		}
 
 		keeper_get_batt_ok(&battery_ok);
 		keeper_get_can_bus_ok(&can_bus_ok);
@@ -514,15 +527,13 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 		arb_mesg("- DEV 0105 - batt_ok %d, can_ok %d, ring_state %d",
 			battery_ok, can_bus_ok, ring_state);
 		if (battery_ok && can_bus_ok && (ring_state == RING_STATE_LOCKED)) {
-// TODO [ ] Check that rocket ready state should be determined here, as there appears to be
-//          such logic in the ERS CAN module.
 			keeper_set_ready_state(true);
 		} else {
 			keeper_set_ready_state(false);
 		}
 
 		loop_count++;
-		k_msleep(ERS_ARBITER_SLEEP_PERIOD_MS);
+		k_msleep(CONFIG_ARBITER_LOOP_SLEEP_PER_MS);
 	}
 }
 
@@ -542,8 +553,9 @@ int32_t arbiter_init(void)
 		LOG_ERR("ERROR spawning arbiter thread\n");
 	}
 
+// TODO [ ] Determine whether this timer needed at all, given thread entry function loop:
 #ifndef DEV_DETERMINE_RING_POSITION_IN_MAIN_LOOP
-	k_timer_start(&ring_position_timer, K_MSEC(RING_POS_PERIOD_MS), K_MSEC(RING_POS_PERIOD_MS));
+	// k_timer_start(&ring_position_timer, K_MSEC(RING_POS_PERIOD_MS), K_MSEC(RING_POS_PERIOD_MS));
 #endif
 
 	return rc;

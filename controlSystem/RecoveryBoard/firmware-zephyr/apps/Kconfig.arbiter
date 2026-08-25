@@ -1,0 +1,25 @@
+# @file
+# @brief ERS Zephyr arbiter module configuration file.
+
+menuconfig ERS_ARBITER
+	bool "ERS arbiter module app settings"
+	default y
+	help
+	  Enable ERS symbols to configure the recovery firmware arbiter module.
+
+if ERS_ARBITER
+
+config ARBITER_LOOP_SLEEP_PER_MS
+	int "Arbiter loop default sleep period in milliseconds"
+	default 100
+	help
+	  Select a sleep period in milliseconds for the recovery system arbiter
+	  main loop.  Must be short enough to allow for lock ring position
+	  determination to occur close enough to apogee detection, to release
+	  the parachutes drogue and main, to provide for full and safe recovery.
+
+endif # ERS_ARBITER
+
+module = ERS_ARBITER
+module-str = ERS arbiter module
+source "subsys/logging/Kconfig.template.log_config"

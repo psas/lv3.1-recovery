@@ -32,7 +32,7 @@ config GPIO_THREAD_STACK_SIZE
 
 config PWM_THREAD_STACK_SIZE
         int "ERS PWM thread stack size"
-        default 512
+        default 768
         help
           Select stack size for ERS GPIO thread
 
@@ -76,13 +76,9 @@ module = ADC
 module-str = ADC module
 source "subsys/logging/Kconfig.template.log_config"
 
-module = ARBITER
-module-str = arbiter module
-source "subsys/logging/Kconfig.template.log_config"
+# ARBITER module has a dedicated Kconfig file
 
-module = CAN
-module-str = CAN module
-source "subsys/logging/Kconfig.template.log_config"
+# CAN module has a dedicated Kconfig file
 
 module = ERS_MOTOR_CONTROL
 module-str = motor control module
@@ -100,8 +96,10 @@ module = STATUS_LED
 module-str = ERS status led
 source "subsys/logging/Kconfig.template.log_config"
 
-# Following Kconfig inclusion needed to support Zephyr logging template macros
-source "Kconfig.zephyr"
-
 # ERS application specific
+rsource "Kconfig.arbiter"
 rsource "Kconfig.can"
+
+# Following Kconfig inclusion needed to support Zephyr logging template macros,
+# and needed for larger Zephyr code and framework support:
+source "Kconfig.zephyr"
