@@ -113,8 +113,7 @@ static uint8_t ers_small_payload_fs[1] = {0};
 
 void clear_flag_can_ok_work_handler(struct k_work *work)
 {
-    // LOG_INF("CAN module timer expired!");
-    ekset_can_bus_ok(0);                    // in "clear CANBus OK flag" work handler
+	keeper_set_can_bus_ok(0); // in "clear CANBus OK flag" work handler
 }
 
 K_WORK_DEFINE(clear_flag_can_ok_work, clear_flag_can_ok_work_handler);
@@ -176,7 +175,7 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
 
 	// (1)
 	enum lock_ring_state ring_state = RING_STATE_UNKNOWN;
-	ekget_ring_status(&ring_state);
+	keeper_get_ring_status(&ring_state);
 
 	// (2)
 	uint32_t battery_voltage = 0;
@@ -184,7 +183,7 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
 
 	// (3)
 	uint32_t batt_ok_flag = 0;
-	ekget_batt_ok(&batt_ok_flag);
+	keeper_get_batt_ok(&batt_ok_flag);
 
 	// (4 . . . drogue chute board detected power status)
 	uint32_t not_umb_on = 0;
@@ -192,7 +191,11 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
 
 	// (5)
 	uint32_t can_bus_ok_flag = 0;            // define local var in "prep and send status frame"
-	ekget_can_bus_ok(&can_bus_ok_flag);
+	keeper_get_can_bus_ok(&can_bus_ok_flag);
+
+	// TODO [ ] With all these drogue references, verify that this routine
+	//          properly supports both drogue chute and main chute firmware
+	//          apps.
 
 	// ring status: 0 = uninitialized, 1 = unlocked, 2 = in between, 3 = locked, 4 = error
 	ers_state_vars_fs[IDX_DROGUE_RING_STATE] = (uint8_t)(ring_state);
@@ -201,9 +204,18 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
 	// TODO [ ] mask not_umb_on with 0x1 to assure Boolean value:
 	ers_state_vars_fs[IDX_DROGUE_SHORE_POW_STATUS] = (uint8_t)(not_umb_on);
 	ers_state_vars_fs[IDX_DROGUE_CAN_BUS_OK] = (uint8_t)(can_bus_ok_flag & 0xFF);
-	ers_state_vars_fs[IDX_DROGUE_READY] = 0;
+	// ers_state_vars_fs[IDX_DROGUE_READY] = 0;
 	ers_state_vars_fs[IDX_RESERVED_01] = 0;
 	ers_state_vars_fs[IDX_RESERVED_02] = 0;
+
+	// We can sanity check "rocket ready" status here, but the check
+	// necessarily duplicates the logical test of whether the rocket is
+	// ready.
+	//
+	// Note that the arbiter module is where "rocket ready" is determined.
+	//
+	// There is also a question of race conditions, where some inputs may
+	// have changed since rocket ready last determined.
 
 	ers_state_vars_fs[IDX_DROGUE_READY] = 
 	  (ers_state_vars_fs[IDX_DROGUE_RING_STATE] == 3) &&
@@ -305,7 +317,7 @@ void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 		if (frame.id == MSG_ID_TELEMETRUM_SENDER) {
 			k_timer_start(&telemetrum_check_timer, K_SECONDS(2), K_SECONDS(2));
 			LOG_INF("RX %X - telemetrum heartbeat", frame.id);
-			ekset_can_bus_ok(1);
+			keeper_set_can_bus_ok(1);
 		}
 
 		switch (frame.id)

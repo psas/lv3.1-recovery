@@ -217,7 +217,7 @@ int32_t mc_update_lock_count(void)
 		val += 1;
 	}
 
-	set_ring_lock_event_count(val);
+	keeper_set_lock_event_count(val);
 
 	LOG_INF("- DEV 0104 - storing ring lock event count of %u", val);
 	rc = store_ers_setting(KEY_NAME_LOCK_COUNT, (const void *)val, sizeof(val));
@@ -244,7 +244,7 @@ int32_t mc_update_unlock_count(void)
 		val += 1;
 	}
 
-	set_ring_unlock_event_count(val);
+	keeper_set_unlock_event_count(val);
 
 	rc = store_ers_setting(KEY_NAME_UNLOCK_COUNT, (const void *)val, sizeof(val));
 	if (rc != 0) {

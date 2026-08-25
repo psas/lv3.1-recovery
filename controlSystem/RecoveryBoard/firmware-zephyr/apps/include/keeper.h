@@ -77,7 +77,7 @@ int32_t keeper_set_hall_sensor_default_limits(void);
  * @param [0..4095] an ADC count within the 12-bit ADC range of possible values.
  */
 
-int32_t cmd_set_limit_v_under(const struct shell *shell, size_t argc, char **argv);
+int32_t keeper_cmd_set_limit_v_under(const struct shell *shell, size_t argc, char **argv);
 int32_t cmd_set_limit_inactive(const struct shell *shell, size_t argc, char **argv);
 int32_t cmd_set_limit_between(const struct shell *shell, size_t argc, char **argv);
 int32_t cmd_set_limit_active(const struct shell *shell, size_t argc, char **argv);
@@ -192,29 +192,30 @@ void set_detected_ring_position(const enum lock_ring_position ring_pos);
 void get_detected_ring_position(enum lock_ring_position *ring_pos);
 
 // Parachute section ring lock and unlock events
-void set_ring_lock_event_count(const uint32_t count);
-void set_ring_unlock_event_count(const uint32_t count);
-void get_ring_lock_event_count(uint32_t *count);
-void get_ring_unlock_event_count(uint32_t *count);
+void keeper_set_lock_event_count(const uint32_t count);
+void keeper_set_unlock_event_count(const uint32_t count);
+void get_ring_lock_event_count(uint32_t *count);        // <- TODO [ ] check whether used.
+void get_ring_unlock_event_count(uint32_t *count);      // <- TODO [ ] check whether used.
 
 // - DATA GROUP - (4) motor
 
-void ekset_DAC_setting_ring_lock(const uint32_t value);
-void ekget_DAC_setting_ring_lock(uint32_t *value);
+void keeper_set_DAC_val_for_ring_motor(const uint32_t value);
+void keeper_get_DAC_val_for_ring_motor(uint32_t *value);
 
 // - DATA GROUP - (6) ERS summary state data
 
-void ekset_ring_status(const enum lock_ring_state value);
-void ekset_batt_ok(const uint32_t value);
-void ekset_shore_power_ok(const uint32_t value);
-void ekset_can_bus_ok(const uint32_t value);
-void ekset_ready_state(const uint32_t value);
+void keeper_set_ring_status(const enum lock_ring_state value);
+void keeper_set_batt_ok(const uint32_t value);
+// TODO [ ] Add or move battery voltage setter and getter APIs here.
+void keeper_set_shore_power_ok(const uint32_t value);   // <- TODO [ ] check whether used.
+void keeper_set_can_bus_ok(const uint32_t value);
+void keeper_set_ready_state(const uint32_t value);
 
-void ekget_ring_status(enum lock_ring_state *value);
-void ekget_batt_ok(uint32_t* value);
-void ekget_shore_power_ok(uint32_t* value);
-void ekget_can_bus_ok(uint32_t* value);
-void ekget_ready_state(uint32_t* value);
+void keeper_get_ring_status(enum lock_ring_state *value);
+void keeper_get_batt_ok(uint32_t* value);
+void keeper_get_shore_power_ok(uint32_t* value);        // <- TODO [ ] check whether used.
+void keeper_get_can_bus_ok(uint32_t* value);
+void keeper_get_ready_state(uint32_t* value);
 
 // ERS diagnostics
 

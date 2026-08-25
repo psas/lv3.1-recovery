@@ -46,7 +46,7 @@ static atomic_t motor_isense = ATOMIC_INIT(0);
 
 static atomic_t motor_isense_mv = ATOMIC_INIT(0);
 
-static atomic_t dac_setting_ring_lock = ATOMIC_INIT(0);
+static atomic_t dac_setting_ring_motor = ATOMIC_INIT(0);
 
 /**
  * @defgroup sensors
@@ -92,7 +92,7 @@ static atomic_t ring_status = ATOMIC_INIT(0);
 static atomic_t batt_ok = ATOMIC_INIT(0);
 static atomic_t shore_power_ok = ATOMIC_INIT(0);
 static atomic_t can_bus_ok = ATOMIC_INIT(0);
-static atomic_t ready_state = ATOMIC_INIT(0);
+static atomic_t rocket_ready = ATOMIC_INIT(0);
 
 // TODO [ ] create public API getter for CAN module to access ERS summary state.
 
@@ -257,7 +257,7 @@ int32_t ekset_adc_value_in_mv(const enum ers_adc_values_in_mv idx, const uint32_
 // TODO [ ] Add check of 'endptr' to determine whether we got valid numeric input,
 //  in all routines which call strtol():
 
-int32_t cmd_set_limit_v_under(const struct shell *shell, size_t argc, char **argv)
+int32_t keeper_cmd_set_limit_v_under(const struct shell *shell, size_t argc, char **argv)
 {
 	uint32_t value = 0;
 	char *endptr, *str;
@@ -659,12 +659,12 @@ void get_detected_ring_position(enum lock_ring_position *ring_pos)
 
 // Parachute section ring lock and unlock events
 
-void set_ring_lock_event_count(const uint32_t count)
+void keeper_set_lock_event_count(const uint32_t count)
 {
 	atomic_set(&ring_lock_events, (atomic_val_t)count);
 }
 
-void set_ring_unlock_event_count(const uint32_t count)
+void keeper_set_unlock_event_count(const uint32_t count)
 {
 	atomic_set(&ring_unlock_events, (atomic_val_t)count);
 }
@@ -717,14 +717,14 @@ void ekget_not_motor_faila(uint32_t* value)
 }
 
 // DAC setting to use for ring lock and ring unlock motor actuations
-void ekset_DAC_setting_ring_lock(const uint32_t value)
+void keeper_set_DAC_val_for_ring_motor(const uint32_t value)
 {
-	atomic_set(&dac_setting_ring_lock, (atomic_val_t)value);
+	atomic_set(&dac_setting_ring_motor, (atomic_val_t)value);
 }
 
-void ekget_DAC_setting_ring_lock(uint32_t *value)
+void keeper_get_DAC_val_for_ring_motor(uint32_t *value)
 {
-	*value = atomic_get(&dac_setting_ring_lock);
+	*value = atomic_get(&dac_setting_ring_motor);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -732,12 +732,12 @@ void ekget_DAC_setting_ring_lock(uint32_t *value)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 // Lock ring status
-void ekset_ring_status(const enum lock_ring_state value)
+void keeper_set_ring_status(const enum lock_ring_state value)
 {
 	atomic_set(&ring_status, (atomic_val_t)value);
 }
 
-void ekget_ring_status(enum lock_ring_state *value)
+void keeper_get_ring_status(enum lock_ring_state *value)
 {
 	*value = atomic_get(&ring_status);
 }
@@ -754,47 +754,49 @@ void ekget_batt_read_dv(uint32_t *value)
 }
 
 // Battery ok flag
-void ekset_batt_ok(const uint32_t value)
+void keeper_set_batt_ok(const uint32_t value)
 {
 	atomic_set(&batt_ok, (atomic_val_t)value);
 }
 
-void ekget_batt_ok(uint32_t* value)
+void keeper_get_batt_ok(uint32_t* value)
 {
 	*value = atomic_get(&batt_ok);
 }
 
 // Shore power ok flag
-void ekset_shore_power_ok(const uint32_t value)
+void keeper_set_shore_power_ok(const uint32_t value)
 {
 	atomic_set(&shore_power_ok, (atomic_val_t)value);
 }
 
-void ekget_shore_power_ok(uint32_t* value)
+void keeper_get_shore_power_ok(uint32_t* value)
 {
 	*value = atomic_get(&shore_power_ok);
 }
 
 // CAN bus ok flag
-void ekset_can_bus_ok(const uint32_t value)
+void keeper_set_can_bus_ok(const uint32_t value)
 {
 	atomic_set(&can_bus_ok, (atomic_val_t)value);
 }
 
-void ekget_can_bus_ok(uint32_t* value)
+void keeper_get_can_bus_ok(uint32_t* value)
 {
 	*value = atomic_get(&can_bus_ok);
 }
 
+// TODO [ ] Determine whether following "rocket ready" state is used.  Does not
+//          appear to be called anywhere.
 // Ready state flag
-void ekset_ready_state(const uint32_t value)
+void keeper_set_ready_state(const uint32_t value)
 {
-	atomic_set(&ready_state, (atomic_val_t)value);
+	atomic_set(&rocket_ready, (atomic_val_t)value);
 }
 
-void ekget_ready_state(uint32_t* value)
+void keeper_get_ready_state(uint32_t* value)
 {
-	*value = atomic_get(&ready_state);
+	*value = atomic_get(&rocket_ready);
 }
 
 //----------------------------------------------------------------------
@@ -870,25 +872,25 @@ static int32_t initialize_system_state_vars(void)
 	rc = retrieve_ers_setting(KEY_NAME_LOCK_COUNT, (void *)count, sizeof(count));
 	if (rc != 0) {
 		LOG_ERR("Failed to retrieve ring lock event count, err %d", rc);
-		set_ring_lock_event_count(RING_LOCK_EVENT_STARTING_COUNT);
+		keeper_set_lock_event_count(RING_LOCK_EVENT_STARTING_COUNT);
 		rc = store_ers_setting(KEY_NAME_LOCK_COUNT, (void *)count, sizeof(count));
 		if (rc != 0) {
 			LOG_ERR("Failed to write ring lock count, err %d", rc);
 		}
 	} else {
-		set_ring_lock_event_count(count);
+		keeper_set_lock_event_count(count);
 	}
 
 	rc = retrieve_ers_setting(KEY_NAME_UNLOCK_COUNT, (void *)count, sizeof(count));
 	if (rc != 0) {
 		LOG_ERR("Failed to retrieve ring unlock events count, err %d", rc);
-		set_ring_unlock_event_count(RING_UNLOCK_EVENT_STARTING_COUNT);
+		keeper_set_unlock_event_count(RING_UNLOCK_EVENT_STARTING_COUNT);
 		rc = store_ers_setting(KEY_NAME_UNLOCK_COUNT, (void *)count, sizeof(count));
 		if (rc != 0) {
 			LOG_ERR("Failed to write ring unlock count, err %d", rc);
 		}
 	} else {
-		set_ring_unlock_event_count(count);
+		keeper_set_unlock_event_count(count);
 	}
 
 	return rc;

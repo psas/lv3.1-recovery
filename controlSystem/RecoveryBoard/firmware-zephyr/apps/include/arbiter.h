@@ -44,33 +44,38 @@ enum lock_ring_state {
  * @warning This routine must be called to make arbiter module ready for use.
  */
 
-int32_t ers_init_arbiter(void);
+int32_t arbiter_init(void);
 
-#if 0
 /**
- * @brief Following four routines implement custom Zephyr shell commands.  As
- *   arguments these routines expect:
- *
- * @param ["s1"|"s2"] to indicate which of two Hall sensors the limit applies.
- * @param [0..4095] an ADC count within the 12-bit ADC range of possible values.
+ * @brief
  */
 
-int32_t cmd_set_limit_v_under(const struct shell *shell, size_t argc, char **argv);
-int32_t cmd_set_limit_inactive(const struct shell *shell, size_t argc, char **argv);
-int32_t cmd_set_limit_between(const struct shell *shell, size_t argc, char **argv);
-int32_t cmd_set_limit_active(const struct shell *shell, size_t argc, char **argv);
+void arbiter_cmd_set_default_limits(const struct shell *shell, size_t argc, char **argv);
 
-#endif // 0 . . . moving APIs to keeper module
-
-void cmd_set_default_limits(const struct shell *shell, size_t argc, char **argv);
+/**
+ * @brief
+ */
 
 void arbiter_show_hall_state_limits(const struct shell *shell);
 
 // Ring position related
+
+/**
+ * @brief
+ */
+
 int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position);
 
-int32_t update_ring_position_detection_timer(const uint32_t timeout_ms);
+/**
+ * @brief
+ */
 
-char *ring_pos_to_str(const enum lock_ring_position pos);
+int32_t arbiter_set_ring_pos_detection_interval(const uint32_t timeout_ms);
+
+/**
+ * @brief
+ */
+
+char *arbiter_ring_pos_to_str(const enum lock_ring_position pos);
 
 #endif // ERS_ARBITER_H

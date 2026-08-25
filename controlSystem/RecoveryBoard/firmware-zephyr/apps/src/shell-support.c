@@ -193,7 +193,8 @@ SHELL_SUBCMD_ADD((hall), show, &sub_section_hall,
   "show Hall sensor limit values (ADC counts 0..4095)", arbiter_show_hall_state_limits, 1, 0);
 
 SHELL_SUBCMD_ADD((hall), v_under, &sub_section_hall_set,
-  "set Hall limit for state \"voltage under\":  hall v_under [s1|s2] [value]", cmd_set_limit_v_under, 3, 0);
+  "set Hall limit for state \"voltage under\":  hall v_under [s1|s2] [value]",
+  keeper_cmd_set_limit_v_under, 3, 0);
 
 SHELL_SUBCMD_ADD((hall), inactive, &sub_section_hall_set,
   "set Hall limit for state \"inactive\":  hall inactive [s1|s2] [value]", cmd_set_limit_inactive, 3, 0);
@@ -213,7 +214,7 @@ SHELL_SUBCMD_ADD((hall), retrieve, &sub_section_hall, "retrieve Hall sensor limi
 
 
 SHELL_SUBCMD_ADD((hall), set_defaults, &sub_section_hall, "restore Hall sensor limit defaults",
-  cmd_set_default_limits, 1, 0);
+  arbiter_cmd_set_default_limits, 1, 0);
 
 SHELL_CMD_REGISTER(hall, &sub_section_hall,
   "- ERS - show and set Hall sensor limit values (in ADC counts)", NULL);
@@ -233,8 +234,7 @@ static int cmd_show_locking_ring_state(const struct shell *shell, size_t argc, c
 	enum lock_ring_state ring_state = RING_STATE_UNKNOWN;
 	int32_t rc = 0;
 
-	// ekget_ring_status(enum lock_ring_state *value);
-	ekget_ring_status(&ring_state);
+	keeper_get_ring_status(&ring_state);
 
 	switch (ring_state) {
 		case RING_STATE_UNKNOWN:
@@ -270,7 +270,7 @@ static int cmd_show_locking_ring_pos(const struct shell *shell, size_t argc, cha
 	{
 		char lbuf[SIZE_SHORT_ERS_MESSAGE] = {0};
 		char *ring_pos_as_str = lbuf;
-		ring_pos_as_str = ring_pos_to_str(ring_position);
+		ring_pos_as_str = arbiter_ring_pos_to_str(ring_position);
 		shell_fprintf(shell, SHELL_NORMAL, "Current lock ring position:  %d %s\n",
 				ring_position, ring_pos_as_str);
 	}
@@ -298,7 +298,7 @@ static int cmd_set_pos_detection_interval(const struct shell *shell, size_t argc
 	shell_fprintf(shell, SHELL_NORMAL, "Storing ring position detection "
 			"interval of %u ms . . .\n", value);
 	set_ring_pos_detection_interval(value);
-	rc = update_ring_position_detection_timer(value);
+	rc = arbiter_set_ring_pos_detection_interval(value);
 	return rc;
 }
 
@@ -508,7 +508,7 @@ static int cmd_dac_set_lock_ring_current_limit(const struct shell *shell, size_t
 
 	shell_fprintf(shell, SHELL_NORMAL,
 		 "storing DAC setting %u for ring lock and unlock operations . . .\n", value);
-	ekset_DAC_setting_ring_lock(value);
+	keeper_set_DAC_val_for_ring_motor(value);
 	return 0;
 }
 
@@ -518,7 +518,7 @@ static int cmd_dac_get_lock_ring_current_limit(const struct shell *shell, size_t
         ARG_UNUSED(argv);
 
         uint32_t value = 0;
-	ekget_DAC_setting_ring_lock(&value);
+	keeper_get_DAC_val_for_ring_motor(&value);
 	shell_fprintf(shell, SHELL_NORMAL, "present DAC setting for ring lock and unlock is %u\n",
 			 value);
 	return 0;

@@ -68,7 +68,7 @@ int main(void)
 	rc = keeper_init();
 	LOG_INF("ERS data \"keeper\" initialization returns %d", rc);
 
-	rc = ers_init_arbiter();
+	rc = arbiter_init();
 	LOG_INF("ERS arbitration module init returns %d", rc);
 
 	rc = pwm_init();

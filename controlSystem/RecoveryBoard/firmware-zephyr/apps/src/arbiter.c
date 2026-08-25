@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <arbiter.h>
-#include <ers-can.h>
-#include <ers-config.h>
-#include <ers-dac.h>
-#include <gpio-in.h>
-#include <keeper.h>
+#include "arbiter.h"
+#include "ers-can.h"
+#include "ers-config.h"
+#include "ers-dac.h"
+#include "gpio-in.h"
+#include "keeper.h"
 #include "settings-ers.h"
 
 #include <zephyr/kernel.h>
@@ -100,9 +100,9 @@ void arbiter_show_hall_state_limits(const struct shell *shell)
  * @brief Shell wrapper function to restore default Hall sensor limit values.
  */
 
-void cmd_set_default_limits(const struct shell *shell, size_t argc, char **argv)
+void arbiter_cmd_set_default_limits(const struct shell *shell, size_t argc, char **argv)
 {
-	LOG_INF("Setting Hall sensor limit default values . . .");
+	shell_print(shell, "Setting Hall sensor limit default values . . .");
 	int32_t rc = keeper_set_hall_sensor_default_limits();
 	if (rc != 0) {
 		LOG_ERR("Failed to set hall limit default values, err %d", rc);
@@ -342,14 +342,14 @@ qualify_validity:
 		ring_state = RING_STATE_UNKNOWN;
 	}
 
-	ekset_ring_status(ring_state);
+	keeper_set_ring_status(ring_state);
 done:
 	return rc;
 }
 
 // TODO [ ] fix ring_pos_to_str() routine, does not appear to return correct string.
 
-char *ring_pos_to_str(const enum lock_ring_position pos)
+char *arbiter_ring_pos_to_str(const enum lock_ring_position pos)
 {
         switch (pos) {
         case RING_POS_LOCKED:
@@ -427,7 +427,7 @@ K_TIMER_DEFINE(ring_position_timer, ring_position_timer_handler, NULL);
  * @return 0 without condition. 
  */
 
-int32_t update_ring_position_detection_timer(const uint32_t timeout_ms)
+int32_t arbiter_set_ring_pos_detection_interval(const uint32_t timeout_ms)
 {
 	LOG_INF("called to update ring position timer, requested interval %u ms", timeout_ms);
 
@@ -453,9 +453,9 @@ int32_t determine_batt_ok(void)
 	int32_t batt_voltage_in_tenths_v = 0;
 	ekget_batt_read_dv(&batt_voltage_in_tenths_v);
 	if (batt_voltage_in_tenths_v >= BATTERY_VOLTAGE_OK_THRESHOLD_TENTHS_V) {
-		ekset_batt_ok(1);
+		keeper_set_batt_ok(1);
 	} else {
-		ekset_batt_ok(0);
+		keeper_set_batt_ok(0);
 	}
 
 	return 0;
@@ -506,9 +506,9 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 
 		rc = determine_batt_ok();
 
-		ekget_batt_ok(&battery_ok);
-		ekget_can_bus_ok(&can_bus_ok);
-		ekget_ring_status(&ring_state);
+		keeper_get_batt_ok(&battery_ok);
+		keeper_get_can_bus_ok(&can_bus_ok);
+		keeper_get_ring_status(&ring_state);
 
 		// LOG_INF("- DEV 0105 - determining ERS ready state . . .");
 		arb_mesg("- DEV 0105 - batt_ok %d, can_ok %d, ring_state %d",
@@ -516,9 +516,9 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 		if (battery_ok && can_bus_ok && (ring_state == RING_STATE_LOCKED)) {
 // TODO [ ] Check that rocket ready state should be determined here, as there appears to be
 //          such logic in the ERS CAN module.
-			ekset_ready_state(true);
+			keeper_set_ready_state(true);
 		} else {
-			ekset_ready_state(false);
+			keeper_set_ready_state(false);
 		}
 
 		loop_count++;
@@ -530,7 +530,7 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 // - SECTION - init code
 //----------------------------------------------------------------------
 
-int32_t ers_init_arbiter(void)
+int32_t arbiter_init(void)
 {
 	int32_t rc = 0;
 

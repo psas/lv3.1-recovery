@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <ers-pwm.h>
+#include "ers-pwm.h"
 
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
