@@ -40,6 +40,7 @@ int32_t keeper_init(void);
 // - SECTION - ERS configuration
 //----------------------------------------------------------------------
 
+#if 0 // This routine factored to keeper.c and now qualified private:
 /**
  * @brief Routine to set a given Hall sensor limit, a cutoff value
  *   measured in ADC counts, for each hall sensor in an ERS board.
@@ -49,8 +50,9 @@ int32_t keeper_init(void);
  */
 
 int32_t set_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
-                                const enum hall_sensor_named_limits limit_idx,
-                                const uint32_t val);
+				const enum hall_sensor_named_limits limit_idx,
+				const uint32_t val);
+#endif // 0
 
 /**
  * @brief Routine to return a Hall sensor limit for given sensor.
@@ -59,9 +61,9 @@ int32_t set_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
  * @return -EINVAL otherwise.
  */
 
-int32_t get_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
-                                const enum hall_sensor_named_limits limit_idx,
-                                uint32_t *value);
+int32_t keeper_get_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
+				const enum hall_sensor_named_limits limit_idx,
+				uint32_t *value);
 
 /**
  * @brief Routine to restore hall sensor limits to default values.
@@ -82,8 +84,17 @@ int32_t cmd_set_limit_inactive(const struct shell *shell, size_t argc, char **ar
 int32_t cmd_set_limit_between(const struct shell *shell, size_t argc, char **argv);
 int32_t cmd_set_limit_active(const struct shell *shell, size_t argc, char **argv);
 
-int32_t cmd_save_hall_limits_to_flash(const struct shell *shell, size_t argc, char **argv);
-int32_t cmd_retrieve_hall_limits_from_flash(const struct shell *shell, size_t argc, char **argv);
+/**
+ * @brief
+ */
+
+int32_t keeper_cmd_store_hall_limits(const struct shell *shell, size_t argc, char **argv);
+
+/**
+ * @brief
+ */
+
+int32_t keeper_cmd_retrieve_hall_limits(const struct shell *shell, size_t argc, char **argv);
 
 // Helper functions to allow for calling Hall cut-off value retrieval from the
 // ERS app as well as from the CLI of the app:
@@ -170,8 +181,8 @@ void ekget_hall_2(uint32_t* value);
 
 void ekget_batt_read_mv(uint32_t* value);
 void ekget_motor_isense_mv(uint32_t* value);
-void ekget_hall_1_mv(uint32_t* value);
-void ekget_hall_2_mv(uint32_t* value);
+void keeper_get_hall_1_mv(uint32_t* value);
+void keeper_get_hall_2_mv(uint32_t* value);
 
 void ekget_batt_read_dv(uint32_t* value);
 
@@ -181,7 +192,7 @@ void ekget_batt_read_dv(uint32_t* value);
  * @return 0 on success to obtain mutex and to get sensor values
  * @return -ESRCH when module not initialized
  */
-int32_t ekget_both_hall_sensors(uint32_t *value_1, uint32_t *value_2);
+int32_t keeper_get_both_hall_sensors(uint32_t *value_1, uint32_t *value_2);
 
 void set_ring_pos_detection_interval(const uint32_t timeout_ms);
 

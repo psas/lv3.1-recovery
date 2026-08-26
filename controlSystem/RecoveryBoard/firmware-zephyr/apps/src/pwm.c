@@ -237,8 +237,10 @@ static int32_t play_pattern(void)
 	const struct shell *shell;
 	shell = shell_backend_uart_get_ptr();
 	__ASSERT(shell != NULL, "Failed to get shell backend.");
+#if 0
 	shell_print(shell, "- DEV 0822 - Current audio pattern has %d notes",
 			audio_pattern[pidx].last_note);
+#endif // 0
 #endif
 
 done:

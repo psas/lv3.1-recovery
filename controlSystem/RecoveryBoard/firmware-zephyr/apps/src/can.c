@@ -83,9 +83,9 @@ enum ers_state_var_indeces {
 };
 #elif defined(ERS_BOARD_VARIANT_DROGUE_CHUTE) || defined(ERS_BOARD_VARIANT_MAIN_CHUTE)
 #if defined(ERS_BOARD_VARIANT_DROGUE_CHUTE)
-#warning "- NOTICE - builing ERS board firmware variant 'Drogue'."
+#warning "- NOTICE - building ERS board firmware variant 'Drogue'."
 #elif defined(ERS_BOARD_VARIANT_MAIN_CHUTE)
-#warning "- NOTICE - builing ERS board firmware variant 'Main'."
+#warning "- NOTICE - building ERS board firmware variant 'Main'."
 #endif
 enum ers_state_var_indeces {
 	IDX_DROGUE_RING_STATE,
@@ -310,7 +310,6 @@ void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 		k_msgq_get(&counter_msgq, &frame, K_FOREVER);
 
 		if (IS_ENABLED(CONFIG_CAN_ACCEPT_RTR) && (frame.flags & CAN_FRAME_RTR) != 0U) {
-			// LOG_INF("M2");
 			continue;
 		}
 

@@ -1,7 +1,5 @@
 /*
- * Copyright (c) 2025 Portland State Aerospace Society
- *
- * SPDX-License-Identifier: Apache-2.0
+ * @file
  *
  * @brief ERS module which uses Zephyr's settings sub-system to write and to
  *  read values using flash memory as a non-volatile store.
@@ -10,12 +8,15 @@
  *  write and flash read operations.
  */
 
-#include <stdio.h>
-#include <string.h>
+#include "ers-config.h"
+// #include "settings-ers.h"
 
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/settings/settings.h>
+
+#include <stdio.h>
+#include <string.h>
 
 LOG_MODULE_REGISTER(ers_settings, CONFIG_ERS_SETTINGS_LOG_LEVEL);
 
@@ -130,6 +131,84 @@ int32_t store_ers_setting(const char* name, const void *val, const uint32_t size
 	if (rc < 0) {
 		LOG_ERR("Fail to store value for '%s', err %d", name, rc);
 	}
+	return rc;
+}
+
+enum sensor_plus_limit_enum {
+	HALL_1_LIMIT_1 = (0 << 4) + 0,
+	HALL_1_LIMIT_2 = (0 << 4) + 1,
+	HALL_1_LIMIT_3 = (0 << 4) + 2,
+	HALL_1_LIMIT_4 = (0 << 4) + 3,
+	HALL_2_LIMIT_1 = (1 << 4) + 0,
+	HALL_2_LIMIT_2 = (1 << 4) + 1,
+	HALL_2_LIMIT_3 = (1 << 4) + 2,
+	HALL_2_LIMIT_4 = (1 << 4) + 3,
+};
+
+int32_t ers_settings_store_hall_limit(const uint32_t sensor_idx,
+				const uint32_t limit_idx,
+				const void *val,
+				const uint32_t size)
+{
+	int32_t rc = 0;
+
+	if (sensor_idx >= HALL_SENSOR_COUNT) {
+		LOG_ERR("Hall sensor index %d out of range, must be in 0..%d",
+				sensor_idx, (HALL_SENSOR_COUNT - 1));
+		rc = -EINVAL;
+		goto done;
+	}
+
+	if (limit_idx >= HALL_SENSOR_LIMIT_COUNT) {
+		LOG_ERR("Sensor limit index %d out of range, must be in 0..%d",
+				sensor_idx, (HALL_SENSOR_LIMIT_COUNT - 1));
+		rc = -EINVAL;
+		goto done;
+	}
+
+	uint32_t combined_idx = (sensor_idx << 4) + limit_idx;
+
+	switch (combined_idx)
+	{
+	case HALL_1_LIMIT_1:
+		rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_1),
+				 	(const void *)val, sizeof(val));
+		break;
+	case HALL_1_LIMIT_2:
+		rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_2),
+				 	(const void *)val, sizeof(val));
+		break;
+	case HALL_1_LIMIT_3:
+		rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_3),
+				 	(const void *)val, sizeof(val));
+		break;
+	case HALL_1_LIMIT_4:
+		rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_4),
+				 	(const void *)val, sizeof(val));
+		break;
+
+	case HALL_2_LIMIT_1:
+		rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_1),
+				 	(const void *)val, sizeof(val));
+		break;
+	case HALL_2_LIMIT_2:
+		rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_2),
+				 	(const void *)val, sizeof(val));
+		break;
+	case HALL_2_LIMIT_3:
+		rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_3),
+				 	(const void *)val, sizeof(val));
+		break;
+	case HALL_2_LIMIT_4:
+		rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_4),
+				 	(const void *)val, sizeof(val));
+		break;
+
+	default:
+		LOG_ERR("Got undefined sensor and limit combination %d in store API.",
+			combined_idx);
+	}
+done:
 	return rc;
 }
 

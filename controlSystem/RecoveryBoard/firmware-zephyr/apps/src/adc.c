@@ -188,7 +188,7 @@ int32_t cmd_ers_read_adc_in0(const struct shell *shell)
 	rc = adc_read_channels(ADC_READING_HALL_1, ADC_READING_HALL_1);
 	if (rc == 0)
 	{
-		ekget_hall_1_mv(&adc_reading);
+		keeper_get_hall_1_mv(&adc_reading);
 		shell_fprintf(shell, SHELL_NORMAL, "Hall 1 sensor reads %u mV\n", adc_reading);
 	}
 	else
@@ -207,7 +207,7 @@ int32_t cmd_ers_read_adc_in1(const struct shell *shell)
 	rc = adc_read_channels(ADC_READING_HALL_2, ADC_READING_HALL_2);
 	if (rc == 0)
 	{
-		ekget_hall_2_mv(&adc_reading);
+		keeper_get_hall_2_mv(&adc_reading);
 		shell_fprintf(shell, SHELL_NORMAL, "Hall 2 sensor reads %u mV\n", adc_reading);
 	}
 	else

@@ -18,6 +18,35 @@
 
 LOG_MODULE_REGISTER(keeper, LOG_LEVEL_INF);
 
+//----------------------------------------------------------------------
+// - SECTION - defines
+//----------------------------------------------------------------------
+
+// There happen to be eight Hall sensor limit values to store, and to retrieve
+// from flash memory.  For "within this file" house keeping, add symbols to
+// store bit-wise left shift values.  These are used to track store and retrieve
+// errors, to allow for attempting further retrieve ops even when some fail.
+
+// TODO [ ] Consider renaming STORE_ to OP_ to make name more general, and to
+//          reuse this enum for all keeper data operations:
+enum keeper_store_value_result {
+STORE_RESULT_1_SHIFT = 0,
+STORE_RESULT_2_SHIFT,
+STORE_RESULT_3_SHIFT,
+STORE_RESULT_4_SHIFT,
+
+STORE_RESULT_5_SHIFT,
+STORE_RESULT_6_SHIFT,
+STORE_RESULT_7_SHIFT,
+STORE_RESULT_8_SHIFT,
+
+COUNT_OF_STORE_RESULTS,
+};
+
+//----------------------------------------------------------------------
+// - SECTION - file scoped
+//----------------------------------------------------------------------
+
 /**
  * @defgroup digital_inputs
  */
@@ -41,11 +70,8 @@ static atomic_t batt_read_dv = ATOMIC_INIT(0);
  */
 
 static atomic_t not_motor_faila = ATOMIC_INIT(0);
-
 static atomic_t motor_isense = ATOMIC_INIT(0);
-
 static atomic_t motor_isense_mv = ATOMIC_INIT(0);
-
 static atomic_t dac_setting_ring_motor = ATOMIC_INIT(0);
 
 /**
@@ -75,6 +101,7 @@ static struct hall_sensor_limits hall_sensor_fs[HALL_SENSOR_COUNT];
 
 // TODO [ ] Determine whether var 'ring_pos_interval' actually used, only seems to be referenced
 //          in this file:
+
 // App determines lock ring position at this interval of time:
 static atomic_t ring_pos_interval = ATOMIC_INIT(0);
 
@@ -107,6 +134,8 @@ struct ers_summary_state {
 
 static struct ers_summary_state summary_state;
 
+// TODO [ ] Determine where and whether to use this struct 'ers_config_and_state':
+
 /**
  * @brief Struct of structs, gathers most ERS board state, configuration, 
  *   and sensor readings in one data structure.
@@ -121,9 +150,21 @@ struct ers_config_and_state {
 // Support run time toggling of diagnostics which share UART with Zephyr shell:
 static atomic_t ers_diag_flag_fs = ATOMIC_INIT(0);
 
-//----------------------------------------------------------------------
-// - SECTION - module concurrency and state
-//----------------------------------------------------------------------
+enum data_operation {
+	KEEPER_OP_SET,
+	KEEPER_OP_GET,
+	KEEPER_OP_STORE,
+	KEEPER_OP_RETRIEVE,
+	KEEPER_LAST_OP,
+};
+
+#define OP_NAME_LENGTH 9
+
+static char op_name_fs[][OP_NAME_LENGTH] = {
+	"set\0", "get\0", "store\0", "retrieve\0",
+};
+
+static char undef_string_fs[] = { "unknown_op" };
 
 // Provide a mutex to assure that both Hall sensors are updated without anyone
 // reading their latest values in the middle of this pair of updates:
@@ -131,6 +172,23 @@ struct k_mutex hall_sensors_mtx;
 
 // Flag to indiciate that this module is initialized:
 static bool keeper_initialized_fs = false;
+
+//----------------------------------------------------------------------
+// - SECTION - prototypes
+//----------------------------------------------------------------------
+
+/**
+ * @brief Routine to set a given Hall sensor limit, a cutoff value
+ *   measured in ADC counts, for each hall sensor in an ERS board.
+ *
+ * @retval 0 when sensor id, limit id in bounds.
+ *
+ * @retval -EINVAL otherwise.
+ */
+
+static int32_t set_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
+				     const enum hall_sensor_named_limits limit_idx,
+				     const uint32_t val);
 
 //----------------------------------------------------------------------
 // - SECTION - routines
@@ -336,45 +394,169 @@ int32_t cmd_set_limit_active(const struct shell *shell, size_t argc, char **argv
 	return 0;
 }
 
-int32_t cmd_save_hall_limits_to_flash(const struct shell *shell, size_t argc, char **argv)
+/**
+ * @brief Helper function to return the name of a data operation, used in
+ *  error messages.
+ */
+
+static char *op_name(const enum data_operation op)
 {
-	uint32_t v_under_limit, inactive_limit, between_limit, active_limit;
+	if (op < KEEPER_LAST_OP) {
+		return op_name_fs[op];
+	} else {
+		return undef_string_fs;
+	}
+}
+
+/**
+ * @brief Helper function to update bit-wise error flags, to track the outcome
+ *  of data store operations.
+ *
+ * @param shift the power by which to raise the value 1.
+ * @param top_count the total number of store operations to be tracked.
+ * @param rc the return code of the API to store a datum.
+ *
+ * @return the value of 2 raised to the power of 'shift'.
+ */
+
+static uint32_t track_err(const enum data_operation op, const uint32_t shift,
+			const uint32_t top_count, const int32_t rc)
+{
+	LOG_ERR("Failed to %s Hall limit %d of %d, err %d", op_name(op),
+	       	shift + 1, top_count, rc);
+	return (1 << shift);
+}
+
+int32_t keeper_cmd_store_hall_limits(const struct shell *shell, size_t argc, char **argv)
+{
+	ARG_UNUSED(argc);
+	ARG_UNUSED(argv);
+
+	// Here declare four local variables, one for each stored sensor limit.
+	// We use these for the first Hall sensor, then re-use for the second sensor:
+	// uint32_t v_under_limit, inactive_limit, between_limit, active_limit;
+	uint32_t hall_limit[HALL_SENSOR_LIMIT_COUNT] = { 0 };
+
+	int32_t get_errors = 0;
+	int32_t store_errors = 0;
+	enum data_operation op = KEEPER_OP_GET;
 	int32_t rc = 0;
 
-	// Call keeper to obtain hall limits:
-	get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_UNDER, &v_under_limit);
-	get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_INACTIVE, &inactive_limit);
-	get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_BETWEEN, &between_limit);
-	get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_ACTIVE, &active_limit);
+	// For each get operation and store operation, we check for errors.
+	// If a get op fails we don't have a valid value to store, so we don't
+	// store.
 
-	// TODO [ ] Develop a readable way to capture follolwing return values in a bitwise
-	//  fashion, for aggregate check of success or failure of all flash store
-	//  operations:
+	for (uint32_t i = 0; i < HALL_SENSOR_COUNT; i++) {
+		for (uint32_t j = 0; j < HALL_SENSOR_LIMIT_COUNT; j++) {
+			// rc = keeper_get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_UNDER, &v_under_limit);
+			rc = keeper_get_hall_sensor_limit(i, j, &hall_limit[j]);
+			if (rc < 0) {
+				// handle error
+				continue;
+			}
+			// TODO [ ] Refactor keyname construction details here to the settings module:
+			rc = ers_settings_store_hall_limit(i, j,
+					       	(const void *)&hall_limit[j],
+						sizeof(&hall_limit[j]));
+			if (rc < 0) {
+				// handle error
+			}
+		}
+	}
+
+
+
+#if 0
+	// Get the latest Hall limits values stored in SRAM:
+	rc = keeper_get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_UNDER, &v_under_limit);
+	rc = keeper_get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_INACTIVE, &inactive_limit);
+	rc = keeper_get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_BETWEEN, &between_limit);
+	rc = keeper_get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_ACTIVE, &active_limit);
+
+	rc = keeper_get_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_UNDER, &v_under_limit);
+	if (rc == 0) {
+		get_errors |= track_err(op, STORE_RESULT_5_SHIFT, COUNT_OF_STORE_RESULTS, rc);
+	}
+
+	rc = keeper_get_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_INACTIVE, &inactive_limit);
+	if (rc < 0) {
+		get_errors |= track_err(op, STORE_RESULT_6_SHIFT, COUNT_OF_STORE_RESULTS, rc);
+	}
+
+	rc = keeper_get_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_BETWEEN, &between_limit);
+	if (rc < 0) {
+		get_errors |= track_err(op, STORE_RESULT_7_SHIFT, COUNT_OF_STORE_RESULTS, rc);
+	}
+
+	rc = keeper_get_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_ACTIVE, &active_limit);
+	if (rc < 0) {
+		get_errors |= track_err(op, STORE_RESULT_8_SHIFT, COUNT_OF_STORE_RESULTS, rc);
+	}
+
+	// Store these Hall limits values in flash:
+	op = KEEPER_OP_STORE;
 	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_1), (const void *)v_under_limit,
 				sizeof(v_under_limit));
+	if (rc < 0) {
+		store_errors |= track_err(op, STORE_RESULT_1_SHIFT, COUNT_OF_STORE_RESULTS, rc);
+	}
+
 	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_2), (const void *)inactive_limit,
 				sizeof(inactive_limit));
+	if (rc < 0) {
+		store_errors |= track_err(op, STORE_RESULT_2_SHIFT, COUNT_OF_STORE_RESULTS, rc);
+	}
+
 	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_3), (const void *)between_limit,
 				sizeof(between_limit));
+	if (rc < 0) {
+		store_errors |= track_err(op, STORE_RESULT_3_SHIFT, COUNT_OF_STORE_RESULTS, rc);
+	}
+
 	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_4), (const void *)active_limit,
 				sizeof(active_limit));
+	if (rc < 0) {
+		store_errors |= track_err(op, STORE_RESULT_4_SHIFT, COUNT_OF_STORE_RESULTS, rc);
+	}
 
-	get_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_UNDER, &v_under_limit);
-	get_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_INACTIVE, &inactive_limit);
-	get_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_BETWEEN, &between_limit);
-	get_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_ACTIVE, &active_limit);
-
+	// Store these Hall limits values in flash:
+	op = KEEPER_OP_STORE;
 	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_1), (const void *)v_under_limit,
 				sizeof(v_under_limit));
+	if (rc < 0) {
+		store_errors |= track_err(STORE_RESULT_5_SHIFT, COUNT_OF_STORE_RESULTS, rc);
+	}
+
 	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_2), (const void *)inactive_limit,
 				sizeof(inactive_limit));
+	if (rc < 0) {
+		store_errors |= track_err(STORE_RESULT_6_SHIFT, COUNT_OF_STORE_RESULTS, rc);
+	}
+
 	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_3), (const void *)between_limit,
 				sizeof(between_limit));
+	if (rc < 0) {
+		store_errors |= track_err(STORE_RESULT_7_SHIFT, COUNT_OF_STORE_RESULTS, rc);
+	}
+
 	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_4), (const void *)active_limit,
 				sizeof(active_limit));
+	if (rc < 0) {
+		store_errors |= track_err(STORE_RESULT_8_SHIFT, COUNT_OF_STORE_RESULTS, rc);
+	}
 
-	//
-	shell_fprintf(shell, SHELL_NORMAL, "Hall sensor limit values store to flash.\n");
+	// TODO [ ] Check get_errors here . . .
+
+	// TODO [ ] Check store_errors here . . .
+	if (store_errors) {
+		shell_fprintf(shell, SHELL_NORMAL, "Failed to store some Hall sensor limits,\n");
+		shell_fprintf(shell, SHELL_NORMAL, "bit-wise errors in hexadecimal are 0x%02X,\n",
+				store_errors);
+	} else {
+		shell_fprintf(shell, SHELL_NORMAL, "Hall sensor limit values stored to flash.\n");
+	}
+#endif // 0
+
 	return rc;
 }
 
@@ -426,25 +608,38 @@ int32_t keeper_retrieve_hall_2_limits(void)
 	return rc;
 }
 
-int32_t cmd_retrieve_hall_limits_from_flash(const struct shell *shell, size_t argc, char **argv)
+int32_t keeper_cmd_retrieve_hall_limits(const struct shell *shell, size_t argc, char **argv)
 {
-	int32_t rc = 0;
+	int32_t rc1 = 0;
+	int32_t rc2 = 0;
 
-	rc = keeper_retrieve_hall_1_limits();
+	rc1 = keeper_retrieve_hall_1_limits();
+	if (rc1 < 0) {
+		LOG_ERR("Failed to retrieve Hall sensor 1 limits, err %d", rc1);
+	}
 
-	// TODO [ ] Name each limit in this response part of this command:
-//	shell_fprintf(shell, SHELL_NORMAL, "Retrieved Hall sensor 1 limits: %u, %u, %u, %u",
-//			v_under_limit, inactive_limit, between_limit, active_limit);
+	rc2 = keeper_retrieve_hall_2_limits();
+	if (rc2 < 0) {
+		LOG_ERR("Failed to retrieve Hall sensor 2 limits, err %d", rc2);
+	}
 
-	rc = keeper_retrieve_hall_2_limits();
+	if (rc1 || rc2) {
+		shell_fprintf(shell, SHELL_NORMAL, "WARNING: Some Hall sensor limits "
+				"not retrieved.  Enter 'hall show' to see them\n");
+	} else {
+		shell_fprintf(shell, SHELL_NORMAL, "Hall sensor limits retrieved.  "
+				"Enter 'hall show' to see them\n");
+	}
 
-	// TODO [ ] Name each limit in this response part of this command:
-//	shell_fprintf(shell, SHELL_NORMAL, "Retrieved Hall sensor 2 limits: %u, %u, %u, %u",
-//			v_under_limit, inactive_limit, between_limit, active_limit);
-
-	shell_fprintf(shell, SHELL_NORMAL, "Hall sensor limits retrieved.  "
-			"Enter 'hall show' to see them\n");
-	return rc;
+	if (rc1 || rc2) {
+		LOG_ERR("Some or all Hall sensor limits failed to be retrieved.");
+		LOG_ERR("sensor 1 limits return code = %d, sensor 2 code = %d",
+				rc1, rc2);
+		LOG_ERR("Returning negative EIO to indicate I/O error with flash memory.");
+		return -EIO;
+	} else {
+		return 0;
+	}
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -463,12 +658,12 @@ void ekget_hall_2(uint32_t* value)
 	*value = atomic_get(&hall_2);
 }
 
-void ekget_hall_1_mv(uint32_t* value)
+void keeper_get_hall_1_mv(uint32_t* value)
 {
 	*value = atomic_get(&hall_1_mv);
 }
 
-void ekget_hall_2_mv(uint32_t* value)
+void keeper_get_hall_2_mv(uint32_t* value)
 {
 	*value = atomic_get(&hall_2_mv);
 }
@@ -529,7 +724,7 @@ int32_t ekset_both_hall_sensors(const uint32_t value_1, const uint32_t value_2)
 	return 0;
 }
 
-int32_t ekget_both_hall_sensors(uint32_t *value_1, uint32_t *value_2)
+int32_t keeper_get_both_hall_sensors(uint32_t *value_1, uint32_t *value_2)
 {
 	int32_t rc = 0;
 
@@ -551,8 +746,8 @@ int32_t ekget_both_hall_sensors(uint32_t *value_1, uint32_t *value_2)
 		return rc;
 	}
 
-	ekget_hall_1_mv(value_1);
-	ekget_hall_2_mv(value_2);
+	keeper_get_hall_1_mv(value_1);
+	keeper_get_hall_2_mv(value_2);
 
 	k_mutex_unlock(&hall_sensors_mtx);
 	if (rc != 0)
@@ -571,9 +766,9 @@ int32_t ekget_both_hall_sensors(uint32_t *value_1, uint32_t *value_2)
  *   adjustments to these readings sub-range limits.
  */
 
-int32_t set_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
-				const enum hall_sensor_named_limits limit_idx,
-				const uint32_t value)
+static int32_t set_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
+				     const enum hall_sensor_named_limits limit_idx,
+				     const uint32_t value)
 {
 	if ((sensor_idx < 0) || (sensor_idx >= HALL_SENSOR_COUNT))
 	{
@@ -604,7 +799,7 @@ int32_t set_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
 	return 0;
 }
 
-int32_t get_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
+int32_t keeper_get_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
 				const enum hall_sensor_named_limits limit_idx,
 				uint32_t *value)
 {
@@ -786,9 +981,7 @@ void keeper_get_can_bus_ok(uint32_t* value)
 	*value = atomic_get(&can_bus_ok);
 }
 
-// TODO [ ] Determine whether following "rocket ready" state is used.  Does not
-//          appear to be called anywhere.
-// Ready state flag
+// Rocket ready state flag
 void keeper_set_ready_state(const uint32_t value)
 {
 	atomic_set(&rocket_ready, (atomic_val_t)value);
@@ -848,9 +1041,7 @@ static int32_t initialize_system_state_vars(void)
 	uint32_t count = 0;
 	int32_t rc = 0;
 
-	// TODO [ ] Create a clear or shared symbol to hold the time-wise interval for ERS
-	//          firmware to determine and update lock ring position.
-	atomic_set(&ring_pos_interval, (atomic_val_t)100);
+	atomic_set(&ring_pos_interval, (atomic_val_t)CONFIG_ARBITER_LOOP_SLEEP_PER_MS);
 
 	summary_state.ring_position = ATOMIC_INIT(RING_POS_UNKNOWN);
 	summary_state.battery_voltage =  ATOMIC_INIT(0); 

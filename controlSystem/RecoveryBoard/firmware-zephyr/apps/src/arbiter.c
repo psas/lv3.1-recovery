@@ -72,10 +72,10 @@ void arbiter_show_hall_state_limits(const struct shell *shell)
 {
 	uint32_t v_under_limit, inactive_limit, between_limit, active_limit;
 
-	get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_UNDER, &v_under_limit);
-	get_hall_sensor_limit(HALL_SENSOR_1, HALL_STATE_V_INACTIVE, &inactive_limit);
-	get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_BETWEEN, &between_limit);
-	get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_ACTIVE, &active_limit);
+	keeper_get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_UNDER, &v_under_limit);
+	keeper_get_hall_sensor_limit(HALL_SENSOR_1, HALL_STATE_V_INACTIVE, &inactive_limit);
+	keeper_get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_BETWEEN, &between_limit);
+	keeper_get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_ACTIVE, &active_limit);
 
 	shell_fprintf(shell, SHELL_NORMAL, "Hall sensor state limit values (in ADC "
 	  "counts):\n");
@@ -84,10 +84,10 @@ void arbiter_show_hall_state_limits(const struct shell *shell)
 	shell_fprintf(shell, SHELL_NORMAL, "  between limit sensor 1: %u\n", between_limit);
 	shell_fprintf(shell, SHELL_NORMAL, "   active limit sensor 1: %u\n", active_limit);
 
-	get_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_UNDER, &v_under_limit);
-	get_hall_sensor_limit(HALL_SENSOR_2, HALL_STATE_V_INACTIVE, &inactive_limit);
-	get_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_BETWEEN, &between_limit);
-	get_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_ACTIVE, &active_limit);
+	keeper_get_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_UNDER, &v_under_limit);
+	keeper_get_hall_sensor_limit(HALL_SENSOR_2, HALL_STATE_V_INACTIVE, &inactive_limit);
+	keeper_get_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_BETWEEN, &between_limit);
+	keeper_get_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_ACTIVE, &active_limit);
 
 	shell_fprintf(shell, SHELL_NORMAL, "  v under limit sensor 2: %u\n", v_under_limit);
 	shell_fprintf(shell, SHELL_NORMAL, " inactive limit sensor 2: %u\n", inactive_limit);
@@ -117,9 +117,7 @@ void arbiter_cmd_set_default_limits(const struct shell *shell, size_t argc, char
  *   of five states.
  */
 
-// TODO [ ] determine whether this routine should be private:
-
-int32_t adc_reading_to_hall_state(const enum hall_sensor_instances sensor_idx,
+static int32_t adc_reading_to_hall_state(const enum hall_sensor_instances sensor_idx,
 				  const uint32_t adc_reading,
 				  enum hall_sensor_state_ids *state)
 {
@@ -129,10 +127,10 @@ int32_t adc_reading_to_hall_state(const enum hall_sensor_instances sensor_idx,
 		return -EINVAL;
 	}
 
-	get_hall_sensor_limit(sensor_idx, HALL_LIMIT_V_UNDER, &limit_v_under);
-	get_hall_sensor_limit(sensor_idx, HALL_STATE_V_INACTIVE, &limit_inactive);
-	get_hall_sensor_limit(sensor_idx, HALL_LIMIT_V_BETWEEN, &limit_between);
-	get_hall_sensor_limit(sensor_idx, HALL_LIMIT_V_ACTIVE, &limit_active);
+	keeper_get_hall_sensor_limit(sensor_idx, HALL_LIMIT_V_UNDER, &limit_v_under);
+	keeper_get_hall_sensor_limit(sensor_idx, HALL_STATE_V_INACTIVE, &limit_inactive);
+	keeper_get_hall_sensor_limit(sensor_idx, HALL_LIMIT_V_BETWEEN, &limit_between);
+	keeper_get_hall_sensor_limit(sensor_idx, HALL_LIMIT_V_ACTIVE, &limit_active);
 
 	if (adc_reading < limit_v_under) {
 		*state = HALL_STATE_V_UNDER;
@@ -151,7 +149,14 @@ int32_t adc_reading_to_hall_state(const enum hall_sensor_instances sensor_idx,
 
 #define DEV_ARB_MESG_SIZE 256
 
-void arb_mesg(char *fmt, ...)
+/**
+ * @brief Routine to print arbiter messages to logging backend, with a run time
+ *   check of app logging state, as held by ERS Zephyr keeper module.
+ *
+ * @note 'arb_mesg' is short for "arbiter message".
+ */
+
+static void arb_mesg(char *fmt, ...)
 {
 	int32_t rc = 0;
 	static char lbuf[DEV_ARB_MESG_SIZE] = {0};
@@ -175,7 +180,7 @@ void arb_mesg(char *fmt, ...)
 
 	size = (size_t) n + 1;      /* One extra byte for '\0' */
 	if (size > DEV_ARB_MESG_SIZE) {
-		LOG_WRN("Messages truncated, is %d chars, only able to show %d",
+		LOG_WRN("Message truncated, is %d chars, only able to show %d",
 			size, DEV_ARB_MESG_SIZE);
 		size = DEV_ARB_MESG_SIZE;
 	}
@@ -211,7 +216,7 @@ int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 	enum hall_sensor_state_ids hall_1_state = HALL_STATE_UNKNOWN;
 	enum hall_sensor_state_ids hall_2_state = HALL_STATE_UNKNOWN;
 
-	rc = ekget_both_hall_sensors(&hall_1_reading, &hall_2_reading);
+	rc = keeper_get_both_hall_sensors(&hall_1_reading, &hall_2_reading);
 	if (rc != 0) {
 		LOG_ERR("determine ring position could not get hall readings, err %d", rc);
 		goto done;
@@ -524,8 +529,9 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 		keeper_get_ring_status(&ring_state);
 
 		// LOG_INF("- DEV 0105 - determining ERS ready state . . .");
-		arb_mesg("- DEV 0105 - batt_ok %d, can_ok %d, ring_state %d",
-			battery_ok, can_bus_ok, ring_state);
+		// arb_mesg("- DEV 0105 - batt_ok %d, can_ok %d, ring_state %d",
+		//	battery_ok, can_bus_ok, ring_state);
+
 		if (battery_ok && can_bus_ok && (ring_state == RING_STATE_LOCKED)) {
 			keeper_set_ready_state(true);
 		} else {

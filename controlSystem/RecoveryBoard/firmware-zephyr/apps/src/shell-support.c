@@ -207,10 +207,10 @@ SHELL_SUBCMD_ADD((hall), active, &sub_section_hall_set,
 
 
 SHELL_SUBCMD_ADD((hall), save, &sub_section_hall, "save Hall sensor limits to flash (default "
-  "limits still available)", cmd_save_hall_limits_to_flash, 1, 0);
+  "limits still available)", keeper_cmd_store_hall_limits, 1, 0);
 
 SHELL_SUBCMD_ADD((hall), retrieve, &sub_section_hall, "retrieve Hall sensor limits from flash",
-  cmd_retrieve_hall_limits_from_flash, 1, 0);
+  keeper_cmd_retrieve_hall_limits, 1, 0);
 
 
 SHELL_SUBCMD_ADD((hall), set_defaults, &sub_section_hall, "restore Hall sensor limit defaults",
