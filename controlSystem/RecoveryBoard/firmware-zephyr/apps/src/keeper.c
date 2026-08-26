@@ -4,7 +4,6 @@
  */
 
 // TODO [ ] Standardize public API names to begin with 'keeper_'.
-// TODO [x] Double quote local header filenames here and in all ERS sources.
 #include "arbiter.h"
 #include "ers-config.h"
 #include "keeper.h"
@@ -19,7 +18,7 @@
 LOG_MODULE_REGISTER(keeper, LOG_LEVEL_INF);
 
 //----------------------------------------------------------------------
-// - SECTION - defines
+// - SECTION - file scoped
 //----------------------------------------------------------------------
 
 // There happen to be eight Hall sensor limit values to store, and to retrieve
@@ -27,25 +26,19 @@ LOG_MODULE_REGISTER(keeper, LOG_LEVEL_INF);
 // store bit-wise left shift values.  These are used to track store and retrieve
 // errors, to allow for attempting further retrieve ops even when some fail.
 
-// TODO [ ] Consider renaming STORE_ to OP_ to make name more general, and to
-//          reuse this enum for all keeper data operations:
 enum keeper_store_value_result {
-STORE_RESULT_1_SHIFT = 0,
-STORE_RESULT_2_SHIFT,
-STORE_RESULT_3_SHIFT,
-STORE_RESULT_4_SHIFT,
+KEEPER_OP_1_SHIFT = 0,
+KEEPER_OP_2_SHIFT,
+KEEPER_OP_3_SHIFT,
+KEEPER_OP_4_SHIFT,
 
-STORE_RESULT_5_SHIFT,
-STORE_RESULT_6_SHIFT,
-STORE_RESULT_7_SHIFT,
-STORE_RESULT_8_SHIFT,
+KEEPER_OP_5_SHIFT,
+KEEPER_OP_6_SHIFT,
+KEEPER_OP_7_SHIFT,
+KEEPER_OP_8_SHIFT,
 
 COUNT_OF_STORE_RESULTS,
 };
-
-//----------------------------------------------------------------------
-// - SECTION - file scoped
-//----------------------------------------------------------------------
 
 /**
  * @defgroup digital_inputs
@@ -432,130 +425,58 @@ int32_t keeper_cmd_store_hall_limits(const struct shell *shell, size_t argc, cha
 	ARG_UNUSED(argc);
 	ARG_UNUSED(argv);
 
-	// Here declare four local variables, one for each stored sensor limit.
-	// We use these for the first Hall sensor, then re-use for the second sensor:
-	// uint32_t v_under_limit, inactive_limit, between_limit, active_limit;
+	// Declare and define an array of Hall sensor limit values,
+	// which will be used for each Hall sensor in the system:
 	uint32_t hall_limit[HALL_SENSOR_LIMIT_COUNT] = { 0 };
 
+	// Track any errors in get and store operations, so that we can at
+	// least partially succeed if some values fail in these operations:
 	int32_t get_errors = 0;
 	int32_t store_errors = 0;
 	enum data_operation op = KEEPER_OP_GET;
 	int32_t rc = 0;
 
-	// For each get operation and store operation, we check for errors.
-	// If a get op fails we don't have a valid value to store, so we don't
-	// store.
+#define ERR_FLAG_BIT_SHIFT (j + HALL_SENSOR_LIMIT_COUNT * i)
 
 	for (uint32_t i = 0; i < HALL_SENSOR_COUNT; i++) {
 		for (uint32_t j = 0; j < HALL_SENSOR_LIMIT_COUNT; j++) {
-			// rc = keeper_get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_UNDER, &v_under_limit);
 			rc = keeper_get_hall_sensor_limit(i, j, &hall_limit[j]);
+
+			// LOG_INF("- DEV - for Hall %d limit %d, error flag bit shift is %d", i, j, ERR_FLAG_BIT_SHIFT);
+
 			if (rc < 0) {
-				// handle error
+				op = KEEPER_OP_GET;
+				get_errors |= track_err(op, ERR_FLAG_BIT_SHIFT,
+					       	COUNT_OF_STORE_RESULTS, rc);
+				LOG_ERR("Failed to get Hall %d limit %d, err %d", i, j, rc);
+				// When get op fails, do not attempt to store anything:
 				continue;
 			}
-			// TODO [ ] Refactor keyname construction details here to the settings module:
 			rc = ers_settings_store_hall_limit(i, j,
-					       	(const void *)&hall_limit[j],
-						sizeof(&hall_limit[j]));
+					       		(const void *)hall_limit[j],
+							sizeof(hall_limit[j]));
 			if (rc < 0) {
-				// handle error
+				op = KEEPER_OP_STORE;
+				store_errors |= track_err(op, ERR_FLAG_BIT_SHIFT,
+					       	COUNT_OF_STORE_RESULTS, rc);
 			}
 		}
 	}
 
-
-
-#if 0
-	// Get the latest Hall limits values stored in SRAM:
-	rc = keeper_get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_UNDER, &v_under_limit);
-	rc = keeper_get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_INACTIVE, &inactive_limit);
-	rc = keeper_get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_BETWEEN, &between_limit);
-	rc = keeper_get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_ACTIVE, &active_limit);
-
-	rc = keeper_get_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_UNDER, &v_under_limit);
-	if (rc == 0) {
-		get_errors |= track_err(op, STORE_RESULT_5_SHIFT, COUNT_OF_STORE_RESULTS, rc);
+	if (get_errors) {
+		shell_fprintf(shell, SHELL_ERROR, "Failed to store some Hall sensor limits,\n");
+		shell_fprintf(shell, SHELL_ERROR, "bit-wise errors in hexadecimal are 0x%02X,\n",
+				get_errors);
 	}
 
-	rc = keeper_get_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_INACTIVE, &inactive_limit);
-	if (rc < 0) {
-		get_errors |= track_err(op, STORE_RESULT_6_SHIFT, COUNT_OF_STORE_RESULTS, rc);
-	}
-
-	rc = keeper_get_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_BETWEEN, &between_limit);
-	if (rc < 0) {
-		get_errors |= track_err(op, STORE_RESULT_7_SHIFT, COUNT_OF_STORE_RESULTS, rc);
-	}
-
-	rc = keeper_get_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_ACTIVE, &active_limit);
-	if (rc < 0) {
-		get_errors |= track_err(op, STORE_RESULT_8_SHIFT, COUNT_OF_STORE_RESULTS, rc);
-	}
-
-	// Store these Hall limits values in flash:
-	op = KEEPER_OP_STORE;
-	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_1), (const void *)v_under_limit,
-				sizeof(v_under_limit));
-	if (rc < 0) {
-		store_errors |= track_err(op, STORE_RESULT_1_SHIFT, COUNT_OF_STORE_RESULTS, rc);
-	}
-
-	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_2), (const void *)inactive_limit,
-				sizeof(inactive_limit));
-	if (rc < 0) {
-		store_errors |= track_err(op, STORE_RESULT_2_SHIFT, COUNT_OF_STORE_RESULTS, rc);
-	}
-
-	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_3), (const void *)between_limit,
-				sizeof(between_limit));
-	if (rc < 0) {
-		store_errors |= track_err(op, STORE_RESULT_3_SHIFT, COUNT_OF_STORE_RESULTS, rc);
-	}
-
-	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_4), (const void *)active_limit,
-				sizeof(active_limit));
-	if (rc < 0) {
-		store_errors |= track_err(op, STORE_RESULT_4_SHIFT, COUNT_OF_STORE_RESULTS, rc);
-	}
-
-	// Store these Hall limits values in flash:
-	op = KEEPER_OP_STORE;
-	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_1), (const void *)v_under_limit,
-				sizeof(v_under_limit));
-	if (rc < 0) {
-		store_errors |= track_err(STORE_RESULT_5_SHIFT, COUNT_OF_STORE_RESULTS, rc);
-	}
-
-	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_2), (const void *)inactive_limit,
-				sizeof(inactive_limit));
-	if (rc < 0) {
-		store_errors |= track_err(STORE_RESULT_6_SHIFT, COUNT_OF_STORE_RESULTS, rc);
-	}
-
-	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_3), (const void *)between_limit,
-				sizeof(between_limit));
-	if (rc < 0) {
-		store_errors |= track_err(STORE_RESULT_7_SHIFT, COUNT_OF_STORE_RESULTS, rc);
-	}
-
-	rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_4), (const void *)active_limit,
-				sizeof(active_limit));
-	if (rc < 0) {
-		store_errors |= track_err(STORE_RESULT_8_SHIFT, COUNT_OF_STORE_RESULTS, rc);
-	}
-
-	// TODO [ ] Check get_errors here . . .
-
-	// TODO [ ] Check store_errors here . . .
 	if (store_errors) {
-		shell_fprintf(shell, SHELL_NORMAL, "Failed to store some Hall sensor limits,\n");
-		shell_fprintf(shell, SHELL_NORMAL, "bit-wise errors in hexadecimal are 0x%02X,\n",
+		shell_fprintf(shell, SHELL_ERROR, "Failed to store some Hall sensor limits,\n");
+		shell_fprintf(shell, SHELL_ERROR, "bit-wise errors in hexadecimal are 0x%02X,\n",
 				store_errors);
+		rc = store_errors;
 	} else {
 		shell_fprintf(shell, SHELL_NORMAL, "Hall sensor limit values stored to flash.\n");
 	}
-#endif // 0
 
 	return rc;
 }
