@@ -1,7 +1,7 @@
 #ifndef ERS_KEEPER_H
 #define ERS_KEEPER_H
 
-#include <arbiter.h>
+#include "arbiter.h"
 #include "ers-config.h"
 
 /**
@@ -40,20 +40,6 @@ int32_t keeper_init(void);
 // - SECTION - ERS configuration
 //----------------------------------------------------------------------
 
-#if 0 // This routine factored to keeper.c and now qualified private:
-/**
- * @brief Routine to set a given Hall sensor limit, a cutoff value
- *   measured in ADC counts, for each hall sensor in an ERS board.
- *
- * @return 0 status code when sensor id, limit id in bounds.
- * @return -EINVAL otherwise.
- */
-
-int32_t set_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
-				const enum hall_sensor_named_limits limit_idx,
-				const uint32_t val);
-#endif // 0
-
 /**
  * @brief Routine to return a Hall sensor limit for given sensor.
  *
@@ -80,9 +66,9 @@ int32_t keeper_set_hall_sensor_default_limits(void);
  */
 
 int32_t keeper_cmd_set_limit_v_under(const struct shell *shell, size_t argc, char **argv);
-int32_t cmd_set_limit_inactive(const struct shell *shell, size_t argc, char **argv);
-int32_t cmd_set_limit_between(const struct shell *shell, size_t argc, char **argv);
-int32_t cmd_set_limit_active(const struct shell *shell, size_t argc, char **argv);
+int32_t keeper_cmd_set_limit_inactive(const struct shell *shell, size_t argc, char **argv);
+int32_t keeper_cmd_set_limit_between(const struct shell *shell, size_t argc, char **argv);
+int32_t keeper_cmd_set_limit_active(const struct shell *shell, size_t argc, char **argv);
 
 /**
  * @brief
@@ -131,60 +117,63 @@ enum ers_adc_values_in_mv {
 
 // Digital inputs
 
-void ekset_iso_drogue(const uint32_t value);
-void ekset_iso_main(const uint32_t value);
-void ekset_not_umb_on(const uint32_t value);
-void ekset_not_motor_faila(const uint32_t value);
+void keeper_set_iso_drogue(const uint32_t value);      // TODO [ ] Check whether needed
+void keeper_set_iso_main(const uint32_t value);        // TODO [ ] Check whether needed
+void keeper_set_not_umb_on(const uint32_t value);
+void keeper_set_not_motor_faila(const uint32_t value); // TODO [ ] Check whether needed
 
-void ekget_iso_drogue(uint32_t* value);
-void ekget_iso_main(uint32_t* value);
-void ekget_not_umb_on(uint32_t* value);
-void ekget_not_motor_faila(uint32_t* value);
+void keeper_get_iso_drogue(uint32_t* value);           // TODO [ ] Check whether needed
+void keeper_get_iso_main(uint32_t* value);             // TODO [ ] Check whether needed
+void keeper_get_not_umb_on(uint32_t* value);
+void keeper_get_not_motor_faila(uint32_t* value);      // TODO [ ] Check whether needed
 
 // Analog inputs
 
-void ekset_batt_read(const uint32_t value);
-void ekset_motor_isense(const uint32_t value);
-void ekset_hall_1(const uint32_t value);
-void ekset_hall_2(const uint32_t value);
+void keeper_set_batt_read(const uint32_t value);
+void keeper_get_batt_read(uint32_t* value);
 
-void ekset_batt_read_mv(const uint32_t value);
-void ekset_motor_isense_ma(const uint32_t value);
-void ekset_hall_1_mv(const uint32_t value);
-void ekset_hall_2_mv(const uint32_t value);
+void keeper_set_motor_isense(const uint32_t value);
+void keeper_get_motor_isense(uint32_t* value);
 
-void ekset_batt_read_dv(const uint32_t value);
+void keeper_set_hall_1(const uint32_t value);
+void keeper_get_hall_1(uint32_t* value);
+
+void keeper_set_hall_2(const uint32_t value);
+void keeper_get_hall_2(uint32_t* value);
+
+void keeper_set_batt_read_mv(const uint32_t value);
+void keeper_get_batt_read_mv(uint32_t* value);         // TODO [ ] Check whether needed
+
+void keeper_set_motor_isense_ma(const uint32_t value);
+void keeper_get_motor_isense_ma(uint32_t* value);      // TODO [ ] Check whether needed
+
+void keeper_set_hall_1_mv(const uint32_t value);
+void keeper_get_hall_1_mv(uint32_t* value);
+
+void keeper_set_hall_2_mv(const uint32_t value);
+void keeper_get_hall_2_mv(uint32_t* value);
+
+void keeper_set_battery_decivolts(const uint32_t value);
+void keeper_get_battery_decivolts(uint32_t* value);
 
 /**
  * @return 0 on success to obtain mutex and to set sensor values
  * @return -ESRCH when module not initialized
  */
 
-int32_t ekset_both_hall_sensors(const uint32_t value_1, const uint32_t value_2);
+int32_t keeper_set_both_hall_sensors(const uint32_t value_1, const uint32_t value_2); // TODO [ ] Check whether needed
 
 /**
  * @brief API to set any one of ADC channel readings
  */
 
-int32_t ekset_adc_value(const enum ers_adc_values idx, const uint32_t value);
+int32_t keeper_set_adc_value(const enum ers_adc_values idx, const uint32_t value);
 
 /**
  * @brief API to set any one of ADC channel readings converted to millivolts
  */
 
-int32_t ekset_adc_value_in_mv(const enum ers_adc_values_in_mv idx, const uint32_t val);
-
-void ekget_batt_read(uint32_t* value);
-void ekget_motor_isense(uint32_t* value);
-void ekget_hall_1(uint32_t* value);
-void ekget_hall_2(uint32_t* value);
-
-void ekget_batt_read_mv(uint32_t* value);
-void ekget_motor_isense_mv(uint32_t* value);
-void keeper_get_hall_1_mv(uint32_t* value);
-void keeper_get_hall_2_mv(uint32_t* value);
-
-void ekget_batt_read_dv(uint32_t* value);
+int32_t keeper_set_adc_value_in_mv(const enum ers_adc_values_in_mv idx, const uint32_t val);
 
 // - DATA GROUP - (3) locking ring
 
@@ -194,19 +183,18 @@ void ekget_batt_read_dv(uint32_t* value);
  */
 int32_t keeper_get_both_hall_sensors(uint32_t *value_1, uint32_t *value_2);
 
-void set_ring_pos_detection_interval(const uint32_t timeout_ms);
+void keeper_set_ring_pos_detection_interval(const uint32_t timeout_ms);
+void keeper_get_ring_pos_detection_interval(uint32_t *timeout_ms);
 
-void get_ring_pos_detection_interval(uint32_t *timeout_ms);
-
-void set_detected_ring_position(const enum lock_ring_position ring_pos);
-
-void get_detected_ring_position(enum lock_ring_position *ring_pos);
+void keeper_set_detected_ring_position(const enum lock_ring_position ring_pos);
+void keeper_get_detected_ring_position(enum lock_ring_position *ring_pos);
 
 // Parachute section ring lock and unlock events
-void keeper_set_lock_event_count(const uint32_t count);
+void keeper_set_lock_event_count(const uint32_t count);   // <- TODO [ ] check whether used.
+void keeper_get_lock_event_count(uint32_t *count);        // <- TODO [ ] check whether used.
+
 void keeper_set_unlock_event_count(const uint32_t count);
-void get_ring_lock_event_count(uint32_t *count);        // <- TODO [ ] check whether used.
-void get_ring_unlock_event_count(uint32_t *count);      // <- TODO [ ] check whether used.
+void keeper_get_unlock_event_count(uint32_t *count);      // <- TODO [ ] check whether used.
 
 // - DATA GROUP - (4) motor
 
@@ -216,16 +204,20 @@ void keeper_get_DAC_val_for_ring_motor(uint32_t *value);
 // - DATA GROUP - (6) ERS summary state data
 
 void keeper_set_ring_status(const enum lock_ring_state value);
-void keeper_set_batt_ok(const uint32_t value);
-// TODO [ ] Add or move battery voltage setter and getter APIs here.
-void keeper_set_shore_power_ok(const uint32_t value);   // <- TODO [ ] check whether used.
-void keeper_set_can_bus_ok(const uint32_t value);
-void keeper_set_ready_state(const uint32_t value);
-
 void keeper_get_ring_status(enum lock_ring_state *value);
+
+// TODO [ ] Add or move battery voltage setter and getter APIs here.
+
+void keeper_set_batt_ok(const uint32_t value);
 void keeper_get_batt_ok(uint32_t* value);
-void keeper_get_shore_power_ok(uint32_t* value);        // <- TODO [ ] check whether used.
+
+void keeper_set_shore_power_ok(const uint32_t value);     // <- TODO [ ] check whether used.
+void keeper_get_shore_power_ok(uint32_t* value);          // <- TODO [ ] check whether used.
+
+void keeper_set_can_bus_ok(const uint32_t value);
 void keeper_get_can_bus_ok(uint32_t* value);
+
+void keeper_set_ready_state(const uint32_t value);
 void keeper_get_ready_state(uint32_t* value);
 
 // ERS diagnostics

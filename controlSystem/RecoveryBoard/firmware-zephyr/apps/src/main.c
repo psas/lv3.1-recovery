@@ -121,16 +121,16 @@ int main(void)
 			LOG_INF("- MARK -");
 			// Note appears that a = hall1, b = hall2, c = battery, d = motor_isense
 			uint32_t a, b, c, d;
-			ekget_batt_read(&a);
-			ekget_motor_isense(&b);
-			ekget_hall_1(&c);
-			ekget_hall_2(&d);
+			keeper_get_batt_read(&a);
+			keeper_get_motor_isense(&b);
+			keeper_get_hall_1(&c);
+			keeper_get_hall_2(&d);
 			LOG_INF("batt, motor, hall1, hall2: %u, %u, %u, %u", a, b, c, d);
 		}
 
 		k_msleep(200);
 		uint32_t b;
-		ekget_motor_isense(&b);
+		keeper_get_motor_isense(&b);
 		// LOG_INF("motor_isense ADC_IN9 = %u", b);
 
 #if 0

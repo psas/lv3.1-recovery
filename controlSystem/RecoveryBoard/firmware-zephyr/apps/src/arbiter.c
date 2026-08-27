@@ -382,74 +382,6 @@ char *arbiter_ring_pos_to_str(const enum lock_ring_position pos)
         }
 }
 
-#if 0
-//----------------------------------------------------------------------
-// - SECTION - arbiter scheduled elements
-//----------------------------------------------------------------------
-
-// Here define a routine to submit to Zephyr's work queue.
-
-void determine_ring_pos_work_handler(struct k_work *work)
-{
-	static uint32_t call_count = 0;
-
-	call_count++;
-	int32_t rc = arbiter_determine_ring_state(&ring_position_fs);
-	if (rc != 0) {
-		LOG_ERR("Failed to figure lock ring position, error %d", rc);
-	}
-
-	set_detected_ring_position(ring_position_fs);
-}
-
-K_WORK_DEFINE(determine_ring_pos_work, determine_ring_pos_work_handler);
-
-struct k_work_sync work_sync;
-
-atomic_t ring_pos_work_status = ATOMIC_INIT(0);
-
-void ring_position_timer_handler(struct k_timer *dummy)
-{
-	LOG_INF("M7");
-	bool flush_result = k_work_flush(&determine_ring_pos_work, &work_sync);
-	LOG_INF("call to k_work_flush returns %d", flush_result);
-
-	int32_t rc = k_work_submit(&determine_ring_pos_work);
-	if (rc < 0) {
-		// LOG_ERR("Failed to submit to work queue, err %d", rc);
-		atomic_set(&ring_pos_work_status, 1);
-	} else {
-		// LOG_ERR("work queue submission call returns status %d", rc);
-		atomic_set(&ring_pos_work_status, 0);
-	}
-}
-
-K_TIMER_DEFINE(ring_position_timer, ring_position_timer_handler, NULL);
-
-/**
- * @brief routine to change interval for lock ring position detection at
- *   run time.
- *
- * @return 0 without condition. 
- */
-
-int32_t arbiter_set_ring_pos_detection_interval(const uint32_t timeout_ms)
-{
-	LOG_INF("called to update ring position timer, requested interval %u ms", timeout_ms);
-
-	k_timer_stop(&ring_position_timer);
-
-	if (timeout_ms > 0) {
-		LOG_INF("M6 - %u ms", timeout_ms);
-		k_timer_start(&ring_position_timer, K_MSEC(100), K_MSEC(timeout_ms));
-	} else {
-		LOG_INF("Leaving timer stopped per request for zero length interval.");
-	}
-
-	return 0;
-}
-#endif // 0
-
 int32_t arbiter_set_ring_pos_detection_interval(const uint32_t timeout_ms)
 {
 	LOG_WRN("- DEV 0825 - stub function");
@@ -464,7 +396,7 @@ int32_t arbiter_set_ring_pos_detection_interval(const uint32_t timeout_ms)
 static int32_t determine_batt_ok(void)
 {
 	int32_t batt_voltage_in_tenths_v = 0;
-	ekget_batt_read_dv(&batt_voltage_in_tenths_v);
+	keeper_get_battery_decivolts(&batt_voltage_in_tenths_v);
 	if (batt_voltage_in_tenths_v >= BATTERY_VOLTAGE_OK_THRESHOLD_TENTHS_V) {
 		keeper_set_batt_ok(1);
 	} else {
@@ -480,11 +412,11 @@ int32_t calc_battery_voltage(void)
 	float battery_voltage = 0.0;
 	uint32_t battery_voltage_dv = 0;
 
-	ekget_batt_read(&adc_reading);
+	keeper_get_batt_read(&adc_reading);
 
 	battery_voltage = (double)(((double)adc_reading / (double)4096 *3.3) / 0.2326);
 	battery_voltage_dv = round(battery_voltage * 10);
-	ekset_batt_read_dv(battery_voltage_dv);
+	keeper_set_battery_decivolts(battery_voltage_dv);
 	return 0;
 }
 

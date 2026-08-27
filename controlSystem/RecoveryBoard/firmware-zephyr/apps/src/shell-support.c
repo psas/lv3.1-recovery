@@ -149,10 +149,10 @@ static int cmd_wrapper_read_adc_all(const struct shell *shell, size_t argc, char
 	}
 
 	uint32_t a, b, c, d;
-	ekget_batt_read(&a);
-	ekget_motor_isense(&b);
-	ekget_hall_1(&c);
-	ekget_hall_2(&d);
+	keeper_get_batt_read(&a);
+	keeper_get_motor_isense(&b);
+	keeper_get_hall_1(&c);
+	keeper_get_hall_2(&d);
 	shell_fprintf(shell, SHELL_NORMAL, "ADC counts for batter, motor current, Hall 1, Hall 2:\n");
 	shell_fprintf(shell, SHELL_NORMAL, "%u  %u  %u  %u\n", a, b, c, d);
 
@@ -197,21 +197,22 @@ SHELL_SUBCMD_ADD((hall), v_under, &sub_section_hall_set,
   keeper_cmd_set_limit_v_under, 3, 0);
 
 SHELL_SUBCMD_ADD((hall), inactive, &sub_section_hall_set,
-  "set Hall limit for state \"inactive\":  hall inactive [s1|s2] [value]", cmd_set_limit_inactive, 3, 0);
+  "set Hall limit for state \"inactive\":  hall inactive [s1|s2] [value]",
+  keeper_cmd_set_limit_inactive, 3, 0);
 
 SHELL_SUBCMD_ADD((hall), between, &sub_section_hall_set,
-  "set Hall limit for state \"between\":  hall between [s1|s2] [value]", cmd_set_limit_between, 3, 0);
+  "set Hall limit for state \"between\":  hall between [s1|s2] [value]",
+  keeper_cmd_set_limit_between, 3, 0);
 
 SHELL_SUBCMD_ADD((hall), active, &sub_section_hall_set,
-  "set Hall limit for state \"active\":  hall active [s1|s2] [value]", cmd_set_limit_active, 3, 0);
+  "set Hall limit for state \"active\":  hall active [s1|s2] [value]",
+  keeper_cmd_set_limit_active, 3, 0);
 
-
-SHELL_SUBCMD_ADD((hall), save, &sub_section_hall, "save Hall sensor limits to flash (default "
+SHELL_SUBCMD_ADD((hall), save, &sub_section_hall, "store Hall sensor limits to flash (default "
   "limits still available)", keeper_cmd_store_hall_limits, 1, 0);
 
 SHELL_SUBCMD_ADD((hall), retrieve, &sub_section_hall, "retrieve Hall sensor limits from flash",
   keeper_cmd_retrieve_hall_limits, 1, 0);
-
 
 SHELL_SUBCMD_ADD((hall), set_defaults, &sub_section_hall, "restore Hall sensor limit defaults",
   arbiter_cmd_set_default_limits, 1, 0);
@@ -297,7 +298,7 @@ static int cmd_set_pos_detection_interval(const struct shell *shell, size_t argc
 
 	shell_fprintf(shell, SHELL_NORMAL, "Storing ring position detection "
 			"interval of %u ms . . .\n", value);
-	set_ring_pos_detection_interval(value);
+	keeper_set_ring_pos_detection_interval(value);
 	rc = arbiter_set_ring_pos_detection_interval(value);
 	return rc;
 }
@@ -308,7 +309,7 @@ static int cmd_show_pos_detection_interval(const struct shell *shell, size_t arg
         ARG_UNUSED(argv);
 
         uint32_t value = 0;
-	get_ring_pos_detection_interval(&value);
+	keeper_get_ring_pos_detection_interval(&value);
 	shell_fprintf(shell, SHELL_NORMAL, "ring position detection interval is %u ms\n", value);
 	return 0;
 }

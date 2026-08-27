@@ -3,7 +3,6 @@
  * @brief ERS keeper module, to hold and to share run time state.
  */
 
-// TODO [ ] Standardize public API names to begin with 'keeper_'.
 #include "arbiter.h"
 #include "ers-config.h"
 #include "keeper.h"
@@ -64,7 +63,7 @@ static atomic_t batt_read_dv = ATOMIC_INIT(0);
 
 static atomic_t not_motor_faila = ATOMIC_INIT(0);
 static atomic_t motor_isense = ATOMIC_INIT(0);
-static atomic_t motor_isense_mv = ATOMIC_INIT(0);
+static atomic_t motor_isense_ma = ATOMIC_INIT(0);
 static atomic_t dac_setting_ring_motor = ATOMIC_INIT(0);
 
 /**
@@ -104,15 +103,17 @@ static atomic_t ring_unlock_events = ATOMIC_INIT(0);
 
 // Summary state variables (values usually determined by tests of simpler data):
 
+#if 1
 // TODO [ ] Consider factoring summary state variables into a structure,
 //  this may improve code readability and mainenance:
 
-static atomic_t ring_status = ATOMIC_INIT(0);
+// static atomic_t ring_status = ATOMIC_INIT(0);
 // QUESTION - put battery voltage in struct of ERS states?
 static atomic_t batt_ok = ATOMIC_INIT(0);
 static atomic_t shore_power_ok = ATOMIC_INIT(0);
 static atomic_t can_bus_ok = ATOMIC_INIT(0);
 static atomic_t rocket_ready = ATOMIC_INIT(0);
+#endif // 0
 
 // TODO [ ] create public API getter for CAN module to access ERS summary state.
 
@@ -125,20 +126,7 @@ struct ers_summary_state {
 	atomic_t ready_flag;
 };
 
-static struct ers_summary_state summary_state;
-
-// TODO [ ] Determine where and whether to use this struct 'ers_config_and_state':
-
-/**
- * @brief Struct of structs, gathers most ERS board state, configuration, 
- *   and sensor readings in one data structure.
- */
- 
-struct ers_config_and_state {
-	struct hall_sensor_limits *hall_1_limit;
-	struct hall_sensor_limits *hall_2_limit;
-	struct ers_summary_state *summary_state;
-};
+static struct ers_summary_state summary_state_fs;
 
 // Support run time toggling of diagnostics which share UART with Zephyr shell:
 static atomic_t ers_diag_flag_fs = ATOMIC_INIT(0);
@@ -192,23 +180,23 @@ static int32_t set_hall_sensor_limit(const enum hall_sensor_instances sensor_idx
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 // Battery reading in ADC counts
-void ekset_batt_read(const uint32_t value)
+void keeper_set_batt_read(const uint32_t value)
 {
 	atomic_set(&batt_read, (atomic_val_t)value);
 }
 
-void ekget_batt_read(uint32_t* value)
+void keeper_get_batt_read(uint32_t* value)
 {
 	*value = atomic_get(&batt_read);
 }
 
 // Battery reading in millivolts
-void ekset_batt_read_mv(const uint32_t value)
+void keeper_set_batt_read_mv(const uint32_t value)
 {
 	atomic_set(&batt_read_mv, (atomic_val_t)value);
 }
 
-void ekget_batt_read_mv(uint32_t* value)
+void keeper_get_batt_read_mv(uint32_t* value)
 {
 	*value = atomic_get(&batt_read_mv);
 }
@@ -217,32 +205,32 @@ void ekget_batt_read_mv(uint32_t* value)
 // - DATA GROUP - (2) digital inputs
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-void ekset_iso_drogue(const uint32_t value)
+void keeper_set_iso_drogue(const uint32_t value)
 {
 	atomic_set(&iso_drogue, (atomic_val_t)value);
 }
 
-void ekset_iso_main(const uint32_t value)
+void keeper_set_iso_main(const uint32_t value)
 {
 	atomic_set(&iso_main, (atomic_val_t)value);
 }
 
-void ekset_not_umb_on(const uint32_t value)
+void keeper_set_not_umb_on(const uint32_t value)
 {
 	atomic_set(&not_umb_on, (atomic_val_t)value);
 }
 
-void ekget_iso_drogue(uint32_t* value)
+void keeper_get_iso_drogue(uint32_t* value)
 {
 	*value = atomic_get(&iso_drogue);
 }
 
-void ekget_iso_main(uint32_t* value)
+void keeper_get_iso_main(uint32_t* value)
 {
 	*value = atomic_get(&iso_main);
 }
 
-void ekget_not_umb_on(uint32_t* value)
+void keeper_get_not_umb_on(uint32_t* value)
 {
 	*value = atomic_get(&not_umb_on);
 }
@@ -251,21 +239,21 @@ void ekget_not_umb_on(uint32_t* value)
 // - DATA GROUP - (2 1/2) analog inputs not categorized
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-int32_t ekset_adc_value(const enum ers_adc_values idx, const uint32_t val)
+int32_t keeper_set_adc_value(const enum ers_adc_values idx, const uint32_t val)
 {
 	switch (idx)
 	{
         case ADC_READING_BATT_READ:
-		ekset_batt_read(val);
+		keeper_set_batt_read(val);
 		break;
         case ADC_READING_MOTOR_ISENSE:
-		ekset_motor_isense(val);
+		keeper_set_motor_isense(val);
 		break;
 	case ADC_READING_HALL_1:
-		ekset_hall_1(val);
+		keeper_set_hall_1(val);
 		break;
         case ADC_READING_HALL_2:
-		ekset_hall_2(val);
+		keeper_set_hall_2(val);
 		break;
 	default:
 		LOG_ERR("Asked to store value for undefined ADC channel %d", idx);
@@ -275,21 +263,21 @@ int32_t ekset_adc_value(const enum ers_adc_values idx, const uint32_t val)
 	return 0;
 }
 
-int32_t ekset_adc_value_in_mv(const enum ers_adc_values_in_mv idx, const uint32_t val)
+int32_t keeper_set_adc_value_in_mv(const enum ers_adc_values_in_mv idx, const uint32_t val)
 {
 	switch (idx)
 	{
         case ADC_READING_BATT_READ_MV:
-		ekset_batt_read_mv(val);
+		keeper_set_batt_read_mv(val);
 		break;
         case ADC_READING_MOTOR_ISENSE_MV:
-		ekset_motor_isense_ma(val);
+		keeper_set_motor_isense_ma(val);
 		break;
         case ADC_READING_HALL_1_MV:
-		ekset_hall_1_mv(val);
+		keeper_set_hall_1_mv(val);
 		break;
         case ADC_READING_HALL_2_MV:
-		ekset_hall_2_mv(val);
+		keeper_set_hall_2_mv(val);
 		break;
 	default:
 		LOG_ERR("Asked to store value for undefined ADC channel %d", idx);
@@ -305,30 +293,35 @@ int32_t ekset_adc_value_in_mv(const enum ers_adc_values_in_mv idx, const uint32_
 
 // Routines set, get, store and retrieve Hall sensor limits
 
-// TODO [ ] Add check of 'endptr' to determine whether we got valid numeric input,
-//  in all routines which call strtol():
-
 int32_t keeper_cmd_set_limit_v_under(const struct shell *shell, size_t argc, char **argv)
 {
 	uint32_t value = 0;
-	char *endptr, *str;
+	char *str, *endptr;
 	enum hall_sensor_instances sensor_idx;
-
 	int32_t rc = determine_which_sensor(argv[1], &sensor_idx);
 	if (rc != 0) {
-		return -EINVAL;
+		rc = -EINVAL;
+		goto done;
 	}
 
 	str = argv[2];
 	value = strtol(str, &endptr, BASE_10);
+        if (*endptr != '\0') {
+		shell_fprintf(shell, SHELL_WARNING, "Parsed non-numeric "
+				"characters after number: '%s'\n", endptr);
+		rc = -EINVAL;
+		goto done;
+	}
+
 	shell_fprintf(shell, SHELL_NORMAL, "setting Hall sensor %d limit 'v_under' to %u\n",
 		      (sensor_idx + 1), value);
 	set_hall_sensor_limit(sensor_idx, HALL_LIMIT_V_UNDER, value);
 
-	return 0;
+done:
+	return rc;
 }
 
-int32_t cmd_set_limit_inactive(const struct shell *shell, size_t argc, char **argv)
+int32_t keeper_cmd_set_limit_inactive(const struct shell *shell, size_t argc, char **argv)
 {
 	uint32_t value = 0;
 	char *endptr, *str;
@@ -348,7 +341,7 @@ int32_t cmd_set_limit_inactive(const struct shell *shell, size_t argc, char **ar
 	return 0;
 }
 
-int32_t cmd_set_limit_between(const struct shell *shell, size_t argc, char **argv)
+int32_t keeper_cmd_set_limit_between(const struct shell *shell, size_t argc, char **argv)
 {
 	uint32_t value = 0;
 	char *endptr, *str;
@@ -368,7 +361,7 @@ int32_t cmd_set_limit_between(const struct shell *shell, size_t argc, char **arg
 	return 0;
 }
 
-int32_t cmd_set_limit_active(const struct shell *shell, size_t argc, char **argv)
+int32_t keeper_cmd_set_limit_active(const struct shell *shell, size_t argc, char **argv)
 {
 	uint32_t value = 0;
 	char *endptr, *str;
@@ -569,12 +562,12 @@ int32_t keeper_cmd_retrieve_hall_limits(const struct shell *shell, size_t argc, 
 
 // Getters
 
-void ekget_hall_1(uint32_t* value)
+void keeper_get_hall_1(uint32_t* value)
 {
 	*value = atomic_get(&hall_1);
 }
 
-void ekget_hall_2(uint32_t* value)
+void keeper_get_hall_2(uint32_t* value)
 {
 	*value = atomic_get(&hall_2);
 }
@@ -591,22 +584,22 @@ void keeper_get_hall_2_mv(uint32_t* value)
 
 // Setters
 
-void ekset_hall_1(const uint32_t value)
+void keeper_set_hall_1(const uint32_t value)
 {
 	atomic_set(&hall_1, (atomic_val_t)value);
 }
 
-void ekset_hall_2(const uint32_t value)
+void keeper_set_hall_2(const uint32_t value)
 {
 	atomic_set(&hall_2, (atomic_val_t)value);
 }
 
-void ekset_hall_1_mv(const uint32_t value)
+void keeper_set_hall_1_mv(const uint32_t value)
 {
 	atomic_set(&hall_1_mv, (atomic_val_t)value);
 }
 
-void ekset_hall_2_mv(const uint32_t value)
+void keeper_set_hall_2_mv(const uint32_t value)
 {
 	atomic_set(&hall_2_mv, (atomic_val_t)value);
 }
@@ -616,7 +609,7 @@ void ekset_hall_2_mv(const uint32_t value)
  *   to assure these values are read only when both are up to date.
  */
 
-int32_t ekset_both_hall_sensors(const uint32_t value_1, const uint32_t value_2)
+int32_t keeper_set_both_hall_sensors(const uint32_t value_1, const uint32_t value_2)
 {
 	int32_t rc = 0;
 	if (!keeper_initialized_fs)
@@ -632,8 +625,8 @@ int32_t ekset_both_hall_sensors(const uint32_t value_1, const uint32_t value_2)
 		return rc;
 	}
 
-	ekset_hall_1(value_1);
-	ekset_hall_2(value_2);
+	keeper_set_hall_1(value_1);
+	keeper_set_hall_2(value_2);
 
 	k_mutex_unlock(&hall_sensors_mtx);
 	if (rc != 0)
@@ -753,24 +746,24 @@ int32_t keeper_get_hall_sensor_limit(const enum hall_sensor_instances sensor_idx
 	return 0;
 }
 
-void set_ring_pos_detection_interval(const uint32_t timeout_ms)
+void keeper_set_ring_pos_detection_interval(const uint32_t timeout_ms)
 {
 	atomic_set(&ring_pos_interval, (atomic_val_t)timeout_ms);
 }
 
-void get_ring_pos_detection_interval(uint32_t *timeout_ms)
+void keeper_get_ring_pos_detection_interval(uint32_t *timeout_ms)
 {
 	*timeout_ms = atomic_get(&ring_pos_interval);
 }
 
-void set_detected_ring_position(const enum lock_ring_position ring_pos)
+void keeper_set_detected_ring_position(const enum lock_ring_position ring_pos)
 {
-	atomic_set(&summary_state.ring_position, (atomic_val_t)ring_pos);
+	atomic_set(&summary_state_fs.ring_position, (atomic_val_t)ring_pos);
 }
 
-void get_detected_ring_position(enum lock_ring_position *ring_pos)
+void keeper_get_detected_ring_position(enum lock_ring_position *ring_pos)
 {
-	*ring_pos = atomic_get(&summary_state.ring_position);
+	*ring_pos = atomic_get(&summary_state_fs.ring_position);
 }
 
 // Parachute section ring lock and unlock events
@@ -780,19 +773,19 @@ void keeper_set_lock_event_count(const uint32_t count)
 	atomic_set(&ring_lock_events, (atomic_val_t)count);
 }
 
+void keeper_get_unlock_event_count(uint32_t *count)
+{
+	*count = atomic_get(&ring_unlock_events);
+}
+
 void keeper_set_unlock_event_count(const uint32_t count)
 {
 	atomic_set(&ring_unlock_events, (atomic_val_t)count);
 }
 
-void get_ring_lock_event_count(uint32_t *count)
+void keeper_get_lock_event_count(uint32_t *count)
 {
 	*count = atomic_get(&ring_lock_events);
-}
-
-void get_ring_unlock_event_count(uint32_t *count)
-{
-	*count = atomic_get(&ring_unlock_events);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -800,34 +793,36 @@ void get_ring_unlock_event_count(uint32_t *count)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 // motor current reading in ADC counts
-void ekset_motor_isense(const uint32_t value)
+void keeper_set_motor_isense(const uint32_t value)
 {
 	atomic_set(&motor_isense, (atomic_val_t)value);
 }
 
-void ekget_motor_isense(uint32_t* value)
+void keeper_get_motor_isense(uint32_t* value)
 {
 	*value = atomic_get(&motor_isense);
 }
 
 // motor current reading in milliamps
-void ekset_motor_isense_ma(const uint32_t value)
+void keeper_set_motor_isense_ma(const uint32_t value)
 {
-	atomic_set(&motor_isense_mv, (atomic_val_t)value);
+	atomic_set(&motor_isense_ma, (atomic_val_t)value);
 }
 
-void ekget_motor_isense_mv(uint32_t* value)
+void keeper_get_motor_isense_ma(uint32_t* value)
 {
-	*value = atomic_get(&motor_isense_mv);
+	*value = atomic_get(&motor_isense_ma);
 }
 
 // motor digitnal status signal out
-void ekset_not_motor_faila(const uint32_t value)
+// TODO [ ] Do we really need to store "not motor faila", or is it used
+//          immediately and volatile in a practical sense?
+void keeper_set_not_motor_faila(const uint32_t value)
 {
 	atomic_set(&not_umb_on, (atomic_val_t)value);
 }
 
-void ekget_not_motor_faila(uint32_t* value)
+void keeper_get_not_motor_faila(uint32_t* value)
 {
 	*value = atomic_get(&not_motor_faila);
 }
@@ -850,21 +845,23 @@ void keeper_get_DAC_val_for_ring_motor(uint32_t *value)
 // Lock ring status
 void keeper_set_ring_status(const enum lock_ring_state value)
 {
-	atomic_set(&ring_status, (atomic_val_t)value);
+	// atomic_set(&ring_status, (atomic_val_t)value);
+	atomic_set(&summary_state_fs.ring_position, (atomic_val_t)value);
 }
 
 void keeper_get_ring_status(enum lock_ring_state *value)
 {
-	*value = atomic_get(&ring_status);
+	// *value = atomic_get(&ring_status);
+	*value = atomic_get(&summary_state_fs.ring_position);
 }
 
-// Battery reading in decivolts
-void ekset_batt_read_dv(const uint32_t value)
+// Battery voltage
+void keeper_set_battery_decivolts(const uint32_t value)
 {
 	atomic_set(&batt_read_dv, (atomic_val_t)value);
 }
 
-void ekget_batt_read_dv(uint32_t *value)
+void keeper_get_battery_decivolts(uint32_t *value)
 {
 	*value = atomic_get(&batt_read_dv);
 }
@@ -964,12 +961,12 @@ static int32_t initialize_system_state_vars(void)
 
 	atomic_set(&ring_pos_interval, (atomic_val_t)CONFIG_ARBITER_LOOP_SLEEP_PER_MS);
 
-	summary_state.ring_position = ATOMIC_INIT(RING_POS_UNKNOWN);
-	summary_state.battery_voltage =  ATOMIC_INIT(0); 
-	summary_state.battery_ok = ATOMIC_INIT(0); 
-	summary_state.shore_power_ok = ATOMIC_INIT(0);
-	summary_state.can_bus_ok = ATOMIC_INIT(0);
-	summary_state.ready_flag = ATOMIC_INIT(0);
+	summary_state_fs.ring_position = ATOMIC_INIT(RING_POS_UNKNOWN);
+	summary_state_fs.battery_voltage =  ATOMIC_INIT(0); 
+	summary_state_fs.battery_ok = ATOMIC_INIT(0); 
+	summary_state_fs.shore_power_ok = ATOMIC_INIT(0);
+	summary_state_fs.can_bus_ok = ATOMIC_INIT(0);
+	summary_state_fs.ready_flag = ATOMIC_INIT(0);
 
 	rc = keeper_set_hall_sensor_default_limits();
 

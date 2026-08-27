@@ -135,7 +135,7 @@ int32_t adc_read_channels(const enum ers_adc_values idx_begin,
                 }
 
 		// Store ADC reading in ERS app "keeper" module:
-		ekset_adc_value(i, (uint32_t)buf);
+		keeper_set_adc_value(i, (uint32_t)buf);
 
                 /*
                  * If using differential mode, the 16 bit value
@@ -163,7 +163,7 @@ int32_t adc_read_channels(const enum ers_adc_values idx_begin,
                 else
                 {
 			// Store ADC reading in ERS app "keeper" module:
-			ekset_adc_value_in_mv(i, (uint32_t)buf);
+			keeper_set_adc_value_in_mv(i, (uint32_t)buf);
 #ifdef DEV_ERS_ADC_PERIODIC_REPORTING
                         LOG_INF(" = %"PRId32" mV", val_mv);
 #endif

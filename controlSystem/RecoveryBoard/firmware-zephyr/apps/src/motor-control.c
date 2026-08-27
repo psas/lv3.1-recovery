@@ -4,9 +4,9 @@
  * ERS board firmware source file motor-control.c
  */
 
-#include <arbiter.h>
-#include <ers-dac.h>
-#include <keeper.h>
+#include "arbiter.h"
+#include "ers-dac.h"
+#include "keeper.h"
 #include "settings-ers.h"
 
 #include <zephyr/kernel.h>
@@ -295,7 +295,7 @@ int32_t mc_lock_ring(void)
 
 	for (i = 0; i < COUNT_CHECKS; i++)
 	{
-		get_detected_ring_position(&ring_pos);
+		keeper_get_detected_ring_position(&ring_pos);
 
 		if ((ring_pos == RING_POS_LOCKED) ||
 		    (ring_pos == RING_POS_LOCKED_FULLY_QUALIFIED))
@@ -303,7 +303,7 @@ int32_t mc_lock_ring(void)
 			break;
 		}
 
-		ekget_motor_isense(&motor_current_in_adc_fs[i]);
+		keeper_get_motor_isense(&motor_current_in_adc_fs[i]);
 		k_msleep(RING_CHECK_INTERVAL_MS);
 	}
 	LOG_INF("Stopping motor on ring position = %d", ring_pos);
@@ -349,7 +349,7 @@ int32_t mc_unlock_ring(void)
 
 	for (i = 0; i < COUNT_CHECKS; i++)
 	{
-		get_detected_ring_position(&ring_pos);
+		keeper_get_detected_ring_position(&ring_pos);
 
 		if ((ring_pos == RING_POS_UNLOCKED) ||
 		    (ring_pos == RING_POS_UNLOCKED_FULLY_QUALIFIED))

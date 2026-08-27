@@ -179,7 +179,7 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
 
 	// (2)
 	uint32_t battery_voltage = 0;
-	ekget_batt_read_dv(&battery_voltage);
+	keeper_get_battery_decivolts(&battery_voltage);
 
 	// (3)
 	uint32_t batt_ok_flag = 0;
@@ -187,7 +187,7 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
 
 	// (4 . . . drogue chute board detected power status)
 	uint32_t not_umb_on = 0;
-	ekget_not_umb_on(&not_umb_on);
+	keeper_get_not_umb_on(&not_umb_on);
 
 	// (5)
 	uint32_t can_bus_ok_flag = 0;            // define local var in "prep and send status frame"
