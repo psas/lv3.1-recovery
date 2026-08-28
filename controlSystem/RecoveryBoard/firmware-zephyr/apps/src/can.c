@@ -8,7 +8,9 @@
  * @note CAN message filters are presently defined in routine rx_thread_entry().
  */
 
-#include <stdio.h>
+#include "ers-app-config.h"
+#include "keeper.h"
+#include "motor-control.h"
 
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
@@ -17,17 +19,15 @@
 #include <zephyr/sys/byteorder.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/logging/log.h>
-// LOG_MODULE_REGISTER(ers_can, CONFIG_CAN_LOG_LEVEL);
-LOG_MODULE_REGISTER(ers_can, LOG_LEVEL_ERR);
 
-#include <ers-app-config.h>
-#include <keeper.h>
-#include <motor-control.h>
+#include <stdio.h>
+
+LOG_MODULE_REGISTER(ers_can, CONFIG_CAN_LOG_LEVEL);
 
 K_THREAD_STACK_DEFINE(rx_thread_stack, CONFIG_CAN_RX_THREAD_STACK_SIZE);
 struct k_thread rx_thread_data;
 
-#define SLEEP_TIME K_MSEC(250)
+// #define SLEEP_TIME K_MSEC(250)
 
 /**
  * @note CAN frame ids for ERS:  while ERS sender won't listen for
@@ -66,8 +66,7 @@ struct k_thread rx_thread_data;
 
 const struct device *const can_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_canbus));
 
-// TODO [x] Review whether this message queues needed:
-CAN_MSGQ_DEFINE(counter_msgq, 2);
+CAN_MSGQ_DEFINE(ers_can_msgq, 2);
 
 #if defined(ERS_BOARD_VARIANT_SENDER)
 enum ers_state_var_indeces {
@@ -283,31 +282,39 @@ void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 		.mask = CAN_STD_ID_MASK
 	};
 
+// TODO [ ] Consider putting following drogue and main chute symbols in Kconfig:
+#if defined(ERS_BOARD_VARIANT_DROGUE_CHUTE)
 	const struct can_filter filter_unlock_drogue_chute = {
 		.flags = 0,
 		.id = MSG_ID_UNLOCK_DROGUE_CHUTE,
 		.mask = CAN_STD_ID_MASK
 	};
-
+#elif defined(ERS_BOARD_VARIANT_MAIN_CHUTE)
 	const struct can_filter filter_unlock_main_chute = {
 		.flags = 0,
 		.id = MSG_ID_UNLOCK_MAIN_CHUTE,
 		.mask = CAN_STD_ID_MASK
 	};
+#else
+#error "Need one of board variant 'drogue' or 'main' chute specified for build!"
+#endif
 
 	struct can_frame frame;
 	int filter_id;
 
-	filter_id = can_add_rx_filter_msgq(can_dev, &counter_msgq, &filter_sender_heartbeat);
-	filter_id = can_add_rx_filter_msgq(can_dev, &counter_msgq, &filter_drogue_heartbeat);
-	filter_id = can_add_rx_filter_msgq(can_dev, &counter_msgq, &filter_main_heartbeat);
-// TODO [ ] consider adding build time symbol to select CAN filter additions
-//          based on given ERS firmware variant 'sender', 'drogue', and 'main'.
-	filter_id = can_add_rx_filter_msgq(can_dev, &counter_msgq, &filter_unlock_drogue_chute);
-	filter_id = can_add_rx_filter_msgq(can_dev, &counter_msgq, &filter_unlock_main_chute);
+	filter_id = can_add_rx_filter_msgq(can_dev, &ers_can_msgq, &filter_sender_heartbeat);
+	filter_id = can_add_rx_filter_msgq(can_dev, &ers_can_msgq, &filter_drogue_heartbeat);
+	filter_id = can_add_rx_filter_msgq(can_dev, &ers_can_msgq, &filter_main_heartbeat);
+#if defined(ERS_BOARD_VARIANT_DROGUE_CHUTE)
+	filter_id = can_add_rx_filter_msgq(can_dev, &ers_can_msgq, &filter_unlock_drogue_chute);
+#elif defined(ERS_BOARD_VARIANT_MAIN_CHUTE)
+	filter_id = can_add_rx_filter_msgq(can_dev, &ers_can_msgq, &filter_unlock_main_chute);
+#else
+#error "Need one of board variant 'drogue' or 'main' chute specified for build!"
+#endif
 
 	while (1) {
-		k_msgq_get(&counter_msgq, &frame, K_FOREVER);
+		k_msgq_get(&ers_can_msgq, &frame, K_FOREVER);
 
 		if (IS_ENABLED(CONFIG_CAN_ACCEPT_RTR) && (frame.flags & CAN_FRAME_RTR) != 0U) {
 			continue;
@@ -350,11 +357,7 @@ void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 
 			prep_and_send_ack_unlock_command();
 			break;
-#if defined(ERS_BOARD_VARIANT_MAIN_CHUTE)
-//		case MSG_ID_UNLOCK_MAIN_CHUTE:
-//			LOG_INF("RX %X - unlock main chute", frame.id);
-//			break;
-#endif
+
 		default:
 			LOG_WRN("RX %X <- unrecognized CAN frame id", frame.id);
 		}
@@ -404,7 +407,8 @@ int32_t ers_init_can(void)
 		return -EAGAIN;
 	}
 
-	k_timer_start(&telemetrum_check_timer, K_SECONDS(CAN_BUS_CHECK_PER_S), K_SECONDS(CAN_BUS_CHECK_PER_S));
+	k_timer_start(&telemetrum_check_timer, K_SECONDS(CAN_BUS_CHECK_PER_S),
+			K_SECONDS(CAN_BUS_CHECK_PER_S));
 
 	k_timer_start(&heartbeat_timer, K_SECONDS(HEARTBEAT_PERIOD_S), K_SECONDS(HEARTBEAT_PERIOD_S));
 

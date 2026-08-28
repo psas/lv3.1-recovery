@@ -30,21 +30,12 @@ LOG_MODULE_REGISTER(arbiter, LOG_LEVEL_INF);
 // Select an ERS battery voltage "ok" threshold of 9.0 VDC, in tenths of a volt:
 #define BATTERY_VOLTAGE_OK_THRESHOLD_TENTHS_V 90
 
-// TODO [ ] Remove this symbol, after verifying that arbiter main loop works as expected:
-// #define RING_POS_PERIOD_MS 100
-
-// TODO [ ] Remove this symbol, after verifying that arbiter main loop works as expected:
-#define DEV_DETERMINE_RING_POSITION_IN_MAIN_LOOP
-
 //----------------------------------------------------------------------
 // - SECTION - file scoped
 //----------------------------------------------------------------------
 
 K_THREAD_STACK_DEFINE(arbiter_thread_stack, CONFIG_ARBITER_THREAD_STACK_SIZE);
 struct k_thread arbiter_thread_data;
-
-// TODO [ ] Remove this variable, after verifying that arbiter main loop works as expected:
-// static enum lock_ring_position ring_position_fs = RING_POS_UNKNOWN;
 
 //----------------------------------------------------------------------
 // - SECTION - routines
@@ -490,11 +481,6 @@ int32_t arbiter_init(void)
 	if (!arbiter_tid) {
 		LOG_ERR("ERROR spawning arbiter thread\n");
 	}
-
-// TODO [ ] Determine whether this timer needed at all, given thread entry function loop:
-#ifndef DEV_DETERMINE_RING_POSITION_IN_MAIN_LOOP
-	// k_timer_start(&ring_position_timer, K_MSEC(RING_POS_PERIOD_MS), K_MSEC(RING_POS_PERIOD_MS));
-#endif
 
 	return rc;
 }
