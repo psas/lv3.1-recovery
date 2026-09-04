@@ -1,8 +1,6 @@
 /*
  * Copyright (c) 2025 Portland State Aerospace Society
  *
- * SPDX-License-Identifier: Apache-2.0
- *
  * @note Parts of this code copied from Zephyr 3.7.1 DAC sample app.
  */
 
@@ -45,14 +43,11 @@ static const struct dac_channel_cfg dac_ch_cfg = {
 	.buffered = true
 };
 
-static uint32_t dac_initialized_fs = 0;
-
 static atomic_t dac_value_fs = ATOMIC_INIT(0);
 
-// TODO [ ] Implement a mutex for "set DAC" API.  It has a system sleep call
-//   which while brief, is recommended by Zephyr's DAC sample.  While ERS
-//   app is unlikely to have more than one calling point to the DAC set output
-//   API, a mutex would assure that the delay after setting is honored.
+K_MUTEX_DEFINE(dac_mtx);
+
+static uint32_t dac_initialized_fs = 0;
 
 //----------------------------------------------------------------------
 // - SECTION - routines
@@ -65,15 +60,23 @@ int32_t dac_write_output_reg(const uint32_t value)
 	const int32_t sleep_time = 4096 / dac_values > 0 ? 4096 / dac_values : 1;
 	int32_t rc = 0;
 
-	if (dac_initialized_fs < 1) {
-		LOG_ERR("DAC device not yet initialized, ers_init_dac() called?");
-		return -ENODEV;
+	if (!dac_initialized_fs) {
+		LOG_ERR("DAC device not yet initialized, dac_init() called?");
+		rc = -ENODEV;
+		goto unlock;
+	}
+
+	rc = k_mutex_lock(&dac_mtx, K_MSEC(CONFIG_DAC_MUTEX_TIMEOUT_MS));
+	if (rc < 0) {
+		LOG_ERR("dac_write_output_reg() lock mutex failed, err %d", rc);
+		goto done;
 	}
 
 	if (value > DAC_COUNT_HIGHEST_VAL) {
 		LOG_ERR("DAC value %u to write too large, 0..%u possible",
 			value, DAC_COUNT_HIGHEST_VAL);
-		return -EINVAL;
+		rc = -EINVAL;
+		goto unlock;
 	}
 
 	rc = dac_write_value(dac_dev, DAC_CHANNEL_ID, value);
@@ -84,28 +87,73 @@ int32_t dac_write_output_reg(const uint32_t value)
 		k_sleep(K_MSEC(sleep_time));
 	}
 
+unlock:
+	rc = k_mutex_unlock(&dac_mtx);
+	if (rc < 0) {
+		LOG_ERR("Failed to unlock DAC mutex, err %d", rc);
+	}
+
+done:
 	return rc;
 }
 
 int32_t dac_present_value(uint32_t *dac_setting)
 {
-	if (dac_initialized_fs) {
-		*dac_setting = atomic_get(&dac_value_fs);
-		return 0;
-	} else {
-		return -EINVAL;
+	int32_t rc = 0;
+
+	if (!dac_initialized_fs) {
+		LOG_ERR("DAC module not initialized, call to dac_init() missed?");
+		rc = -EINVAL;
+		goto done;
 	}
+
+	rc = k_mutex_lock(&dac_mtx, K_MSEC(CONFIG_DAC_MUTEX_TIMEOUT_MS));
+	if (rc < 0) {
+		LOG_ERR("dac_present_value() lock mutex failed, err %d", rc);
+		goto done;
+	}
+
+	*dac_setting = atomic_get(&dac_value_fs);
+
+	rc = k_mutex_unlock(&dac_mtx);
+	if (rc < 0) {
+		LOG_ERR("dac_present_value() unlock mutex failed, err %d", rc);
+	}
+done:
+	return rc;
 }
 
 int32_t dac_range(int32_t *bound_low, int32_t *bound_high)
 {
-	// LOG_INF("DAC range is %u..%u", 0, DAC_COUNT_HIGHEST_VAL);
+	int32_t rc = 0;
+
+	if (!dac_initialized_fs) {
+		LOG_ERR("DAC module not initialized, call to dac_init() missed?");
+		rc = -EINVAL;
+		goto done;
+	}
+
+	rc = k_mutex_lock(&dac_mtx, K_MSEC(CONFIG_DAC_MUTEX_TIMEOUT_MS));
+	if (rc < 0)
+	{
+		LOG_ERR("dac_range() lock mutex failed, err %d", rc);
+		goto done;
+	}
+
 	*bound_low = 0;
 	*bound_high = DAC_COUNT_HIGHEST_VAL;
-	return 0;
+
+	rc = k_mutex_unlock(&dac_mtx);
+	if (rc != 0) {
+		LOG_ERR("dac_range() unlock mutex failed, err %d", rc);
+		return rc;
+	}
+
+done:
+	return rc;
 }
 
-int32_t ers_init_dac(void)
+int32_t dac_init(void)
 {
 	int32_t rc = 0;
 

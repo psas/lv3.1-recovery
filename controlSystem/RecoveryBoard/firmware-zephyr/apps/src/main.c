@@ -38,6 +38,8 @@ int main(void)
 	static uint32_t loop_count = 0;
 	int32_t rc = 0;
 
+	LOG_INF("- DEV 2026-09-03 0A -");
+
 	rc = ers_init_gpio_in();
 	LOG_INF("GPIO input pin initialization returns %d", rc);
 
@@ -50,7 +52,7 @@ int main(void)
 	rc = adc_init();
 	LOG_INF("ADC init code returns %d", rc);
 
-	rc = ers_init_dac();
+	rc = dac_init();
 	LOG_INF("DAC init code returns %d", rc);
 
 // TODO [ ] Create thread for CAN init routine which entails a `while (1)`

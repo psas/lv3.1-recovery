@@ -80,6 +80,8 @@ source "subsys/logging/Kconfig.template.log_config"
 
 # CAN module has a dedicated Kconfig file
 
+# DAC module has a dedicated Kconfig file
+
 module = ERS_MOTOR_CONTROL
 module-str = motor control module
 source "subsys/logging/Kconfig.template.log_config"
@@ -99,6 +101,7 @@ source "subsys/logging/Kconfig.template.log_config"
 # ERS application specific
 rsource "Kconfig.arbiter"
 rsource "Kconfig.can"
+rsource "Kconfig.dac"
 
 # Following Kconfig inclusion needed to support Zephyr logging template macros,
 # and needed for larger Zephyr code and framework support:
