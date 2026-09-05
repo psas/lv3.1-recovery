@@ -25,6 +25,7 @@
 LOG_MODULE_REGISTER(ers_can, CONFIG_CAN_LOG_LEVEL);
 
 K_THREAD_STACK_DEFINE(rx_thread_stack, CONFIG_CAN_RX_THREAD_STACK_SIZE);
+
 struct k_thread rx_thread_data;
 
 // #define SLEEP_TIME K_MSEC(250)
@@ -57,8 +58,8 @@ struct k_thread rx_thread_data;
 #endif
 
 #define HEARTBEAT_PERIOD_S 1
-// TODO [ ] Choose a more clear name for CANBus health check period in seconds:
-#define CAN_BUS_CHECK_PER_S 2
+
+#define CAN_BUS_HEALTH_CHECK_PERIOD_SEC 2
 
 //----------------------------------------------------------------------
 // - SECTION - file scoped
@@ -78,7 +79,7 @@ enum ers_state_var_indeces {
 	IDX_SENDER_ERS_STATUS,
 	IDX_SENDER_ROCKET_READY,
 	IDX_RESERVED_01,
-	IDX_STATE_VAR_LAST_ELEMENT
+	IDX_STATE_VAR_ELEMENT_COUNT
 };
 #elif defined(ERS_BOARD_VARIANT_DROGUE_CHUTE) || defined(ERS_BOARD_VARIANT_MAIN_CHUTE)
 #if defined(ERS_BOARD_VARIANT_DROGUE_CHUTE)
@@ -86,16 +87,17 @@ enum ers_state_var_indeces {
 #elif defined(ERS_BOARD_VARIANT_MAIN_CHUTE)
 #warning "- NOTICE - building ERS board firmware variant 'Main'."
 #endif
+
 enum ers_state_var_indeces {
-	IDX_DROGUE_RING_STATE,
-	IDX_DROGUE_BATT_READ,
-	IDX_DROGUE_BATT_OK,
-	IDX_DROGUE_SHORE_POW_STATUS,
-	IDX_DROGUE_CAN_BUS_OK,
-	IDX_DROGUE_READY,
+	IDX_ERS_RING_STATE,
+	IDX_ERS_BATT_READ,
+	IDX_ERS_BATT_OK,
+	IDX_ERS_SHORE_POW_STATUS,
+	IDX_ERS_CAN_BUS_OK,
+	IDX_ERS_READY,
 	IDX_RESERVED_01,
 	IDX_RESERVED_02,
-	IDX_STATE_VAR_LAST_ELEMENT
+	IDX_STATE_VAR_ELEMENT_COUNT
 };
 #else
 #warning "ERROR no ERS board firmware variant defined."
@@ -103,7 +105,7 @@ enum ers_state_var_indeces {
 #warning "ERS_BOARD_VARIANT_DROGUE_CHUTE or ERS_BOARD_VARIANT_MAIN_CHUTE."
 #endif
 
-static uint8_t ers_state_vars_fs[IDX_STATE_VAR_LAST_ELEMENT] = {0};
+static uint8_t ers_state_vars_fs[IDX_STATE_VAR_ELEMENT_COUNT] = {0};
 static uint8_t ers_small_payload_fs[1] = {0};
 
 //----------------------------------------------------------------------
@@ -192,18 +194,13 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
 	uint32_t can_bus_ok_flag = 0;            // define local var in "prep and send status frame"
 	keeper_get_can_bus_ok(&can_bus_ok_flag);
 
-	// TODO [ ] With all these drogue references, verify that this routine
-	//          properly supports both drogue chute and main chute firmware
-	//          apps.
-
 	// ring status: 0 = uninitialized, 1 = unlocked, 2 = in between, 3 = locked, 4 = error
-	ers_state_vars_fs[IDX_DROGUE_RING_STATE] = (uint8_t)(ring_state);
-	ers_state_vars_fs[IDX_DROGUE_BATT_READ] = (uint8_t)(battery_voltage & 0xFF);
-	ers_state_vars_fs[IDX_DROGUE_BATT_OK] = batt_ok_flag;
-	// TODO [ ] mask not_umb_on with 0x1 to assure Boolean value:
-	ers_state_vars_fs[IDX_DROGUE_SHORE_POW_STATUS] = (uint8_t)(not_umb_on);
-	ers_state_vars_fs[IDX_DROGUE_CAN_BUS_OK] = (uint8_t)(can_bus_ok_flag & 0xFF);
-	// ers_state_vars_fs[IDX_DROGUE_READY] = 0;
+	ers_state_vars_fs[IDX_ERS_RING_STATE] = (uint8_t)(ring_state);
+	ers_state_vars_fs[IDX_ERS_BATT_READ] = (uint8_t)(battery_voltage & 0xFF);
+	ers_state_vars_fs[IDX_ERS_BATT_OK] = batt_ok_flag;
+	ers_state_vars_fs[IDX_ERS_SHORE_POW_STATUS] = ((uint8_t)(not_umb_on) & 0x1);
+	ers_state_vars_fs[IDX_ERS_CAN_BUS_OK] = (uint8_t)(can_bus_ok_flag & 0xFF);
+	// ers_state_vars_fs[IDX_ERS_READY] = 0;
 	ers_state_vars_fs[IDX_RESERVED_01] = 0;
 	ers_state_vars_fs[IDX_RESERVED_02] = 0;
 
@@ -216,10 +213,10 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
 	// There is also a question of race conditions, where some inputs may
 	// have changed since rocket ready last determined.
 
-	ers_state_vars_fs[IDX_DROGUE_READY] = 
-	  (ers_state_vars_fs[IDX_DROGUE_RING_STATE] == 3) &&
-	   ers_state_vars_fs[IDX_DROGUE_BATT_OK] &&
-	   ers_state_vars_fs[IDX_DROGUE_CAN_BUS_OK];
+	ers_state_vars_fs[IDX_ERS_READY] = 
+	  (ers_state_vars_fs[IDX_ERS_RING_STATE] == 3) &&
+	   ers_state_vars_fs[IDX_ERS_BATT_OK] &&
+	   ers_state_vars_fs[IDX_ERS_CAN_BUS_OK];
 
 	memcpy(ers_status_frame.data, ers_state_vars_fs, sizeof(ers_state_vars_fs));
 
@@ -235,12 +232,12 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
         LOG_INF("                  ringst battrd battok pwrsts canok  ready  reserv reserv");
 	LOG_INF("drogue CAN frame:  0x%02X   0x%02X   0x%02X   0x%02X   0x%02X   0x%02X   0x%02X"
 	"   0x%02X",
-	  ers_state_vars_fs[IDX_DROGUE_RING_STATE],
-	  ers_state_vars_fs[IDX_DROGUE_BATT_READ],
-	  ers_state_vars_fs[IDX_DROGUE_BATT_OK],
-	  ers_state_vars_fs[IDX_DROGUE_SHORE_POW_STATUS],
-	  ers_state_vars_fs[IDX_DROGUE_CAN_BUS_OK],
-	  ers_state_vars_fs[IDX_DROGUE_READY],
+	  ers_state_vars_fs[IDX_ERS_RING_STATE],
+	  ers_state_vars_fs[IDX_ERS_BATT_READ],
+	  ers_state_vars_fs[IDX_ERS_BATT_OK],
+	  ers_state_vars_fs[IDX_ERS_SHORE_POW_STATUS],
+	  ers_state_vars_fs[IDX_ERS_CAN_BUS_OK],
+	  ers_state_vars_fs[IDX_ERS_READY],
 	  ers_state_vars_fs[IDX_RESERVED_01],
 	  ers_state_vars_fs[IDX_RESERVED_02]);
 #endif // 0 . . . 2026-02-15
@@ -255,11 +252,42 @@ void heartbeat_timer_handler(struct k_timer *dummy)
 
 K_TIMER_DEFINE(heartbeat_timer, heartbeat_timer_handler, NULL);
 
+int32_t can_helper_unlock_ring(void) {
+
+// TODO [ ] Check with Theo about correctness of this specified condition to unlock ring:
+// "If !UMB_ON = 1 (no umbilical voltage) and the the RING_STATUS = 2 (it’s locked)"
+
+	int32_t not_umb_on = 0;
+	keeper_get_not_umb_on(&not_umb_on);
+	enum lock_ring_state ring_state = RING_STATE_UNKNOWN;
+	keeper_get_ring_status(&ring_state);
+	int32_t rc = 0;
+
+	// Note, "not umbilical on" means shore power not connected to rocket
+	if ((not_umb_on == 1) &&
+	    ((ring_state == RING_STATE_LOCKED) || (ring_state == RING_STATE_BETWEEN))) {
+
+		rc = mc_unlock_ring();
+		if (rc != 0)
+		{
+			LOG_ERR("Failed to unlock ring via CAN message, err %d", rc);
+		}
+
+		prep_and_send_ack_unlock_command();
+	} else {
+		LOG_INF("Conditions not met to unlock ring:");
+		LOG_INF("Expect not_umb_on equals 1, ring state equal locked or unlocked,");
+		LOG_INF("Find not_umb_on equals %d, ring state = %d", not_umb_on, ring_state);
+		rc = -EAGAIN;
+	}
+
+	return rc;
+}
+
 void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 {
-	ARG_UNUSED(arg1);
-	ARG_UNUSED(arg2);
-	ARG_UNUSED(arg3);
+	ARG_UNUSED(arg1); ARG_UNUSED(arg2); ARG_UNUSED(arg3);
+
 	int32_t rc = 0;
 
 	const struct can_filter filter_sender_heartbeat = {
@@ -346,16 +374,7 @@ void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 #else
 #error "Need one of board variant 'drogue' or 'main' chute specified for build!"
 #endif
-
-// TODO [ ] Add needed test before calling unlock API.  Test per ERS Google doc is:
-// "If !UMB_ON = 1 (no umbilical voltage) and the the RING_STATUS = 2 (it’s locked)"
-			rc = mc_unlock_ring();
-			if (rc != 0)
-			{
-				LOG_ERR("Failed to unlock ring via CAN message, err %d", rc);
-			}
-
-			prep_and_send_ack_unlock_command();
+			rc = can_helper_unlock_ring();
 			break;
 
 		default:
@@ -392,6 +411,7 @@ int32_t ers_init_can(void)
 		return -ENODEV;
 	}
 
+#if 0
 // From "./include/zephyr/drivers/can.h":
 // int can_set_bitrate_data(const struct device *dev, uint32_t bitrate_data);
 
@@ -400,6 +420,7 @@ int32_t ers_init_can(void)
 	{
 		LOG_ERR("Failed to set CAN bitrate, err %d", rc);
 	}
+#endif // 0
 
 	rc = can_start(can_dev);
  	if (rc != 0) {
@@ -407,8 +428,8 @@ int32_t ers_init_can(void)
 		return -EAGAIN;
 	}
 
-	k_timer_start(&telemetrum_check_timer, K_SECONDS(CAN_BUS_CHECK_PER_S),
-			K_SECONDS(CAN_BUS_CHECK_PER_S));
+	k_timer_start(&telemetrum_check_timer, K_SECONDS(CAN_BUS_HEALTH_CHECK_PERIOD_SEC),
+			K_SECONDS(CAN_BUS_HEALTH_CHECK_PERIOD_SEC));
 
 	k_timer_start(&heartbeat_timer, K_SECONDS(HEARTBEAT_PERIOD_S), K_SECONDS(HEARTBEAT_PERIOD_S));
 

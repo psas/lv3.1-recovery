@@ -47,18 +47,17 @@ enum lock_ring_state {
 int32_t arbiter_init(void);
 
 /**
- * @brief
+ * @brief Set some . . .
  */
 
 void arbiter_cmd_set_default_limits(const struct shell *shell, size_t argc, char **argv);
 
 /**
- * @brief
+ * @brief Show present Hall sensor cut-off values, measured empirically and
+ *  used to sense lock ring position.
  */
 
 void arbiter_show_hall_state_limits(const struct shell *shell);
-
-// Ring position related
 
 /**
  * @brief
@@ -67,13 +66,14 @@ void arbiter_show_hall_state_limits(const struct shell *shell);
 int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position);
 
 /**
- * @brief
+ * @brief Set the interval in milliseconds at which ERS firmware takes Hall
+ *  sensor readings and determiines the lock ring position.
  */
 
 int32_t arbiter_set_ring_pos_detection_interval(const uint32_t timeout_ms);
 
 /**
- * @brief
+ * @brief Convert an enum value for lock ring position to a string.
  */
 
 char *arbiter_ring_pos_to_str(const enum lock_ring_position pos);

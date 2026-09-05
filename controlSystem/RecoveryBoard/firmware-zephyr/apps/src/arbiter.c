@@ -344,8 +344,6 @@ done:
 	return rc;
 }
 
-// TODO [ ] fix ring_pos_to_str() routine, does not appear to return correct string.
-
 char *arbiter_ring_pos_to_str(const enum lock_ring_position pos)
 {
         switch (pos) {

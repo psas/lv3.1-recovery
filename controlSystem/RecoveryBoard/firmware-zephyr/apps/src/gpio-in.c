@@ -188,13 +188,9 @@ int32_t gpio_in_configure_not_motor_faila(void)
         return rc;
 }
 
-// TODO [ ] Add check for ERS GPIO module initialized.
-
 void gpio_in_thread_entry(void *arg1, void *arg2, void *arg3)
 {
-        ARG_UNUSED(arg1);
-        ARG_UNUSED(arg2);
-        ARG_UNUSED(arg3);
+        ARG_UNUSED(arg1); ARG_UNUSED(arg2); ARG_UNUSED(arg3);
 
 	uint32_t val[ERS_NUM_GPIO_INPUTS] = {0};
 	int32_t rc = 0;
@@ -206,8 +202,14 @@ void gpio_in_thread_entry(void *arg1, void *arg2, void *arg3)
 		val[ERS_SIG_NOT_UMB_ON] = gpio_pin_get_dt(&not_umb_on);
 		val[ERS_SIG_NOT_MOTOR_FAILA] = gpio_pin_get_dt(&not_motor_faila);
 
+		// We need to invert shore power/umbilical cord present signal,
+		// per live test in LV3.1 avioncics system on 2026-02-08 SUN.
+		val[ERS_SIG_NOT_UMB_ON] = !(val[ERS_SIG_NOT_UMB_ON]);
+		keeper_set_not_umb_on(val[ERS_SIG_NOT_UMB_ON]);
+
+		// - ERS digital input summary reporting begin -
 		keeper_get_diag_mode(&rc);
-		rc = 0; // - DEV 0226 -
+		rc = 0;
 		if (rc > 0)
 		{
 			LOG_INF("drogue, main, umb, motor_fail: %d, %d, %d, %d",
@@ -217,17 +219,13 @@ void gpio_in_thread_entry(void *arg1, void *arg2, void *arg3)
 				val[ERS_SIG_NOT_MOTOR_FAILA]
 				);
 		}
-
-		// We need to invert shore power/umbilical cord present signal,
-		// per live test in LV3.1 avioncics system on 2026-02-08 SUN.
-		val[ERS_SIG_NOT_UMB_ON] = !(val[ERS_SIG_NOT_UMB_ON]);
-		keeper_set_not_umb_on(val[ERS_SIG_NOT_UMB_ON]);
+		// - ERS digital input summary reporting end -
 
 		k_msleep(ERS_GPIO_THREAD_SLEEP_MS);
 	}
 }
 
-int32_t ers_init_gpio_in(void)
+int32_t gpio_in_init(void)
 {
         int32_t rc = 0;
 

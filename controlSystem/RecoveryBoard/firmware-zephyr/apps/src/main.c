@@ -40,7 +40,7 @@ int main(void)
 
 	LOG_INF("- DEV 2026-09-03 0A -");
 
-	rc = ers_init_gpio_in();
+	rc = gpio_in_init();
 	LOG_INF("GPIO input pin initialization returns %d", rc);
 
         rc = ers_init_shell_support();
