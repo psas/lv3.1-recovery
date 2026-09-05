@@ -401,7 +401,7 @@ char *state_to_str(enum can_state state)
 	}
 }
 
-int32_t ers_init_can(void)
+int32_t ers_can_init(void)
 {
 	int32_t rc = 0;
 	k_tid_t rx_tid;
@@ -410,17 +410,6 @@ int32_t ers_init_can(void)
 		LOG_ERR("CAN: Device %s not ready.", can_dev->name);
 		return -ENODEV;
 	}
-
-#if 0
-// From "./include/zephyr/drivers/can.h":
-// int can_set_bitrate_data(const struct device *dev, uint32_t bitrate_data);
-
-	rc = can_set_bitrate_data(can_dev, 500000);
-	if (rc != 0)
-	{
-		LOG_ERR("Failed to set CAN bitrate, err %d", rc);
-	}
-#endif // 0
 
 	rc = can_start(can_dev);
  	if (rc != 0) {
@@ -442,6 +431,7 @@ int32_t ers_init_can(void)
 
 	if (!rx_tid) {
 		LOG_ERR("ERROR spawning rx thread");
+		rc = -ESRCH;
 	}
 
 	return rc;

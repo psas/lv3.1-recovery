@@ -55,9 +55,7 @@ int main(void)
 	rc = dac_init();
 	LOG_INF("DAC init code returns %d", rc);
 
-// TODO [ ] Create thread for CAN init routine which entails a `while (1)`
-//  construct.
-	rc = ers_init_can();
+	rc = ers_can_init();
 	LOG_INF("ERS CAN module init returns %d", rc);
 
 	ers_settings_init();
