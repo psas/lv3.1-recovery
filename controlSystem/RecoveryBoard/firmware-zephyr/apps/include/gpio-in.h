@@ -1,8 +1,8 @@
 #ifndef GPIO_IN_H
 #define GPIO_IN_H
 
-// TODO [ ] rename gpio-in.[ch] to reflect this module also controls GPIO
-//           outputs.
+// TODO [ ] Add comment blocks
+// TODO [ ] Rename APIs per public API naming convention, which is <module_name>_.
 
 int32_t gpio_in_init(void);
 
