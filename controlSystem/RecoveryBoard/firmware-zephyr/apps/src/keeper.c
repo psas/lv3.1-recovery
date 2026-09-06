@@ -4,7 +4,7 @@
  */
 
 #include "arbiter.h"
-#include "ers-config.h"
+#include "hall-and-ring.h"
 #include "keeper.h"
 #include "status-led.h"
 #include "settings-ers.h"

@@ -1,10 +1,9 @@
 #ifndef ERS_ARBITER_H
 #define ERS_ARBITER_H
 
-#include <zephyr/shell/shell.h>
+#include "hall-and-ring.h"
 
-// To provide `enum hall_sensor_instances`:
-#include "ers-config.h"
+#include <zephyr/shell/shell.h>
 
 /**
  * @brief TODO [ ] complete this stub comment block.

@@ -8,8 +8,7 @@
  *  write and flash read operations.
  */
 
-#include "ers-config.h"
-// #include "settings-ers.h"
+#include "hall-and-ring.h"
 
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
