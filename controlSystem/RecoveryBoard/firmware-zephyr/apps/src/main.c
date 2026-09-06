@@ -4,22 +4,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <stdio.h>
+#include "adc-ers.h"
+#include "arbiter.h"
+#include "can-ers.h"
+#include "dac-ers.h"
+#include "pwm-ers.h"
+#include "gpio-in.h"
+#include "keeper.h"
+#include "motor-control.h"
+#include "settings-ers.h"
+#include "shell-support.h"
+#include "status-led.h"
 
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
-#include <arbiter.h>
-#include <ers-adc.h>
-#include <ers-can.h>
-#include <ers-dac.h>
-#include <ers-pwm.h>
-#include <gpio-in.h>
-#include <keeper.h>
-#include <motor-control.h>
-#include <settings-ers.h>
-#include <shell-support.h>
-#include <status-led.h>
+#include <stdio.h>
 
 LOG_MODULE_REGISTER(ers_main, LOG_LEVEL_INF);
 

@@ -5,7 +5,7 @@
  */
 
 #include "arbiter.h"
-#include "ers-dac.h"
+#include "dac-ers.h"
 #include "keeper.h"
 #include "settings-ers.h"
 

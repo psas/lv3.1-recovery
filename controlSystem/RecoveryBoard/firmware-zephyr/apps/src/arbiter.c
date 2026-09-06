@@ -5,8 +5,8 @@
  */
 
 #include "arbiter.h"
-#include "ers-can.h"
-#include "ers-dac.h"
+#include "can-ers.h"
+#include "dac-ers.h"
 #include "gpio-in.h"
 #include "hall-and-ring.h"
 #include "keeper.h"

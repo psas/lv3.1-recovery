@@ -16,9 +16,9 @@
  *   RTOS is configured to run its shell facility.
  */
 
+#include "adc-ers.h"
 #include "arbiter.h"
-#include "ers-adc.h"
-#include "ers-dac.h"
+#include "dac-ers.h"
 #include "ers-util.h"
 #include "keeper.h"
 #include "motor-control.h"
