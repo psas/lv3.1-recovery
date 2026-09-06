@@ -186,18 +186,8 @@ static void arb_mesg(char *fmt, ...)
 	}
 }
 
-/**
- * @brief Routine to determine lock ring position.
- *
- * @note This routine determines ring position as described in
- *  https://docs.google.com/document/d/1DnytDlZa1X-BaIqlIBrfcuedKocKrCpTfgMspk0twxI/edit?tab=t.0#heading=h.rg42p47rcyt5,
- *  and further it determines lock ring "status" as described in
- *  the same document.  Second parameter is a simplified version
- *  of the first "position" parameter.
- *
- * @note Calling code is responsible for setting parameter ring_position to
- *    a sensible starting value, namely 'RING_POS_UNKNOWN'.
- */
+// TODO [ ] Determine whether this API needs mutex protection, as it runs
+//          longer than a few clock cycles.
 
 int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 {
@@ -216,13 +206,13 @@ int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 	rc = adc_reading_to_hall_state(HALL_SENSOR_1, hall_1_reading, &hall_1_state);
 	if (rc != 0) {
 		LOG_ERR("Failed to get hall sensor 1 state from reading comparison, err %d", rc);
-		return rc;
+		goto done;
 	}
 
 	rc = adc_reading_to_hall_state(HALL_SENSOR_2, hall_2_reading, &hall_2_state);
 	if (rc != 0) {
 		LOG_ERR("Failed to get hall sensor 2 state from reading comparison, err %d", rc);
-		return rc;
+		goto done;
 	}
 
 	arb_mesg("readings, states: %u %u  %d %d", hall_1_reading, hall_2_reading, hall_1_state, hall_2_state);

@@ -60,7 +60,6 @@ static int direct_loader_immediate_value(const char *name, size_t len,
 			rc = read_cb(cb_arg, one_value->dest, len);
 			if (rc >= 0) {
 				one_value->fetched = 1;
-				// LOG_INF("immediate load: OK.");
 				return 0;
 			}
 
@@ -77,7 +76,8 @@ static int direct_loader_immediate_value(const char *name, size_t len,
 	return 0;
 }
 
-int load_immediate_value(const char *name, void *dest, size_t len)
+// TODO [ ] Check whether this routine can be static:
+static int load_immediate_value(const char *name, void *dest, size_t len)
 {
 	int rc;
 	struct direct_immediate_value dov;
@@ -107,7 +107,7 @@ int load_immediate_value(const char *name, void *dest, size_t len)
  *  setting key name.
  */
 
-int32_t retrieve_ers_setting(const char* name, void *val, const uint32_t size)
+int32_t settings_ers_retrieve_value(const char* name, void *val, const uint32_t size)
 {
 	int32_t rc = 0;
 
@@ -120,18 +120,20 @@ int32_t retrieve_ers_setting(const char* name, void *val, const uint32_t size)
 	return rc;
 }
 
-int32_t store_ers_setting(const char* name, const void *val, const uint32_t size)
+int32_t settings_ers_store_value(const char* name, const void *val, const uint32_t size)
 {
 	int32_t rc = 0;
 
 	LOG_INF("save '%s' key directly: ", name);
 	rc = settings_save_one(name, &val, sizeof(val));
-	// if (rc) {
 	if (rc < 0) {
 		LOG_ERR("Fail to store value for '%s', err %d", name, rc);
 	}
 	return rc;
 }
+
+// Helper enum to allow single switch statement to select its case based on
+// both Hall sensor instance, and Hall reading cut-off value:
 
 enum sensor_plus_limit_enum {
 	HALL_1_LIMIT_1 = (0 << 4) + 0,
@@ -144,7 +146,7 @@ enum sensor_plus_limit_enum {
 	HALL_2_LIMIT_4 = (1 << 4) + 3,
 };
 
-int32_t ers_settings_store_hall_limit(const uint32_t sensor_idx,
+int32_t settings_ers_store_hall_limit(const uint32_t sensor_idx,
 				const uint32_t limit_idx,
 				const void *val,
 				const uint32_t size)
@@ -170,36 +172,36 @@ int32_t ers_settings_store_hall_limit(const uint32_t sensor_idx,
 	switch (combined_idx)
 	{
 	case HALL_1_LIMIT_1:
-		rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_1),
+		rc = settings_ers_store_value(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_1),
 				 	(const void *)val, sizeof(val));
 		break;
 	case HALL_1_LIMIT_2:
-		rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_2),
+		rc = settings_ers_store_value(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_2),
 				 	(const void *)val, sizeof(val));
 		break;
 	case HALL_1_LIMIT_3:
-		rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_3),
+		rc = settings_ers_store_value(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_3),
 				 	(const void *)val, sizeof(val));
 		break;
 	case HALL_1_LIMIT_4:
-		rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_4),
+		rc = settings_ers_store_value(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_4),
 				 	(const void *)val, sizeof(val));
 		break;
 
 	case HALL_2_LIMIT_1:
-		rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_1),
+		rc = settings_ers_store_value(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_1),
 				 	(const void *)val, sizeof(val));
 		break;
 	case HALL_2_LIMIT_2:
-		rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_2),
+		rc = settings_ers_store_value(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_2),
 				 	(const void *)val, sizeof(val));
 		break;
 	case HALL_2_LIMIT_3:
-		rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_3),
+		rc = settings_ers_store_value(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_3),
 				 	(const void *)val, sizeof(val));
 		break;
 	case HALL_2_LIMIT_4:
-		rc = store_ers_setting(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_4),
+		rc = settings_ers_store_value(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_4),
 				 	(const void *)val, sizeof(val));
 		break;
 
@@ -211,7 +213,7 @@ done:
 	return rc;
 }
 
-void ers_settings_init(void)
+void settings_ers_init(void)
 {
 	int32_t rc;
 

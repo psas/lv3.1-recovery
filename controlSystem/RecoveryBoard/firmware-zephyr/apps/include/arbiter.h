@@ -6,7 +6,16 @@
 #include <zephyr/shell/shell.h>
 
 /**
- * @brief TODO [ ] complete this stub comment block.
+ * @brief Parse string-wise Hall sensor abbreviation and return a numeric
+ *  reference to it, based on an enum of Hall sensors in the ERS system.
+ *
+ * @param sensor_name is the string-wise abbreviation "s1" or "s2", refers to
+ *   one of Hall sensor 1 and Hall sensor 2.
+ * @param sensor_idx is a pointer to a caller variable, meant to hold an
+ *   effective index to the Hall sensor on which to act.
+ *
+ * @retval 0 on success
+ * @retval -EINVAL if sensor abbreviation not one of "s1" and "s2".
  */
 
 int32_t determine_which_sensor(const char *sensor_name, enum hall_sensor_instances *sensor_idx);
@@ -46,7 +55,18 @@ enum lock_ring_state {
 int32_t arbiter_init(void);
 
 /**
- * @brief Set some . . .
+ * @brief Assign Hall sensor default cut-off values to app run-time variables.
+ * @note These values may likely become inaccurate when the physical, ERS lock
+ *  ring assembly is handled.  Small changes in the position of the Hall
+ *  sensors and an associated permanent magnet with each sensor lead to
+ *  notable changes in Hall readings, which correspond to ring states.
+ *
+ * @note The three parameters of this API are standard to Zephyr shell
+ *  commands.
+ *
+ * @param shell Pointer to Zephyr shell construct instance in the app.
+ * @param argc Count of input tokens, separated by white space.
+ * @param argv array of pointers to input tokens.
  */
 
 void arbiter_cmd_set_default_limits(const struct shell *shell, size_t argc, char **argv);
@@ -54,16 +74,39 @@ void arbiter_cmd_set_default_limits(const struct shell *shell, size_t argc, char
 /**
  * @brief Show present Hall sensor cut-off values, measured empirically and
  *  used to sense lock ring position.
+ *
+ * @param shell Pointer to Zephyr shell construct instance in the app.
  */
 
 void arbiter_show_hall_state_limits(const struct shell *shell);
 
+
 /**
- * @brief
+ * @brief Routine to determine lock ring position.
+ *
+ * @note This routine determines ring position as described in
+ *  https://docs.google.com/document/d/1DnytDlZa1X-BaIqlIBrfcuedKocKrCpTfgMspk0twxI/edit?tab=t.0#heading=h.rg42p47rcyt5,
+ *  and further it determines lock ring "status" as described in
+ *  the same document.  Second parameter is a simplified version
+ *  of the first "position" parameter.
+ *
+ * @note Calling code is responsible for setting parameter ring_position to
+ *    a sensible starting value, namely 'RING_POS_UNKNOWN'.
+ */
+
+
+/**
+ * @brief Determine ring state from Hall sensor readings; ring position is an
+ *  intermediate value in this determination.
+ *
+ * @param ring_position is the detected, physical position of the ERS lock ring.
+ *
+ * @retval 
  */
 
 int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position);
 
+// TODO [ ] Complete this API comment block:
 /**
  * @brief Set the interval in milliseconds at which ERS firmware takes Hall
  *  sensor readings and determiines the lock ring position.

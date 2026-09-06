@@ -435,7 +435,7 @@ int32_t keeper_cmd_store_hall_limits(const struct shell *shell, size_t argc, cha
 		for (uint32_t j = 0; j < HALL_SENSOR_LIMIT_COUNT; j++) {
 			rc = keeper_get_hall_sensor_limit(i, j, &hall_limit[j]);
 
-			// LOG_INF("- DEV - for Hall %d limit %d, error flag bit shift is %d", i, j, ERR_FLAG_BIT_SHIFT);
+			LOG_INF("- DEV 0906 - for Hall %d limit %d, error flag bit shift is %d", i, j, ERR_FLAG_BIT_SHIFT);
 
 			if (rc < 0) {
 				op = KEEPER_OP_GET;
@@ -445,7 +445,7 @@ int32_t keeper_cmd_store_hall_limits(const struct shell *shell, size_t argc, cha
 				// When get op fails, do not attempt to store anything:
 				continue;
 			}
-			rc = ers_settings_store_hall_limit(i, j,
+			rc = settings_ers_store_hall_limit(i, j,
 					       		(const void *)hall_limit[j],
 							sizeof(hall_limit[j]));
 			if (rc < 0) {
@@ -481,13 +481,13 @@ int32_t keeper_retrieve_hall_1_limits(void)
 
 	// Call keeper to obtain hall limits:
 	// shell_fprintf(shell, SHELL_NORMAL, "- STUB -\n");
-	rc = retrieve_ers_setting(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_1), &v_under_limit,
+	rc = settings_ers_retrieve_value(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_1), &v_under_limit,
 					sizeof(v_under_limit));
-	rc = retrieve_ers_setting(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_2), &inactive_limit,
+	rc = settings_ers_retrieve_value(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_2), &inactive_limit,
 					sizeof(inactive_limit));
-	rc = retrieve_ers_setting(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_3), &between_limit,
+	rc = settings_ers_retrieve_value(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_3), &between_limit,
 					sizeof(between_limit));
-	rc = retrieve_ers_setting(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_4), &active_limit,
+	rc = settings_ers_retrieve_value(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_4), &active_limit,
 					sizeof(active_limit));
 
 	// Store retrieved Hall sensor limits to SRAM for run time use:
@@ -504,13 +504,13 @@ int32_t keeper_retrieve_hall_2_limits(void)
 	uint32_t v_under_limit, inactive_limit, between_limit, active_limit;
 	int32_t rc = 0;
 
-	rc = retrieve_ers_setting(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_1), &v_under_limit,
+	rc = settings_ers_retrieve_value(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_1), &v_under_limit,
 					sizeof(v_under_limit));
-	rc = retrieve_ers_setting(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_2), &inactive_limit,
+	rc = settings_ers_retrieve_value(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_2), &inactive_limit,
 					sizeof(inactive_limit));
-	rc = retrieve_ers_setting(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_3), &between_limit,
+	rc = settings_ers_retrieve_value(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_3), &between_limit,
 					sizeof(between_limit));
-	rc = retrieve_ers_setting(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_4), &active_limit,
+	rc = settings_ers_retrieve_value(STRINGIFY(SETTING_KEYNAME_S2_HLIMIT_4), &active_limit,
 					sizeof(active_limit));
 
 	// Store retrieved Hall sensor limits to SRAM for run time use:
@@ -941,7 +941,11 @@ void keeper_get_diag_mode(uint32_t* value)
 
 int32_t keeper_set_hall_sensor_default_limits(void)
 {
-	int32_t rc = set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_UNDER, HALL_LIMIT_V_UNDER_S1);
+// TODO [ ] replace the logical OR'ing of errors with better logic
+
+	int32_t rc = 0;
+	
+	rc = set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_UNDER, HALL_LIMIT_V_UNDER_S1);
 	rc |= set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_INACTIVE, HALL_LIMIT_V_INACTIVE_S1);
 	rc |= set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_BETWEEN, HALL_LIMIT_V_BETWEEN_S1);
 	rc |= set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_ACTIVE, HALL_LIMIT_V_ACTIVE_S1);
@@ -978,11 +982,11 @@ static int32_t initialize_system_state_vars(void)
 
 	// Retrieve (read from flash) ring lock event count and unlock event count:
 
-	rc = retrieve_ers_setting(KEY_NAME_LOCK_COUNT, (void *)count, sizeof(count));
+	rc = settings_ers_retrieve_value(KEY_NAME_LOCK_COUNT, (void *)count, sizeof(count));
 	if (rc != 0) {
 		LOG_ERR("Failed to retrieve ring lock event count, err %d", rc);
 		keeper_set_lock_event_count(RING_LOCK_EVENT_STARTING_COUNT);
-		rc = store_ers_setting(KEY_NAME_LOCK_COUNT, (void *)count, sizeof(count));
+		rc = settings_ers_store_value(KEY_NAME_LOCK_COUNT, (void *)count, sizeof(count));
 		if (rc != 0) {
 			LOG_ERR("Failed to write ring lock count, err %d", rc);
 		}
@@ -990,11 +994,11 @@ static int32_t initialize_system_state_vars(void)
 		keeper_set_lock_event_count(count);
 	}
 
-	rc = retrieve_ers_setting(KEY_NAME_UNLOCK_COUNT, (void *)count, sizeof(count));
+	rc = settings_ers_retrieve_value(KEY_NAME_UNLOCK_COUNT, (void *)count, sizeof(count));
 	if (rc != 0) {
 		LOG_ERR("Failed to retrieve ring unlock events count, err %d", rc);
 		keeper_set_unlock_event_count(RING_UNLOCK_EVENT_STARTING_COUNT);
-		rc = store_ers_setting(KEY_NAME_UNLOCK_COUNT, (void *)count, sizeof(count));
+		rc = settings_ers_store_value(KEY_NAME_UNLOCK_COUNT, (void *)count, sizeof(count));
 		if (rc != 0) {
 			LOG_ERR("Failed to write ring unlock count, err %d", rc);
 		}

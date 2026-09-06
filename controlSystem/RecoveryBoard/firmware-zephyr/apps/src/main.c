@@ -58,13 +58,13 @@ int main(void)
 	rc = ers_can_init();
 	LOG_INF("ERS CAN module init returns %d", rc);
 
-	ers_settings_init();
+	settings_ers_init();
 	LOG_INF("just back from ERS settings module init");
 	k_msleep(500);
-
+#if 0
         rc = ers_init_shell_support();
 	LOG_INF("ERS command initialization returns %d", rc);
-
+#endif
 	rc = keeper_init();
 	LOG_INF("ERS data \"keeper\" initialization returns %d", rc);
 
@@ -92,15 +92,7 @@ int main(void)
 	}
 
 	// Play start up, or 'banner' audio pattern:
-#if 0
-	rc = pwm_play_pattern(PWM_APP_BANNER_PATTERN);
-	if (rc != 0) {
-		LOG_ERR("Failed to play audio start up pattern, err = %d", rc);
-	}
-#endif
-
-	// Test of alternate audio pattern:
-	k_msleep(1000);
+	// k_msleep(1000);
 	rc = pwm_play_pattern(PWM_APP_15_NOTES);
 	if (rc != 0) {
 		LOG_ERR("Failed to play 15-note audio pattern, err = %d", rc);

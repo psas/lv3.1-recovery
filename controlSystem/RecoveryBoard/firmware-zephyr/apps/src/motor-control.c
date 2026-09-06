@@ -206,7 +206,7 @@ int32_t mc_update_lock_count(void)
 	uint32_t val = 0;
 	// TODO [ ] Consider reading lock event count from keeper module, from
 	//  SRAM, as it will have been copied by keeper during app start up.
-	int32_t rc = retrieve_ers_setting(KEY_NAME_LOCK_COUNT, &val, sizeof(val));
+	int32_t rc = settings_ers_retrieve_value(KEY_NAME_LOCK_COUNT, &val, sizeof(val));
 
 	if (rc != 0) {
 		val = RING_LOCK_EVENT_STARTING_COUNT;
@@ -220,7 +220,7 @@ int32_t mc_update_lock_count(void)
 	keeper_set_lock_event_count(val);
 
 	LOG_INF("- DEV 0104 - storing ring lock event count of %u", val);
-	rc = store_ers_setting(KEY_NAME_LOCK_COUNT, (const void *)val, sizeof(val));
+	rc = settings_ers_store_value(KEY_NAME_LOCK_COUNT, (const void *)val, sizeof(val));
 	if (rc != 0) {
 		LOG_ERR("Failed to store count of ring lock events, err %d", rc);
 	}
@@ -233,7 +233,7 @@ int32_t mc_update_unlock_count(void)
 	uint32_t val = 0;
 	// TODO [ ] Consider reading lock event count from keeper module, from
 	//  SRAM, as it will have been copied by keeper during app start up.
-	int32_t rc = retrieve_ers_setting(KEY_NAME_UNLOCK_COUNT, &val, sizeof(val));
+	int32_t rc = settings_ers_retrieve_value(KEY_NAME_UNLOCK_COUNT, &val, sizeof(val));
 
 	if (rc != 0) {
 		val = RING_UNLOCK_EVENT_STARTING_COUNT;
@@ -246,7 +246,7 @@ int32_t mc_update_unlock_count(void)
 
 	keeper_set_unlock_event_count(val);
 
-	rc = store_ers_setting(KEY_NAME_UNLOCK_COUNT, (const void *)val, sizeof(val));
+	rc = settings_ers_store_value(KEY_NAME_UNLOCK_COUNT, (const void *)val, sizeof(val));
 	if (rc != 0) {
 		LOG_ERR("Failed to store count of ring unlock events, err %d", rc);
 	}

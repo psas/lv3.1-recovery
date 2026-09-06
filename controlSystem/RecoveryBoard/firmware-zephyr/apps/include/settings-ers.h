@@ -9,24 +9,36 @@
 #define RING_UNLOCK_EVENT_STARTING_COUNT 0
 
 /**
- * @brief
+ * @brief Initialize ERS persistent data management module.
  */
 
-void ers_settings_init(void);
+void settings_ers_init(void);
 
 /**
- * @brief
+ * @brief Retrieve one or more bytes, identifying them  with a named key.
+ *
+ * @pararm name Keyname to search in store of settings.
+ * @pararm val Pointer to caller variable to hold retrieved value.
+ * @pararm size Expected count of bytes in value.
+ *
+ * @retval 0 on success.
+ * @return non-zero per Zephyr's settings_load_subtree_direct() API.
  */
 
-// TODO [ ] Rename this API to 'ers_settings_retrieve':
-int32_t retrieve_ers_setting(const char* name, void *val, const uint32_t size);
+int32_t settings_ers_retrieve_value(const char* name, void *val, const uint32_t size);
 
 /**
- * @brief
+ * @brief Save one or more bytes and associate them with a named key.
+ *
+ * @pararm name Keyname to store with the value to be stored.
+ * @pararm val Pointer to caller variable which holds value to store.
+ * @pararm size Expected count of bytes in value.
+ *
+ * @retval 0 on success.
+ * @return non-zero per Zephyr's settings_save_one() API.
  */
 
-// TODO [ ] Rename this API to 'ers_settings_store':
-int32_t store_ers_setting(const char* name, const void *val, const uint32_t size);
+int32_t settings_ers_store_value(const char* name, const void *val, const uint32_t size);
 
 /**
  * @brief Setting API to store a Hall sensor limit.
@@ -45,12 +57,16 @@ int32_t store_ers_setting(const char* name, const void *val, const uint32_t size
  *  modules of the ERS app must map numeric indices to string names.  The
  *  details of settings keyname construction are encapsulated in this API.
  *
- * @param . . .
+ * @param sensor_idx Hall sensor ID per enum of system's two Hall sensors.
+ * @param limit_idx Hall reading cut-off identifier, a named cut-off or "limit".
+ * @param val Value of the reading considered the state wise cut-off point.
+ * @param size Size of the value in bytes.
  *
- * @retval . . .
+ * @retval 0 on success.
+ * @return non-zero per Zephyr's settings_save_one() API.
  */
 
-int32_t ers_settings_store_hall_limit(const uint32_t sensor_idx,
+int32_t settings_ers_store_hall_limit(const uint32_t sensor_idx,
 				      const uint32_t limit_idx,
 				      const void *val,
 				      const uint32_t size);

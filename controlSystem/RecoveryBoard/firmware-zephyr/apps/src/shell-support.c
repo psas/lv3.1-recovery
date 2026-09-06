@@ -375,7 +375,7 @@ static int cmd_motor_show_use_count(const struct shell *shell, size_t argc, char
         uint32_t value = 0;
         int32_t rc = 0;
 
-	rc = retrieve_ers_setting(KEY_NAME_LOCK_COUNT, &value, sizeof(value));
+	rc = settings_ers_retrieve_value(KEY_NAME_LOCK_COUNT, &value, sizeof(value));
 	if (rc != 0) {
                 shell_fprintf(shell, SHELL_NORMAL, "Failed to read motor use count from flash,"
 			       " err %d\n\r", rc);
@@ -400,7 +400,7 @@ static int cmd_motor_set_use_count(const struct shell *shell, size_t argc, char 
 	// TOOD [ ] Sanity check outcome of `strtol()`.
         shell_fprintf(shell, SHELL_NORMAL, "setting motor use count to %u\n", value);
 
-        rc = store_ers_setting(KEY_NAME_LOCK_COUNT, (const void *)value, sizeof(value));
+        rc = settings_ers_store_value(KEY_NAME_LOCK_COUNT, (const void *)value, sizeof(value));
         if (rc != 0) {
                 LOG_ERR("Failed to store motor use (lock|unlock ring) events, err %d", rc);
         }
