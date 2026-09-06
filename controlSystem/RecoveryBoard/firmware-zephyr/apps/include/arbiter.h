@@ -94,6 +94,7 @@ void arbiter_show_hall_state_limits(const struct shell *shell);
  *    a sensible starting value, namely 'RING_POS_UNKNOWN'.
  */
 
+// TODO [ ] Complete following comment block:
 
 /**
  * @brief Determine ring state from Hall sensor readings; ring position is an
@@ -106,16 +107,13 @@ void arbiter_show_hall_state_limits(const struct shell *shell);
 
 int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position);
 
-// TODO [ ] Complete this API comment block:
-/**
- * @brief Set the interval in milliseconds at which ERS firmware takes Hall
- *  sensor readings and determiines the lock ring position.
- */
-
-int32_t arbiter_set_ring_pos_detection_interval(const uint32_t timeout_ms);
-
 /**
  * @brief Convert an enum value for lock ring position to a string.
+ *
+ * @param pos An integer value representing lock ring physical position.
+ *
+ * @return A string-wise name for the physical ring position.  Possible strings
+ *  include a string to indicate when position is unknown.
  */
 
 char *arbiter_ring_pos_to_str(const enum lock_ring_position pos);

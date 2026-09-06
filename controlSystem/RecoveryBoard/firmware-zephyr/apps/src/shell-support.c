@@ -42,15 +42,13 @@ LOG_MODULE_REGISTER(shell_support, LOG_LEVEL_INF);
 
 static int cmd_wrapper_read_adc_in0(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc);
-        ARG_UNUSED(argv);
+        ARG_UNUSED(argc); ARG_UNUSED(argv);
 	return cmd_ers_read_adc_in0(shell);
 }
 
 static int cmd_wrapper_read_adc_in1(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc);
-        ARG_UNUSED(argv);
+        ARG_UNUSED(argc); ARG_UNUSED(argv);
 	return cmd_ers_read_adc_in1(shell);
 }
 
@@ -60,9 +58,7 @@ static int cmd_wrapper_read_adc_in1(const struct shell *shell, size_t argc, char
 
 static int cmd_diag_periodic_on(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(shell);
-        ARG_UNUSED(argc);
-        ARG_UNUSED(argv);
+        ARG_UNUSED(shell); ARG_UNUSED(argc); ARG_UNUSED(argv);
 
 	keeper_set_diag_periodic();
 	return 0;
@@ -70,9 +66,7 @@ static int cmd_diag_periodic_on(const struct shell *shell, size_t argc, char *ar
 
 static int cmd_diag_periodic_off(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(shell);
-        ARG_UNUSED(argc);
-        ARG_UNUSED(argv);
+        ARG_UNUSED(shell); ARG_UNUSED(argc); ARG_UNUSED(argv);
 
 	keeper_clear_diag_periodic();
 	return 0;
@@ -135,8 +129,7 @@ SHELL_CMD_REGISTER(led, &cmds_status_led, "- ERS - status LED", NULL);
 
 static int cmd_wrapper_read_adc_all(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc);
-        ARG_UNUSED(argv);
+        ARG_UNUSED(argc); ARG_UNUSED(argv);
 	int32_t rc = 0;
 
         shell_print(shell, "Calling ADC module to read all ADC channels . . .\n");
@@ -230,8 +223,7 @@ SHELL_CMD_REGISTER(hall, &sub_section_hall,
 
 static int cmd_show_locking_ring_state(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc);
-        ARG_UNUSED(argv);
+        ARG_UNUSED(argc); ARG_UNUSED(argv);
 	enum lock_ring_state ring_state = RING_STATE_UNKNOWN;
 	int32_t rc = 0;
 
@@ -262,8 +254,7 @@ static int cmd_show_locking_ring_state(const struct shell *shell, size_t argc, c
 
 static int cmd_show_locking_ring_pos(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc);
-        ARG_UNUSED(argv);
+        ARG_UNUSED(argc); ARG_UNUSED(argv);
 
 	enum lock_ring_position ring_position = RING_POS_UNKNOWN;
 	int32_t rc = arbiter_determine_ring_state(&ring_position);
@@ -286,8 +277,7 @@ static int cmd_show_locking_ring_pos(const struct shell *shell, size_t argc, cha
 
 static int cmd_set_pos_detection_interval(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc);
-        ARG_UNUSED(argv);
+        ARG_UNUSED(argc); ARG_UNUSED(argv);
 
         uint32_t value = 0;
         char *endptr, *str;
@@ -299,14 +289,12 @@ static int cmd_set_pos_detection_interval(const struct shell *shell, size_t argc
 	shell_fprintf(shell, SHELL_NORMAL, "Storing ring position detection "
 			"interval of %u ms . . .\n", value);
 	keeper_set_ring_pos_detection_interval(value);
-	rc = arbiter_set_ring_pos_detection_interval(value);
 	return rc;
 }
 
 static int cmd_show_pos_detection_interval(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc);
-        ARG_UNUSED(argv);
+        ARG_UNUSED(argc); ARG_UNUSED(argv);
 
         uint32_t value = 0;
 	keeper_get_ring_pos_detection_interval(&value);
@@ -317,8 +305,7 @@ static int cmd_show_pos_detection_interval(const struct shell *shell, size_t arg
 
 static int cmd_lock_ring(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc);
-        ARG_UNUSED(argv);
+        ARG_UNUSED(argc); ARG_UNUSED(argv);
 
 	int32_t rc = mc_lock_ring();
 	if (rc != 0)
@@ -331,8 +318,7 @@ static int cmd_lock_ring(const struct shell *shell, size_t argc, char *argv[])
 
 static int cmd_unlock_ring(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc);
-        ARG_UNUSED(argv);
+        ARG_UNUSED(argc); ARG_UNUSED(argv);
 
 	int32_t rc = mc_unlock_ring();
 	if (rc != 0)
@@ -371,7 +357,7 @@ SHELL_CMD_REGISTER(ring, &sub_section_ring, "- ERS - lock ring commands", NULL);
 
 static int cmd_motor_show_use_count(const struct shell *shell, size_t argc, char *argv[])
 {
-	LOG_INF("- STUBCOMMAND - show moter uer count.");
+	LOG_INF("- STUBCOMMAND - show moter use count.");
         uint32_t value = 0;
         int32_t rc = 0;
 
@@ -380,7 +366,7 @@ static int cmd_motor_show_use_count(const struct shell *shell, size_t argc, char
                 shell_fprintf(shell, SHELL_NORMAL, "Failed to read motor use count from flash,"
 			       " err %d\n\r", rc);
 	} else {
-                shell_fprintf(shell, SHELL_NORMAL, "Motor actuations at %u count\n\r", value);
+                shell_fprintf(shell, SHELL_NORMAL, "Motor has been actuated %u times\n\r", value);
 	}
 
 	return 0;
@@ -426,8 +412,7 @@ SHELL_CMD_REGISTER(motor, &cmds_motor_use, "- ERS - motor use info", NULL);
 
 static int cmd_dac_show_range(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc);
-        ARG_UNUSED(argv);
+        ARG_UNUSED(argc); ARG_UNUSED(argv);
 
 	uint32_t bound_low = 0;
 	uint32_t bound_high = 0;
@@ -445,8 +430,7 @@ static int cmd_dac_show_range(const struct shell *shell, size_t argc, char *argv
 
 static int cmd_dac_show_dac_setting(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc);
-        ARG_UNUSED(argv);
+        ARG_UNUSED(argc); ARG_UNUSED(argv);
 
 	uint32_t dac_setting = 0;
 	int32_t rc = dac_present_value(&dac_setting);
@@ -473,8 +457,7 @@ static int cmd_dac_show_dac_setting(const struct shell *shell, size_t argc, char
 
 static int cmd_dac_write_output_value(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc);
-        ARG_UNUSED(argv);
+        ARG_UNUSED(argc); ARG_UNUSED(argv);
 
         uint32_t value = 0;
         char *endptr, *str;
@@ -499,8 +482,7 @@ static int cmd_dac_write_output_value(const struct shell *shell, size_t argc, ch
 
 static int cmd_dac_set_lock_ring_current_limit(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc);
-        ARG_UNUSED(argv);
+        ARG_UNUSED(argc); ARG_UNUSED(argv);
 
         uint32_t value = 0;
         char *endptr, *str;
@@ -515,8 +497,7 @@ static int cmd_dac_set_lock_ring_current_limit(const struct shell *shell, size_t
 
 static int cmd_dac_get_lock_ring_current_limit(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc);
-        ARG_UNUSED(argv);
+        ARG_UNUSED(argc); ARG_UNUSED(argv);
 
         uint32_t value = 0;
 	keeper_get_DAC_val_for_ring_motor(&value);

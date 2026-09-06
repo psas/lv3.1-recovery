@@ -2,16 +2,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "keeper.h"
+
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/sys/util.h>
-#include <inttypes.h>
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(gpio_in, CONFIG_ERS_GPIO_LOG_LEVEL);
 
-#include <keeper.h>
+#include <inttypes.h>
 
 //----------------------------------------------------------------------
 // - SECTION - pound defines
@@ -76,7 +77,7 @@ enum ers_input_signals
 // - SECTION - routines
 //----------------------------------------------------------------------
 
-int32_t gpio_in_configure_iso_drogue(void)
+static int32_t gpio_in_configure_iso_drogue(void)
 {
         if (!gpio_is_ready_dt(&iso_drogue)) {
                 printk("Error: iso_drogue device %s is not ready\n",
@@ -104,7 +105,7 @@ int32_t gpio_in_configure_iso_drogue(void)
         return rc;
 }
 
-int32_t gpio_in_configure_iso_main(void)
+static int32_t gpio_in_configure_iso_main(void)
 {
         if (!gpio_is_ready_dt(&iso_main)) {
                 printk("Error: iso_main device %s is not ready\n",
@@ -132,7 +133,7 @@ int32_t gpio_in_configure_iso_main(void)
         return rc;
 }
 
-int32_t gpio_in_configure_not_umb_on(void)
+static int32_t gpio_in_configure_not_umb_on(void)
 {
         if (!gpio_is_ready_dt(&not_umb_on)) {
                 printk("Error: not_umb_on device %s is not ready\n",
@@ -160,7 +161,7 @@ int32_t gpio_in_configure_not_umb_on(void)
         return rc;
 }
 
-int32_t gpio_in_configure_not_motor_faila(void)
+static int32_t gpio_in_configure_not_motor_faila(void)
 {
         if (!gpio_is_ready_dt(&not_motor_faila)) {
                 printk("Error: not_motor_faila device %s is not ready\n",
@@ -188,7 +189,7 @@ int32_t gpio_in_configure_not_motor_faila(void)
         return rc;
 }
 
-void gpio_in_thread_entry(void *arg1, void *arg2, void *arg3)
+static void gpio_in_thread_entry(void *arg1, void *arg2, void *arg3)
 {
         ARG_UNUSED(arg1); ARG_UNUSED(arg2); ARG_UNUSED(arg3);
 
@@ -230,29 +231,25 @@ int32_t gpio_in_init(void)
         int32_t rc = 0;
 
 	rc = gpio_in_configure_iso_drogue();
-	if (rc)
-	{
+	if (rc) {
 		LOG_ERR("Failed to configure GPIO for iso_drogue signal in, err %d", rc);
 		return rc;
 	}
 
 	rc = gpio_in_configure_iso_main();
-	if (rc)
-	{
+	if (rc) {
 		LOG_ERR("Failed to configure GPIO for iso_main signal in, err %d", rc);
 		return rc;
 	}
 
 	rc = gpio_in_configure_not_umb_on();
-	if (rc)
-	{
+	if (rc) {
 		LOG_ERR("Failed to configure GPIO for not_umb_on signal in, err %d", rc);
 		return rc;
 	}
 
 	rc = gpio_in_configure_not_motor_faila();
-	if (rc)
-	{
+	if (rc) {
 		LOG_ERR("Failed to configure GPIO for not_motor_faila signal in, err %d", rc);
 		return rc;
 	}

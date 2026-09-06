@@ -361,12 +361,6 @@ char *arbiter_ring_pos_to_str(const enum lock_ring_position pos)
         }
 }
 
-int32_t arbiter_set_ring_pos_detection_interval(const uint32_t timeout_ms)
-{
-	LOG_WRN("- DEV 0825 - stub function");
-	return -1;
-}
-
 /**
  * @brief Routine to apply a threshold test to latest battery voltage and to
  *   update a flag to indicate whether batter voltage ok.
@@ -410,13 +404,30 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
         ARG_UNUSED(arg3);
 
 	enum lock_ring_position ring_position = RING_POS_UNKNOWN;
-	// char *str_ptr = ring_pos_to_str(ring_position);
 	uint32_t battery_ok = 0;
 	uint32_t can_bus_ok = 0;
 	enum lock_ring_state ring_state = RING_STATE_UNKNOWN;
 
+	static uint32_t states_check_period_ms = CONFIG_ARBITER_LOOP_SLEEP_PER_MS;
 	static uint32_t loop_count = 0;
 	int32_t rc = 0;
+
+	// Note this while loop determines three important values in sequence.
+	// These recovery system values are:
+	//
+	// - lock ring state
+	// - system battery voltage
+	// - "battery ok" state
+	//
+	// A single loop construct with a run-time adjustable period determines
+	// how often these values are determined.
+	//
+	// While this may be good enough for timely parachute deployment, a
+	// review of this design is in order.  Questions to answer include:
+	//
+	// - Do any of these values need a dedicated check interval?
+	// - Would kernel timers be a better or good way to provide independent
+	//   timing for each recovery system value?
 
 	while (1) {
 		rc = arbiter_determine_ring_state(&ring_position);
@@ -425,7 +436,6 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 		}
 
 		rc = calc_battery_voltage();
-		// LOG_INF("calc battery voltage returns status %d", rc);
 		if (rc < 0) {
 			LOG_ERR("Failed to calculate battery voltage, err %d", rc);
 		}
@@ -439,18 +449,18 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 		keeper_get_can_bus_ok(&can_bus_ok);
 		keeper_get_ring_status(&ring_state);
 
-		// LOG_INF("- DEV 0105 - determining ERS ready state . . .");
-		// arb_mesg("- DEV 0105 - batt_ok %d, can_ok %d, ring_state %d",
-		//	battery_ok, can_bus_ok, ring_state);
-
 		if (battery_ok && can_bus_ok && (ring_state == RING_STATE_LOCKED)) {
 			keeper_set_ready_state(true);
 		} else {
 			keeper_set_ready_state(false);
 		}
 
+                keeper_get_ring_pos_detection_interval(&states_check_period_ms);
+		LOG_INF("A1");
 		loop_count++;
-		k_msleep(CONFIG_ARBITER_LOOP_SLEEP_PER_MS);
+
+		// k_msleep(CONFIG_ARBITER_LOOP_SLEEP_PER_MS);
+		k_msleep(states_check_period_ms);
 	}
 }
 

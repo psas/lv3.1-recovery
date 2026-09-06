@@ -479,8 +479,7 @@ int32_t keeper_retrieve_hall_1_limits(void)
 	uint32_t v_under_limit, inactive_limit, between_limit, active_limit;
 	int32_t rc = 0;
 
-	// Call keeper to obtain hall limits:
-	// shell_fprintf(shell, SHELL_NORMAL, "- STUB -\n");
+	// Retrieve Hall sensor limits from FLASH:
 	rc = settings_ers_retrieve_value(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_1), &v_under_limit,
 					sizeof(v_under_limit));
 	rc = settings_ers_retrieve_value(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_2), &inactive_limit,

@@ -38,8 +38,6 @@ int main(void)
 	static uint32_t loop_count = 0;
 	int32_t rc = 0;
 
-	LOG_INF("- DEV 2026-09-03 0A -");
-
 	rc = gpio_in_init();
 	LOG_INF("GPIO input pin initialization returns %d", rc);
 
@@ -61,10 +59,7 @@ int main(void)
 	settings_ers_init();
 	LOG_INF("just back from ERS settings module init");
 	k_msleep(500);
-#if 0
-        rc = ers_init_shell_support();
-	LOG_INF("ERS command initialization returns %d", rc);
-#endif
+
 	rc = keeper_init();
 	LOG_INF("ERS data \"keeper\" initialization returns %d", rc);
 
