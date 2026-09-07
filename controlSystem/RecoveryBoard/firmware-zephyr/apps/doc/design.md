@@ -9,14 +9,57 @@ The firmware includes modules to manage various system activies.
 _Table 1: ERS Zephyr firmware modules_
 
 - ADC input module
+- Arbiter
 - CAN communication module
 - DAC output module
-- motor control
-- PWM module, for ERS system buzzer
+- GPIO input module
+- motor control module
+- Keeper, of run-time state
+- PWM module
 - settings module, for run-time and persistent state
 - shell (CLI) module
 - status LED module
 
+### ADC input module
+
+The ADC input module manages the configuration and reading of four analog input channels.  Called out in the spec, these channels cover the reading of:
+
+- ERS battery voltage
+- lock ring motor current
+- Hall sensor 1 output
+- Hall sensor 2 output
+
+ADC channel configuration begins in device tree source, in ``apps/boards/ers-v3p1.overlay``.  Config parameters including gain, voltage reference, acqure times and resolution are expressed in this overlay file.  Calls to Zephyr's ADC API (which in turn calls HAL code from our microcontroller manufacturer, in this case STMicro, apply configuration settings at app start time.
+
+Naturally the device tree overlay file does not know the meanings of the signals to which ADC channels are wired.  The ERS Zephyr ADC module itself doesn't know these signals by name and meaning either.  This module's purpose is to set up, and then to read ADC channels periodically.  It stores these readings in the app's run time data store module, a module called the "keeper".
+
+TODO [ ] Determine whether a thread is needed to perform the ADC module channel reading and storing.  A kernel timer and work item to submit to Zephyr's system work queue might be a good fit for this work, and use less static RAM.
+
+### Arbiter
+
+The ERS firmware arbiter is responsible for gathering and acting on data from various system inputs, including ADC channel inputs, digital inputs, CAN messages and CAN bus health status.  The arbiter manifests the code which decides when to release the parachute, either drogue chute or main chute depending on app configuration at build time.
+
+The arbiter also responds to certain CLI invocations, some directly and some indirectly through the firmware's keeper module.
+
+The arbiter implements the app's highest level logic, and depends on information from all of the sensor facing and bus facing, communications modules.
+
+The arbiter implements a thread with a "forever" loop construct, which provides for adjustable, periodic reckoning of system inputs.
+
+TODO [ ] Review monitor responsibilities and determine whether a lighter weight scheduling of work, e.g. timer and system work queue use would be a better design than a thread.
+
+TODO [ ] locate following paragraph in CLI section:
+
+  These occur over a UART connection during firmware and some hardware development, and are helpful for tuning and testing on the bench top.  There is no radio link to ERS firmware, therefore ERS firmware CLI is not able to be exercised during rocket flights.
+
+### CAN communication module
+
+. . .
+
+
+### DAC output module
+### GPIO input module
+### motor control module
+### Keeper, of run-time state
 
 ### PWM module
 
@@ -35,7 +78,7 @@ In addition to the factoring of code into modules, the ERS design centers around
 
 ## Lock Ring
 
-This is an important section!  The lock ring assembly, of which there are two in the LV3.1 airframe, locks sections of the rocket together which contain the drogue and main parachutes.  For a typical successful flight, the lock ring for the drogue chute section is unlocked at or shortly after apogee.  This releases the drogue chute which slows the descent of the airframe.  At a further time in descent, the lock ring for the main chute is unlocked.  This releases the main chute.
+This is an important section!  The lock ring assembly, of which there are two in the LV3.1 airframe, locks sections of the rocket together which contain respectively the drogue and main parachutes.  For a typical successful flight, the lock ring for the drogue chute section is unlocked at or shortly after apogee.  This releases the drogue chute which slows the descent of the airframe.  At a further time in descent, the lock ring for the main chute is unlocked.  This releases the main chute.
 
 If ERS firmware receives a command to lock a given ring, and that ring is detected as "locked", the firmware does not attempt to drive the lock ring motor.  Similarly when the firmware receives a command to unlock a ring, which is detected as "unlocked", the firmwrae does not drive the motor to unlock the ring.  The firmware assumes the ring state is true, and avoids energizing the ring motors in those cases where they would be physically unable to turn in the given direction.
 
