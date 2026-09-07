@@ -22,7 +22,7 @@ _Table 1: ERS Zephyr firmware modules_
 - Shell (CLI) module
 - Status LED module
 
-Modules of the ERS Zephyr app are all fairly simple.  The most involved modules arguably are the CAN communications module, the interactive shell module, and the arbiter.  Some of the modules implement threads.  Some are based on sample apps from Zephyr 3.7.0 smaples.  An overview of modules and a couple of key features follows this paragraph.  Note that 'Y' means yes or present, and '-' means not present.  (The dash is a little more distinct from the letter Y):
+Modules of the ERS Zephyr app are all fairly simple.  The most involved modules arguably are the CAN communications module, the interactive shell module, and the arbiter.  Some of the modules implement threads.  Some are based on sample apps from Zephyr 3.7.0.  An overview of modules and a couple of key features follows this paragraph.  Note that 'Y' means yes or present, and '-' means not present.  (The dash is a little more distinct from the letter Y):
 
 _Table 2 - ERS Zephyr module attributes_
 
@@ -118,7 +118,7 @@ With many modules using the keeper, an important consideration arises around des
 
 For writing to and reading from Boolean flags and 32-bit integer type data, the keeper module makes use of Zephyr atomic types and their write and read APIs.  In a couple of places where multiple values are updated or read, a mutex is used to protect access to those data.
 
-Notable:  comments in the keeper module use "read" and "write" to describe data ops.  Comments in the settings module make use of "store" and "retrieve", to talk about the corresponding data ops which utilize non-volatile memory.
+Notable:  comments in the keeper module use "read" and "write" to describe data ops.  Comments in the settings module make use of "store" and "retrieve", to talk about the corresponding data ops which access data in non-volatile memory.
 
 ### PWM module
 
@@ -133,11 +133,14 @@ Audio pattern support is limited to a simple but flexible structure.  Pattern st
 
 ### Settings module
 
-The ERS settings module is responsible to copy, and to read back certain data in non-volatile memory.  No thread is needed.
+The ERS settings module is responsible to copy, and to read back certain data in non-volatile memory.  No thread is needed.  In this module, the terms "store" and "retrieve" are used in a manner parallel to the keeper modules operations to write and to read data.
+
+Distinct from run time data, which are stored in variables, in memory the size of the data itself, these same data when written to non-volatile memory are stored as key-value pairs.  Zephyr's settings sub-system associates string-wise keys, or names, with each datum stored.  This is not a complex activity, but still involves some detail in terms of code development.  Key names need to be selected, and it is helpful to associate them with their values . . .
+
+
+
 
 ### Shell (CLI) module
-
-_Stub section_
 
 The ERS command line interface makes use of the Zephyr RTOS shell facility.  Some keys things to note:
 
@@ -145,6 +148,8 @@ The ERS command line interface makes use of the Zephyr RTOS shell facility.  Som
 - ERS speicific commands have descriptions that start with "- ERS -"
 - Both Zephyr standard and app specific commands are supported with a 'help'
   option
+
+NOTICE:  The ERS specification has been updated since the commands in ERS Zephyr firmware were developed.  These commands do not map one-to-one with the Rust based version of ERS firmware.  It would be ideal to have both ERS firmware implementations reflect the same set of commands.  There is work to do in this application to reach that alignment of CLI commands.
 
 The Zephyr shell, or shell sub-system, has a built-in help command.  The help command not only lists available commands but precedes these with some useful key bindings.  Available commands vary from app to app, depending on what the application implements beyond Zephyr's built in commands.  See Zephyr's shell system documentation, linked in the "references" section of this document.
 
@@ -178,14 +183,102 @@ Available commands:
 
 _More details to be added here_
 
+#### DAC commands
+
+```
+uart:~$ dac help
+dac - - ERS - DAC info and set commands
+Subcommands:
+  range                     : show microcontroller DAC range
+  show_present_value        : show present DAC setting
+  set                       : set DAC output
+  set_lock_unlock_current   : set DAC value to limit lock ring motor current
+  show_lock_unlock_current  : show DAC value to limit lock ring motor current
+```
+
+#### Diagnostics commands
+
+```
+uart:~$ diag help
+diag - - ERS - diagnostics
+Subcommands:
+  on   : enable ERS periodic diagnostics
+  off  : disable ERS periodic diagnostics
+```
+
+#### development commands
+
+```
+uart:~$ ers help
+ers - - ERS - development commands
+Subcommands:
+  adcall  : Read ERS board's four ADC channels
+  adc0    : Read ERS board ADC for Hall sensor 1
+  adc1    : Read ERS board ADC for Hall sensor 2
+```
+
+#### Hall sensor commands
+
+```
+uart:~$ hall help
+hall - - ERS - show and set Hall sensor limit values (in ADC counts)
+Subcommands:
+  active        : set Hall limit for state "active":  hall active [s1|s2] [value]
+  between       : set Hall limit for state "between":  hall between [s1|s2]
+                 [value]
+  inactive      : set Hall limit for state "inactive":  hall inactive [s1|s2]
+                 [value]
+  retrieve      : retrieve Hall sensor limits from flash
+  save          : store Hall sensor limits to flash (default limits still
+                 available)
+  set_defaults  : restore Hall sensor limit defaults
+  show          : show Hall sensor limit values (ADC counts 0..4095)
+  v_under       : set Hall limit for state "voltage under":  hall v_under [s1|s2]
+                 [value]
+```
+
+#### LED commands
+
+```
+uart:~$ led help
+led - - ERS - status LED
+Subcommands:
+  on   : enable ERS status LED
+  off  : disable ERS status LED
+```
+
+#### Motor commands
+
+```
+uart:~$ motor help
+motor - - ERS - motor use info
+Subcommands:
+  show  : show motor use count
+  set   : set motor use count (for when motor is replaced)
+```
+
+#### Ring commands
+
+```
+uart:~$ ring help
+ring - - ERS - lock ring commands
+Subcommands:
+  diset     : set ring position detection internal in ms
+  dishow    : show ring position detection internal in ms
+  lock      : lock ring
+  position  : show lock ring position
+  state     : show lock ring state
+  unlock    : unlock ring
+```
+
 ### Status LED module
 
 The status LED module controls a single LED.  At time of writing the status LED module supports just two states:  led heartbeat, and LED off.
 
 There is no thread involved, as LED pattern is updated by other application modules.
 
-TODO [ ] Add mutex protection to the public API.
-TODO [ ] Add additional LED blink patterns to indicate errors.
+- TODO [ ] Add mutex protection to the public API.
+- TODO [ ] Add additional LED blink patterns to indicate errors.
 
 # Physical and Programmatic Elements
 
@@ -227,7 +320,7 @@ The practical difference between ring position and ring state, is that ring posi
 
 Lock ring state is crucial to shaping the behavior of the electromechanical recovery system.  Lock ring position is determined by reading two Hall sensors per ring, and is managed across multiple application modules.
 
-_Figure 1 - Data path Hall sensor readings to lock ring motor movement
+_Figure 1 - Data path Hall sensor readings to lock ring motor movement_
 
 ```
  +-----------------+   +--------------+   +-------------+   +-----------------+
@@ -243,7 +336,5 @@ _Figure 1 - Data path Hall sensor readings to lock ring motor movement
 Figure 1 shows the flow of data to guide lock ring release during a flight.  On the bench top, the ERS firmware shell provides commands which interract with each of these modules, to read state and to make adjustments.  The shell as mentioned, is of course, not in active use during a flight, so the data path above is complete for the firmware's most important work and and inner working.
 
 ## References
-
-- https://www.markdownguide.org/extended-syntax/
 
 - https://docs.zephyrproject.org/latest/samples/subsys/shell/shell.html
