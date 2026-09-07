@@ -5,9 +5,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <inttypes.h>
-#include <stddef.h>
-#include <stdint.h>
+#include "keeper.h"
 
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
@@ -17,9 +15,11 @@
 #include <zephyr/shell/shell.h>
 
 #include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(ers_adc, CONFIG_ADC_LOG_LEVEL);
+LOG_MODULE_REGISTER(ers_adc, CONFIG_ERS_ADC_LOG_LEVEL);
 
-#include "keeper.h"
+#include <inttypes.h>
+#include <stddef.h>
+#include <stdint.h>
 
 //----------------------------------------------------------------------
 // - SECTION - pound defines
@@ -27,27 +27,7 @@ LOG_MODULE_REGISTER(ers_adc, CONFIG_ADC_LOG_LEVEL);
 
 #define ADC_READ_PERIOD_MS 10
 
-// Per Zephyr's include/zephyr/logging/log.h there are four levels of logging:
-//
-// - LOG_ERR
-// - LOG_WRN
-// - LOG_INF
-// - LOG_DBG
-//
-// Development logging messages are probably most like informational (LOG_INF)
-// or debugging (LOG_DBG) messages, but in the Zephyr ERS firmware development
-// there have been multiple instances where a development message is useful
-// at a finer granularity than Zephyr's logging levels provide.  For this reason
-// the following symbol(s) are either defined or undefined, allowing for
-// specific, often feature-wise messages and groups of messages to be enabled
-// independent from other development time messages.
-//
-// These symbols and their corresponding messages may be completely removed
-// from final release code.
-
 #undef DEV_ERS_ADC_PERIODIC_REPORTING
-
-#define MOTOR_ISENSE_READ_PERIOD_MS 50
 
 //----------------------------------------------------------------------
 // - SECTION - file scoped
@@ -80,7 +60,7 @@ struct k_mutex adc_mtx;
 int32_t adc_read_channels(const enum ers_adc_values idx_begin,
 			  const enum ers_adc_values idx_end)
 {
-	int32_t rc = k_mutex_lock(&adc_mtx, K_MSEC(1500));
+	int32_t rc = k_mutex_lock(&adc_mtx, K_MSEC(CONFIG_ADC_API_TIMEOUT_MS));
 	if (rc != 0) {
 		LOG_ERR("Failed to lock ADC read channels mutex, error %d", rc);
 		goto done;
@@ -163,7 +143,7 @@ int32_t cmd_ers_read_adc_in0(const struct shell *shell)
 {
 	uint32_t adc_reading;
 
-	int32_t rc = k_mutex_lock(&adc_mtx, K_MSEC(1500));
+	int32_t rc = k_mutex_lock(&adc_mtx, K_MSEC(CONFIG_ADC_API_TIMEOUT_MS));
 	if (rc != 0) {
 		LOG_ERR("Failed to lock mutex in read ADC_IN0, err %d", rc);
 		goto done;
@@ -191,7 +171,7 @@ int32_t cmd_ers_read_adc_in1(const struct shell *shell)
 {
 	uint32_t adc_reading;
 
-	int32_t rc = k_mutex_lock(&adc_mtx, K_MSEC(1500));
+	int32_t rc = k_mutex_lock(&adc_mtx, K_MSEC(CONFIG_ADC_API_TIMEOUT_MS));
 	if (rc != 0) {
 		LOG_ERR("Failed to lock mutex in read ADC_IN1, err %d", rc);
 		goto done;
@@ -247,11 +227,9 @@ void adc_thread_entry(void *arg1, void *arg2, void *arg3)
                 }
         }
 
-        while (1)
-        {
+        while (1) {
 #ifdef DEV_ERS_ADC_PERIODIC_REPORTING
-		if ((count % 300) == 0)
-		{
+		if ((count % 300) == 0) {
                 	LOG_INF("ADC reading[%u]: (thread entry function)\n", count++);
 		}
 #endif
@@ -297,7 +275,8 @@ int32_t adc_init(void)
 		LOG_INF("starting ADC thread . . .");
 	}
 
-	LOG_INF("- DEV 1026 - ADC module configured %u channels.", ARRAY_SIZE(adc_channels));
+	LOG_INF("ADC module configured %u channels.", ARRAY_SIZE(adc_channels));
+	LOG_INF("- DEV 0906 - ADC API timeout set to %d ms", CONFIG_ADC_API_TIMEOUT_MS);
 
 	return rc;
 }

@@ -72,9 +72,7 @@ config PWM_THREAD_PRIORITY
 
 # TODO [ ] Give all ERS firmware modules a Zephyr log config reference here:
 
-module = ADC
-module-str = ADC module
-source "subsys/logging/Kconfig.template.log_config"
+# ADC module has a dedicated Kconfig file
 
 # ARBITER module has a dedicated Kconfig file
 
@@ -99,6 +97,7 @@ module-str = ERS status led
 source "subsys/logging/Kconfig.template.log_config"
 
 # ERS application specific
+rsource "Kconfig.adc"
 rsource "Kconfig.arbiter"
 rsource "Kconfig.can"
 rsource "Kconfig.dac"
