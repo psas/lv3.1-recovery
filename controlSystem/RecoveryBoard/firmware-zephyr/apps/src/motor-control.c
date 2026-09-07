@@ -154,6 +154,8 @@ int32_t mc_drive_deploy2_high(void)
 	}
 }
 
+// TODO [ ] Refactor DEV_DAC_SETTING_IN_SITU to DAC module Kconfig symbol,
+//          so it is easier to find and may be changed without touching C code:
 #define DEV_DAC_SETTING_IN_SITU 800
 #define RING_CHECK_INTERVAL_MS 5 // was 10
 #define COUNT_CHECKS 60 // was 30
