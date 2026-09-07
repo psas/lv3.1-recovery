@@ -1,6 +1,8 @@
 # ERS Zephyr App Design
 
-This document describes the design of parachute deploying, recovery system firmware in the Portland State Aerospace Society's Launch Vehicle 3.1.  This firmware is based on Zephyr RTOS.  Through summer 2025 to 2026, the firmware was compiled against Zephyr 3.7.0.
+The ERS Zephyr app for Launch Vehicle 3.1 is responsible for safe, timely recovery parachute release.  The firmware is build-time configurable for both drogue chute and main parachute operation.
+
+This document describes the design of parachute deploying, recovery system firmware in the Portland State Aerospace Society's Launch Vehicle 3.1.  This firmware is based on Zephyr RTOS 3.7.0.  Its development time spans summer 2025 to fall of 2026.
 
 ## Modules
 
@@ -110,9 +112,11 @@ The keeper module implements and manages a run-time data store.  There is no dat
 
 Run time data can be stored persistently.  See the section on the module named settings-ers.
 
-For writing to and reading from Boolean flags and 32-bit integer type data, the keeper module makes use of Zephyr atomic types and their write and read APIs.  In a couple of places where multiple values are updated or read, a "keeper" API mutex is used to avoid race conditions.
+In the larger design picture, a primary goal of the keeper module design is to support a star-like pattern for data to travel in the application.  Modules need to share data with each other.  In the absence of a central store, the paths each module would need to establish would be more complex to represent in a graph like diagram.  In a sense there would be many kinds of data paths in place of just one or two.  With the keeper module, we can talk about modules having a data writing path, and a data reading path, to one central place, when they need one or both paths.  The keeper module also provides a convenient way for modules like the CAN module and the arbiter, to query all the data they need to generate status messages to the larger system, and to determine lock ring activations.
 
-Most of the ERS Zephyr modules make use of the keeper.  Modules write or "post" their data to the keeper, and read it back on demand.  Often times modules read the data posted by other modules.
+With many modules using the keeper, an important consideration arises around design to assure that data race conditions are avoided.  Fortunately, most ERS run time data are 32-bit integer values.
+
+For writing to and reading from Boolean flags and 32-bit integer type data, the keeper module makes use of Zephyr atomic types and their write and read APIs.  In a couple of places where multiple values are updated or read, a mutex is used to protect access to those data.
 
 Notable:  comments in the keeper module use "read" and "write" to describe data ops.  Comments in the settings module make use of "store" and "retrieve", to talk about the corresponding data ops which utilize non-volatile memory.
 
@@ -142,6 +146,36 @@ The ERS command line interface makes use of the Zephyr RTOS shell facility.  Som
 - Both Zephyr standard and app specific commands are supported with a 'help'
   option
 
+The Zephyr shell, or shell sub-system, has a built-in help command.  The help command not only lists available commands but precedes these with some useful key bindings.  Available commands vary from app to app, depending on what the application implements beyond Zephyr's built in commands.  See Zephyr's shell system documentation, linked in the "references" section of this document.
+
+_Table n - ERS shell commands_
+
+```
+uart:~$ help
+Please press the <Tab> button to see all available commands.
+You can also use the <Tab> button to prompt or auto-complete all commands or its subcommands.
+You can try to call commands with <-h> or <--help> parameter for more information.
+
+Shell supports following meta-keys:
+  Ctrl + (a key from: abcdefklnpuw)
+  Alt  + (a key from: bf)
+Please refer to shell documentation for more details.
+
+Available commands:
+  can     : CAN controller commands
+  dac     : - ERS - DAC info and set commands
+  device  : Device commands
+  diag    : - ERS - diagnostics
+  ers     : - ERS - development commands
+  hall    : - ERS - show and set Hall sensor limit values (in ADC counts)
+  help    : Prints the help message.
+  kernel  : Kernel commands
+  led     : - ERS - status LED
+  motor   : - ERS - motor use info
+  ring    : - ERS - lock ring commands
+  stats   : Stats commands
+```
+
 _More details to be added here_
 
 ### Status LED module
@@ -159,41 +193,57 @@ In addition to the factoring of code into modules, the ERS design centers around
 
 ## Lock Ring
 
-This is an important section!  The lock ring assembly, of which there are two in the LV3.1 airframe, locks sections of the rocket together which contain respectively the drogue and main parachutes.  For a typical successful flight, the lock ring for the drogue chute section is unlocked at or shortly after apogee.  This releases the drogue chute which slows the descent of the airframe.  At a further time in descent, the lock ring for the main chute is unlocked.  This releases the main chute.
+This is an important section!
+
+The lock ring assembly is a physical part of the LV3.1 airframe and rocket.  It entails a direct current motor and gearing, both inside and outside the motor.  These mechanical elements have strength but are subject to damage if driven with too high a current, or from certain physical configurations (e.g. driving motor to lock ring when ring already locked).
+
+This section covers LV3.1 lock rings and firmware design considerations made to drive them safely.
+
+The lock ring assembly, of which there are two in the LV3.1 airframe, locks sections of the rocket together which contain respectively the drogue and main parachutes.  For a typical successful flight, the lock ring for the drogue chute section is unlocked at or shortly after apogee.  This releases the drogue chute which slows the descent of the airframe.  At a further time in descent, the lock ring for the main chute is unlocked.  This releases the main chute.
 
 If ERS firmware receives a command to lock a given ring, and that ring is detected as "locked", the firmware does not attempt to drive the lock ring motor.  Similarly when the firmware receives a command to unlock a ring, which is detected as "unlocked", the firmwrae does not drive the motor to unlock the ring.  The firmware assumes the ring state is true, and avoids energizing the ring motors in those cases where they would be physically unable to turn in the given direction.
 
-The ERS firmware specification, a document at https://docs.google.com/document/d/1DnytDlZa1X-BaIqlIBrfcuedKocKrCpTfgMspk0twxI/edit?tab=t.0#heading=h.rg42p47rcyt5, talks about both ring position and ring status.  The section for this is titled "Hall Sensors".  The title fails to convey that this section also talks about ring position / state.  A further confusing point is that ring position and ring state are pretty much the same concept, but this is not highlighted in the specification.
+The ERS firmware specification, a document at https://docs.google.com/document/d/1DnytDlZa1X-BaIqlIBrfcuedKocKrCpTfgMspk0twxI/edit?tab=t.0#heading=h.rg42p47rcyt5, talks about both ring position and ring status.  The section for this is titled "Hall Sensors".  The title fails to convey that this section also talks about ring position and ring state.
 
-It would be more clear for the spec to use one term to talk about ring state.
+### Lock Ring Position versus State
 
-In this design document for Zephyr based ERS firmware, "ring state" is chosen as the preferred term for the ring's given position and state.  In real life, the ERS system may not know the position of the ring.  "Unknown" is not really a physical position, but it is a state.  This is one reason to prefer "ring state" over "ring position".
+The ERS firmware specification introduces both lock ring position and lock ring state.  The two terms are nearly the same, each naming a set of state-like elements.  There is however more granularity in lock ring position.  Listing possible ring positions and states called out in the specification gives:
 
-### Ring Position Detection
+_Table 3 - Lock ring positions and state mapping_
 
-Lock ring state is crucial to shaping the behavior of the electromechanical recovery system.  Lock ring position is determined by reading two Hall sensors per ring, and is managed across multiple application modules.  As a clue, the following modules contain the word 'position', which is the non-preferred term for ring state:
+| ring position            | ring state  |
+| :---:                    | :---:       |
+| unknown                  | unitialized |
+| locked fully qualified   | ---v        |
+| locked                   | locked      |
+| between                  | between     |
+| unlocked                 | unlocked    |
+| unlocked fully qualified | ---^        |
+| error                    | error       |
+
+The practical difference between ring position and ring state, is that ring positions locked and unlocked may be fully or partially qualified.  See the firmware specification section "Hall Sensors", and the table which maps Hall sensor cut-off (limit) values to physical ring positions.
+
+### Ring Position Detection - a programmatic design
+
+Lock ring state is crucial to shaping the behavior of the electromechanical recovery system.  Lock ring position is determined by reading two Hall sensors per ring, and is managed across multiple application modules.
+
+_Figure 1 - Data path Hall sensor readings to lock ring motor movement
 
 ```
-./arbiter.c
-./keeper.c
-./motor-control.c
-./shell-support.c
+ +-----------------+   +--------------+   +-------------+   +-----------------+
+ |   ADC module    |-->|    Keeper    |-->|   Arbiter   |-->|  Motor control  |
+ +-----------------+   +--------------+   +-------------+   +-----------------+
 ```
 
-TODO [ ] Change the term "position" in code comments and variable names, where
-         it makes sensor to do so for clarity and use of the preferred term
-         "ring state".
+- ADC module gathers Hall sensor readings
+- Keeper stores the readings for other modules to use
+- Arbiter determines lock ring position based on readings and Hall limit values
+- Motor control module actuates the lock ring motor  
 
-The arbiter determines lock ring position based on Hall sensor inputs.
-
-The keeper module stores and shares the latest lock ring position state.
-
-The motor control module reads the latest determined ring position, to decide whether to move the
-ring.
-
-The Zephyr shell (CLI) module reads long ring position, and some related parameters, to report
-those interactively to users.
+Figure 1 shows the flow of data to guide lock ring release during a flight.  On the bench top, the ERS firmware shell provides commands which interract with each of these modules, to read state and to make adjustments.  The shell as mentioned, is of course, not in active use during a flight, so the data path above is complete for the firmware's most important work and and inner working.
 
 ## References
 
-_Stub section_
+- https://www.markdownguide.org/extended-syntax/
+
+- https://docs.zephyrproject.org/latest/samples/subsys/shell/shell.html
