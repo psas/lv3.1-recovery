@@ -4,6 +4,7 @@
 /**
  * @brief Initialize ERS Zephyr CAN module
  *
+ * @retval 0 on success.
  * @retval -ENODEV when physical CAN bus is reported not ready.
  * @retval -EAGAIN when CAN bus fails to start.
  * @retval -ESRCH when module fails to create thread for CAN message handling.

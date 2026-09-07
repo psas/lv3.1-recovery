@@ -225,7 +225,7 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
 		 "ERS status frame");
 
 //----------------------------------------------------------------------
-// the message The Message THE MESSAGE
+// - ERS CAN status frame summary
 //----------------------------------------------------------------------
 
 #if 0
@@ -356,6 +356,8 @@ void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 
 		switch (frame.id)
 		{
+		// TODO [ ] Find a way to make the commented out heartbeat
+		//          messages easy to turn on and off, or remove them:
 		case MSG_ID_TELEMETRUM_SENDER:
 			// LOG_INF("RX %X - telemetrum heartbeat", frame.id);
 			break;
@@ -383,6 +385,7 @@ void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 	}
 }
 
+// TODO [ ] Check whether this function can be qualified static:
 char *state_to_str(enum can_state state)
 {
 	switch (state) {
@@ -405,6 +408,9 @@ int32_t ers_can_init(void)
 {
 	int32_t rc = 0;
 	k_tid_t rx_tid;
+
+	// TODO [ ] Consider adding a "module ready" flag, to protect against
+	//          multiple calls to this init function.
 
 	if (!device_is_ready(can_dev)) {
 		LOG_ERR("CAN: Device %s not ready.", can_dev->name);

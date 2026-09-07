@@ -13,12 +13,37 @@ _Table 1: ERS Zephyr firmware modules_
 - CAN communication module
 - DAC output module
 - GPIO input module
-- motor control module
-- Keeper, of run-time state
+- Keeper, for run-time state
+- Motor control module
 - PWM module
-- settings module, for run-time and persistent state
-- shell (CLI) module
-- status LED module
+- Settings module, for persistent state
+- Shell (CLI) module
+- Status LED module
+
+Modules of the ERS Zephyr app are all fairly simple.  The most involved modules arguably are the CAN communications module, the interactive shell module, and the arbiter.  Some of the modules implement threads.  Some are based on sample apps from Zephyr 3.7.0 smaples.  An overview of modules and a couple of key features follows here:
+
+_Table 2 - ERS Zephyr module attributes_
+
+|  Module name  | has thread | has mutex | sample based |
+|    :----:     |   :----:   |  :----:   |    :----:    |
+| ADC           |     Y      |     Y     |      Y       |
+| Arbiter       |     Y      |     N     |      N       |
+| CAN           |     Y      |     N     |      Y       |
+| DAC           |     N      |     Y     |      Y       |
+| GPIO in       |     Y      |     N     |      Y       |
+| Keeper        |     N      |     Y     |      N       |
+| Motor control |     N      |     N#1   |      N       |
+| PWM           |     Y      |     N#1   |      Y       |
+| Settings      |     N      |     N#1   |      Y       |
+| Shell (CLI)   |     N#2    |     Y     |      N       |
+| Status LED    |     N      |     N*    |      N       |
+
+#1 An "N#1" mark means the given module likely needs mutex or other resource
+   protection mechanism.
+#2 An "N#2" mark means the module runs in a Zephyr RTOS thread context, as
+   opposed to an application thread.
+
+When it comes to a module being based on a Zephyr sample app, it may be that the module code is significantly changed and extended beyond the sample.  The quality of being sample-based is noted here, for the frequency with which the Zephyr RTOS project has helpful, practical samples.
 
 ### ADC input module
 
@@ -29,7 +54,7 @@ The ADC input module manages the configuration and reading of four analog input 
 - Hall sensor 1 output
 - Hall sensor 2 output
 
-ADC channel configuration begins in device tree source, in ``apps/boards/ers-v3p1.overlay``.  Config parameters including gain, voltage reference, acqure times and resolution are expressed in this overlay file.  Calls to Zephyr's ADC API (which in turn calls HAL code from our microcontroller manufacturer, in this case STMicro, apply configuration settings at app start time.
+ADC channel configuration begins in device tree source, in ``apps/boards/ers-v3p1.overlay``.  Configuration parameters including channel gain, voltage reference, acqiure time and reading resolution are expressed in this overlay file.  Calls to Zephyr's ADC API (which in turn calls HAL code from our microcontroller manufacturer, in this case STMicro), apply configuration settings at app start time.
 
 Naturally the device tree overlay file does not know the meanings of the signals to which ADC channels are wired.  The ERS Zephyr ADC module itself doesn't know these signals by name and meaning either.  This module's purpose is to set up, and then to read ADC channels periodically.  It stores these readings in the app's run time data store module, a module called the "keeper".
 
@@ -53,12 +78,21 @@ TODO [ ] locate following paragraph in CLI section:
 
 ### CAN communication module
 
-. . .
+The ERS CAN module handles CAN message reception and transmission.  A thread implements the reception half of controller area network communications.  A kernel work item is defined and submitted to send CAN frames onto the ERS CAN bus.  Frames to send come in two types:  a status frame with key ERS board state info, and a acknowledge frame when commands are received from the ERS sendor board.
 
+ERS CAN module is one of the more complex modules (though all are relatively simple).  In contrast, there is just one function in this module's public API, a function to init the module.  Nearly all other interaction with the application occurs through CAN module queries to the application keeper module.
+
+Notable:  the CAN module distinguishes the role of the ERS board on which it is running.  Each of ERS Sender board, drogue chute board, and main chute board have distinct CAN message IDs.  These ID values identify the boards to one another on the CAN bus, and to any party who can observe the CAN bus traffic.
 
 ### DAC output module
+
+The digital to analog (DAC) module sets the maximum current applied to the lock ring motor.  The output of the DAC feeds into the G
+
+
 ### GPIO input module
+
 ### motor control module
+
 ### Keeper, of run-time state
 
 ### PWM module
@@ -71,6 +105,12 @@ An API to the PWM module provides for:
 - silencing the buzzer
 
 Audio pattern support is limited to a simple but flexible structure.  Pattern structure members support sequences of single notes up to sixteen notes long.  Each note is described by a PWM period (a scaled version of the unit 1 / Hertz) and a duration in milliseconds.  An audio pattern also entails a Boolean flag, to indicate whether the pattern plays one time or repeats.  This structure allows for a good variety of audio patterns while keeping the code simple.
+
+### Settings module
+
+### Shell (CLI) module
+
+### Status LED module
 
 # Physical and Programmatic Elements
 
