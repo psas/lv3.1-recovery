@@ -23,4 +23,26 @@
                 LOG_ERR("Failed to unlock %s mutex, err %d", STRINGIFY(module_name), rc); \
         }
 
+#define DEV_0909_LED_ON(caller)                              \
+	rc = status_led_on();                                \
+	if (rc < 0) {                                        \
+		LOG_ERR("DEBUG LED ON FAILED (%s)", caller); \
+	}
+#if 0
+	} else { \
+		LOG_INF("%s+", caller); \
+	}
+#endif // 0
+
+#define DEV_0909_LED_OFF(caller)                              \
+	rc = status_led_off();                                \
+	if (rc < 0) {                                         \
+		LOG_ERR("DEBUG LED OFF FAILED (%s)", caller); \
+	}
+#if 0
+	} else { \
+		LOG_INF("%s-", caller); \
+	}
+#endif // 0
+
 #endif // ERS_UTIL_H

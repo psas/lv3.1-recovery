@@ -12,6 +12,7 @@
 #include "hall-and-ring.h"
 #include "keeper.h"
 #include "settings-ers.h"
+#include "status-led.h"
 
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
@@ -49,6 +50,7 @@ int32_t determine_which_sensor(const char *sensor_name, enum hall_sensor_instanc
 {
 	int32_t rc = 0;
 	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
+	DEV_0909_LED_ON("A6")
 
 	if (strncmp("s1", sensor_name, sizeof("s1")) == 0) {
 		*sensor_idx = HALL_SENSOR_1;
@@ -61,6 +63,7 @@ int32_t determine_which_sensor(const char *sensor_name, enum hall_sensor_instanc
 	}
 	rc = 0;
 
+	DEV_0909_LED_OFF("A6")
 	ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
 done:
 	return rc;
@@ -73,8 +76,9 @@ done:
 void arbiter_show_hall_state_limits(const struct shell *shell)
 {
 	LOG_INF("L2");
-	// int32_t rc = 0;
-	// ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
+	int32_t rc = 0;
+	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
+	DEV_0909_LED_ON("A5")
 
 	uint32_t v_under_limit, inactive_limit, between_limit, active_limit;
 
@@ -100,8 +104,9 @@ void arbiter_show_hall_state_limits(const struct shell *shell)
 	shell_fprintf(shell, SHELL_NORMAL, "  between limit sensor 2: %u\n", between_limit);
 	shell_fprintf(shell, SHELL_NORMAL, "   active limit sensor 2: %u\n", active_limit);
 
-	// ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
-// done:
+	DEV_0909_LED_OFF("A5")
+	ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
+done:
 }
 
 /**
@@ -112,7 +117,9 @@ void arbiter_cmd_set_default_limits(const struct shell *shell, size_t argc, char
 {
 	LOG_INF("L1");
 	int32_t rc = 0;
+
 	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
+	DEV_0909_LED_ON("A4")
 
 	shell_print(shell, "Setting Hall sensor limit default values . . .");
 	rc = keeper_set_hall_sensor_default_limits();
@@ -122,6 +129,7 @@ void arbiter_cmd_set_default_limits(const struct shell *shell, size_t argc, char
 		arbiter_show_hall_state_limits(shell);
 	}
 
+	DEV_0909_LED_OFF("A4")
 	ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
 done:
 }
@@ -235,6 +243,7 @@ int32_t calc_battery_voltage(void)
 	int32_t rc = 0;
 
 	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
+	DEV_0909_LED_ON("A3")
 
 	keeper_get_batt_read(&adc_reading);
 
@@ -245,6 +254,7 @@ int32_t calc_battery_voltage(void)
 	battery_voltage_dv = (double)((((double)adc_reading / (double)4096 *3.3) / 0.2326) * 10.0);
 	keeper_set_batt_decivolts(battery_voltage_dv);
 
+	DEV_0909_LED_OFF("A3")
 	ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
 done:
 	return rc;
@@ -259,23 +269,24 @@ int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 	enum hall_sensor_state_ids hall_2_state = HALL_STATE_UNKNOWN;
 
 	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
+	DEV_0909_LED_ON("A2")
 
 	rc = keeper_get_both_hall_sensors(&hall_1_reading, &hall_2_reading);
 	if (rc != 0) {
 		LOG_ERR("determine ring position could not get hall readings, err %d", rc);
-		goto done;
+		goto unlock;
 	}
 
 	rc = adc_reading_to_hall_state(HALL_SENSOR_1, hall_1_reading, &hall_1_state);
 	if (rc != 0) {
 		LOG_ERR("Failed to get hall sensor 1 state from reading comparison, err %d", rc);
-		goto done;
+		goto unlock;
 	}
 
 	rc = adc_reading_to_hall_state(HALL_SENSOR_2, hall_2_reading, &hall_2_state);
 	if (rc != 0) {
 		LOG_ERR("Failed to get hall sensor 2 state from reading comparison, err %d", rc);
-		goto done;
+		goto unlock;
 	}
 
 	arb_mesg("readings, states: %u %u  %d %d", hall_1_reading, hall_2_reading, hall_1_state, hall_2_state);
@@ -305,7 +316,7 @@ determinations.
 	if (hall_1_state == hall_2_state) {
 		arb_mesg("H2");
 		*ring_position = RING_POS_UNKNOWN;
-		goto done;
+		goto unlock;
 	}
 
 	// Cover row "Ina" locked positions with partial validity:
@@ -315,7 +326,7 @@ determinations.
 	{
 		arb_mesg("H3");
 		*ring_position = RING_POS_LOCKED;
-		goto done;
+		goto unlock;
 	}
 
 	// Cover column "Ina" unlocked positions with partial validity:
@@ -325,7 +336,7 @@ determinations.
 	{
 		arb_mesg("H4");
 		*ring_position = RING_POS_UNLOCKED;
-		goto done;
+		goto unlock;
 	}
 
 	// Cover row "Act" unlocked positions with partial validity:
@@ -335,7 +346,7 @@ determinations.
 	{
 		arb_mesg("H5");
 		*ring_position = RING_POS_UNLOCKED;
-		goto done;
+		goto unlock;
 	}
 
 	// Cover column "Act" locked positions with partial validity:
@@ -345,7 +356,7 @@ determinations.
 	{
 		arb_mesg("H6");
 		*ring_position = RING_POS_LOCKED;
-		goto done;
+		goto unlock;
 	}
 
 qualify_validity:
@@ -400,6 +411,8 @@ qualify_validity:
 		goto done;
 	}
 
+unlock:
+	DEV_0909_LED_OFF("A2")
 	ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
 done:
 	return rc;
@@ -409,6 +422,7 @@ char *arbiter_ring_pos_to_str(const enum lock_ring_position pos)
 {
 	int32_t rc = 0;
 	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
+	DEV_0909_LED_ON("A1")
 
         switch (pos) {
         case RING_POS_LOCKED:
@@ -434,6 +448,7 @@ char *arbiter_ring_pos_to_str(const enum lock_ring_position pos)
                 return "ring position unknown";
         }
 
+	DEV_0909_LED_OFF("A1")
 	ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
 done:
 	return "RING POSITION UNAVAILABLE";
