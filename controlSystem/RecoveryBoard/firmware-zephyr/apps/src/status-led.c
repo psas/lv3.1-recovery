@@ -37,6 +37,9 @@ static enum ers_status_led_pattern led_pattern_fs = STATUS_LED_HEARTBEAT;
 
 #define STATUS_LED_GPIO_LEVEL_OFF 1
 
+// Forward declarations . . .
+static void stop_status_led_timer(void);
+
 //----------------------------------------------------------------------
 // - SECTION - routines
 //----------------------------------------------------------------------
@@ -77,18 +80,70 @@ done:
 
 K_TIMER_DEFINE(status_led_timer, status_led_timer_handler, NULL);
 
+static void stop_status_led_timer(void)
+{
+	k_timer_stop(&status_led_timer);
+}
+
+static void start_status_led_timer(void)
+{
+	k_timer_start(&status_led_timer, K_MSEC(LED_START_DURATION_MS), K_MSEC(LED_PERIOD_MS));
+}
+
+//----------------------------------------------------------------------
+// - SECTION - public API
+//----------------------------------------------------------------------
+
 int32_t status_led_set_pattern(enum ers_status_led_pattern pattern)
 {
 // TODO [ ] Add mutex to this API
 
 	if (!flag_led_initialized) {
-		return -EIO;
+		return -EFAULT;
 	}
 
 	// TODO [ ] Bounds check 'pattern' to fall within LED patterns enumeration:
 	led_pattern_fs = pattern;
 
+	start_status_led_timer();
+
 	return 0;
+}
+
+int32_t status_led_on(void)
+{
+	int32_t rc = 0;
+
+	if (!flag_led_initialized) {
+		return -EFAULT;
+	}
+
+	stop_status_led_timer();
+
+	rc = gpio_pin_set_dt(&led, 0);
+	if (rc < 0) {
+		LOG_ERR("Failed to turn on status LED, err %d", rc);
+	}
+
+	return rc;
+}
+
+int32_t status_led_off(void)
+{
+	int32_t rc = 0;
+
+	if (!flag_led_initialized) {
+		return -EFAULT;
+	}
+
+	stop_status_led_timer();
+
+	rc = gpio_pin_set_dt(&led, 1);
+	if (rc < 0) {
+		LOG_ERR("Failed to turn on status LED, err %d", rc);
+	}
+
+	return rc;
 }
 
 int32_t status_led_init(void)

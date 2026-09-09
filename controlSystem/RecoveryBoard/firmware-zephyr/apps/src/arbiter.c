@@ -72,8 +72,9 @@ done:
 
 void arbiter_show_hall_state_limits(const struct shell *shell)
 {
-	int32_t rc = 0;
-	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
+	LOG_INF("L2");
+	// int32_t rc = 0;
+	// ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
 
 	uint32_t v_under_limit, inactive_limit, between_limit, active_limit;
 
@@ -99,8 +100,8 @@ void arbiter_show_hall_state_limits(const struct shell *shell)
 	shell_fprintf(shell, SHELL_NORMAL, "  between limit sensor 2: %u\n", between_limit);
 	shell_fprintf(shell, SHELL_NORMAL, "   active limit sensor 2: %u\n", active_limit);
 
-	ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
-done:
+	// ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
+// done:
 }
 
 /**
@@ -109,6 +110,7 @@ done:
 
 void arbiter_cmd_set_default_limits(const struct shell *shell, size_t argc, char **argv)
 {
+	LOG_INF("L1");
 	int32_t rc = 0;
 	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
 

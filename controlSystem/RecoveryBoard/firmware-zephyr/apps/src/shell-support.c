@@ -89,16 +89,13 @@ SHELL_CMD_REGISTER(diag, &ers_cmds_diag, "- ERS - diagnostics", NULL);
 // - COMMAND SET - status LED
 //----------------------------------------------------------------------
 
-// TODO [ ] Amend "status LED on" command to "set LED pattern", which will
-//          require an argument for the pattern.
-
 static int cmd_status_led_on(const struct shell *shell, size_t argc, char *argv[])
 {
 	int32_t rc = 0;
 	shell_fprintf(shell, SHELL_NORMAL, "Enable ERS status LED . . .\n\r");
-	rc = status_led_set_pattern(STATUS_LED_HEARTBEAT);
+	rc = status_led_on();
 	if (rc < 0) {
-		shell_print(shell, "Failed to set status LED pattern, err %d", rc);
+		shell_print(shell, "Failed to turn on status LED, err %d", rc);
 	}
 	return rc;
 }
@@ -107,17 +104,84 @@ static int cmd_status_led_off(const struct shell *shell, size_t argc, char *argv
 {
 	int32_t rc = 0;
 	shell_fprintf(shell, SHELL_NORMAL, "Disable ERS status LED . . . \n\r");
-	rc = status_led_set_pattern(STATUS_LED_OFF);
-
+	rc = status_led_off();
+	if (rc < 0) {
+		shell_print(shell, "Failed to turn on status LED, err %d", rc);
+	}
 	return rc;
 }
 
+static int cmd_status_led_set_pattern(const struct shell *shell, size_t argc, char *argv[])
+{
+	enum ers_status_led_pattern pattern = STATUS_LED_PATTERN_UNDEFINED;
+	int32_t rc = 0;
+
+	if (strncmp(argv[0], "set", sizeof("set")) != 0) {
+		rc = EINVAL;
+		goto error;
+	}
+
+	if (strncmp(argv[1], "pattern", sizeof("pattern")) != 0) {
+		rc = EINVAL;
+		goto error;
+	}
+
+	LOG_INF("- DEV 0909 - requested LED pattern: %s", argv[2]);
+
+	// Note:  names of supported blink patterns are hard-coded here:
+	if (strncmp(argv[2], "off", sizeof("off")) == 0) {
+		pattern = STATUS_LED_OFF;
+	}
+	if (strncmp(argv[2], "heartbeat", sizeof("heartbeat")) == 0) {
+		pattern = STATUS_LED_HEARTBEAT;
+	}
+	if (strncmp(argv[2], "sos", sizeof("sos")) == 0) {
+		pattern = STATUS_LED_SOS;
+	}
+
+	switch(pattern)
+	{
+	case STATUS_LED_OFF:
+		rc = status_led_set_pattern(STATUS_LED_OFF);
+		break;
+	case STATUS_LED_HEARTBEAT:
+		rc = status_led_set_pattern(STATUS_LED_HEARTBEAT);
+		break;
+	case STATUS_LED_SOS:
+		LOG_WRN("'SOS' LED pattern not yet implemented");
+		rc = -ENOTSUP;
+		break;
+	case STATUS_LED_PATTERN_UNDEFINED:
+	default:
+		LOG_ERR("Got undefined LED pattern request, pattern = %d", pattern);
+		rc = -EINVAL;
+	}
+
+	if (rc < 0) {
+		LOG_ERR("Failed to set requested LED pattern, err %d", rc);
+	}
+	goto done;
+
+error:
+	LOG_INF("- DEV 0909 - error in arguments, got:");
+	for (int i = 0; i < argc; i++) {
+		LOG_INF("  arg %d: %s", i, argv[i]);
+	}
+
+done:
+	return rc;
+}
+
+// static int cmd_status_led_off(const struct shell *shell, size_t argc, char *argv[])
+
 SHELL_STATIC_SUBCMD_SET_CREATE(
         cmds_status_led,
-        SHELL_CMD_ARG(on, NULL, "enable ERS status LED",
+        SHELL_CMD_ARG(on, NULL, "enable ERS status LED: led on",
                 cmd_status_led_on, 0, 0),
-        SHELL_CMD_ARG(off, NULL, "disable ERS status LED",
+        SHELL_CMD_ARG(off, NULL, "disable ERS status LED: led off",
                 cmd_status_led_off, 0, 0),
+        SHELL_CMD_ARG(set, NULL, "set status LED blink pattern: led set pattern <pattern_name>",
+                cmd_status_led_set_pattern, 0, 3),
         SHELL_SUBCMD_SET_END
 );
 

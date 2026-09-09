@@ -76,7 +76,6 @@ static int direct_loader_immediate_value(const char *name, size_t len,
 	return 0;
 }
 
-// TODO [ ] Check whether this routine can be static:
 static int load_immediate_value(const char *name, void *dest, size_t len)
 {
 	int rc;
