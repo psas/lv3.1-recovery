@@ -47,6 +47,9 @@ struct k_mutex arbiter_mtx;
 
 int32_t determine_which_sensor(const char *sensor_name, enum hall_sensor_instances *sensor_idx)
 {
+	int32_t rc = 0;
+	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
+
 	if (strncmp("s1", sensor_name, sizeof("s1")) == 0) {
 		*sensor_idx = HALL_SENSOR_1;
 	}
@@ -54,9 +57,13 @@ int32_t determine_which_sensor(const char *sensor_name, enum hall_sensor_instanc
 		*sensor_idx = HALL_SENSOR_2;
 	}
 	else {
-		return -EINVAL;
+		rc = -EINVAL;
 	}
-	return 0;
+	rc = 0;
+
+	ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
+done:
+	return rc;
 }
 
 /**
@@ -65,6 +72,9 @@ int32_t determine_which_sensor(const char *sensor_name, enum hall_sensor_instanc
 
 void arbiter_show_hall_state_limits(const struct shell *shell)
 {
+	int32_t rc = 0;
+	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
+
 	uint32_t v_under_limit, inactive_limit, between_limit, active_limit;
 
 	keeper_get_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_UNDER, &v_under_limit);
@@ -89,7 +99,8 @@ void arbiter_show_hall_state_limits(const struct shell *shell)
 	shell_fprintf(shell, SHELL_NORMAL, "  between limit sensor 2: %u\n", between_limit);
 	shell_fprintf(shell, SHELL_NORMAL, "   active limit sensor 2: %u\n", active_limit);
 
-	shell_fprintf(shell, SHELL_NORMAL, "- DEV 0212 - keyname '%s'\n", SETTING_KEYNAME_S2_HL1);
+	ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
+done:
 }
 
 /**
@@ -98,13 +109,19 @@ void arbiter_show_hall_state_limits(const struct shell *shell)
 
 void arbiter_cmd_set_default_limits(const struct shell *shell, size_t argc, char **argv)
 {
+	int32_t rc = 0;
+	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
+
 	shell_print(shell, "Setting Hall sensor limit default values . . .");
-	int32_t rc = keeper_set_hall_sensor_default_limits();
+	rc = keeper_set_hall_sensor_default_limits();
 	if (rc != 0) {
 		LOG_ERR("Failed to set hall limit default values, err %d", rc);
 	} else {
 		arbiter_show_hall_state_limits(shell);
 	}
+
+	ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
+done:
 }
 
 /**
@@ -239,11 +256,7 @@ int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 	enum hall_sensor_state_ids hall_1_state = HALL_STATE_UNKNOWN;
 	enum hall_sensor_state_ids hall_2_state = HALL_STATE_UNKNOWN;
 
-	rc = k_mutex_lock(&arbiter_mtx, K_MSEC(CONFIG_ARBITER_MUTEX_TIMEOUT_MS));
-	if (rc < 0) {
-		LOG_ERR("Failed to lock %s mutex, err %d", "arbiter", rc);
-		goto done;
-	}
+	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
 
 	rc = keeper_get_both_hall_sensors(&hall_1_reading, &hall_2_reading);
 	if (rc != 0) {
@@ -385,6 +398,7 @@ qualify_validity:
 		goto done;
 	}
 
+	ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
 done:
 	return rc;
 }

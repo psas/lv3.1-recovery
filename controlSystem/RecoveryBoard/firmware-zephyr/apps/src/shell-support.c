@@ -539,7 +539,7 @@ static int cmd_batt_show_status(const struct shell *shell, size_t argc, char *ar
 			battery_voltage);
 
 	keeper_get_batt_millivolts(&battery_voltage);
-	shell_fprintf(shell, SHELL_NORMAL, "battery voltage: %d\n",
+	shell_fprintf(shell, SHELL_NORMAL, "battery voltage in millivolts: %d\n",
 			battery_voltage);
 
 	keeper_get_batt_decivolts(&battery_voltage);
@@ -550,7 +550,7 @@ static int cmd_batt_show_status(const struct shell *shell, size_t argc, char *ar
 
 SHELL_STATIC_SUBCMD_SET_CREATE(
         cmds_batt,
-        SHELL_CMD_ARG(info, NULL, "show battery voltage and status",
+        SHELL_CMD_ARG(info, NULL, "show battery voltage",
 			cmd_batt_show_status, 0, 0),
         SHELL_SUBCMD_SET_END
 );

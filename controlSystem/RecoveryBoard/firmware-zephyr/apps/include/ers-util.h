@@ -5,6 +5,11 @@
 
 #define BASE_TEN 10
 
+// Note: following lock mutices macro expects the following:
+// - a declaration of int32_t variable named 'rc'.
+// - a label named 'done' in the routine where it is used.
+// - the 'done' label appears after any call to unlock the given mutex.
+
 #define ERS_MUTEX_LOCK(mtx, timeout, module_name)                                       \
         rc = k_mutex_lock(&mtx, K_MSEC(timeout));                                       \
         if (rc < 0) {                                                                   \

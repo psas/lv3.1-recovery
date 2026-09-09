@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "ers-util.h"
 #include "keeper.h"
 
 #include <zephyr/device.h>
@@ -25,7 +26,7 @@ LOG_MODULE_REGISTER(ers_adc, CONFIG_ERS_ADC_LOG_LEVEL);
 // - SECTION - pound defines
 //----------------------------------------------------------------------
 
-#define ADC_READ_PERIOD_MS 1000 // <-- 10 millisecond, as found 2026-09-08
+#define ADC_READ_PERIOD_MS 10
 
 #undef DEV_ERS_ADC_PERIODIC_REPORTING
 
@@ -82,7 +83,6 @@ int32_t adc_read_channels(const enum ers_adc_values idx_begin,
         };
 
         for (size_t i = idx_begin; i <= idx_end; i++) {
-                int32_t val_mv;
 
 #ifdef DEV_ERS_ADC_PERIODIC_REPORTING
                 LOG_INF("- %s, channel %d: ",
@@ -100,45 +100,17 @@ int32_t adc_read_channels(const enum ers_adc_values idx_begin,
 
 		// Store ADC reading in ERS app "keeper" module:
 		keeper_set_adc_value(i, (uint32_t)buf);
-
-                /*
-                 * If using differential mode, the 16 bit value
-                 * in the ADC sample buffer should be a signed 2's
-                 * complement value.
-                 */
-                if (adc_channels[i].channel_cfg.differential) {
-                        val_mv = (int32_t)((int16_t)buf);
-                } else {
-                        val_mv = (int32_t)buf;
-                }
-
-#ifdef DEV_ERS_ADC_PERIODIC_REPORTING
-                LOG_INF("%"PRId32, val_mv);
-#endif
-
-#if 0 // Conversion does not seem to work.  Arbiter routine calc_battery_voltage()
-      // figures voltage correctly.
-                rc = adc_raw_to_millivolts_dt(&adc_channels[i], &val_mv);
-                /* conversion to mV may not be supported, skip if not */
-                if (rc < 0) {
-                        LOG_WRN(" (value in mV not available)");
-                } else {
-			// Store ADC reading in ERS app "keeper" module:
-			keeper_set_adc_value_in_mv(i, (uint32_t)buf);
-#ifdef DEV_ERS_ADC_PERIODIC_REPORTING
-                        LOG_INF(" = %"PRId32" mV", val_mv);
-#endif
-		}
-#endif // 0
 	}
 
 unlock:
+#if 0
 	rc = k_mutex_unlock(&adc_mtx);
 	if (rc != 0) {
 		LOG_ERR("Failed to unlock mutex in ADC read channels, err %d", rc);
 		return rc;
 	}
-
+#endif // 0
+	ERS_MUTEX_UNLOCK(adc_mtx, ADC module);
 done:
 	return rc;
 }

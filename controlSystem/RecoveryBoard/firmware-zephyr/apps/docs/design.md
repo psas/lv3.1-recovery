@@ -308,6 +308,7 @@ Shell supports following meta-keys:
 Please refer to shell documentation for more details.
 
 Available commands:
+  batt    : - ERS - battery status
   can     : CAN controller commands
   dac     : - ERS - DAC info and set commands
   device  : Device commands
@@ -325,6 +326,16 @@ Available commands:
 The following sections up through "Ring commands" just show the command
 descriptions which are coded into the ERS Zephyr app. These are visible by
 entering the command, followed by the word "help".
+
+#### Battery command
+
+```
+uart:~$ batt help
+batt - - ERS - battery status
+Subcommands:
+  info  : show battery voltage
+uart:~$
+```
 
 #### DAC commands
 
