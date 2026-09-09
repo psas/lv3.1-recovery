@@ -18,6 +18,12 @@ config ARBITER_LOOP_SLEEP_PER_MS
 	  determination to occur close enough to apogee detection, to release
 	  the parachutes drogue and main, to provide for full and safe recovery.
 
+config ARBITER_MUTEX_TIMEOUT_MS
+	int "Arbiter default mutex timeout in milliseconds"
+	default 1000
+	help
+	  Set the arbiter module mutex timeout, measured in milliseconds.
+
 endif # ERS_ARBITER
 
 module = ERS_ARBITER

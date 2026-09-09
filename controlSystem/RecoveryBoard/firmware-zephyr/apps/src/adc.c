@@ -25,7 +25,7 @@ LOG_MODULE_REGISTER(ers_adc, CONFIG_ERS_ADC_LOG_LEVEL);
 // - SECTION - pound defines
 //----------------------------------------------------------------------
 
-#define ADC_READ_PERIOD_MS 10
+#define ADC_READ_PERIOD_MS 1000 // <-- 10 millisecond, as found 2026-09-08
 
 #undef DEV_ERS_ADC_PERIODIC_REPORTING
 
@@ -115,6 +115,9 @@ int32_t adc_read_channels(const enum ers_adc_values idx_begin,
 #ifdef DEV_ERS_ADC_PERIODIC_REPORTING
                 LOG_INF("%"PRId32, val_mv);
 #endif
+
+#if 0 // Conversion does not seem to work.  Arbiter routine calc_battery_voltage()
+      // figures voltage correctly.
                 rc = adc_raw_to_millivolts_dt(&adc_channels[i], &val_mv);
                 /* conversion to mV may not be supported, skip if not */
                 if (rc < 0) {
@@ -126,6 +129,7 @@ int32_t adc_read_channels(const enum ers_adc_values idx_begin,
                         LOG_INF(" = %"PRId32" mV", val_mv);
 #endif
 		}
+#endif // 0
 	}
 
 unlock:

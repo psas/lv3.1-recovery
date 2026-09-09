@@ -146,7 +146,7 @@ static int cmd_wrapper_read_adc_all(const struct shell *shell, size_t argc, char
 	keeper_get_motor_isense(&b);
 	keeper_get_hall_1(&c);
 	keeper_get_hall_2(&d);
-	shell_fprintf(shell, SHELL_NORMAL, "ADC counts for batter, motor current, Hall 1, Hall 2:\n");
+	shell_fprintf(shell, SHELL_NORMAL, "ADC counts for battery, motor current, Hall 1, Hall 2:\n");
 	shell_fprintf(shell, SHELL_NORMAL, "%u  %u  %u  %u\n", a, b, c, d);
 
 	return rc;
@@ -527,6 +527,35 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 );
 
 SHELL_CMD_REGISTER(dac, &cmds_dac, "- ERS - DAC info and set commands", NULL);
+
+static int cmd_batt_show_status(const struct shell *shell, size_t argc, char *argv[])
+{
+        ARG_UNUSED(argc); ARG_UNUSED(argv);
+
+	int32_t battery_voltage = 0;
+
+	keeper_get_batt_read(&battery_voltage);
+	shell_fprintf(shell, SHELL_NORMAL, "battery voltage as ADC count: %d\n",
+			battery_voltage);
+
+	keeper_get_batt_millivolts(&battery_voltage);
+	shell_fprintf(shell, SHELL_NORMAL, "battery voltage: %d\n",
+			battery_voltage);
+
+	keeper_get_batt_decivolts(&battery_voltage);
+	shell_fprintf(shell, SHELL_NORMAL, "battery voltage in tenths of a volt: %d\n",
+			battery_voltage);
+	return 0;
+}
+
+SHELL_STATIC_SUBCMD_SET_CREATE(
+        cmds_batt,
+        SHELL_CMD_ARG(info, NULL, "show battery voltage and status",
+			cmd_batt_show_status, 0, 0),
+        SHELL_SUBCMD_SET_END
+);
+
+SHELL_CMD_REGISTER(batt, &cmds_batt, "- ERS - battery status", NULL);
 
 //----------------------------------------------------------------------
 // - SECTION - init function

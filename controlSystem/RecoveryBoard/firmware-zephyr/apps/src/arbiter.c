@@ -7,6 +7,7 @@
 #include "arbiter.h"
 #include "can-ers.h"
 #include "dac-ers.h"
+#include "ers-util.h"
 #include "gpio-in.h"
 #include "hall-and-ring.h"
 #include "keeper.h"
@@ -35,7 +36,10 @@ LOG_MODULE_REGISTER(arbiter, LOG_LEVEL_INF);
 //----------------------------------------------------------------------
 
 K_THREAD_STACK_DEFINE(arbiter_thread_stack, CONFIG_ARBITER_THREAD_STACK_SIZE);
+
 struct k_thread arbiter_thread_data;
+
+struct k_mutex arbiter_mtx;
 
 //----------------------------------------------------------------------
 // - SECTION - routines
@@ -186,8 +190,46 @@ static void arb_mesg(char *fmt, ...)
 	}
 }
 
-// TODO [ ] Determine whether this API needs mutex protection, as it runs
-//          longer than a few clock cycles.
+/**
+ * @brief Routine to apply a threshold test to latest battery voltage and to
+ *   update a flag to indicate whether batter voltage ok.
+ */
+
+static int32_t determine_batt_ok(void)
+{
+	int32_t batt_voltage_in_tenths_v = 0;
+	keeper_get_batt_decivolts(&batt_voltage_in_tenths_v);
+	if (batt_voltage_in_tenths_v >= BATTERY_VOLTAGE_OK_THRESHOLD_TENTHS_V) {
+		keeper_set_batt_ok(1);
+	} else {
+		keeper_set_batt_ok(0);
+	}
+
+	return 0;
+}
+
+int32_t calc_battery_voltage(void)
+{
+	uint32_t adc_reading = 0;
+	float battery_voltage = 0.0;
+	uint32_t battery_voltage_dv = 0;
+	int32_t rc = 0;
+
+	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
+
+	keeper_get_batt_read(&adc_reading);
+
+	// TODO [ ] Consider making Kconfig symbols for terms in following
+	//          battery voltage formula:
+	battery_voltage = (double)((((double)adc_reading / (double)4096 *3.3) / 0.2326) * 1000.0);
+	keeper_set_batt_millivolts(battery_voltage);
+	battery_voltage_dv = (double)((((double)adc_reading / (double)4096 *3.3) / 0.2326) * 10.0);
+	keeper_set_batt_decivolts(battery_voltage_dv);
+
+	ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
+done:
+	return rc;
+}
 
 int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 {
@@ -196,6 +238,12 @@ int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 	uint32_t hall_2_reading = 0;
 	enum hall_sensor_state_ids hall_1_state = HALL_STATE_UNKNOWN;
 	enum hall_sensor_state_ids hall_2_state = HALL_STATE_UNKNOWN;
+
+	rc = k_mutex_lock(&arbiter_mtx, K_MSEC(CONFIG_ARBITER_MUTEX_TIMEOUT_MS));
+	if (rc < 0) {
+		LOG_ERR("Failed to lock %s mutex, err %d", "arbiter", rc);
+		goto done;
+	}
 
 	rc = keeper_get_both_hall_sensors(&hall_1_reading, &hall_2_reading);
 	if (rc != 0) {
@@ -330,12 +378,22 @@ qualify_validity:
 	}
 
 	keeper_set_ring_status(ring_state);
+
+	rc = k_mutex_unlock(&arbiter_mtx);
+	if (rc < 0) {
+		LOG_ERR("Failed to unlock %s mutex, err %d", "arbiter", rc);
+		goto done;
+	}
+
 done:
 	return rc;
 }
 
 char *arbiter_ring_pos_to_str(const enum lock_ring_position pos)
 {
+	int32_t rc = 0;
+	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
+
         switch (pos) {
         case RING_POS_LOCKED:
                 return "ring locked";
@@ -359,38 +417,10 @@ char *arbiter_ring_pos_to_str(const enum lock_ring_position pos)
         default:
                 return "ring position unknown";
         }
-}
 
-/**
- * @brief Routine to apply a threshold test to latest battery voltage and to
- *   update a flag to indicate whether batter voltage ok.
- */
-
-static int32_t determine_batt_ok(void)
-{
-	int32_t batt_voltage_in_tenths_v = 0;
-	keeper_get_battery_decivolts(&batt_voltage_in_tenths_v);
-	if (batt_voltage_in_tenths_v >= BATTERY_VOLTAGE_OK_THRESHOLD_TENTHS_V) {
-		keeper_set_batt_ok(1);
-	} else {
-		keeper_set_batt_ok(0);
-	}
-
-	return 0;
-}
-
-int32_t calc_battery_voltage(void)
-{
-	uint32_t adc_reading = 0;
-	float battery_voltage = 0.0;
-	uint32_t battery_voltage_dv = 0;
-
-	keeper_get_batt_read(&adc_reading);
-
-	battery_voltage = (double)(((double)adc_reading / (double)4096 *3.3) / 0.2326);
-	battery_voltage_dv = round(battery_voltage * 10);
-	keeper_set_battery_decivolts(battery_voltage_dv);
-	return 0;
+	ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
+done:
+	return "RING POSITION UNAVAILABLE";
 }
 
 //----------------------------------------------------------------------
@@ -456,10 +486,8 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 		}
 
                 keeper_get_ring_pos_detection_interval(&states_check_period_ms);
-		LOG_INF("A1");
 		loop_count++;
 
-		// k_msleep(CONFIG_ARBITER_LOOP_SLEEP_PER_MS);
 		k_msleep(states_check_period_ms);
 	}
 }
@@ -471,6 +499,8 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 int32_t arbiter_init(void)
 {
 	int32_t rc = 0;
+
+	k_mutex_init(&arbiter_mtx);
 
 	k_tid_t arbiter_tid = k_thread_create(&arbiter_thread_data, arbiter_thread_stack,
 					K_THREAD_STACK_SIZEOF(arbiter_thread_stack),

@@ -52,10 +52,10 @@ static atomic_t not_umb_on = ATOMIC_INIT(0);
  */
 
 static atomic_t batt_read = ATOMIC_INIT(0);
-static atomic_t batt_read_mv = ATOMIC_INIT(0);
+static atomic_t batt_millivolts = ATOMIC_INIT(0);
 // TODO [ ] Refactor battery millivolt to decivolt conversion to occur
 //   after calls to get battery voltage:
-static atomic_t batt_read_dv = ATOMIC_INIT(0);
+static atomic_t batt_decivolts = ATOMIC_INIT(0);
 
 /**
  * @defgroup motor_related
@@ -176,7 +176,7 @@ static int32_t set_hall_sensor_limit(const enum hall_sensor_instances sensor_idx
 //----------------------------------------------------------------------
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// - DATA GROUP - (1) battery
+// - DATA GROUP - battery
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 // Battery reading in ADC counts
@@ -191,18 +191,40 @@ void keeper_get_batt_read(uint32_t* value)
 }
 
 // Battery reading in millivolts
-void keeper_set_batt_read_mv(const uint32_t value)
+void keeper_set_batt_millivolts(const uint32_t value)
 {
-	atomic_set(&batt_read_mv, (atomic_val_t)value);
+	atomic_set(&batt_millivolts, (atomic_val_t)value);
 }
 
-void keeper_get_batt_read_mv(uint32_t* value)
+void keeper_get_batt_millivolts(uint32_t* value)
 {
-	*value = atomic_get(&batt_read_mv);
+	*value = atomic_get(&batt_millivolts);
+}
+
+// Battery voltage
+void keeper_set_batt_decivolts(const uint32_t value)
+{
+	atomic_set(&batt_decivolts, (atomic_val_t)value);
+}
+
+void keeper_get_batt_decivolts(uint32_t *value)
+{
+	*value = atomic_get(&batt_decivolts);
+}
+
+// Battery ok flag
+void keeper_set_batt_ok(const uint32_t value)
+{
+	atomic_set(&batt_ok, (atomic_val_t)value);
+}
+
+void keeper_get_batt_ok(uint32_t* value)
+{
+	*value = atomic_get(&batt_ok);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// - DATA GROUP - (2) digital inputs
+// - DATA GROUP - digital inputs
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 void keeper_set_iso_drogue(const uint32_t value)
@@ -236,7 +258,7 @@ void keeper_get_not_umb_on(uint32_t* value)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// - DATA GROUP - (2 1/2) analog inputs not categorized
+// - DATA GROUP - analog inputs not categorized
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 int32_t keeper_set_adc_value(const enum ers_adc_values idx, const uint32_t val)
@@ -265,10 +287,17 @@ int32_t keeper_set_adc_value(const enum ers_adc_values idx, const uint32_t val)
 
 int32_t keeper_set_adc_value_in_mv(const enum ers_adc_values_in_mv idx, const uint32_t val)
 {
+	int32_t rc = 0;
+
 	switch (idx)
 	{
         case ADC_READING_BATT_READ_MV:
-		keeper_set_batt_read_mv(val);
+		rc = calc_battery_voltage();
+		if (rc < 0) {
+			LOG_ERR("Failed to calculate battery voltage, err %d", rc);
+			break;
+		}
+		keeper_set_batt_millivolts(val);
 		break;
         case ADC_READING_MOTOR_ISENSE_MV:
 		keeper_set_motor_isense_ma(val);
@@ -281,10 +310,10 @@ int32_t keeper_set_adc_value_in_mv(const enum ers_adc_values_in_mv idx, const ui
 		break;
 	default:
 		LOG_ERR("Asked to store value for undefined ADC channel %d", idx);
-		return -EINVAL;
+		rc = -EINVAL;
 	}
 
-	return 0;
+	return rc;
 }
 
 //----------------------------------------------------------------------
@@ -556,7 +585,7 @@ int32_t keeper_cmd_retrieve_hall_limits(const struct shell *shell, size_t argc, 
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// - DATA GROUP - (3) locking ring
+// - DATA GROUP - locking ring
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 // Getters
@@ -611,15 +640,13 @@ void keeper_set_hall_2_mv(const uint32_t value)
 int32_t keeper_set_both_hall_sensors(const uint32_t value_1, const uint32_t value_2)
 {
 	int32_t rc = 0;
-	if (!keeper_initialized_fs)
-	{
+	if (!keeper_initialized_fs) {
 		LOG_ERR("Data keeper module not initialized!");
 		return -ESRCH;
 	}
 
 	k_mutex_lock(&hall_sensors_mtx, K_FOREVER);
-	if (rc != 0)
-	{
+	if (rc != 0) {
 		LOG_ERR("Failed to lock mutex for \"store hall sensors values\", error %d", rc);
 		return rc;
 	}
@@ -628,8 +655,7 @@ int32_t keeper_set_both_hall_sensors(const uint32_t value_1, const uint32_t valu
 	keeper_set_hall_2(value_2);
 
 	k_mutex_unlock(&hall_sensors_mtx);
-	if (rc != 0)
-	{
+	if (rc != 0) {
 		LOG_ERR("Failed to lock mutex for \"store hall sensors values\", error %d", rc);
 		return rc;
 	}
@@ -641,8 +667,7 @@ int32_t keeper_get_both_hall_sensors(uint32_t *value_1, uint32_t *value_2)
 {
 	int32_t rc = 0;
 
-	if (!keeper_initialized_fs)
-	{
+	if (!keeper_initialized_fs) {
 		LOG_ERR("Data keeper module not initialized!");
 		*value_1 = atomic_get(&hall_1);
 		*value_2 = atomic_get(&hall_2);
@@ -653,8 +678,7 @@ int32_t keeper_get_both_hall_sensors(uint32_t *value_1, uint32_t *value_2)
 //  determine why mutex lock and unlock calls were commented out here as of
 //  2026-01-04:
 	k_mutex_lock(&hall_sensors_mtx, K_FOREVER);
-	if (rc != 0)
-	{
+	if (rc != 0) {
 		LOG_ERR("Failed to lock mutex for \"store hall sensors values\", error %d", rc);
 		return rc;
 	}
@@ -663,8 +687,7 @@ int32_t keeper_get_both_hall_sensors(uint32_t *value_1, uint32_t *value_2)
 	keeper_get_hall_2_mv(value_2);
 
 	k_mutex_unlock(&hall_sensors_mtx);
-	if (rc != 0)
-	{
+	if (rc != 0) {
 		LOG_ERR("Failed to unlock mutex for \"store hall sensors values\", error %d", rc);
 		return rc;
 	}
@@ -683,13 +706,11 @@ static int32_t set_hall_sensor_limit(const enum hall_sensor_instances sensor_idx
 				     const enum hall_sensor_named_limits limit_idx,
 				     const uint32_t value)
 {
-	if ((sensor_idx < 0) || (sensor_idx >= HALL_SENSOR_COUNT))
-	{
+	if ((sensor_idx < 0) || (sensor_idx >= HALL_SENSOR_COUNT)) {
 		return -EINVAL;
 	}
 
-	if ((limit_idx < 0) || (limit_idx >= HALL_SENSOR_LIMIT_COUNT))
-	{
+	if ((limit_idx < 0) || (limit_idx >= HALL_SENSOR_LIMIT_COUNT)) {
 		return -EINVAL;
 	}
 
@@ -716,13 +737,11 @@ int32_t keeper_get_hall_sensor_limit(const enum hall_sensor_instances sensor_idx
 				const enum hall_sensor_named_limits limit_idx,
 				uint32_t *value)
 {
-	if ((sensor_idx < 0) || (sensor_idx >= HALL_SENSOR_COUNT))
-	{
+	if ((sensor_idx < 0) || (sensor_idx >= HALL_SENSOR_COUNT)) {
 		return -EINVAL;
 	}
 
-	if ((limit_idx < 0) || (limit_idx >= HALL_SENSOR_LIMIT_COUNT))
-	{
+	if ((limit_idx < 0) || (limit_idx >= HALL_SENSOR_LIMIT_COUNT)) {
 		return -EINVAL;
 	}
 
@@ -788,7 +807,7 @@ void keeper_get_lock_event_count(uint32_t *count)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// - DATA GROUP - (4) motor
+// - DATA GROUP - motor
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 // motor current reading in ADC counts
@@ -837,43 +856,15 @@ void keeper_get_DAC_val_for_ring_motor(uint32_t *value)
 	*value = atomic_get(&dac_setting_ring_motor);
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// - DATA GROUP - (6) ERS summary state data
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
 // Lock ring status
 void keeper_set_ring_status(const enum lock_ring_state value)
 {
-	// atomic_set(&ring_status, (atomic_val_t)value);
 	atomic_set(&summary_state_fs.ring_position, (atomic_val_t)value);
 }
 
 void keeper_get_ring_status(enum lock_ring_state *value)
 {
-	// *value = atomic_get(&ring_status);
 	*value = atomic_get(&summary_state_fs.ring_position);
-}
-
-// Battery voltage
-void keeper_set_battery_decivolts(const uint32_t value)
-{
-	atomic_set(&batt_read_dv, (atomic_val_t)value);
-}
-
-void keeper_get_battery_decivolts(uint32_t *value)
-{
-	*value = atomic_get(&batt_read_dv);
-}
-
-// Battery ok flag
-void keeper_set_batt_ok(const uint32_t value)
-{
-	atomic_set(&batt_ok, (atomic_val_t)value);
-}
-
-void keeper_get_batt_ok(uint32_t* value)
-{
-	*value = atomic_get(&batt_ok);
 }
 
 // Shore power ok flag
@@ -973,8 +964,7 @@ static int32_t initialize_system_state_vars(void)
 
 	rc = keeper_set_hall_sensor_default_limits();
 
-	if (rc != 0)
-	{
+	if (rc != 0) {
 		LOG_ERR("Failed to set one or more of Hall limit default values, error %d", rc);
 		rc = -EINVAL;
 	}

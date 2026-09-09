@@ -80,29 +80,25 @@ void arbiter_cmd_set_default_limits(const struct shell *shell, size_t argc, char
 
 void arbiter_show_hall_state_limits(const struct shell *shell);
 
-
 /**
- * @brief Routine to determine lock ring position.
+ * @brief Calculate system battery voltage from latest ADC reading.
  *
- * @note This routine determines ring position as described in
- *  https://docs.google.com/document/d/1DnytDlZa1X-BaIqlIBrfcuedKocKrCpTfgMspk0twxI/edit?tab=t.0#heading=h.rg42p47rcyt5,
- *  and further it determines lock ring "status" as described in
- *  the same document.  Second parameter is a simplified version
- *  of the first "position" parameter.
+ * @note Calcuates battery voltage in both millivolts and tenths of a volt.
  *
- * @note Calling code is responsible for setting parameter ring_position to
- *    a sensible starting value, namely 'RING_POS_UNKNOWN'.
+ * @retval 0 on success.
+ * TODO [ ] Add mutex to arbiter and return -EAGAIN
  */
 
-// TODO [ ] Complete following comment block:
+int32_t calc_battery_voltage(void);
 
 /**
- * @brief Determine ring state from Hall sensor readings; ring position is an
- *  intermediate value in this determination.
+ * @brief Determine lock ring postion, and state.  Return ring position.
  *
- * @param ring_position is the detected, physical position of the ERS lock ring.
+ * @param pointer to caller variable to hold lock ring position.
  *
- * @retval 
+ * @retval 0 on success, ring position in variable pointed to by ring_position.
+ * TODO [ ] @retval -EAGAIN when mutex lock request times out.
+ * @return . . .
  */
 
 int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position);

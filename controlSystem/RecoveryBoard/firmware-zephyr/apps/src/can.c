@@ -180,7 +180,7 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
 
 	// (2)
 	uint32_t battery_voltage = 0;
-	keeper_get_battery_decivolts(&battery_voltage);
+	keeper_get_batt_decivolts(&battery_voltage);
 
 	// (3)
 	uint32_t batt_ok_flag = 0;

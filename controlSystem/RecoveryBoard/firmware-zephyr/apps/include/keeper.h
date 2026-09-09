@@ -141,8 +141,8 @@ void keeper_get_hall_1(uint32_t* value);
 void keeper_set_hall_2(const uint32_t value);
 void keeper_get_hall_2(uint32_t* value);
 
-void keeper_set_batt_read_mv(const uint32_t value);
-void keeper_get_batt_read_mv(uint32_t* value);         // TODO [ ] Check whether needed
+void keeper_set_batt_millivolts(const uint32_t value);
+void keeper_get_batt_millivolts(uint32_t* value);
 
 void keeper_set_motor_isense_ma(const uint32_t value);
 void keeper_get_motor_isense_ma(uint32_t* value);      // TODO [ ] Check whether needed
@@ -153,8 +153,8 @@ void keeper_get_hall_1_mv(uint32_t* value);
 void keeper_set_hall_2_mv(const uint32_t value);
 void keeper_get_hall_2_mv(uint32_t* value);
 
-void keeper_set_battery_decivolts(const uint32_t value);
-void keeper_get_battery_decivolts(uint32_t* value);
+void keeper_set_batt_decivolts(const uint32_t value);
+void keeper_get_batt_decivolts(uint32_t* value);
 
 /**
  * @return 0 on success to obtain mutex and to set sensor values
