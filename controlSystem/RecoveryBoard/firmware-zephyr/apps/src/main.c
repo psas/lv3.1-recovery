@@ -35,7 +35,6 @@ LOG_MODULE_REGISTER(ers_main, LOG_LEVEL_INF);
 
 int main(void)
 {
-	static uint32_t loop_count = 0;
 	int32_t rc = 0;
 
 	rc = gpio_in_init();
@@ -94,6 +93,8 @@ int main(void)
 	}
 
 #if 0
+	static uint32_t loop_count = 0;
+
 	LOG_INF("main() entering 'while (1)' loop . . .");
 
 	while (1)

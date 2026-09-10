@@ -78,7 +78,7 @@ struct audio_pattern audio_pattern[] = {
 			{ .period = 0, .duration_ms = 220, },
 			{ .period = 1800000, .duration_ms = 440, },
 			{ .period = 2700000, .duration_ms = 220, },
-#if 1
+
 			{ .period = 0, .duration_ms = 220, },
 			{ .period = 2700000, .duration_ms = 220, },
 			{ .period = 2170000, .duration_ms = 220, },
@@ -87,7 +87,6 @@ struct audio_pattern audio_pattern[] = {
 			{ .period = 0, .duration_ms = 220, },
 			{ .period = 1800000, .duration_ms = 440, },
 			{ .period = 0, .duration_ms = 220, },
-#endif // 0
 		},
 		.repetitions = 1,
 		.rep_count = 0,
@@ -115,7 +114,7 @@ static int32_t init_pwm_hardware(void)
 {
 	int32_t rc = 0;
 
-	// LOG_INF("initializing PWM for device '%s'\n", pwm_buzzer.dev->name);
+	LOG_INF("initializing PWM for device '%s'\n", pwm_buzzer.dev->name);
 
 	if (!pwm_is_ready_dt(&pwm_buzzer)) {
 		LOG_ERR("Error: PWM device %s is not ready\n",
@@ -203,7 +202,6 @@ static int32_t play_pattern(void)
 {
 	int32_t rc = 0;
 
-
 	// Obtain index to audio pattern:
 	uint32_t pidx = selected_pattern_fs;
 
@@ -233,7 +231,7 @@ static int32_t play_pattern(void)
 	rc = play_note(period, period / 2, duration);
 	audio_pattern[pidx].note_idx++;
 
-#if 1
+	// TODO [ ] Move pointer to shell instance declaration to top of file, make static:
 	const struct shell *shell;
 	shell = shell_backend_uart_get_ptr();
 	__ASSERT(shell != NULL, "Failed to get shell backend.");
@@ -241,7 +239,6 @@ static int32_t play_pattern(void)
 	shell_print(shell, "- DEV 0822 - Current audio pattern has %d notes",
 			audio_pattern[pidx].last_note);
 #endif // 0
-#endif
 
 done:
 	return rc;

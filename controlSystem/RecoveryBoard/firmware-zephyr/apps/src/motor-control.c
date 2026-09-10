@@ -233,7 +233,7 @@ int32_t mc_update_lock_count(void)
 int32_t mc_update_unlock_count(void)
 {
 	uint32_t val = 0;
-	// TODO [ ] Consider reading lock event count from keeper module, from
+	// TODO [ ] Consider reading unlock event count from keeper module, from
 	//  SRAM, as it will have been copied by keeper during app start up.
 	int32_t rc = settings_ers_retrieve_value(KEY_NAME_UNLOCK_COUNT, &val, sizeof(val));
 
