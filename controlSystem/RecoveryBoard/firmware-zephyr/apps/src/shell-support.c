@@ -281,10 +281,6 @@ SHELL_CMD_REGISTER(hall, &sub_section_hall,
 // - SECTION - ERS lock ring commands (IN PROGRESS)
 //----------------------------------------------------------------------
 
-// TODO [ ] use the shell parameter to print queried data, to avoid the echo
-//           or doubling effect when the shell "sees" log messages from Zephyr's
-//          logging system.
-
 static int cmd_show_locking_ring_state(const struct shell *shell, size_t argc, char *argv[])
 {
         ARG_UNUSED(argc); ARG_UNUSED(argv);
@@ -486,7 +482,6 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
                 cmd_motor_set_use_count, 2, 0),
         SHELL_CMD_ARG(max_current, NULL, "show maximum current limit:  motor max_current",
                 cmd_motor_show_max_current, 1, 0),
-	// TODO [ ] add command to show max current allowed by DAC module.
         SHELL_SUBCMD_SET_END
 );
 
@@ -543,16 +538,10 @@ static int cmd_dac_show_dac_setting(const struct shell *shell, size_t argc, char
         ARG_UNUSED(argc); ARG_UNUSED(argv);
 
 	uint32_t dac_setting = 0;
-	// TODO [ ] Change this call to one which call's the keeper module for this info:
-	int32_t rc = dac_present_value(&dac_setting);
-	if (rc == 0) {
-		shell_fprintf(shell, SHELL_NORMAL, "present DAC setting is %u\n", dac_setting);
-	} else {
-		shell_fprintf(shell, SHELL_NORMAL, "Failed to get present DAC setting, err %d\n",
-				rc);
-	}
 
-	return rc;
+	keeper_get_DAC_val_for_ring_motor(&dac_setting);
+	shell_fprintf(shell, SHELL_NORMAL, "present DAC setting is %u\n", dac_setting);
+	return 0;
 }
 
 /**

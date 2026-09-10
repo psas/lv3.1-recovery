@@ -281,7 +281,9 @@ int32_t arbiter_calc_max_motor_drive_current(void)
 	shell_print(shell_ptr_fs, "- DEV 0910 - DAC output step in microvolts: %u uV",
 			step_in_microvolts);
 
-	uint32_t i_max = (step_in_microvolts * dac_out_setting) / 3 / 99;
+	// Note, the divide by '2' accounts for ERS MOTOR_ILIM voltage divider,
+	//  realized by R37 and R38:
+	uint32_t i_max = (step_in_microvolts * dac_out_setting) / 2 / 3 / 99;
 	shell_print(shell_ptr_fs, "- DEV 0910 - maximum motor current in milliamps: %u mA",
 			i_max);
 
