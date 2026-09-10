@@ -13,7 +13,6 @@
 #include "keeper.h"
 #include "motor-control.h"
 #include "settings-ers.h"
-#include "shell-support.h"
 #include "status-led.h"
 
 #include <zephyr/kernel.h>
@@ -39,9 +38,6 @@ int main(void)
 
 	rc = gpio_in_init();
 	LOG_INF("GPIO input pin initialization returns %d", rc);
-
-        rc = ers_init_shell_support();
-	LOG_INF("ERS command initialization returns %d", rc);
 
         rc = ers_init_motor_ctrl();
 	LOG_INF("motor control module init returns %d", rc);

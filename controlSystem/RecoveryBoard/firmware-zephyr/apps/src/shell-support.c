@@ -692,15 +692,3 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 );
 
 SHELL_CMD_REGISTER(batt, &cmds_batt, "- ERS - battery status", NULL);
-
-//----------------------------------------------------------------------
-// - SECTION - init function
-//----------------------------------------------------------------------
-
-// TODO [ ] Test whether this stub init function is needed, it probably is not needed:
-
-int32_t ers_init_shell_support(void)
-{
-	int32_t rc = 0;
-	return rc;
-}
