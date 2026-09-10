@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (c) 2025 Portland State Aerospace Society
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -265,7 +265,7 @@ SHELL_SUBCMD_ADD((hall), active, &sub_section_hall_set,
   "set Hall limit for state \"active\":  hall active [s1|s2] [value]",
   keeper_cmd_set_limit_active, 3, 0);
 
-SHELL_SUBCMD_ADD((hall), save, &sub_section_hall, "store Hall sensor limits to flash (default "
+SHELL_SUBCMD_ADD((hall), store, &sub_section_hall, "store Hall sensor limits to flash (default "
   "limits still available)", keeper_cmd_store_hall_limits, 1, 0);
 
 SHELL_SUBCMD_ADD((hall), retrieve, &sub_section_hall, "retrieve Hall sensor limits from flash",

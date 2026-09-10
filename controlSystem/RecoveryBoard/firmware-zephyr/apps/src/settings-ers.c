@@ -123,7 +123,6 @@ int32_t settings_ers_store_value(const char* name, const void *val, const uint32
 {
 	int32_t rc = 0;
 
-	LOG_INF("save '%s' key directly: ", name);
 	rc = settings_save_one(name, &val, sizeof(val));
 	if (rc < 0) {
 		LOG_ERR("Fail to store value for '%s', err %d", name, rc);
