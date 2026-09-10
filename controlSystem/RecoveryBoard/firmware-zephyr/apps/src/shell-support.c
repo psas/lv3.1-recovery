@@ -332,7 +332,7 @@ static int cmd_show_locking_ring_pos(const struct shell *shell, size_t argc, cha
 	}
 	else
 	{
-		shell_fprintf(shell, SHELL_NORMAL, "Failed lock ring position query, error %d\n",
+		shell_fprintf(shell, SHELL_NORMAL, "Failed lock ring position query, err %d\n",
 				 rc);
 	}
 
@@ -421,7 +421,6 @@ SHELL_CMD_REGISTER(ring, &sub_section_ring, "- ERS - lock ring commands", NULL);
 
 static int cmd_motor_show_use_count(const struct shell *shell, size_t argc, char *argv[])
 {
-	LOG_INF("- STUBCOMMAND - show moter use count.");
         uint32_t value = 0;
         int32_t rc = 0;
 
@@ -438,8 +437,6 @@ static int cmd_motor_show_use_count(const struct shell *shell, size_t argc, char
 
 static int cmd_motor_set_use_count(const struct shell *shell, size_t argc, char *argv[])
 {
-	LOG_INF("- IN PROGRESS COMMAND - set moter use count.");
-
         uint32_t value = 0;
         char *endptr, *str;
         int32_t rc = 0;
@@ -458,21 +455,59 @@ static int cmd_motor_set_use_count(const struct shell *shell, size_t argc, char 
 	return 0;
 }
 
+static int cmd_motor_show_max_current(const struct shell *shell, size_t argc, char *argv[])
+{
+        ARG_UNUSED(argc); ARG_UNUSED(argv);
+
+	// Note, body of this routine is copied from cmd_dac_show_dac_setting() . . .
+	uint32_t dac_setting = 0;
+	int32_t rc = dac_present_value(&dac_setting);
+	if (rc == 0) {
+		shell_fprintf(shell, SHELL_NORMAL, "Max motor current (per DAC setting) is %u\n",
+				dac_setting);
+	} else {
+		shell_fprintf(shell, SHELL_NORMAL, "Failed to read max motor current setting, err"
+			       "%d\n", rc);
+	}
+
+	return 0;
+}
+
 SHELL_STATIC_SUBCMD_SET_CREATE(
         cmds_motor_use,
-        SHELL_CMD_ARG(show, NULL, "show motor use count",
+        SHELL_CMD_ARG(show_use_count, NULL, "show motor use count: motor show_use_count",
                 cmd_motor_show_use_count, 1, 0),
-        SHELL_CMD_ARG(set, NULL, "set motor use count (for when motor is replaced)",
+        SHELL_CMD_ARG(set_use_count, NULL, "set motor use count: motor set_use_count",
                 cmd_motor_set_use_count, 2, 0),
+        SHELL_CMD_ARG(max_current, NULL, "show maximum current limit:  motor max_current",
+                cmd_motor_show_max_current, 1, 0),
 	// TODO [ ] add command to show max current allowed by DAC module.
         SHELL_SUBCMD_SET_END
 );
+
+/**
+ * @note 'motor' is the primary token of the motor command.  Secondary tokens
+ *  include:
+ *
+ *  - 'show_use_count'
+ *  - 'set_use_count'
+ *  - 'show_max_current'
+ */
 
 SHELL_CMD_REGISTER(motor, &cmds_motor_use, "- ERS - motor use info", NULL);
 
 //----------------------------------------------------------------------
 // - COMMAND SET - DAC commands
 //----------------------------------------------------------------------
+
+/**
+ * @brief Command to show range of DAC output setting values.
+ *
+ * @note Takes standard Zephyr shell command parameters.
+ *
+ * @retval 0 on success update to on-chip DAC config register(s).
+ * @return -errno as returned from Zephyr wrappers to DAC driver APIs.
+ */
 
 static int cmd_dac_show_range(const struct shell *shell, size_t argc, char *argv[])
 {
@@ -481,16 +516,22 @@ static int cmd_dac_show_range(const struct shell *shell, size_t argc, char *argv
 	uint32_t bound_low = 0;
 	uint32_t bound_high = 0;
 	int32_t rc = dac_range(&bound_low, &bound_high);
-	if (rc != 0)
-	{
+	if (rc != 0) {
 		shell_fprintf(shell, SHELL_NORMAL, "Failed to read DAC range values, err %d\n", rc);
-	}
-	else
-	{
+	} else {
 		shell_fprintf(shell, SHELL_NORMAL, "DAC range is %u..%u\n", bound_low, bound_high);
 	}
 	return 0;
 }
+
+/**
+ * @brief Command to read and show DAC output setting value.
+ *
+ * @note Takes standard Zephyr shell command parameters.
+ *
+ * @retval 0 on success update to on-chip DAC config register(s).
+ * @return -errno as returned from Zephyr wrappers to DAC driver APIs.
+ */
 
 static int cmd_dac_show_dac_setting(const struct shell *shell, size_t argc, char *argv[])
 {
@@ -498,17 +539,14 @@ static int cmd_dac_show_dac_setting(const struct shell *shell, size_t argc, char
 
 	uint32_t dac_setting = 0;
 	int32_t rc = dac_present_value(&dac_setting);
-	if (rc == 0)
-	{
+	if (rc == 0) {
 		shell_fprintf(shell, SHELL_NORMAL, "present DAC setting is %u\n", dac_setting);
-	}
-	else
-	{
-		shell_fprintf(shell, SHELL_NORMAL, "Failed to get present DAC setting, error %d\n",
+	} else {
+		shell_fprintf(shell, SHELL_NORMAL, "Failed to get present DAC setting, err %d\n",
 				rc);
 	}
 
-	return 0;
+	return rc;
 }
 
 /**
@@ -517,6 +555,15 @@ static int cmd_dac_show_dac_setting(const struct shell *shell, size_t argc, char
  * @param argc Count of arguments following command toke.
  * @param @p argv Array of command arguments.
  * @return 0 on success, negative errno as returned by dac_write_output_reg().
+ */
+
+/**
+ * @brief Command to write a DAC output value to DAC control register.
+ *
+ * @note Takes standard Zephyr shell command parameters.
+ *
+ * @retval 0 on success update to on-chip DAC config register(s).
+ * @return -errno as returned from Zephyr wrappers to DAC driver APIs.
  */
 
 static int cmd_dac_write_output_value(const struct shell *shell, size_t argc, char *argv[])
@@ -538,10 +585,12 @@ static int cmd_dac_write_output_value(const struct shell *shell, size_t argc, ch
 }
 
 /**
- * @brief
- * @param
- * @retval
- * @return
+ * @brief Set the maximum, limiting current with which to drive the lock ring
+ *  motor.
+ *
+ * @note Takes standard Zephyr shell command parameters.
+ *
+ * @retval 0 always.
  */
 
 static int cmd_dac_set_lock_ring_current_limit(const struct shell *shell, size_t argc, char *argv[])
@@ -558,6 +607,15 @@ static int cmd_dac_set_lock_ring_current_limit(const struct shell *shell, size_t
 	keeper_set_DAC_val_for_ring_motor(value);
 	return 0;
 }
+
+/**
+ * @brief Show the maximum, limiting current with which to drive the lock ring
+ *  motor.
+ *
+ * @note Takes standard Zephyr shell command parameters.
+ *
+ * @retval 0 always.
+ */
 
 static int cmd_dac_get_lock_ring_current_limit(const struct shell *shell, size_t argc, char *argv[])
 {
@@ -592,6 +650,14 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 
 SHELL_CMD_REGISTER(dac, &cmds_dac, "- ERS - DAC info and set commands", NULL);
 
+/**
+ * @brief Show the ERS system battery current voltage.
+ *
+ * @note Takes standard Zephyr shell command parameters.
+ *
+ * @retval 0 always.
+ */
+
 static int cmd_batt_show_status(const struct shell *shell, size_t argc, char *argv[])
 {
         ARG_UNUSED(argc); ARG_UNUSED(argv);
@@ -624,6 +690,8 @@ SHELL_CMD_REGISTER(batt, &cmds_batt, "- ERS - battery status", NULL);
 //----------------------------------------------------------------------
 // - SECTION - init function
 //----------------------------------------------------------------------
+
+// TODO [ ] Test whether this stub init function is needed, it probably is not needed:
 
 int32_t ers_init_shell_support(void)
 {

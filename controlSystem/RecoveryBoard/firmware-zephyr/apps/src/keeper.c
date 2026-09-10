@@ -300,7 +300,7 @@ int32_t keeper_set_adc_value_in_mv(const enum ers_adc_values_in_mv idx, const ui
 		keeper_set_batt_millivolts(val);
 		break;
         case ADC_READING_MOTOR_ISENSE_MV:
-		keeper_set_motor_isense_ma(val);
+		keeper_set_motor_isense_ma(val); // a case body in keeper_set_adc_value_in_mv()
 		break;
         case ADC_READING_HALL_1_MV:
 		keeper_set_hall_1_mv(val);

@@ -271,7 +271,6 @@ int32_t mc_lock_ring(void)
 	// (1) make sure BDS63150 is on, not in power saving mode:
 	rc = mc_set_not_motor_ps(0x0);
 	if (rc != 0) {
-// TODO [ ] Consider exiting on this error:
 	       	LOG_ERR("Failed to drive BDS63150 power mode pin, err %d", rc);
 		goto done;
        	}
@@ -279,7 +278,6 @@ int32_t mc_lock_ring(void)
 	// (2) set DAC to produce minimal current needed to turn over lock ring motor:
 	rc = dac_write_output_reg(DEV_DAC_SETTING_IN_SITU);
 	if (rc != 0) {
-// TODO [ ] Consider exiting on this error:
 	       	LOG_ERR("Failed to set DAC output level, err %d", rc);
 		goto done;
        	}
@@ -287,7 +285,6 @@ int32_t mc_lock_ring(void)
 	// (3) apply logic levels to BDS63150 IN1, IN2 pins for H-bridge output:
 	rc = mc_drive_deploy2_high();
 	if (rc != 0) {
-// TODO [ ] Consider exiting on this error:
 	       	LOG_ERR("Failed to drive BDS63150 DEPLOY 1 and or 2 lines, err %d", rc);
 		goto done;
        	}
@@ -295,6 +292,12 @@ int32_t mc_lock_ring(void)
 	enum lock_ring_position ring_pos = RING_POS_UNKNOWN;
 	uint32_t i;
 
+	// Note:  the body of this FOR loop only reads values from the app's
+	//  keeper module.  It does not write them.  Another module, the ADC
+	//  module is periodically writing values to the keeper.  There is a
+	//  non-obvious dependency here -- an implementation worth revisiting
+	//  and possibly changing -- to assure that RING_CHECK_INTERVAL_MS is
+	//  at least as long as the ADC "read all channels" interval.
 	for (i = 0; i < COUNT_CHECKS; i++)
 	{
 		keeper_get_detected_ring_position(&ring_pos);

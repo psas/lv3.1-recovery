@@ -173,7 +173,7 @@ int32_t keeper_set_adc_value(const enum ers_adc_values idx, const uint32_t value
  * @brief API to set any one of ADC channel readings converted to millivolts
  */
 
-int32_t keeper_set_adc_value_in_mv(const enum ers_adc_values_in_mv idx, const uint32_t val);
+int32_t keeper_set_adc_value_in_mv(const enum ers_adc_values_in_mv idx, const uint32_t val);  // TODO [ ] Check whether needed
 
 // - DATA GROUP - (3) locking ring
 
