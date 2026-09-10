@@ -414,25 +414,32 @@ char *arbiter_ring_pos_to_str(const enum lock_ring_position pos)
 
         switch (pos) {
         case RING_POS_LOCKED:
+		ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
                 return "ring locked";
 		break;
         case RING_POS_BETWEEN_L_AND_U:
+		ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
                 return "ring between";
 		break;
         case RING_POS_UNLOCKED:
+		ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
                 return "ring unlocked";
 		break;
         case RING_POS_LOCKED_FULLY_QUALIFIED:
+		ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
                 return "ring locked (fully qualified)";
 		break;
         case RING_POS_BETWEEN_FULLY_QUALIFIED:
+		ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
                 return "ring between (fully qualified)";
 		break;
         case RING_POS_UNLOCKED_FULLY_QUALIFIED:
+		ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
                 return "ring unlocked (fully qualified)";
 		break;
 	case RING_POS_UNKNOWN:
         default:
+		ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
                 return "ring position unknown";
         }
 
