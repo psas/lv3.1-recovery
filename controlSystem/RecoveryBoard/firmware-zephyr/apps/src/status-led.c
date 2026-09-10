@@ -12,11 +12,6 @@
 
 LOG_MODULE_REGISTER(status_led, CONFIG_STATUS_LED_LOG_LEVEL);
 
-// TODO [ ] Determine whether the thread which calls this module may exit,
-//          and leave the kernel timer still running.  (This would be ok in
-//          most cases, but would represent a resource which the app could no
-//          longer turn off or stop using completely.)
-
 //----------------------------------------------------------------------
 // - SECTION - defines
 //----------------------------------------------------------------------

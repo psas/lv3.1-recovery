@@ -93,6 +93,7 @@ int main(void)
 		LOG_ERR("Failed to play 15-note audio pattern, err = %d", rc);
 	}
 
+#if 0
 	LOG_INF("main() entering 'while (1)' loop . . .");
 
 	while (1)
@@ -115,20 +116,12 @@ int main(void)
 			LOG_INF("batt, motor, hall1, hall2: %u, %u, %u, %u", a, b, c, d);
 		}
 
-		k_msleep(200);
-		uint32_t b;
-		keeper_get_motor_isense(&b);
-		// LOG_INF("motor_isense ADC_IN9 = %u", b);
-
-#if 0
-		rc = pwm_play_melody();
-		if (rc != 0) {
-			LOG_ERR("Failed to actuate ERS buzzer, err %d", rc);
-		}
-#endif // 0
-
 		k_msleep(ERS_MAIN_LOOP_PERIOD_MS);
 	}
 
 	return 0;
+#else
+	LOG_INF("- DEV 0909 - main exiting to test other app threads and timers");
+	return 0;
+#endif
 }
