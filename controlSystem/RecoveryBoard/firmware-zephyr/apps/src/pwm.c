@@ -106,6 +106,8 @@ static enum pwm_state pwm_state_fs = PWM_IDLE;
 
 static enum pwm_audio_pattern selected_pattern_fs = PWM_APP_SILENT;
 
+static const struct shell* shell_ptr_fs;
+
 //----------------------------------------------------------------------
 // - SECTION - routines
 //----------------------------------------------------------------------
@@ -184,11 +186,9 @@ static int32_t play_note(const uint32_t period,
 			const uint32_t duty,
 			const uint32_t duration)
 {
-	// TODO [ ] Implement some modest, reasonable maximum duration.
-	// TODO [ ] Consider adding a LOG_ERR() at the check point for rc.
-
 	int32_t rc = pwm_set_dt(&pwm_buzzer, period, duty);
 	if (rc < 0) {
+		LOG_ERR("Failed to set PWM period and duty cycle, err %d", rc);
 		goto done;
 	}
 	k_msleep(duration);
@@ -230,15 +230,6 @@ static int32_t play_pattern(void)
 
 	rc = play_note(period, period / 2, duration);
 	audio_pattern[pidx].note_idx++;
-
-	// TODO [ ] Move pointer to shell instance declaration to top of file, make static:
-	const struct shell *shell;
-	shell = shell_backend_uart_get_ptr();
-	__ASSERT(shell != NULL, "Failed to get shell backend.");
-#if 0
-	shell_print(shell, "- DEV 0822 - Current audio pattern has %d notes",
-			audio_pattern[pidx].last_note);
-#endif // 0
 
 done:
 	return rc;
@@ -296,8 +287,7 @@ void pwm_thread_entry(void *arg1, void *arg2, void *arg3)
 			}
 			k_msleep(10);
 		} else {
-			// TODO [ ] Create symbol for PWM thread sleep period
-			k_msleep(750);
+			k_msleep(CONFIG_PWM_FOREVER_LOOP_SLEEP_MS);
 		}
 	}
 }
@@ -326,12 +316,12 @@ int32_t pwm_init(void)
 
 // For shell pointer use see:
 // https://blog.mbedded.ninja/programming/operating-systems/zephyr/shell/
-	const struct shell *shell;
-	shell = shell_backend_uart_get_ptr();
-	__ASSERT(shell != NULL, "Failed to get shell backend.");
-	shell_print(shell, "PWM module started, %d buzzer patterns defined",
-			ARRAY_SIZE(audio_pattern));
+	// const struct shell *shell;
+	shell_ptr_fs = shell_backend_uart_get_ptr();
+	__ASSERT(shell_ptr_fs != NULL, "Failed to get shell backend.");
 
+	shell_print(shell_ptr_fs, "PWM module started, %d buzzer patterns defined",
+			ARRAY_SIZE(audio_pattern));
 done:
 	return rc;
 }

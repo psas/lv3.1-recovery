@@ -1,0 +1,31 @@
+# @file
+# @brief Application configuration for ERS PWM (analog to digital) module
+# Copyright (c) 2026 Portland State Aerospace Society
+
+menuconfig ERS_PWM_MODULE
+	bool "ERS PWM module settings"
+	default y
+	help
+	  Enable and configure ERS PWM module.
+
+if ERS_PWM_MODULE
+
+config PWM_API_TIMEOUT_MS
+	int "PWM public API timeout in milliseconds"
+	default 1500
+	help
+	  Set a timeout measured in milliseconds for the ERS Zephry PWM public
+	  API.
+
+config PWM_FOREVER_LOOP_SLEEP_MS
+	int "Period for which PWM 'forever' loop sleep after performing work"
+	default 750
+	help
+	  Set the period for which the PWM module sleeps at the end of
+	  completing its tasks.
+
+endif # ERS_PWM_MODULE
+
+module = ERS_PWM
+module-str = ERS PWM module
+source "subsys/logging/Kconfig.template.log_config"
