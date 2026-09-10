@@ -6,6 +6,14 @@
 #include <zephyr/shell/shell.h>
 
 /**
+ * @brief ERS arbiter initialization routine.
+ *
+ * @warning This routine must be called to make arbiter module ready for use.
+ */
+
+int32_t arbiter_init(void);
+
+/**
  * @brief Parse string-wise Hall sensor abbreviation and return a numeric
  *  reference to it, based on an enum of Hall sensors in the ERS system.
  *
@@ -19,6 +27,15 @@
  */
 
 int32_t determine_which_sensor(const char *sensor_name, enum hall_sensor_instances *sensor_idx);
+
+/**
+ * @brief Calculate maximum motor current, based on DAC output setting value.
+ *
+ * @retval 0 on success.
+ * @retval -EFAULT on API mutex timeout.
+ */
+
+int32_t arbiter_calc_max_motor_drive_current(void);
 
 enum lock_ring_position {
 	RING_POS_LOCKED,
@@ -45,14 +62,6 @@ enum lock_ring_state {
 	RING_STATE_LOCKED,
 	RING_STATE_ERROR
 };
-
-/**
- * @brief ERS arbiter initialization routine.
- *
- * @warning This routine must be called to make arbiter module ready for use.
- */
-
-int32_t arbiter_init(void);
 
 /**
  * @brief Assign Hall sensor default cut-off values to app run-time variables.

@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2025 Portland State Aerospace Society (PSAS)
- *
+ * @file
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -10,47 +9,6 @@
 #include <zephyr/dt-bindings/input/input-event-codes.h>
 
 // TODO [ ] determine whether needed and how used:
-// #include <zephyr/dt-bindings/input/input-event-codes.h>
-
-// Excerpt from https://docs.google.com/document/d/1DnytDlZa1X-BaIqlIBrfcuedKocKrCpTfgMspk0twxI/edit?tab=t.0#heading=h.yycwig6l5oeu
-
-// --- EXCERPT BEGIN ---
-
-// Pin Configuration
-// -------------------
-// Shared
-// [x] !UMB_ON (PA8 = GPIO input)
-// [x] BATT_READ (PB0 = analog input ADC_IN8)          . . . analog input PB0
-// [ ] Buzzer (PB15 = GPIO output low / PWM)
-// [x] SERIAL OUT (PA2 = UART2_TX @ 115200 bps 8N1)
-// [x] SERIAL IN (PA3 = UART2_RX @ 115200 bps 8N1)
-// [x] CAN_TX (PA12 = CAN TXD)
-// [x] CAN_RX (PA11 = CAN_RX)
-// [ ] CAN_SHDN (PA10 = GPIO output low)
-// [ ] CAN_SLIENT (PA9 = GPIO output low)
-// [x] !MOTOR_PS (PB6 = GPIO output low)
-// Everything else
-// [ ] GPIO input with pulldown enabled
-
-// Sender PCB 
-// [x] ISO_DROGUE (PA5 = GPIO input)
-// [x] ISO_MAIN  (PA6 = GPIO input)
-// [x] ROCKET_READY (PA7 = GPIO output low)
-
-// ERS PCBs
-// [x] DEPLOY1 (PB4 = GPIO output low)
-// [x] DEPLOY2 (PB5 = GPIO output low)
-// [ ] !MOTOR_FAILA (PB7 = GPIO input)
-// [x] MOTOR_ILIM (PA4 = DAC output)
-// [?] MOTOR_ISENSE (PB1 = Analog input ADC_IN9)       . . . analog input PB1
-// [x] HALL1 (PA0 = Analog input ADC_IN0)              . . . analog input PA0
-// [x] HALL2 (PA1 = Analog input ADC_IN1)              . . . analog input PA1
-
-// --- EXCERPT END ---
-
-// Notes:
-//  +  only GPIO ports A and B used on ERS board
-//  +  nucleo_f091rc.dts references &gpioa and &gpioc
 
 / {
         model = "ERS V3.1 board";
@@ -62,9 +20,9 @@
                 zephyr,sram = &sram0;
                 zephyr,flash = &flash0;
                 zephyr,canbus = &can1;
+                zephyr,dac = &dac1;
 	};
 
-// Return to https://michaelangerer.dev/zephyr/2021/12/21/zephyr-basics-gpio.html
 	ers-gpios {
 		compatible = "psas,ers-gpios", "gpio-keys";
 
@@ -129,12 +87,6 @@
 	};
 };
 
-// A zephyr sample app source file:
-// "zephyr/drivers/led_pwm/boards/mec15xxevb_assy6853.overlay"
-
-// A break from specifying nodes defined explicitly from '/', so that we
-// may see node 'pwm' in proximity to pwmleds device group:
-
 &timers15 {
         st,prescaler = <10000>;
         status = "okay";
@@ -185,8 +137,6 @@
         status = "okay";
 };
 
-// - DEV 0822 - appears to be needed as clock source in
-// zephyr/drivers/clock_control/clock_stm32_ll_common.c routine set_up_plls()
 &clk_lsi {
         status = "okay";
 };

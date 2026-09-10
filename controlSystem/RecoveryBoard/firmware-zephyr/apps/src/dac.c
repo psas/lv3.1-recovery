@@ -4,6 +4,8 @@
  * @note Parts of this code copied from Zephyr 3.7.1 DAC sample app.
  */
 
+#include "keeper.h"
+
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/dac.h>
 #include <zephyr/logging/log.h>
@@ -84,6 +86,7 @@ int32_t dac_write_output_reg(const uint32_t value)
 		LOG_ERR("Failed to write output value %d to DAC, err %d", value, rc);
 	} else {
 		atomic_set(&dac_value_fs, (atomic_val_t)value);
+		keeper_set_DAC_val_for_ring_motor(value);
 		k_sleep(K_MSEC(sleep_time));
 	}
 
@@ -176,6 +179,9 @@ int32_t dac_init(void)
 		DAC_CHANNEL_ID);
 
 	LOG_INF("Per device tree DAC has resolution of %d counts", DAC_RESOLUTION);
+	LOG_INF("- DEV 0910 - Zephyr user node is %s", STRINGIFY(ZEPHYR_USER_NODE));
+	LOG_INF("- DEV 0910 - from local Kconfig DAC upper range val is %d",
+			(1 << CONFIG_ERS_DAC_RES_IN_BITS));
 
 	return rc;
 }

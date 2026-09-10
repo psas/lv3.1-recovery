@@ -17,6 +17,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/shell/shell.h>
+#include <zephyr/shell/shell_uart.h>
 
 #include <math.h>
 #include <stdio.h>
@@ -41,6 +42,8 @@ K_THREAD_STACK_DEFINE(arbiter_thread_stack, CONFIG_ARBITER_THREAD_STACK_SIZE);
 struct k_thread arbiter_thread_data;
 
 struct k_mutex arbiter_mtx;
+
+static const struct shell *shell_ptr_fs;
 
 //----------------------------------------------------------------------
 // - SECTION - routines
@@ -228,6 +231,7 @@ static int32_t determine_batt_ok(void)
 	return 0;
 }
 
+// TODO [ ] Align this public API's name with convention in API naming:
 int32_t calc_battery_voltage(void)
 {
 	uint32_t adc_reading = 0;
@@ -245,6 +249,41 @@ int32_t calc_battery_voltage(void)
 	keeper_set_batt_millivolts(battery_voltage);
 	battery_voltage_dv = (double)((((double)adc_reading / (double)4096 *3.3) / 0.2326) * 10.0);
 	keeper_set_batt_decivolts(battery_voltage_dv);
+
+	ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
+done:
+	return rc;
+}
+
+// 2026-09-09 API in progress . . .
+
+int32_t arbiter_calc_max_motor_drive_current(void)
+{
+	int32_t rc = 0;
+	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
+
+	shell_print(shell_ptr_fs, "- DEV 0910 - STUB FUNCTION");
+
+// # ST32F091RC DAC step size is 3.3/4096
+// # Iout = step * 11/8192, per ERS specification document
+//
+// 3.3V . . . ERS_V_RAIL
+// 4096 . . . (1 << ERS_DAC_RES_IN_BITS)
+
+	uint32_t ers_v_rail = CONFIG_ERS_V_RAIL_MICROVOLTS;
+	uint32_t dac_out_setting = 0;
+
+	keeper_get_DAC_val_for_ring_motor(&dac_out_setting);
+	shell_print(shell_ptr_fs, "- DEV 0910 - DAC output setting in counts: %u",
+			dac_out_setting);
+
+	uint32_t step_in_microvolts = ers_v_rail / (1 << CONFIG_ERS_DAC_RES_IN_BITS);
+	shell_print(shell_ptr_fs, "- DEV 0910 - DAC output step in microvolts: %u uV",
+			step_in_microvolts);
+
+	uint32_t i_max = (step_in_microvolts * dac_out_setting) / 3 / 99;
+	shell_print(shell_ptr_fs, "- DEV 0910 - maximum motor current in milliamps: %u mA",
+			i_max);
 
 	ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
 done:
@@ -534,6 +573,10 @@ int32_t arbiter_init(void)
 	if (!arbiter_tid) {
 		LOG_ERR("ERROR spawning arbiter thread\n");
 	}
+
+        // const struct shell *shell;
+        shell_ptr_fs = shell_backend_uart_get_ptr();
+        __ASSERT(shell_ptr_fs != NULL, "Failed to get shell backend.");
 
 	return rc;
 }

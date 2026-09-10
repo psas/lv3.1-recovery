@@ -470,6 +470,11 @@ static int cmd_motor_show_max_current(const struct shell *shell, size_t argc, ch
 			       "%d\n", rc);
 	}
 
+	rc = arbiter_calc_max_motor_drive_current();
+	if (rc < 0) {
+		LOG_ERR("Failed to calculate motor drive current, err %d", rc);
+	}
+
 	return 0;
 }
 
@@ -538,6 +543,7 @@ static int cmd_dac_show_dac_setting(const struct shell *shell, size_t argc, char
         ARG_UNUSED(argc); ARG_UNUSED(argv);
 
 	uint32_t dac_setting = 0;
+	// TODO [ ] Change this call to one which call's the keeper module for this info:
 	int32_t rc = dac_present_value(&dac_setting);
 	if (rc == 0) {
 		shell_fprintf(shell, SHELL_NORMAL, "present DAC setting is %u\n", dac_setting);
