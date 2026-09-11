@@ -1,21 +1,32 @@
 /**
- * Copyright (c) 2025 Portland State Aerospace Society
- *
- * SPDX-License-Identifier: Apache-2.0
+ * @file
+ * @brief ERS Zephyr app, motor control module header
  */
 
-// TODO [ ] Add docblocks to motor control APIs.
+/**
+ * @brief Initialize the motor control module.
+ *
+ * @retval 0 on success.
+ * @return -errno from one of GPIO configure functions, or from settings API
+ *  calls.
+ */
 
 int32_t ers_init_motor_ctrl(void);
 
-// TODO [ ] rename to 'drive_to_lock' and refine as needed for production:
-int32_t mc_drive_deploy1_high(void);
-
-// TODO [ ] rename to 'drive_to_unlock' and refine as needed for production:
-int32_t mc_drive_deploy2_high(void);
-
-int32_t mc_set_not_motor_ps(const uint32_t value);
+/**
+ * @brief Lock the parachute airframe section ring.
+ *
+ * @retval 0 on success.
+ * @return -errno from one of motor drive chip control line functions.
+ */
 
 int32_t mc_lock_ring(void);
+
+/**
+ * @brief Unlock the parachute airframe section ring.
+ *
+ * @retval 0 on success.
+ * @return -errno from one of motor drive chip control line functions.
+ */
 
 int32_t mc_unlock_ring(void);

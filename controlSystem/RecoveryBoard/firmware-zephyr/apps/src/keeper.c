@@ -774,12 +774,12 @@ void keeper_get_ring_pos_detection_interval(uint32_t *timeout_ms)
 	*timeout_ms = atomic_get(&ring_pos_interval);
 }
 
-void keeper_set_detected_ring_position(const enum lock_ring_position ring_pos)
+void keeper_set_ring_position(const enum lock_ring_position ring_pos)
 {
 	atomic_set(&summary_state_fs.ring_position, (atomic_val_t)ring_pos);
 }
 
-void keeper_get_detected_ring_position(enum lock_ring_position *ring_pos)
+void keeper_get_ring_position(enum lock_ring_position *ring_pos)
 {
 	*ring_pos = atomic_get(&summary_state_fs.ring_position);
 }

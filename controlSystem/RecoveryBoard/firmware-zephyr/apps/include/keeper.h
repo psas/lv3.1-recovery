@@ -186,8 +186,8 @@ int32_t keeper_get_both_hall_sensors(uint32_t *value_1, uint32_t *value_2);
 void keeper_set_ring_pos_detection_interval(const uint32_t timeout_ms);
 void keeper_get_ring_pos_detection_interval(uint32_t *timeout_ms);
 
-void keeper_set_detected_ring_position(const enum lock_ring_position ring_pos);
-void keeper_get_detected_ring_position(enum lock_ring_position *ring_pos);
+void keeper_set_ring_position(const enum lock_ring_position ring_pos);
+void keeper_get_ring_position(enum lock_ring_position *ring_pos);
 
 // Parachute section ring lock and unlock events
 void keeper_set_lock_event_count(const uint32_t count);   // <- TODO [ ] check whether used.

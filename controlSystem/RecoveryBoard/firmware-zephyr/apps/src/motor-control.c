@@ -49,25 +49,25 @@ static bool motor_control_initialized_fs = false;
 // - SECTION - routines
 //----------------------------------------------------------------------
 
-int32_t mc_set_deploy1(const uint32_t value)
+static int32_t mc_write_deploy1(const uint32_t value)
 {
 	int32_t rc = gpio_pin_set(deploy1.port, deploy1.pin, value);
 	return rc;
 }
 
-int32_t mc_set_deploy2(const uint32_t value)
+static int32_t mc_write_deploy2(const uint32_t value)
 {
 	int32_t rc = gpio_pin_set(deploy2.port, deploy2.pin, value);
 	return rc;
 }
 
-int32_t mc_set_not_motor_ps(const uint32_t value)
+static int32_t mc_write_not_motor_ps(const uint32_t value)
 {
 	int32_t rc = gpio_pin_set(not_motor_ps.port, not_motor_ps.pin, value);
 	return rc;
 }
 
-int32_t mc_configure_deploy1(void)
+static int32_t mc_configure_deploy1(void)
 {
         if (!gpio_is_ready_dt(&deploy1)) {
                 LOG_ERR("Error: deploy1 device %s is not ready",
@@ -86,7 +86,7 @@ int32_t mc_configure_deploy1(void)
 	return rc;
 }
 
-int32_t mc_configure_deploy2(void)
+static int32_t mc_configure_deploy2(void)
 {
         if (!gpio_is_ready_dt(&deploy2)) {
                 LOG_ERR("Error: deploy2 device %s is not ready",
@@ -105,7 +105,7 @@ int32_t mc_configure_deploy2(void)
 	return rc;
 }
 
-int32_t mc_configure_not_motor_ps(void)
+static int32_t mc_configure_not_motor_ps(void)
 {
         if (!gpio_is_ready_dt(&not_motor_ps)) {
                 LOG_ERR("Error: not_motor_ps device %s is not ready",
@@ -124,32 +124,26 @@ int32_t mc_configure_not_motor_ps(void)
 	return rc;
 }
 
-int32_t mc_drive_deploy1_high(void)
+static int32_t drive_to_lock(void)
 {
 	int32_t rc1, rc2;
-	rc1 = mc_set_deploy1(1);
-	rc2 = mc_set_deploy2(0);
-	if ((rc1 == 0) && (rc2 == 0))
-	{
+	rc1 = mc_write_deploy1(1);
+	rc2 = mc_write_deploy2(0);
+	if ((rc1 == 0) && (rc2 == 0)) {
 		return 0;
-	}
-	else
-	{
+	} else {
 		return -EINVAL;
 	}
 }
 
-int32_t mc_drive_deploy2_high(void)
+static int32_t drive_to_unlock(void)
 {
 	int32_t rc1, rc2;
-	rc1 = mc_set_deploy1(0);
-	rc2 = mc_set_deploy2(1);
-	if ((rc1 == 0) && (rc2 == 0))
-	{
+	rc1 = mc_write_deploy1(0);
+	rc2 = mc_write_deploy2(1);
+	if ((rc1 == 0) && (rc2 == 0)) {
 		return 0;
-	}
-	else
-	{
+	} else {
 		return -EINVAL;
 	}
 }
@@ -163,21 +157,18 @@ static uint32_t motor_current_in_adc_fs[CONFIG_MC_COUNT_RING_CHECKS] = {0};
 #define MARGIN 8
 #define LINE_LEN ((READING_WIDTH * READINGS_PER_LINE) + MARGIN)
 
-void show_motor_currents(void)
+static void show_motor_currents(void)
 {
 	char lbuf[LINE_LEN] = { 0 };
 	uint32_t i = 0;
 	uint32_t j = 1;
 	uint32_t buf_len = 0;
 
-	while (i < CONFIG_MC_COUNT_RING_CHECKS)
-	{
-		if ((i % READINGS_PER_LINE) != 0)
-		{
+	while (i < CONFIG_MC_COUNT_RING_CHECKS) {
+		if ((i % READINGS_PER_LINE) != 0) {
 			buf_len = strlen(lbuf);
 
-			if (buf_len == 0)
-			{
+			if (buf_len == 0) {
 				snprintf(&lbuf[buf_len], (LINE_LEN - buf_len), "(%u)", j);
 				buf_len = strlen(lbuf);
 				j++;
@@ -185,9 +176,7 @@ void show_motor_currents(void)
 
 			snprintf(&lbuf[buf_len], (LINE_LEN - buf_len), " %u,",
 			  motor_current_in_adc_fs[i]);
-		}
-		else
-		{
+		} else {
 			LOG_INF("%s", lbuf);
 			memset(lbuf, 0, sizeof(lbuf));
 			k_msleep(100);
@@ -199,7 +188,7 @@ void show_motor_currents(void)
 	k_msleep(5);
 }
 
-int32_t mc_update_lock_count(void)
+static int32_t mc_update_lock_count(void)
 {
 	uint32_t val = 0;
 	int32_t rc = 0;
@@ -221,7 +210,7 @@ int32_t mc_update_lock_count(void)
 	return rc;
 }
 
-int32_t mc_update_unlock_count(void)
+static int32_t mc_update_unlock_count(void)
 {
 	uint32_t val = 0;
 	int32_t rc = 0;
@@ -256,24 +245,24 @@ int32_t mc_lock_ring(void)
 
 	LOG_INF("M1 - DEPLOY1 high");
 	// (1) make sure BDS63150 is on, not in power saving mode:
-	rc = mc_set_not_motor_ps(0x0);
+	rc = mc_write_not_motor_ps(0x0);
 	if (rc != 0) {
 	       	LOG_ERR("Failed to drive BDS63150 power mode pin, err %d", rc);
-		goto done;
+		goto enter_power_saving_mode;
        	}
 
 	// (2) set DAC to produce minimal current needed to turn over lock ring motor:
 	rc = dac_write_output_reg(CONFIG_MC_DAC_OUTPUT_FOR_CURRENT_LIMIT);
 	if (rc != 0) {
 	       	LOG_ERR("Failed to set DAC output level, err %d", rc);
-		goto done;
+		goto set_low_current_limit;
        	}
 
 	// (3) apply logic levels to BDS63150 IN1, IN2 pins for H-bridge output:
-	rc = mc_drive_deploy2_high();
+	rc = drive_to_unlock();
 	if (rc != 0) {
 	       	LOG_ERR("Failed to drive BDS63150 DEPLOY 1 and or 2 lines, err %d", rc);
-		goto done;
+		goto set_low_current_limit;
        	}
 
 	enum lock_ring_position ring_pos = RING_POS_UNKNOWN;
@@ -287,7 +276,7 @@ int32_t mc_lock_ring(void)
 	//  at least as long as the ADC "read all channels" interval.
 	for (i = 0; i < CONFIG_MC_COUNT_RING_CHECKS; i++)
 	{
-		keeper_get_detected_ring_position(&ring_pos);
+		keeper_get_ring_position(&ring_pos);
 
 		if ((ring_pos == RING_POS_LOCKED) ||
 		    (ring_pos == RING_POS_LOCKED_FULLY_QUALIFIED))
@@ -301,6 +290,7 @@ int32_t mc_lock_ring(void)
 	LOG_INF("Stopping motor on ring position = %d", ring_pos);
 	LOG_INF("Stopped motor after %u ring position checks", i);
 
+set_low_current_limit:
 	// (4) reduce current to motor to way low:
 	LOG_INF("M1 - DAC output low . . .");
 	rc = dac_write_output_reg(5);
@@ -308,8 +298,9 @@ int32_t mc_lock_ring(void)
 
 	rc = mc_update_lock_count();
 
+enter_power_saving_mode:
 	// (5) set BDS63150 to power saving mode:
-	rc = mc_set_not_motor_ps(0x1);
+	rc = mc_write_not_motor_ps(0x1);
 	if (rc != 0) { LOG_ERR("Trouble motor_ps!"); }
 
 	LOG_INF("motor currents:");
@@ -325,23 +316,32 @@ int32_t mc_unlock_ring(void)
 
 	LOG_INF("M1 - DEPLOY1 high");
 	// (1) make sure BDS63150 is on, not in power saving mode:
-	rc = mc_set_not_motor_ps(0x0);
-	if (rc != 0) { LOG_ERR("Trouble setting not_motor_ps low, err %d", rc); }
+	rc = mc_write_not_motor_ps(0x0);
+	if (rc != 0) {
+		LOG_ERR("Trouble setting not_motor_ps low, err %d", rc);
+		goto enter_power_saving_mode;
+	}
 
 	// (2) set DAC to produce minimal current needed to turn over lock ring motor:
 	rc = dac_write_output_reg(CONFIG_MC_DAC_OUTPUT_FOR_CURRENT_LIMIT);
-	if (rc != 0) { LOG_ERR("Trouble setting DAC out, err %d", rc); }
+	if (rc != 0) {
+		LOG_ERR("Trouble setting DAC out, err %d", rc);
+		goto set_low_current_limit;
+	}
 
 	// (3) apply logic levels to BDS63150 IN1, IN2 pins for H-bridge output:
-	rc = mc_drive_deploy1_high();
-	if (rc != 0) { LOG_ERR("Trouble driving DEPLOY1 high, err %d", rc); }
+	rc = drive_to_lock();
+	if (rc != 0) {
+		LOG_ERR("Trouble driving DEPLOY1 high, err %d", rc);
+		goto set_low_current_limit;
+	}
 
 	enum lock_ring_position ring_pos = RING_POS_UNKNOWN;
 	uint32_t i;
 
 	for (i = 0; i < CONFIG_MC_COUNT_RING_CHECKS; i++)
 	{
-		keeper_get_detected_ring_position(&ring_pos);
+		keeper_get_ring_position(&ring_pos);
 
 		if ((ring_pos == RING_POS_UNLOCKED) ||
 		    (ring_pos == RING_POS_UNLOCKED_FULLY_QUALIFIED))
@@ -354,16 +354,22 @@ int32_t mc_unlock_ring(void)
 
 	LOG_INF("Stopping motor after %u ring position checks", i);
 
+set_low_current_limit:
 	// (4) reduce current to motor to very low:
 	LOG_INF("M1 - DAC output low . . .");
 	rc = dac_write_output_reg(5);
-	if (rc != 0) { LOG_ERR("Trouble set DAC out to near zero!"); }
+	if (rc != 0) {
+		LOG_ERR("Trouble set DAC out to near zero!");
+	}
 
 	rc = mc_update_unlock_count();
 
+enter_power_saving_mode:
 	// (5) set BDS63150 to power saving mode:
-	rc = mc_set_not_motor_ps(0x1);
-	if (rc != 0) { LOG_ERR("Trouble motor_ps!"); }
+	rc = mc_write_not_motor_ps(0x1);
+	if (rc != 0) {
+		LOG_ERR("Trouble motor_ps!");
+	}
 
 	return rc;
 }
@@ -382,23 +388,23 @@ int32_t ers_init_motor_ctrl(void)
 	rc = mc_configure_deploy1();
 	if (rc) {
 		LOG_ERR("Configure deploy1 signal out, err %d", rc);
-		return rc;
+		goto done;
 	}
 
 	rc = mc_configure_deploy2();
 	if (rc) {
 		LOG_ERR("Configure deploy2 signal out, err %d", rc);
-		return rc;
+		goto done;
 	}
 
 	rc = mc_configure_not_motor_ps();
 	if (rc) {
 		LOG_ERR("Configure not_motor_ps signal out, err %d", rc);
-		return rc;
+		goto done;
 	}
 
 	// Drive NOT_MOTOR_PS high to assure motor H-bridge is powered:
-	rc = mc_set_not_motor_ps(0);
+	rc = mc_write_not_motor_ps(0);
 	if (rc < 0) {
 		LOG_ERR("Failed to drive not_motor_ps line, err %d", rc);
 		goto done;
