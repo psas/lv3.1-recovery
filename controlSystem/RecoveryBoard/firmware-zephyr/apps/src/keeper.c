@@ -91,9 +91,6 @@ struct hall_sensor_limits {
 
 static struct hall_sensor_limits hall_sensor_fs[HALL_SENSOR_COUNT];
 
-// TODO [ ] Determine whether var 'ring_pos_interval' actually used, only seems to be referenced
-//          in this file:
-
 // App determines lock ring position at this interval of time:
 static atomic_t ring_pos_interval = ATOMIC_INIT(0);
 
@@ -103,20 +100,16 @@ static atomic_t ring_unlock_events = ATOMIC_INIT(0);
 
 // Summary state variables (values usually determined by tests of simpler data):
 
-#if 1
 // TODO [ ] Consider factoring summary state variables into a structure,
 //  this may improve code readability and mainenance:
 
-// static atomic_t ring_status = ATOMIC_INIT(0);
 // QUESTION - put battery voltage in struct of ERS states?
 static atomic_t batt_ok = ATOMIC_INIT(0);
 static atomic_t shore_power_ok = ATOMIC_INIT(0);
 static atomic_t can_bus_ok = ATOMIC_INIT(0);
 static atomic_t rocket_ready = ATOMIC_INIT(0);
-#endif // 0
 
 // TODO [ ] create public API getter for CAN module to access ERS summary state.
-
 struct ers_summary_state {
 	atomic_t ring_position;
 	atomic_t battery_voltage;
@@ -292,7 +285,7 @@ int32_t keeper_set_adc_value_in_mv(const enum ers_adc_values_in_mv idx, const ui
 	switch (idx)
 	{
         case ADC_READING_BATT_READ_MV:
-		rc = calc_battery_voltage();
+		rc = arbiter_calc_battery_voltage();
 		if (rc < 0) {
 			LOG_ERR("Failed to calculate battery voltage, err %d", rc);
 			break;
@@ -667,31 +660,28 @@ int32_t keeper_get_both_hall_sensors(uint32_t *value_1, uint32_t *value_2)
 {
 	int32_t rc = 0;
 
-	if (!keeper_initialized_fs) {
-		LOG_ERR("Data keeper module not initialized!");
-		*value_1 = atomic_get(&hall_1);
-		*value_2 = atomic_get(&hall_2);
-		return -ESRCH;
-	}
-
-// TODO [ ] Watch behavior when issuing lock and unlock ring commands, try to
-//  determine why mutex lock and unlock calls were commented out here as of
-//  2026-01-04:
 	k_mutex_lock(&hall_sensors_mtx, K_FOREVER);
 	if (rc != 0) {
-		LOG_ERR("Failed to lock mutex for \"store hall sensors values\", error %d", rc);
-		return rc;
+		LOG_ERR("Failed to lock mutex, get hall sensor vals, err %d", rc);
+		goto done;
+	}
+
+	if (!keeper_initialized_fs) {
+		LOG_ERR("Data keeper module not initialized!");
+		rc = -ESRCH;
+		goto unlock;
 	}
 
 	keeper_get_hall_1_mv(value_1);
 	keeper_get_hall_2_mv(value_2);
 
+unlock:
 	k_mutex_unlock(&hall_sensors_mtx);
 	if (rc != 0) {
-		LOG_ERR("Failed to unlock mutex for \"store hall sensors values\", error %d", rc);
-		return rc;
+		LOG_ERR("Failed to unlock mutex, get hall sensor vals, err %d", rc);
+		goto done;
 	}
-
+done:
 	return 0;
 }
 

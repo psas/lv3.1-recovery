@@ -231,8 +231,7 @@ static int32_t determine_batt_ok(void)
 	return 0;
 }
 
-// TODO [ ] Align this public API's name with convention in API naming:
-int32_t calc_battery_voltage(void)
+int32_t arbiter_calc_battery_voltage(void)
 {
 	uint32_t adc_reading = 0;
 	float battery_voltage = 0.0;
@@ -531,7 +530,7 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 			LOG_ERR("Failed to determine lock ring position, err %d", rc);
 		}
 
-		rc = calc_battery_voltage();
+		rc = arbiter_calc_battery_voltage();
 		if (rc < 0) {
 			LOG_ERR("Failed to calculate battery voltage, err %d", rc);
 		}
@@ -576,9 +575,8 @@ int32_t arbiter_init(void)
 		LOG_ERR("ERROR spawning arbiter thread\n");
 	}
 
-        // const struct shell *shell;
-        shell_ptr_fs = shell_backend_uart_get_ptr();
-        __ASSERT(shell_ptr_fs != NULL, "Failed to get shell backend.");
+	shell_ptr_fs = shell_backend_uart_get_ptr();
+	__ASSERT(shell_ptr_fs != NULL, "Failed to get shell backend.");
 
 	return rc;
 }

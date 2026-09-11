@@ -98,7 +98,7 @@ void arbiter_show_hall_state_limits(const struct shell *shell);
  * TODO [ ] Add mutex to arbiter and return -EAGAIN
  */
 
-int32_t calc_battery_voltage(void);
+int32_t arbiter_calc_battery_voltage(void);
 
 /**
  * @brief Determine lock ring postion, and state.  Return ring position.

@@ -94,37 +94,5 @@ int main(void)
 		LOG_ERR("Failed to play 15-note audio pattern, err = %d", rc);
 	}
 
-#if 0
-	static uint32_t loop_count = 0;
-
-	LOG_INF("main() entering 'while (1)' loop . . .");
-
-	while (1)
-	{
-		loop_count++;
-		keeper_get_diag_mode(&rc);
-		// TODO [ ] Review call to check diagnostics mode and remove the
-		//          following unconditional clearing of 'rc' when mode
-		//          check is determined to be a sensible check:
-		rc = 0; // - DEV 0226 -
-		if (rc > 0)
-		{
-			LOG_INF("- MARK -");
-			// Note appears that a = hall1, b = hall2, c = battery, d = motor_isense
-			uint32_t a, b, c, d;
-			keeper_get_batt_read(&a);
-			keeper_get_motor_isense(&b);
-			keeper_get_hall_1(&c);
-			keeper_get_hall_2(&d);
-			LOG_INF("batt, motor, hall1, hall2: %u, %u, %u, %u", a, b, c, d);
-		}
-
-		k_msleep(ERS_MAIN_LOOP_PERIOD_MS);
-	}
-
 	return 0;
-#else
-	LOG_INF("- DEV 0909 - main exiting to test other app threads and timers");
-	return 0;
-#endif
 }
