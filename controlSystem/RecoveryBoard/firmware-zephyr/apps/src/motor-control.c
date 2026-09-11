@@ -206,22 +206,17 @@ void show_motor_currents(void)
 int32_t mc_update_lock_count(void)
 {
 	uint32_t val = 0;
-	// TODO [ ] Consider reading lock event count from keeper module, from
-	//  SRAM, as it will have been copied by keeper during app start up.
-	int32_t rc = settings_ers_retrieve_value(KEY_NAME_LOCK_COUNT, &val, sizeof(val));
+	int32_t rc = 0;
 
-	if (rc != 0) {
-		val = RING_LOCK_EVENT_STARTING_COUNT;
-		LOG_ERR("Failed to read count of ring lock events, err %d", rc);
-		LOG_DBG("Resetting count of ring lock events to %d",
-			RING_LOCK_EVENT_STARTING_COUNT);
-	} else {
-		val += 1;
-	}
+	// Read lock count and increment:
+	keeper_get_lock_event_count(&val);
+	val += 1;
 
+	// Write the updated lock count to run time data store:
 	keeper_set_lock_event_count(val);
+	LOG_INF("Keeper holds a ring lock count of %u", val);
 
-	LOG_INF("- DEV 0104 - storing ring lock event count of %u", val);
+	// Store the updated lock count to non-volatile memory:
 	rc = settings_ers_store_value(KEY_NAME_LOCK_COUNT, (const void *)val, sizeof(val));
 	if (rc != 0) {
 		LOG_ERR("Failed to store count of ring lock events, err %d", rc);
@@ -233,21 +228,17 @@ int32_t mc_update_lock_count(void)
 int32_t mc_update_unlock_count(void)
 {
 	uint32_t val = 0;
-	// TODO [ ] Consider reading unlock event count from keeper module, from
-	//  SRAM, as it will have been copied by keeper during app start up.
-	int32_t rc = settings_ers_retrieve_value(KEY_NAME_UNLOCK_COUNT, &val, sizeof(val));
+	int32_t rc = 0;
 
-	if (rc != 0) {
-		val = RING_UNLOCK_EVENT_STARTING_COUNT;
-		LOG_ERR("Failed to read count of ring unlock events, err %d", rc);
-		LOG_DBG("Resetting count of ring unlock events to %d",
-			RING_UNLOCK_EVENT_STARTING_COUNT);
-	} else {
-		val += 1;
-	}
+	// Read unlock count and increment:
+	keeper_get_unlock_event_count(&val);
+	LOG_INF("Keeper holds a ring unlock count of %u", val);
+	val += 1;
 
+	// Write the updated unlock count to run time data store:
 	keeper_set_unlock_event_count(val);
 
+	// Store the updated unlock count to non-volatile memory:
 	rc = settings_ers_store_value(KEY_NAME_UNLOCK_COUNT, (const void *)val, sizeof(val));
 	if (rc != 0) {
 		LOG_ERR("Failed to store count of ring unlock events, err %d", rc);
@@ -387,20 +378,19 @@ int32_t mc_unlock_ring(void)
 
 int32_t ers_init_motor_ctrl(void)
 {
+        uint32_t event_count = 0;
         int32_t rc = 0;
 
 // ERS GPIOs used for output:
 
 	rc = mc_configure_deploy1();
-	if (rc)
-	{
+	if (rc) {
 		LOG_ERR("Configure deploy1 signal out, err %d", rc);
 		return rc;
 	}
 
 	rc = mc_configure_deploy2();
-	if (rc)
-	{
+	if (rc) {
 		LOG_ERR("Configure deploy2 signal out, err %d", rc);
 		return rc;
 	}
@@ -417,6 +407,30 @@ int32_t ers_init_motor_ctrl(void)
 		LOG_ERR("Failed to drive not_motor_ps line, err %d", rc);
 		goto done;
 	}
+
+	// Retrieve ring lock event count:
+	rc = settings_ers_retrieve_value(KEY_NAME_LOCK_COUNT,
+			&event_count, sizeof(event_count));
+	if (rc < 0) {
+		LOG_ERR("Failed to retrieve lock ring event count, err %d", rc);
+		LOG_WRN("Resetting lock event count to zero . . .");
+		event_count = 0;
+	}
+
+	// Write lock event count to run time data store:
+	keeper_set_lock_event_count(event_count);
+
+	// Retrieve ring unlock event count:
+	rc = settings_ers_retrieve_value(KEY_NAME_UNLOCK_COUNT,
+			&event_count, sizeof(event_count));
+	if (rc < 0) {
+		LOG_ERR("Failed to retrieve unlock ring event count, err %d", rc);
+		LOG_WRN("Resetting unlock event count to zero . . .");
+		event_count = 0;
+	}
+
+	// Write unlock event count to run time data store:
+	keeper_set_unlock_event_count(event_count);
 
 	motor_control_initialized_fs = true;
 

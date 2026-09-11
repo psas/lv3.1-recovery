@@ -36,9 +36,23 @@ int main(void)
 {
 	int32_t rc = 0;
 
+	// Setting up GPIOs is one of the first things to do for hardware safety:
 	rc = gpio_in_init();
 	LOG_INF("GPIO input pin initialization returns %d", rc);
 
+	// The motor control module calls settings API, and is also important
+	// for safe hardware operation:
+	settings_ers_init();
+	LOG_INF("just back from ERS settings module init");
+	k_msleep(300);
+
+	// ERS keeper module is used by motor and several other modules, initialize
+	// this module before those who use it:
+	rc = keeper_init();
+	LOG_INF("ERS data \"keeper\" initialization returns %d", rc);
+
+	// The motor module puts the H-brdige in a "motor off" state, so call this
+	// module as early as possible:
         rc = ers_init_motor_ctrl();
 	LOG_INF("motor control module init returns %d", rc);
 
@@ -50,13 +64,6 @@ int main(void)
 
 	rc = ers_can_init();
 	LOG_INF("ERS CAN module init returns %d", rc);
-
-	settings_ers_init();
-	LOG_INF("just back from ERS settings module init");
-	k_msleep(500);
-
-	rc = keeper_init();
-	LOG_INF("ERS data \"keeper\" initialization returns %d", rc);
 
 	rc = arbiter_init();
 	LOG_INF("ERS arbitration module init returns %d", rc);
@@ -82,7 +89,6 @@ int main(void)
 	}
 
 	// Play start up, or 'banner' audio pattern:
-	// k_msleep(1000);
 	rc = pwm_play_pattern(PWM_APP_15_NOTES);
 	if (rc != 0) {
 		LOG_ERR("Failed to play 15-note audio pattern, err = %d", rc);
