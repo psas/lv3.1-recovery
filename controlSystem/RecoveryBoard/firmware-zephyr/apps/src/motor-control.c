@@ -6,6 +6,7 @@
 
 #include "arbiter.h"
 #include "dac-ers.h"
+#include "ers-util.h"
 #include "keeper.h"
 #include "settings-ers.h"
 
@@ -41,9 +42,9 @@ static const struct gpio_dt_spec deploy2 = GPIO_DT_SPEC_GET_OR(DOUT2_NODE, gpios
 #endif
 static const struct gpio_dt_spec not_motor_ps = GPIO_DT_SPEC_GET_OR(DOUT3_NODE, gpios, {0});
 
-// TODO [ ] Add check for motor control module initialized.
-// Flag to indiciate that this module is initialized:
 static bool motor_control_initialized_fs = false;
+
+static struct k_mutex motor_control_mtx;
 
 //----------------------------------------------------------------------
 // - SECTION - routines
@@ -242,6 +243,13 @@ int32_t mc_lock_ring(void)
 // turn off motor in those states.
 
 	int32_t rc = 0;
+	ERS_MUTEX_LOCK(motor_control_mtx, CONFIG_MC_MUTEX_TIMEOUT_MS, motor_control);
+
+	if (!motor_control_initialized_fs) {
+		LOG_ERR("Motor control module not initialized!");
+		rc = -EFAULT;
+		goto unlock;
+	}
 
 	LOG_INF("M1 - DEPLOY1 high");
 	// (1) make sure BDS63150 is on, not in power saving mode:
@@ -306,6 +314,8 @@ enter_power_saving_mode:
 	LOG_INF("motor currents:");
 	show_motor_currents();
 
+unlock:
+	ERS_MUTEX_UNLOCK(motor_control_mtx, motor_control);
 done:
 	return rc;
 }
@@ -313,6 +323,13 @@ done:
 int32_t mc_unlock_ring(void)
 {
 	int32_t rc = 0;
+	ERS_MUTEX_LOCK(motor_control_mtx, CONFIG_MC_MUTEX_TIMEOUT_MS, motor_control);
+
+	if (!motor_control_initialized_fs) {
+		LOG_ERR("Motor control module not initialized!");
+		rc = -EFAULT;
+		goto unlock;
+	}
 
 	LOG_INF("M1 - DEPLOY1 high");
 	// (1) make sure BDS63150 is on, not in power saving mode:
@@ -371,6 +388,9 @@ enter_power_saving_mode:
 		LOG_ERR("Trouble motor_ps!");
 	}
 
+unlock:
+	ERS_MUTEX_UNLOCK(motor_control_mtx, motor_control);
+done:
 	return rc;
 }
 
@@ -383,8 +403,9 @@ int32_t ers_init_motor_ctrl(void)
         uint32_t event_count = 0;
         int32_t rc = 0;
 
-// ERS GPIOs used for output:
+	k_mutex_init(&motor_control_mtx);
 
+	// Configure signal lines connected to H-bridge motor driver chip:
 	rc = mc_configure_deploy1();
 	if (rc) {
 		LOG_ERR("Configure deploy1 signal out, err %d", rc);
@@ -435,7 +456,6 @@ int32_t ers_init_motor_ctrl(void)
 	keeper_set_unlock_event_count(event_count);
 
 	motor_control_initialized_fs = true;
-
 done:
         return rc; 
 }

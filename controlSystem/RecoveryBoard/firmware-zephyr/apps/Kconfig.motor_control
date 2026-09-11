@@ -9,6 +9,12 @@ menuconfig ERS_MOTOR_CONTROL
 
 if ERS_MOTOR_CONTROL
 
+config MC_MUTEX_TIMEOUT_MS
+	int "Motor control module mutex timeout in milliseconds"
+	default 1000
+	help
+	  Set motor control module mutex timeout, measured in milliseconds.
+
 config MC_DAC_OUTPUT_FOR_CURRENT_LIMIT
 	int "DAC output setting, used to limit lock ring motor current."
 	default 740
