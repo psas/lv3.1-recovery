@@ -154,14 +154,10 @@ int32_t mc_drive_deploy2_high(void)
 	}
 }
 
-// TODO [ ] Refactor DEV_DAC_SETTING_IN_SITU to DAC module Kconfig symbol,
-//          so it is easier to find and may be changed without touching C code:
-#define DEV_DAC_SETTING_IN_SITU 800
-#define RING_CHECK_INTERVAL_MS 5 // was 10
-#define COUNT_CHECKS 60 // was 30
+static uint32_t motor_current_in_adc_fs[CONFIG_MC_COUNT_RING_CHECKS] = {0};
 
-static uint32_t motor_current_in_adc_fs[COUNT_CHECKS] = {0};
-
+// Some local formatting symbols to better show motor current readings
+// from lock ring and unlock ring ops:
 #define READING_WIDTH 6
 #define READINGS_PER_LINE 8
 #define MARGIN 8
@@ -174,7 +170,7 @@ void show_motor_currents(void)
 	uint32_t j = 1;
 	uint32_t buf_len = 0;
 
-	while (i < COUNT_CHECKS)
+	while (i < CONFIG_MC_COUNT_RING_CHECKS)
 	{
 		if ((i % READINGS_PER_LINE) != 0)
 		{
@@ -267,7 +263,7 @@ int32_t mc_lock_ring(void)
        	}
 
 	// (2) set DAC to produce minimal current needed to turn over lock ring motor:
-	rc = dac_write_output_reg(DEV_DAC_SETTING_IN_SITU);
+	rc = dac_write_output_reg(CONFIG_MC_DAC_OUTPUT_FOR_CURRENT_LIMIT);
 	if (rc != 0) {
 	       	LOG_ERR("Failed to set DAC output level, err %d", rc);
 		goto done;
@@ -289,7 +285,7 @@ int32_t mc_lock_ring(void)
 	//  non-obvious dependency here -- an implementation worth revisiting
 	//  and possibly changing -- to assure that RING_CHECK_INTERVAL_MS is
 	//  at least as long as the ADC "read all channels" interval.
-	for (i = 0; i < COUNT_CHECKS; i++)
+	for (i = 0; i < CONFIG_MC_COUNT_RING_CHECKS; i++)
 	{
 		keeper_get_detected_ring_position(&ring_pos);
 
@@ -300,7 +296,7 @@ int32_t mc_lock_ring(void)
 		}
 
 		keeper_get_motor_isense(&motor_current_in_adc_fs[i]);
-		k_msleep(RING_CHECK_INTERVAL_MS);
+		k_msleep(CONFIG_MC_RING_CHECK_INTERVAL_MS);
 	}
 	LOG_INF("Stopping motor on ring position = %d", ring_pos);
 	LOG_INF("Stopped motor after %u ring position checks", i);
@@ -333,7 +329,7 @@ int32_t mc_unlock_ring(void)
 	if (rc != 0) { LOG_ERR("Trouble setting not_motor_ps low, err %d", rc); }
 
 	// (2) set DAC to produce minimal current needed to turn over lock ring motor:
-	rc = dac_write_output_reg(DEV_DAC_SETTING_IN_SITU);
+	rc = dac_write_output_reg(CONFIG_MC_DAC_OUTPUT_FOR_CURRENT_LIMIT);
 	if (rc != 0) { LOG_ERR("Trouble setting DAC out, err %d", rc); }
 
 	// (3) apply logic levels to BDS63150 IN1, IN2 pins for H-bridge output:
@@ -343,7 +339,7 @@ int32_t mc_unlock_ring(void)
 	enum lock_ring_position ring_pos = RING_POS_UNKNOWN;
 	uint32_t i;
 
-	for (i = 0; i < COUNT_CHECKS; i++)
+	for (i = 0; i < CONFIG_MC_COUNT_RING_CHECKS; i++)
 	{
 		keeper_get_detected_ring_position(&ring_pos);
 
@@ -353,7 +349,7 @@ int32_t mc_unlock_ring(void)
 			LOG_INF("Stopping motor on ring position = %d", ring_pos);
 			break;
 		}
-		k_msleep(RING_CHECK_INTERVAL_MS);
+		k_msleep(CONFIG_MC_RING_CHECK_INTERVAL_MS);
 	}
 
 	LOG_INF("Stopping motor after %u ring position checks", i);

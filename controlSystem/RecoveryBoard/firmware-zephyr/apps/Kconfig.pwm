@@ -1,6 +1,5 @@
 # @file
-# @brief Application configuration for ERS PWM (analog to digital) module
-# Copyright (c) 2026 Portland State Aerospace Society
+# @brief Application configuration for ERS PWM module
 
 menuconfig ERS_PWM_MODULE
 	bool "ERS PWM module settings"

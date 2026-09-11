@@ -1,0 +1,42 @@
+# @file
+# @brief Application configuration for ERS motor control module
+
+menuconfig ERS_MOTOR_CONTROL
+        bool "ERS motor control module settings"
+        default y
+        help
+          Enable and configure ERS motor control module.
+
+if ERS_MOTOR_CONTROL
+
+config MC_DAC_OUTPUT_FOR_CURRENT_LIMIT
+	int "DAC output setting, used to limit lock ring motor current."
+	default 740
+	help
+	  Set limit on driving current for lock ring motor.  Per ERS specification
+	  calculations, based on MOTOR_ILIM net voltage and voltage divider at
+	  the motor driver IC, DAC count of 740 produces about 1 amp current out
+	  of the motor driver chip.
+
+config MC_RING_CHECK_INTERVAL_MS
+	int "Interval between ring position checks during lock and unlock ops."
+	default 5
+	help
+	  Set an interval between ring position checks, those which occur in the
+	  motor control module during ring lock and ring unlock operations.  May
+	  need to be adjusted, per bench top tests and observations.
+
+config MC_COUNT_RING_CHECKS
+	int ""
+	default 60
+	help
+	  Set the maximum planned count of lock ring position checks to perform,
+	  during a lock ring, and an unlock ring operation.  Note that not all
+	  checks may be performed, in cases where the long ring reaches its
+	  desired new position in fewer checks and ring check time intervals.
+
+endif # ERS_MOTOR_CONTROL
+
+module = ERS_MOTOR_CONTROL
+module-str = ERS motor control
+source "subsys/logging/Kconfig.template.log_config"

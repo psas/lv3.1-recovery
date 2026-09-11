@@ -101,6 +101,7 @@ rsource "Kconfig.adc"
 rsource "Kconfig.arbiter"
 rsource "Kconfig.can"
 rsource "Kconfig.dac"
+rsource "Kconfig.motor_control"
 rsource "Kconfig.status_led"
 rsource "Kconfig.pwm"
 
