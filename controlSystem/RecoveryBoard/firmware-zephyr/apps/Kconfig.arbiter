@@ -1,0 +1,52 @@
+# @file
+# @brief ERS Zephyr arbiter module configuration file.
+
+menuconfig ERS_ARBITER
+	bool "ERS arbiter module app settings"
+	default y
+	help
+	  Enable ERS symbols to configure the recovery firmware arbiter module.
+
+if ERS_ARBITER
+
+config ARBITER_LOOP_SLEEP_PER_MS
+	int "Arbiter loop default sleep period in milliseconds"
+	default 100
+	help
+	  Select a sleep period in milliseconds for the recovery system arbiter
+	  main loop.  Must be short enough to allow for lock ring position
+	  determination to occur close enough to apogee detection, to release
+	  the parachutes drogue and main, to provide for full and safe recovery.
+
+config ARBITER_MUTEX_TIMEOUT_MS
+	int "Arbiter default mutex timeout in milliseconds"
+	default 1000
+	help
+	  Set the arbiter module mutex timeout, measured in milliseconds.
+
+# Workaround for not being able to have commas or minus signs in macro arguments:
+# (This pattern is borrowed from code in Zephyr 3.7.0 soc Kconfig files)
+DT_NODE_ZEPHYR_USER := /zephyr,user
+DT_DAC_RESOLUTION := dac-resolution
+
+config ERS_V_RAIL_MICROVOLTS
+	int "ERS board voltage supply rail"
+	default 3300000
+	help
+	  Provide ERS microcontroller DAC a numerator which supports step
+	  calculation results as integers, with three digit accuracy.  ERS
+	  DAC step size formula is (3.3V / (1<<DAC_RESOLUTION_IN_BITS)).
+	  To use units of microvolts puts the step size in the whole integer
+	  realm.
+
+config ERS_DAC_RES_IN_BITS
+	int "BDS63150 motor driver IC current out scale numerator"
+	default $(dt_node_int_prop_int,$(DT_NODE_ZEPHYR_USER),$(DT_DAC_RESOLUTION))
+	help
+	  Set the DAC resolution, measured in counts
+
+endif # ERS_ARBITER
+
+module = ERS_ARBITER
+module-str = ERS arbiter module
+source "subsys/logging/Kconfig.template.log_config"

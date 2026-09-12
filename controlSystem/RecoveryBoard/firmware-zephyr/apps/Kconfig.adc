@@ -1,0 +1,25 @@
+# @file
+# @brief Application configuration for ERS ADC (analog to digital) module
+# Copyright (c) 2026 Portland State Aerospace Society
+
+menuconfig ERS_ADC_MODULE
+	bool "ERS ADC module settings"
+	default y
+	help
+	  Enable and configure ERS ADC module.  Enabled by default as it is
+	  critical to correct, full system operation.
+
+if ERS_ADC_MODULE
+
+config ADC_API_TIMEOUT_MS
+	int "ADC public API timeout in milliseconds"
+	default 1500
+	help
+	  Set a timeout measured in milliseconds for the ERS Zephry ADC public
+	  API.
+
+endif # ERS_ADC_MODULE
+
+module = ERS_ADC
+module-str = ERS ADC module
+source "subsys/logging/Kconfig.template.log_config"

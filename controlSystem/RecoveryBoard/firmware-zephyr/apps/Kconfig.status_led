@@ -1,0 +1,22 @@
+# @file
+# @brief ERS Zephyr status LED module configuration file.
+
+menuconfig ERS_STATUS_LED
+	bool "ERS status LED settings"
+	default y
+	help
+	  Enable ERS symbols to configure the status LED module.
+
+if ERS_STATUS_LED
+
+config STATUS_LED_MUTEX_TIMEOUT_MS
+	int "Status LED API default mutex timeout in milliseconds"
+	default 1000
+	help
+	  Set the status LED API mutex timeout, measured in milliseconds.
+
+endif # ERS_STATUS_LED
+
+module = ERS_STATUS_LED
+module-str = status LED module
+source "subsys/logging/Kconfig.template.log_config"

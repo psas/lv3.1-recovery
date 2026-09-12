@@ -1,0 +1,110 @@
+#
+# Copyright (c) 2025 Portland State Aerospace Society
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+# ERS firmware thread stack sizes
+
+config ADC_THREAD_STACK_SIZE
+        int "ERS ADC thread stack size"
+        default 512
+        help
+          Select stack size for ERS ADC thread
+
+config ARBITER_THREAD_STACK_SIZE
+        int "ERS arbiter thread stack size"
+        default 512
+        help
+          Select stack size for ERS arbiter thread
+
+config CAN_RX_THREAD_STACK_SIZE
+        int "ERS CAN RX thread stack size"
+        default 1536
+        help
+          Select stack size for ERS CAN RX thread
+
+config GPIO_THREAD_STACK_SIZE
+        int "ERS GPIO thread stack size"
+        default 512
+        help
+          Select stack size for ERS GPIO thread
+
+config PWM_THREAD_STACK_SIZE
+        int "ERS PWM thread stack size"
+        default 768
+        help
+          Select stack size for ERS GPIO thread
+
+# ERS firmware thread priorities
+
+config ADC_THREAD_PRIORITY
+        int "ADC module thread priority"
+        default 3
+        help
+          Priority of ERS thread to manage ADC channel readings.
+
+config ARBITER_THREAD_PRIORITY
+        int "ERS arbiter thread priority"
+        default 5
+        help
+          Priority of ERS arbiter thread, which determines system readiness
+          to unlock ring to release one of drogue and main parachutes.
+
+config CAN_RX_THREAD_PRIORITY
+        int "ERS CAN interface thread priority"
+        default 2
+        help
+          Priority of CAN interface thread.
+
+config GPIO_THREAD_PRIORITY
+        int "ERS GPIO thread priority"
+        default 4
+        help
+          Priority of thread which primarily reads I/O pins of the ERS board.
+
+config PWM_THREAD_PRIORITY
+        int "ERS PWM thread priority"
+        default 6
+        help
+          Priority of thread to control PWM block, used to generate audible
+	  tones.
+
+# TODO [ ] Give all ERS firmware modules a Zephyr log config reference here:
+
+# ADC module has a dedicated Kconfig file
+
+# ARBITER module has a dedicated Kconfig file
+
+# CAN module has a dedicated Kconfig file
+
+# DAC module has a dedicated Kconfig file
+
+module = ERS_MOTOR_CONTROL
+module-str = motor control module
+source "subsys/logging/Kconfig.template.log_config"
+
+module = ERS_GPIO
+module-str = ERS GPIO module
+source "subsys/logging/Kconfig.template.log_config"
+
+module = ERS_SETTINGS
+module-str = ERS settings module
+source "subsys/logging/Kconfig.template.log_config"
+
+module = STATUS_LED
+module-str = ERS status led
+source "subsys/logging/Kconfig.template.log_config"
+
+# ERS application specific
+rsource "Kconfig.adc"
+rsource "Kconfig.arbiter"
+rsource "Kconfig.can"
+rsource "Kconfig.dac"
+rsource "Kconfig.motor_control"
+rsource "Kconfig.status_led"
+rsource "Kconfig.pwm"
+
+# Following Kconfig inclusion needed to support Zephyr logging template macros,
+# and needed for larger Zephyr code and framework support:
+source "Kconfig.zephyr"

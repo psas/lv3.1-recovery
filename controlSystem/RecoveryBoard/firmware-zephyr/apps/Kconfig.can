@@ -1,0 +1,30 @@
+# @file
+# @brief Application configuration for ERS CAN module
+# Copyright (c) 2025 - 2026 Portland State Aerospace Society
+#
+# Original license and copyright notices:
+#
+#   Private config options for can sample app
+#   Copyright (c) 2018 Alexander Wachter
+#   SPDX-License-Identifier: Apache-2.0
+
+menuconfig ERS_CAN_MODULE
+	bool "ERS CAN module app settings"
+	default y
+	help
+	  Enable ERS config symbols for the application CAN module.
+
+if ERS_CAN_MODULE
+
+config LOOPBACK_MODE
+	bool "Loopback LOOPBACK_MODE"
+	default y
+	help
+	  Set the controller to loopback mode.
+	  This allows testing without a second board.
+
+endif # ERS_CAN_MODULE
+
+module = ERS_CAN
+module-str = ERS firmware CAN module
+source "subsys/logging/Kconfig.template.log_config"

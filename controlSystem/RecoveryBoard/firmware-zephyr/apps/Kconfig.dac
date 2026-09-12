@@ -1,0 +1,22 @@
+# @file
+# @brief ERS Zephyr digital-to-analog module configuration file.
+
+menuconfig ERS_DAC
+	bool "ERS DAC module app settings"
+	default y
+	help
+	  Enable ERS symbols to configure the digital-to-analog (DAC) module.
+
+if ERS_DAC
+
+config DAC_MUTEX_TIMEOUT_MS
+	int "DAC module default mutex timeout in milliseconds"
+	default 1000
+	help
+	  Set the DAC module mutex timeout, measured in milliseconds.
+
+endif # ERS_DAC
+
+module = ERS_DAC
+module-str = DAC module
+source "subsys/logging/Kconfig.template.log_config"

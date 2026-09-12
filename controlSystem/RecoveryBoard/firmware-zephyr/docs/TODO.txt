@@ -1,0 +1,126 @@
+2025-09-27 SAT
+--------------
+
+ERS firmware TODO list:
+
+[x] Implement correct CAN messages, both RX and TX messages.
+    Note RX CAN message ids are 0x700, 0x100, 0x200
+    [x] RX messages:
+          [x] 0x700 Telemetrum heartbeat
+          [x] 0x100 unlock drogue chute,
+          [x] 0x200 unlock main chute
+    [x] TX messages:
+          [x] 0x710 drogue board status plus heartbeat
+          [x] 0x720 main board status plus heartbeat
+          [x] 0x101 acknowledge receipt of message with id 0x100
+          [x] 0x201 acknowledge receipt of message with id 0x200
+
+[x] In CAN module configure a timer and workqueue task, where this task clears
+     an application state flash for "CAN bus ok" when the timer reaches its
+     two second timeout.
+
+[x] Create an API function to send the ERS board variant's heart CAN frame, one of
+     0x700 Sender/Telemetrum ERS board
+     0x710 Drogue parachute ERS board
+     0x720 Main parachute ERS board
+
+     Note each ERS variant CAN "heartbeat" contains the same seven values, each
+     stored as a byte, with an extra byte added to create a CAN frame with data
+     length of eight.
+
+[x] Add DAC module to provide motor current regulation.
+
+[x] Amend gpio_in module to save latest input values in the keeper module.
+
+[x] Amend ADC module to save latest input values in the keeper module.
+
+[x] Implement an arbiter to act upon current state and gathered data.
+    [x] create an arbiter thread with stub code.
+    [x] add logic to arbiter to determine and write ring state.
+    [x] add logic to arbiter to determine and write battery state.
+    [x] add logic to arbiter to determine and write shore power state.
+    [x] add logic to arbiter to determine and write ready state.
+
+[x] Implement a local way to toggle periodic diagnostics on and off at run time.
+
+[x] Implement off-chip and system status checking routines
+    [x] ring status    . . . one of 2 = locked, 1 = between, 0 = unlocked
+// ~2025-11-11 update:  0x00 = Ring status: 0 = uninitialized, 1 = unlocked, 2 = in between, 3 = locked, 4 = error
+    [x] batt_voltage   . . . among analog inputs
+    [x] batt_ok        . . . a threshold based state
+    [x] shore_power_ok . . . 1 = shore power detected, 0 = no shore power
+    [x] can_bus_ok     . . . telemetrum heartbeat received within last two seconds
+    [x] ready_state    . . . true when (1) battery ok (2) ring locked (3) CAN bus ok
+    [x] reserved
+    [x] reserved
+
+[x] Implement APIs to control GPIO output signals
+    [x] deploy1
+    [x] deploy1
+    [x] motor_ps (not tested)
+
+[x] Add APIs to lock and to unlock rocket parachute section ring.
+
+[ ] Add following shell commands from Google doc by Andrew, Theo, Hessah:
+    [x] help
+    [ ] state - ERS system state
+    [x] l - lock ring
+    [x] u - unlock ring
+    [x] pos [poll] - report locking ring position
+
+2025-10-21 TUE
+
+[x] Add commands:
+    [x] to enable/disable lock ring position reporting
+    [x] to set lock ring position (hall sensor reading) interval in milliseconds
+    [x] to show lock ring position detection interval
+    [x] to restore Hall sensor cutoff value defaults
+
+[ ] To arbiter add:
+    [-] a kernel timer for developing ring lock and ring unlock routines (in absence
+         of lock ring assembly)
+
+[ ] To ADC module
+    [-] add a timer and Zephyr work queue submission to read motor current channel
+    [ ] add a command to show motor current and current reading interval
+
+[x] Implement the code differences to support main chute board, should be only
+     difference in two or a few CAN message IDs.
+
+2026-01-03
+[ ] Extend current readings for short period after ring lock and ring unlock
+     actions, to catch when current drops to zero.
+
+[x] Change pound include statement for ERS header to use double quotes, not arrow brackets.
+
+[x] Check whether polling thread in can.c is needed.
+
+[x] Locate and update place in code where CAN bitrate is set.
+    See https://docs.zephyrproject.org/latest/hardware/peripherals/can/controller.html
+
+[x] Amend helper Python script `rx.py` to periodically send Telemetrum heartbeat.
+   (a second separate Python script to send CAN frames breaks the reception of
+    the first Python script which only listens.)
+
+[x] Create Kconfig symbols for ERS thread priorities and stack sizes
+
+[x] Amend the README in firmware-zephyr directory with instructions to start a
+     debugging session.
+
+[x] Add commands to store Hall sensor cutoff values to flash.  These
+
+[ ] Find out whether Zephyr ADC channel scanning API requires all configured
+     analog inputs (channels) to be measured in order to obtain correct readings.
+     Passing just one or a subset of channels to API seems to return zero as
+     the reading value all the time, and this disagrees with the data which are
+     actually available.
+
+[x] Move enum hall_sensor_instances from keeper.h to ers-config-defaults.h.
+
+[x] Create a timer based LED work element.
+
+[x] Complete the API cmd_save_hall_limits_to_flash().
+
+[x] Shorten header file name `ers-config-defaults.h` to `ers-config.h`.
+
+[ ] Add command to turn on and turn off buzzer "mark" type audio pattern.

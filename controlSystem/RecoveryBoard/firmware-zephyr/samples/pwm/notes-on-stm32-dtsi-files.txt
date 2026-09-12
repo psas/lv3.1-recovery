@@ -1,0 +1,22 @@
+
+
+ted@localhost:~/projects/zephyr-project/modules/hal/stm32$ grep -nr _pb14 ./* | grep f091rc
+./dts/st/f0/stm32f091rcyx-pinctrl.dtsi:201:			/omit-if-no-ref/ analog_pb14: analog_pb14 {
+./dts/st/f0/stm32f091rcyx-pinctrl.dtsi:403:			/omit-if-no-ref/ i2c2_sda_pb14: i2c2_sda_pb14 {
+./dts/st/f0/stm32f091rcyx-pinctrl.dtsi:450:			/omit-if-no-ref/ i2s2_mck_pb14: i2s2_mck_pb14 {
+./dts/st/f0/stm32f091rcyx-pinctrl.dtsi:528:			/omit-if-no-ref/ spi2_miso_pb14: spi2_miso_pb14 {
+./dts/st/f0/stm32f091rcyx-pinctrl.dtsi:672:			/omit-if-no-ref/ tim1_ch2n_pb14: tim1_ch2n_pb14 {
+./dts/st/f0/stm32f091rcyx-pinctrl.dtsi:780:			/omit-if-no-ref/ tim15_ch1_pb14: tim15_ch1_pb14 {
+./dts/st/f0/stm32f091rcyx-pinctrl.dtsi:865:			/omit-if-no-ref/ usart3_de_pb14: usart3_de_pb14 {
+./dts/st/f0/stm32f091rcyx-pinctrl.dtsi:905:			/omit-if-no-ref/ usart3_rts_pb14: usart3_rts_pb14 {
+./dts/st/f0/stm32f091rchx-pinctrl.dtsi:201:			/omit-if-no-ref/ analog_pb14: analog_pb14 {
+./dts/st/f0/stm32f091rchx-pinctrl.dtsi:403:			/omit-if-no-ref/ i2c2_sda_pb14: i2c2_sda_pb14 {
+./dts/st/f0/stm32f091rchx-pinctrl.dtsi:450:			/omit-if-no-ref/ i2s2_mck_pb14: i2s2_mck_pb14 {
+./dts/st/f0/stm32f091rchx-pinctrl.dtsi:528:			/omit-if-no-ref/ spi2_miso_pb14: spi2_miso_pb14 {
+./dts/st/f0/stm32f091rchx-pinctrl.dtsi:672:			/omit-if-no-ref/ tim1_ch2n_pb14: tim1_ch2n_pb14 {
+./dts/st/f0/stm32f091rchx-pinctrl.dtsi:780:			/omit-if-no-ref/ tim15_ch1_pb14: tim15_ch1_pb14 {
+./dts/st/f0/stm32f091rchx-pinctrl.dtsi:865:			/omit-if-no-ref/ usart3_de_pb14: usart3_de_pb14 {
+./dts/st/f0/stm32f091rchx-pinctrl.dtsi:905:			/omit-if-no-ref/ usart3_rts_pb14: usart3_rts_pb14 {
+ted@localhost:~/projects/zephyr-project/modules/hal/stm32$
+
+
