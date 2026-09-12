@@ -29,24 +29,8 @@ LOG_MODULE_REGISTER(keeper, LOG_LEVEL_INF);
 
 #define COUNT_OF_RUN_TIME_SENSOR_LIMITS (HALL_SENSOR_COUNT * HALL_SENSOR_LIMIT_COUNT)
 
-// NOTE We're hoping not to need this enum, which highlights how the present
-// organizing of Hall sensors and sensor limits is hard-to-scale.  But for
-// the moment we use this enum in keeper_restore_hall_sensor_default_limits(),
-// which references each limit in sequence, and not in a loop.
-
-#if 0
-enum keeper_store_value_result {
-KEEPER_OP_1_SHIFT = 0,
-KEEPER_OP_2_SHIFT,
-KEEPER_OP_3_SHIFT,
-KEEPER_OP_4_SHIFT,
-
-KEEPER_OP_5_SHIFT,
-KEEPER_OP_6_SHIFT,
-KEEPER_OP_7_SHIFT,
-KEEPER_OP_8_SHIFT,
-};
-#endif
+// Array of Hall sensor default limits.  These may need to be tuned at run time
+// when lock ring assemblies have been handled.
 
 static uint32_t hall_sensor_default_limits[] = {
 	HALL_LIMIT_V_UNDER_S1,
@@ -89,12 +73,7 @@ static atomic_t dac_setting_ring_motor = ATOMIC_INIT(0);
 /**
  * @defgroup sensors
  *
- * @note Hall sensor limits are empirically determined readings, in this case
- *   ADC counts, above which or below which the firmware is written to
- *   treat such crossing as a physical state change in the lock ring.
- *   Further there are two limits which we / firmware treat as sensor error
- *   conditions.  Those values we should never see from an intact, working
- *   sensor.
+ * @note Hall sensor readings, in units of ADC counts and in millivolts
  */
 
 static atomic_t hall_1 = ATOMIC_INIT(0);
@@ -858,7 +837,7 @@ void keeper_get_motor_isense_ma(uint32_t* value)
 
 // motor digitnal status signal out
 // TODO [ ] Do we really need to store "not motor faila", or is it used
-//          immediately and volatile in a practical sense?
+//          immediately, and volatile in a practical sense?
 void keeper_set_not_motor_faila(const uint32_t value)
 {
 	atomic_set(&not_umb_on, (atomic_val_t)value);

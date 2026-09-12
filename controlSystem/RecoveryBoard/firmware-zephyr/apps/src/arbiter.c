@@ -335,56 +335,70 @@ Note Uf, Bf, Lf are fully qualified unlocked, in between and lock ring position
 determinations.
 */
 
+// TODO [ ] Replace commented calls to arb_mesg() with a variable to capture
+//          which ring position test results in a match of present sensor
+//          states.  (Writing a variable much faster than printing a message.)
+
 	// Look for possible "between" sensor values pairs first:
 	if ((hall_1_state == HALL_STATE_V_BETWEEN) || (hall_2_state == HALL_STATE_V_BETWEEN)) {
-		arb_mesg("H1");
-		*ring_position = RING_POS_BETWEEN_L_AND_U;
-		goto qualify_validity;
-	}
+		// arb_mesg("H1");                                  //  - - x - -  Vun (Vunder)
+		*ring_position = RING_POS_BETWEEN_L_AND_U;          //  - - x - -  Ina (Inactive)
+		goto qualify_validity;                              //  x x x x x  Bet (Between)
+	}                                                           //  - - x - -  Act (Active)
+	                                                            //  - - x - -  Ovr (Vover)
 
-	// Cover error possibilities:
-	if (hall_1_state == hall_2_state) {
-		arb_mesg("H2");
-		*ring_position = RING_POS_UNKNOWN;
-		goto unlock;
-	}
+	if ((hall_1_state == hall_2_state) &&
+		(hall_1_state != HALL_STATE_V_BETWEEN))
+	{                                                           //  x - - - -    X - X - -
+	 	// arb_mesg("H2");                                  //  - x - - -    - X X - -
+		*ring_position = RING_POS_UNKNOWN;                  //  - - - - -    X X X X X
+		goto unlock;                                        //  - - - x -    - - X X -
+	}                                                           //  - - - - x    - - X - X
 
-	// Cover row "Ina" locked positions with partial validity:
-	if ((hall_1_state == HALL_STATE_V_INACTIVE) &&
-	    ((hall_2_state == HALL_STATE_V_UNDER) ||
-	     (hall_2_state == HALL_STATE_V_OVER)))
+	if (((hall_1_state == HALL_STATE_V_UNDER) && (hall_2_state == HALL_STATE_V_OVER)) ||
+	    ((hall_1_state == HALL_STATE_V_OVER) && (hall_2_state == HALL_STATE_V_UNDER)))
 	{
-		arb_mesg("H3");
+		*ring_position = RING_POS_UNKNOWN;                  //  - - - - x    X - X - X
+		goto unlock;                                        //  - - - - -    - X X - -
+	}                                                           //  - - - - -    X X X X X
+                                                                    //  - - - - -    - - X X -
+                                                                    //  x - - - -    X - X - X
+	// Cover row "Ina" locked positions with partial validity:
+	if ((hall_1_state == HALL_STATE_V_INACTIVE) &&              //  - - - - -    X - X - X
+	    ((hall_2_state == HALL_STATE_V_UNDER) ||                //  x - - - x    X X X - X
+	     (hall_2_state == HALL_STATE_V_OVER)))                  //  - - - - -    X X X X X
+	{                                                           //  - - - - -    - - X X -
+		// arb_mesg("H3");                                  //  - - - - -    X - X - X
 		*ring_position = RING_POS_LOCKED;
 		goto unlock;
 	}
 
 	// Cover column "Ina" unlocked positions with partial validity:
-	if ((hall_2_state == HALL_STATE_V_INACTIVE) &&
-	    ((hall_1_state == HALL_STATE_V_UNDER) ||
-	     (hall_1_state == HALL_STATE_V_OVER)))
-	{
-		arb_mesg("H4");
+	if ((hall_2_state == HALL_STATE_V_INACTIVE) &&              //  - x - - -    X X X - X
+	    ((hall_1_state == HALL_STATE_V_UNDER) ||                //  - - - - -    X X X - X
+	     (hall_1_state == HALL_STATE_V_OVER)))                  //  - - - - -    X X X X X
+	{                                                           //  - - - - -    - - X X -
+		// arb_mesg("H4");                                  //  - x - - -    X X X - X
 		*ring_position = RING_POS_UNLOCKED;
 		goto unlock;
 	}
 
 	// Cover row "Act" unlocked positions with partial validity:
-	if ((hall_1_state == HALL_STATE_V_INACTIVE) &&
-	    ((hall_2_state == HALL_STATE_V_UNDER) ||
-	     (hall_2_state == HALL_STATE_V_OVER)))
-	{
-		arb_mesg("H5");
+	if ((hall_1_state == HALL_STATE_V_INACTIVE) &&              //  - - - - -    X X X - X
+	    ((hall_2_state == HALL_STATE_V_UNDER) ||                //  - - - - -    X X X - X
+	     (hall_2_state == HALL_STATE_V_OVER)))                  //  - - - - -    X X X X X
+	{                                                           //  x - - - x    X - X X X
+		// arb_mesg("H5");                                  //  - - - - -    X X X - X
 		*ring_position = RING_POS_UNLOCKED;
 		goto unlock;
 	}
 
 	// Cover column "Act" locked positions with partial validity:
-	if ((hall_2_state == HALL_STATE_V_ACTIVE) &&
-	    ((hall_1_state == HALL_STATE_V_UNDER) ||
-	     (hall_1_state == HALL_STATE_V_OVER)))
-	{
-		arb_mesg("H6");
+	if ((hall_2_state == HALL_STATE_V_ACTIVE) &&                //  - - - x -    X X X X X
+	    ((hall_1_state == HALL_STATE_V_UNDER) ||                //  - - - - -    X X X - X
+	     (hall_1_state == HALL_STATE_V_OVER)))                  //  - - - - -    X X X X X
+	{                                                           //  - - - - -    X - X X X
+		// arb_mesg("H6");                                  //  - - - x -    X X X X X
 		*ring_position = RING_POS_LOCKED;
 		goto unlock;
 	}
@@ -394,16 +408,31 @@ qualify_validity:
 		arb_mesg("both hall in between");
 		*ring_position = RING_POS_BETWEEN_FULLY_QUALIFIED;
 	}
+								    // - - - - -     X X X X X
+								    // - - - - -     X X X - X
+								    // - - x - -     X X X X X
+								    // - - - - -     X - X X X
+								    // - - - - -     X X X X X
 
 	if ((hall_1_state == HALL_STATE_V_ACTIVE) && (hall_2_state == HALL_STATE_V_INACTIVE)) {
 		arb_mesg("ring unlocked, fully qualified");
 		*ring_position = RING_POS_UNLOCKED_FULLY_QUALIFIED;
 	}
+								    // - - - - -     X X X X X
+								    // - - - - -     X X X - X
+								    // - - - - -     X X X X X
+								    // - x - - -     X X X X X
+								    // - - - - -     X X X X X
 
 	if ((hall_1_state == HALL_STATE_V_INACTIVE) && (hall_2_state == HALL_STATE_V_ACTIVE)) {
 		arb_mesg("ring locked, fully qualified");
 		*ring_position = RING_POS_LOCKED_FULLY_QUALIFIED;
 	}
+								    // - - - - -     X X X X X
+								    // - - - x -     X X X X X
+								    // - - - - -     X X X X X
+								    // - - - - -     X X X X X
+								    // - - - - -     X X X X X
 
 	/**
 	 * @note Seems a bit duplicative but ring position from Hall sensor pair
