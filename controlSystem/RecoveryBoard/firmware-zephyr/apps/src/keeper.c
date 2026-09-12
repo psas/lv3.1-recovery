@@ -11,6 +11,7 @@
 
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/shell/shell_uart.h>
 
 #include <stdlib.h>
 
@@ -21,10 +22,19 @@ LOG_MODULE_REGISTER(keeper, LOG_LEVEL_INF);
 //----------------------------------------------------------------------
 
 // There happen to be eight Hall sensor limit values to store, and to retrieve
-// from flash memory.  For "within this file" house keeping, add symbols to
-// store bit-wise left shift values.  These are used to track store and retrieve
-// errors, to allow for attempting further retrieve ops even when some fail.
+// from flash memory.  For error tracking in this file, add symbols to
+// store bit-wise left shift values.  Next two macros are used to track store
+// and retrieve errors, to allow for attempting further operations even when
+// some fail.
 
+#define COUNT_OF_RUN_TIME_SENSOR_LIMITS (HALL_SENSOR_COUNT * HALL_SENSOR_LIMIT_COUNT)
+
+// NOTE We're hoping not to need this enum, which highlights how the present
+// organizing of Hall sensors and sensor limits is hard-to-scale.  But for
+// the moment we use this enum in keeper_restore_hall_sensor_default_limits(),
+// which references each limit in sequence, and not in a loop.
+
+#if 0
 enum keeper_store_value_result {
 KEEPER_OP_1_SHIFT = 0,
 KEEPER_OP_2_SHIFT,
@@ -35,8 +45,18 @@ KEEPER_OP_5_SHIFT,
 KEEPER_OP_6_SHIFT,
 KEEPER_OP_7_SHIFT,
 KEEPER_OP_8_SHIFT,
+};
+#endif
 
-COUNT_OF_STORE_RESULTS,
+static uint32_t hall_sensor_default_limits[] = {
+	HALL_LIMIT_V_UNDER_S1,
+	HALL_LIMIT_V_INACTIVE_S1,
+	HALL_LIMIT_V_BETWEEN_S1,
+	HALL_LIMIT_V_ACTIVE_S1,
+	HALL_LIMIT_V_UNDER_S2,
+	HALL_LIMIT_V_INACTIVE_S2,
+	HALL_LIMIT_V_BETWEEN_S2,
+	HALL_LIMIT_V_ACTIVE_S2
 };
 
 /**
@@ -82,6 +102,9 @@ static atomic_t hall_2 = ATOMIC_INIT(0);
 static atomic_t hall_1_mv = ATOMIC_INIT(0);
 static atomic_t hall_2_mv = ATOMIC_INIT(0);
 
+// TODO [ ] Expand this structure to include settings keynames per limit value.
+// TODO [ ] Consider adding a default limit value member to this struct:
+#if 1
 struct hall_sensor_limits {
 	atomic_t v_under;
 	atomic_t inactive;
@@ -90,8 +113,10 @@ struct hall_sensor_limits {
 };
 
 static struct hall_sensor_limits hall_sensor_fs[HALL_SENSOR_COUNT];
+#endif
 
-// App determines lock ring position at this interval of time:
+// App determines lock ring position at this interval of time.  Possible to
+// update at run time for tuning purposes, using the CLI:
 static atomic_t ring_pos_interval = ATOMIC_INIT(0);
 
 // Counts of times ring locked and unlocked:
@@ -155,14 +180,20 @@ static bool keeper_initialized_fs = false;
  * @brief Routine to set a given Hall sensor limit, a cutoff value
  *   measured in ADC counts, for each hall sensor in an ERS board.
  *
- * @retval 0 when sensor id, limit id in bounds.
+ * @param sensor_idx A numeric Hall sensor identifier.
+ * @param limit_idx A numeric sensor limit identifier.
+ * @param val The value of the sensor limit to write to data store.
  *
+ * @retval 0 when sensor id, limit id in bounds.
  * @retval -EINVAL otherwise.
  */
 
 static int32_t set_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
 				     const enum hall_sensor_named_limits limit_idx,
 				     const uint32_t val);
+
+// Diagnostics without Zephyr shell echoing:
+static const struct shell* shell_ptr_fs;
 
 //----------------------------------------------------------------------
 // - SECTION - routines
@@ -440,8 +471,8 @@ int32_t keeper_cmd_store_hall_limits(const struct shell *shell, size_t argc, cha
 	ARG_UNUSED(argc);
 	ARG_UNUSED(argv);
 
-	// Declare and define an array of Hall sensor limit values,
-	// which will be used for each Hall sensor in the system:
+	// Declare and define an array of Hall sensor limit values, for value
+	// handling in this routine:
 	uint32_t hall_limit[HALL_SENSOR_LIMIT_COUNT] = { 0 };
 
 	// Track any errors in get and store operations, so that we can at
@@ -457,12 +488,13 @@ int32_t keeper_cmd_store_hall_limits(const struct shell *shell, size_t argc, cha
 		for (uint32_t j = 0; j < HALL_SENSOR_LIMIT_COUNT; j++) {
 			rc = keeper_get_hall_sensor_limit(i, j, &hall_limit[j]);
 
-			LOG_INF("- DEV 0906 - for Hall %d limit %d, error flag bit shift is %d", i, j, ERR_FLAG_BIT_SHIFT);
+			LOG_INF("- DEV 0906 - for Hall %d limit %d, error flag bit shift is %d", i,
+					j, ERR_FLAG_BIT_SHIFT);
 
 			if (rc < 0) {
 				op = KEEPER_OP_GET;
 				get_errors |= track_err(op, ERR_FLAG_BIT_SHIFT,
-					       	COUNT_OF_STORE_RESULTS, rc);
+						COUNT_OF_RUN_TIME_SENSOR_LIMITS, rc);
 				LOG_ERR("Failed to get Hall %d limit %d, err %d", i, j, rc);
 				// When get op fails, do not attempt to store anything:
 				continue;
@@ -473,10 +505,12 @@ int32_t keeper_cmd_store_hall_limits(const struct shell *shell, size_t argc, cha
 			if (rc < 0) {
 				op = KEEPER_OP_STORE;
 				store_errors |= track_err(op, ERR_FLAG_BIT_SHIFT,
-					       	COUNT_OF_STORE_RESULTS, rc);
+						COUNT_OF_RUN_TIME_SENSOR_LIMITS, rc);
 			}
 		}
 	}
+
+#undef ERR_FLAG_BIT_SHIFT
 
 	if (get_errors) {
 		shell_fprintf(shell, SHELL_ERROR, "Failed to store some Hall sensor limits,\n");
@@ -919,21 +953,44 @@ void keeper_get_diag_mode(uint32_t* value)
 // - SECTION - initialization
 //----------------------------------------------------------------------
 
-int32_t keeper_set_hall_sensor_default_limits(void)
+int32_t keeper_restore_hall_sensor_default_limits(void)
 {
-// TODO [ ] replace the logical OR'ing of errors with better logic
-
+	uint32_t i = 0;
 	int32_t rc = 0;
-	
-	rc = set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_UNDER, HALL_LIMIT_V_UNDER_S1);
-	rc |= set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_INACTIVE, HALL_LIMIT_V_INACTIVE_S1);
-	rc |= set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_BETWEEN, HALL_LIMIT_V_BETWEEN_S1);
-	rc |= set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_ACTIVE, HALL_LIMIT_V_ACTIVE_S1);
+	// Sensor limit operation is to write default limits to keeper module:
+	// (In context of keeper, to read is to get, to write is to set.)
+	enum data_operation op = KEEPER_OP_SET;
+	int32_t set_errors = 0;
 
-	rc |= set_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_UNDER, HALL_LIMIT_V_UNDER_S2);
-	rc |= set_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_INACTIVE, HALL_LIMIT_V_INACTIVE_S2);
-	rc |= set_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_BETWEEN, HALL_LIMIT_V_BETWEEN_S2);
-	rc |= set_hall_sensor_limit(HALL_SENSOR_2, HALL_LIMIT_V_ACTIVE, HALL_LIMIT_V_ACTIVE_S2);
+#define ERR_FLAG_BIT_SHIFT (limit_idx + HALL_SENSOR_LIMIT_COUNT * sensor_idx)
+
+        for (uint32_t sensor_idx = 0; sensor_idx < HALL_SENSOR_COUNT; sensor_idx++) {
+                for (uint32_t limit_idx = 0; limit_idx < HALL_SENSOR_LIMIT_COUNT; limit_idx++) {
+			// Compute index to array of default sensor limits:
+			i = limit_idx + HALL_SENSOR_LIMIT_COUNT * sensor_idx;
+
+			shell_fprintf(shell_ptr_fs, SHELL_NORMAL, "Restoring "
+				       "sensor limit value %u (i = %u) . . .\n",
+				       hall_sensor_default_limits[i], i);
+
+			rc = set_hall_sensor_limit(sensor_idx, limit_idx,
+					hall_sensor_default_limits[i]);
+
+			if (rc < 0) {
+				set_errors |= track_err(op, ERR_FLAG_BIT_SHIFT,
+					COUNT_OF_RUN_TIME_SENSOR_LIMITS, rc);
+				continue;
+			}
+		}
+	}
+
+	if (set_errors != 0) {
+		shell_fprintf(shell_ptr_fs, SHELL_ERROR, "Failed to restore"
+			       "some Hall sensor default limits,\n");
+	} else {
+		shell_fprintf(shell_ptr_fs, SHELL_NORMAL, "Restored %d Hall"
+				"sensor limit values.", i);
+	}
 
 	return rc;
 }
@@ -952,7 +1009,7 @@ static int32_t initialize_system_state_vars(void)
 	summary_state_fs.can_bus_ok = ATOMIC_INIT(0);
 	summary_state_fs.ready_flag = ATOMIC_INIT(0);
 
-	rc = keeper_set_hall_sensor_default_limits();
+	rc = keeper_restore_hall_sensor_default_limits();
 
 	if (rc != 0) {
 		LOG_ERR("Failed to set one or more of Hall limit default values, error %d", rc);
@@ -991,7 +1048,12 @@ static int32_t initialize_system_state_vars(void)
 int32_t keeper_init(void)
 {
 	k_mutex_init(&hall_sensors_mtx);
+
+	shell_ptr_fs = shell_backend_uart_get_ptr();
+        __ASSERT(shell_ptr_fs != NULL, "Failed to get shell backend.");
+
 	initialize_system_state_vars();
 	keeper_initialized_fs = true;
+
 	return 0;
 }

@@ -119,7 +119,7 @@ void arbiter_cmd_set_default_limits(const struct shell *shell, size_t argc, char
 	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
 
 	shell_print(shell, "Setting Hall sensor limit default values . . .");
-	rc = keeper_set_hall_sensor_default_limits();
+	rc = keeper_restore_hall_sensor_default_limits();
 	if (rc != 0) {
 		LOG_ERR("Failed to set hall limit default values, err %d", rc);
 	} else {

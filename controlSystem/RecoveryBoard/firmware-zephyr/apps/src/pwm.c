@@ -316,7 +316,6 @@ int32_t pwm_init(void)
 
 // For shell pointer use see:
 // https://blog.mbedded.ninja/programming/operating-systems/zephyr/shell/
-	// const struct shell *shell;
 	shell_ptr_fs = shell_backend_uart_get_ptr();
 	__ASSERT(shell_ptr_fs != NULL, "Failed to get shell backend.");
 

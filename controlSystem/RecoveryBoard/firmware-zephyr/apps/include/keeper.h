@@ -55,7 +55,7 @@ int32_t keeper_get_hall_sensor_limit(const enum hall_sensor_instances sensor_idx
  * @brief Routine to restore hall sensor limits to default values.
  */
 
-int32_t keeper_set_hall_sensor_default_limits(void);
+int32_t keeper_restore_hall_sensor_default_limits(void);
 
 /**
  * @brief Following four routines implement custom Zephyr shell commands.  As
