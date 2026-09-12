@@ -1,19 +1,20 @@
 /**
- * Copyright (c) 2025 Portland State Aerospace Society
- *
- * SPDX-License-Identifier: Apache-2.0
+ * @file
+ * @ ERS Zephyr application shell (command line interface) module
  */
 
 /**
  * @brief ERS drogue and main app uses Zephyr shell facility and adds custom
  *   commands to it.
  *
- * @note The code in this module is a mix of Zephyr "command set up" macros
- *   and wrapper functions.  Those wrappers often call more detailed functions
- *   in their respective ERS application modules.
+ * @note The code in this module contains Zephyr shell macros, mostly (or
+ *  entirely) to declare custom commands.  These are added to a minimal set of
+ *  Zephyr built-in shell commands.  These have been minimized through Kconfig
+ *  symbol choices.
  *
- * @note Zephyr shell commands execute in whichever thread or workqueue Zephyr
- *   RTOS is configured to run its shell facility.
+ * @note This module also contains some command function bodies, and some
+ *  "trampoline" functions, to jump to functions which to do the actual work,
+ *  and which are defined in other firmware modules of this app.
  */
 
 #include "adc-ers.h"
@@ -236,6 +237,29 @@ SHELL_CMD_REGISTER(ers, &ers_cmds, "- ERS - development commands", NULL);
 // - COMMAND SET - Hall sensor commands
 //----------------------------------------------------------------------
 
+static int cmd_read_hall_sensors(const struct shell *shell, size_t argc, char *argv[])
+{
+        ARG_UNUSED(argc); ARG_UNUSED(argv);
+
+	uint32_t hall_1_reading = 0;
+	uint32_t hall_2_reading = 0;
+	enum lock_ring_position pos;
+	int32_t rc = 0;
+
+	rc = keeper_get_both_hall_sensors(&hall_1_reading, &hall_2_reading);
+	if (rc < 0) {
+		shell_fprintf(shell, SHELL_ERROR, "Failed to get Hall readings, err %d\n", rc);
+		goto done;
+	}
+	shell_fprintf(shell, SHELL_NORMAL, "Hall sensor 1 reading: %d\n", hall_1_reading);
+	shell_fprintf(shell, SHELL_NORMAL, "Hall sensor 2 reading: %d\n", hall_2_reading);
+
+	keeper_get_ring_position(&pos);
+	shell_fprintf(shell, SHELL_NORMAL, "present ring position is %d\n", pos);
+done:
+	return rc;
+}
+
 /**
  * @note Hall sensor commands referenced in this section are implemented in a
  *   separate ERS source file.
@@ -245,6 +269,9 @@ SHELL_SUBCMD_SET_CREATE(sub_section_hall, (hall));
 
 /* Create a set of one subcommands for 'hall' command */
 SHELL_SUBCMD_SET_CREATE(sub_section_hall_set, (hall, set));
+
+SHELL_SUBCMD_ADD((hall), read, &sub_section_hall, "read Hall sensors",
+  cmd_read_hall_sensors, 1, 0);
 
 SHELL_SUBCMD_ADD((hall), show, &sub_section_hall,
   "show Hall sensor limit values (ADC counts 0..4095)", arbiter_show_hall_state_limits, 1, 0);
