@@ -84,7 +84,7 @@ static atomic_t hall_2_mv = ATOMIC_INIT(0);
 
 // TODO [ ] Expand this structure to include settings keynames per limit value.
 // TODO [ ] Consider adding a default limit value member to this struct:
-#if 1
+
 struct hall_sensor_limits {
 	atomic_t v_under;
 	atomic_t inactive;
@@ -93,7 +93,6 @@ struct hall_sensor_limits {
 };
 
 static struct hall_sensor_limits hall_sensor_fs[HALL_SENSOR_COUNT];
-#endif
 
 // App determines lock ring position at this interval of time.  Possible to
 // update at run time for tuning purposes, using the CLI:
@@ -105,8 +104,8 @@ static atomic_t ring_unlock_events = ATOMIC_INIT(0);
 
 // Summary state variables (values usually determined by tests of simpler data):
 
-// TODO [ ] Consider factoring summary state variables into a structure,
-//  this may improve code readability and mainenance:
+// TODO [ ] Decide whether to hold ERS drogue and main chute summary state
+//  variables in a struct, or in individual atomic type vars:
 
 // QUESTION - put battery voltage in struct of ERS states?
 static atomic_t batt_ok = ATOMIC_INIT(0);
@@ -114,7 +113,6 @@ static atomic_t shore_power_ok = ATOMIC_INIT(0);
 static atomic_t can_bus_ok = ATOMIC_INIT(0);
 static atomic_t rocket_ready = ATOMIC_INIT(0);
 
-// TODO [ ] create public API getter for CAN module to access ERS summary state.
 struct ers_summary_state {
 	atomic_t ring_position;
 	atomic_t battery_voltage;
@@ -815,8 +813,8 @@ void keeper_get_motor_isense_ma(uint32_t* value)
 }
 
 // motor digitnal status signal out
-// TODO [ ] Do we really need to store "not motor faila", or is it used
-//          immediately, and volatile in a practical sense?
+// Note:  motor faila setter and getter in place for use with debugging command
+//  which is not yet implemented.
 void keeper_set_not_motor_faila(const uint32_t value)
 {
 	atomic_set(&not_umb_on, (atomic_val_t)value);
