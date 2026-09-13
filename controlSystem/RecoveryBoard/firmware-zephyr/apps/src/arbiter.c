@@ -301,7 +301,7 @@ int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 
 	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
 
-	rc = keeper_get_both_hall_sensors(&hall_1_reading, &hall_2_reading);
+	rc = keeper_get_both_hall_readings_in_mv(&hall_1_reading, &hall_2_reading);
 	if (rc != 0) {
 		LOG_ERR("determine ring position could not get hall readings, err %d", rc);
 		goto unlock;

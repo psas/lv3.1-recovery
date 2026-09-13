@@ -1,0 +1,24 @@
+# @file
+# @brief App configuration for ERS keeper module, a data store.
+
+menuconfig ERS_KEEPER_MODULE
+	bool "ERS keeper module settings"
+	default y
+	help
+	  Enable and configure ERS keeper module.  Enabled by default as it is
+	  critical to correct, full system operation.
+
+if ERS_KEEPER_MODULE
+
+config KEEPER_API_TIMEOUT_MS
+	int "Keeper public API timeout in milliseconds"
+	default 1500
+	help
+	  Set a timeout measured in milliseconds for the ERS Zephry keeper
+	  module public API.
+
+endif # ERS_KEEPER_MODULE
+
+module = keeper
+module-str = ERS keeper module
+source "subsys/logging/Kconfig.template.log_config"

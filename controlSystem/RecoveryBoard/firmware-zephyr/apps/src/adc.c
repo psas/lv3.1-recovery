@@ -103,13 +103,6 @@ int32_t adc_read_channels(const enum ers_adc_values idx_begin,
 	}
 
 unlock:
-#if 0
-	rc = k_mutex_unlock(&adc_mtx);
-	if (rc != 0) {
-		LOG_ERR("Failed to unlock mutex in ADC read channels, err %d", rc);
-		return rc;
-	}
-#endif // 0
 	ERS_MUTEX_UNLOCK(adc_mtx, ADC module);
 done:
 	return rc;

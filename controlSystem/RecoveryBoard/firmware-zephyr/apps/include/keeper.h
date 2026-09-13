@@ -157,11 +157,28 @@ void keeper_set_batt_decivolts(const uint32_t value);
 void keeper_get_batt_decivolts(uint32_t* value);
 
 /**
+ * @brief Write Hall sensor readings, in ADC counts, to keeper data store.
  * @return 0 on success to obtain mutex and to set sensor values
- * @return -ESRCH when module not initialized
+ * @return -FAULT when module not initialized
  */
 
-int32_t keeper_set_both_hall_sensors(const uint32_t value_1, const uint32_t value_2); // TODO [ ] Check whether needed
+int32_t keeper_set_both_hall_readings(const uint32_t value_1, const uint32_t value_2); // TODO [ ] Check whether needed
+
+/**
+ * @brief Return latest Hall sensor readings, in ADC counts.
+ * @return 0 on success to obtain mutex and to get sensor values
+ * @return -FAULT when module not initialized
+ */
+
+int32_t keeper_get_both_hall_readings(uint32_t *value_1, uint32_t *value_2);
+
+/**
+ * @brief Return latest Hall sensor readings, in millivolts.
+ * @return 0 on success.
+ * @return -FAULT when module not initialized.
+ */
+
+int32_t keeper_get_both_hall_readings_in_mv(uint32_t *value_1, uint32_t *value_2);
 
 /**
  * @brief API to set any one of ADC channel readings
@@ -175,13 +192,7 @@ int32_t keeper_set_adc_value(const enum ers_adc_values idx, const uint32_t value
 
 int32_t keeper_set_adc_value_in_mv(const enum ers_adc_values_in_mv idx, const uint32_t val);  // TODO [ ] Check whether needed
 
-// - DATA GROUP - (3) locking ring
-
-/**
- * @return 0 on success to obtain mutex and to get sensor values
- * @return -ESRCH when module not initialized
- */
-int32_t keeper_get_both_hall_sensors(uint32_t *value_1, uint32_t *value_2);
+// - DATA GROUP - lock ring
 
 void keeper_set_ring_pos_detection_interval(const uint32_t timeout_ms);
 void keeper_get_ring_pos_detection_interval(uint32_t *timeout_ms);

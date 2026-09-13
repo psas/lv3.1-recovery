@@ -246,11 +246,18 @@ static int cmd_read_hall_sensors(const struct shell *shell, size_t argc, char *a
 	enum lock_ring_position pos;
 	int32_t rc = 0;
 
-	rc = keeper_get_both_hall_sensors(&hall_1_reading, &hall_2_reading);
+	rc = keeper_get_both_hall_readings(&hall_1_reading, &hall_2_reading);
 	if (rc < 0) {
 		shell_fprintf(shell, SHELL_ERROR, "Failed to get Hall readings, err %d\n", rc);
 		goto done;
 	}
+	shell_fprintf(shell, SHELL_NORMAL, "Calling 'get both Hall readings':\n");
+	shell_fprintf(shell, SHELL_NORMAL, "Hall sensor 1 reading: %d\n", hall_1_reading);
+	shell_fprintf(shell, SHELL_NORMAL, "Hall sensor 2 reading: %d\n", hall_2_reading);
+
+	keeper_get_hall_1(&hall_1_reading);
+	keeper_get_hall_2(&hall_2_reading);
+	shell_fprintf(shell, SHELL_NORMAL, "Calling Hall 1 getting and Hall 2 getter:':\n");
 	shell_fprintf(shell, SHELL_NORMAL, "Hall sensor 1 reading: %d\n", hall_1_reading);
 	shell_fprintf(shell, SHELL_NORMAL, "Hall sensor 2 reading: %d\n", hall_2_reading);
 

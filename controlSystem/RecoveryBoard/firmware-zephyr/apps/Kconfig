@@ -70,20 +70,7 @@ config PWM_THREAD_PRIORITY
           Priority of thread to control PWM block, used to generate audible
 	  tones.
 
-# TODO [ ] Give all ERS firmware modules a Zephyr log config reference here:
-
-# ADC module has a dedicated Kconfig file
-
-# ARBITER module has a dedicated Kconfig file
-
-# CAN module has a dedicated Kconfig file
-
-# DAC module has a dedicated Kconfig file
-
-module = ERS_MOTOR_CONTROL
-module-str = motor control module
-source "subsys/logging/Kconfig.template.log_config"
-
+# Module Zephyr logging support
 module = ERS_GPIO
 module-str = ERS GPIO module
 source "subsys/logging/Kconfig.template.log_config"
@@ -92,15 +79,12 @@ module = ERS_SETTINGS
 module-str = ERS settings module
 source "subsys/logging/Kconfig.template.log_config"
 
-module = STATUS_LED
-module-str = ERS status led
-source "subsys/logging/Kconfig.template.log_config"
-
-# ERS application specific
+# ERS module Kconfig files
 rsource "Kconfig.adc"
 rsource "Kconfig.arbiter"
 rsource "Kconfig.can"
 rsource "Kconfig.dac"
+rsource "Kconfig.keeper"
 rsource "Kconfig.motor_control"
 rsource "Kconfig.status_led"
 rsource "Kconfig.pwm"

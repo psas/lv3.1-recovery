@@ -43,6 +43,6 @@ config MC_COUNT_RING_CHECKS
 
 endif # ERS_MOTOR_CONTROL
 
-module = ERS_MOTOR_CONTROL
-module-str = ERS motor control
+module = MOTOR_CONTROL
+module-str = motor control module
 source "subsys/logging/Kconfig.template.log_config"

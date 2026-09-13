@@ -4,6 +4,7 @@
  */
 
 #include "arbiter.h"
+#include "ers-util.h"
 #include "hall-and-ring.h"
 #include "keeper.h"
 #include "status-led.h"
@@ -669,19 +670,34 @@ int32_t keeper_set_both_hall_sensors(const uint32_t value_1, const uint32_t valu
 	return 0;
 }
 
-int32_t keeper_get_both_hall_sensors(uint32_t *value_1, uint32_t *value_2)
+int32_t keeper_get_both_hall_readings(uint32_t *value_1, uint32_t *value_2)
 {
 	int32_t rc = 0;
-
-	k_mutex_lock(&hall_sensors_mtx, K_FOREVER);
-	if (rc != 0) {
-		LOG_ERR("Failed to lock mutex, get hall sensor vals, err %d", rc);
-		goto done;
-	}
+	ERS_MUTEX_LOCK(hall_sensors_mtx, CONFIG_KEEPER_API_TIMEOUT_MS, keeper);
 
 	if (!keeper_initialized_fs) {
 		LOG_ERR("Data keeper module not initialized!");
-		rc = -ESRCH;
+		rc = -EFAULT;
+		goto unlock;
+	}
+
+	keeper_get_hall_1(value_1);
+	keeper_get_hall_2(value_2);
+
+unlock:
+	ERS_MUTEX_UNLOCK(hall_sensors_mtx, keeper);
+done:
+	return 0;
+}
+
+int32_t keeper_get_both_hall_readings_in_mv(uint32_t *value_1, uint32_t *value_2)
+{
+	int32_t rc = 0;
+	ERS_MUTEX_LOCK(hall_sensors_mtx, CONFIG_KEEPER_API_TIMEOUT_MS, keeper);
+
+	if (!keeper_initialized_fs) {
+		LOG_ERR("Data keeper module not initialized!");
+		rc = -EFAULT;
 		goto unlock;
 	}
 
@@ -689,11 +705,7 @@ int32_t keeper_get_both_hall_sensors(uint32_t *value_1, uint32_t *value_2)
 	keeper_get_hall_2_mv(value_2);
 
 unlock:
-	k_mutex_unlock(&hall_sensors_mtx);
-	if (rc != 0) {
-		LOG_ERR("Failed to unlock mutex, get hall sensor vals, err %d", rc);
-		goto done;
-	}
+	ERS_MUTEX_UNLOCK(hall_sensors_mtx, keeper);
 done:
 	return 0;
 }

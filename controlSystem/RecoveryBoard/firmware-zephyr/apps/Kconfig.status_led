@@ -17,6 +17,6 @@ config STATUS_LED_MUTEX_TIMEOUT_MS
 
 endif # ERS_STATUS_LED
 
-module = ERS_STATUS_LED
+module = STATUS_LED
 module-str = status LED module
 source "subsys/logging/Kconfig.template.log_config"
