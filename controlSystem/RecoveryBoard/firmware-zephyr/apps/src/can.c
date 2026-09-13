@@ -24,11 +24,9 @@
 
 LOG_MODULE_REGISTER(ers_can, CONFIG_CAN_LOG_LEVEL);
 
-K_THREAD_STACK_DEFINE(rx_thread_stack, CONFIG_CAN_RX_THREAD_STACK_SIZE);
-
-struct k_thread rx_thread_data;
-
-// #define SLEEP_TIME K_MSEC(250)
+//----------------------------------------------------------------------
+// - SECTION - defines
+//----------------------------------------------------------------------
 
 /**
  * @note CAN frame ids for ERS:  while ERS sender won't listen for
@@ -57,13 +55,13 @@ struct k_thread rx_thread_data;
 #error "Need one of board variant 'drogue' or 'main' chute specified for build!"
 #endif
 
-#define HEARTBEAT_PERIOD_S 1
-
-#define CAN_BUS_HEALTH_CHECK_PERIOD_SEC 2
-
 //----------------------------------------------------------------------
 // - SECTION - file scoped
 //----------------------------------------------------------------------
+
+K_THREAD_STACK_DEFINE(rx_thread_stack, CONFIG_CAN_RX_THREAD_STACK_SIZE);
+
+struct k_thread rx_thread_data;
 
 const struct device *const can_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_canbus));
 
@@ -186,7 +184,7 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
 	uint32_t batt_ok_flag = 0;
 	keeper_get_batt_ok(&batt_ok_flag);
 
-	// (4 . . . drogue chute board detected power status)
+	// (4)
 	uint32_t not_umb_on = 0;
 	keeper_get_not_umb_on(&not_umb_on);
 
@@ -194,53 +192,25 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
 	uint32_t can_bus_ok_flag = 0;            // define local var in "prep and send status frame"
 	keeper_get_can_bus_ok(&can_bus_ok_flag);
 
+	// (6)
+	uint32_t rocket_ready = 0;
+	keeper_get_ready_state(&rocket_ready);
+
 	// ring status: 0 = uninitialized, 1 = unlocked, 2 = in between, 3 = locked, 4 = error
 	ers_state_vars_fs[IDX_ERS_RING_STATE] = (uint8_t)(ring_state);
 	ers_state_vars_fs[IDX_ERS_BATT_READ] = (uint8_t)(battery_voltage & 0xFF);
 	ers_state_vars_fs[IDX_ERS_BATT_OK] = batt_ok_flag;
 	ers_state_vars_fs[IDX_ERS_SHORE_POW_STATUS] = ((uint8_t)(not_umb_on) & 0x1);
 	ers_state_vars_fs[IDX_ERS_CAN_BUS_OK] = (uint8_t)(can_bus_ok_flag & 0xFF);
-	// ers_state_vars_fs[IDX_ERS_READY] = 0;
+	ers_state_vars_fs[IDX_ERS_READY] =  (uint8_t)(rocket_ready & 0xff);
 	ers_state_vars_fs[IDX_RESERVED_01] = 0;
 	ers_state_vars_fs[IDX_RESERVED_02] = 0;
-
-	// We can sanity check "rocket ready" status here, but the check
-	// necessarily duplicates the logical test of whether the rocket is
-	// ready.
-	//
-	// Note that the arbiter module is where "rocket ready" is determined.
-	//
-	// There is also a question of race conditions, where some inputs may
-	// have changed since rocket ready last determined.
-
-	ers_state_vars_fs[IDX_ERS_READY] = 
-	  (ers_state_vars_fs[IDX_ERS_RING_STATE] == 3) &&
-	   ers_state_vars_fs[IDX_ERS_BATT_OK] &&
-	   ers_state_vars_fs[IDX_ERS_CAN_BUS_OK];
 
 	memcpy(ers_status_frame.data, ers_state_vars_fs, sizeof(ers_state_vars_fs));
 
 	can_send(can_dev, &ers_status_frame, K_FOREVER,
 		 tx_irq_callback,
 		 "ERS status frame");
-
-//----------------------------------------------------------------------
-// - ERS CAN status frame summary
-//----------------------------------------------------------------------
-
-#if 0
-        LOG_INF("                  ringst battrd battok pwrsts canok  ready  reserv reserv");
-	LOG_INF("drogue CAN frame:  0x%02X   0x%02X   0x%02X   0x%02X   0x%02X   0x%02X   0x%02X"
-	"   0x%02X",
-	  ers_state_vars_fs[IDX_ERS_RING_STATE],
-	  ers_state_vars_fs[IDX_ERS_BATT_READ],
-	  ers_state_vars_fs[IDX_ERS_BATT_OK],
-	  ers_state_vars_fs[IDX_ERS_SHORE_POW_STATUS],
-	  ers_state_vars_fs[IDX_ERS_CAN_BUS_OK],
-	  ers_state_vars_fs[IDX_ERS_READY],
-	  ers_state_vars_fs[IDX_RESERVED_01],
-	  ers_state_vars_fs[IDX_RESERVED_02]);
-#endif // 0 . . . 2026-02-15
 }
 
 K_WORK_DEFINE(prep_and_send_status_frame_work, prep_and_send_status_frame_work_handler);
@@ -356,17 +326,6 @@ void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 
 		switch (frame.id)
 		{
-		// TODO [ ] Find a way to make the commented out heartbeat
-		//          messages easy to turn on and off, or remove them:
-		case MSG_ID_TELEMETRUM_SENDER:
-			// LOG_INF("RX %X - telemetrum heartbeat", frame.id);
-			break;
-		case MSG_ID_DROGUE_HEARTBEAT:
-			// LOG_INF("RX %X - drogue chute heartbeat", frame.id);
-			break;
-		case MSG_ID_MAIN_HEARTBEAT:
-			// LOG_INF("RX %X - main chute heartbeat", frame.id);
-			break;
 #if defined(ERS_BOARD_VARIANT_DROGUE_CHUTE)
 		case MSG_ID_UNLOCK_DROGUE_CHUTE:
 			LOG_INF("RX %X - got cmd unlock drogue chute", frame.id);
@@ -382,25 +341,6 @@ void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 		default:
 			LOG_WRN("RX %X <- unrecognized CAN frame id", frame.id);
 		}
-	}
-}
-
-// TODO [ ] Check whether this function can be qualified static:
-char *state_to_str(enum can_state state)
-{
-	switch (state) {
-	case CAN_STATE_ERROR_ACTIVE:
-		return "error-active";
-	case CAN_STATE_ERROR_WARNING:
-		return "error-warning";
-	case CAN_STATE_ERROR_PASSIVE:
-		return "error-passive";
-	case CAN_STATE_BUS_OFF:
-		return "bus-off";
-	case CAN_STATE_STOPPED:
-		return "stopped";
-	default:
-		return "unknown";
 	}
 }
 
@@ -423,10 +363,11 @@ int32_t ers_can_init(void)
 		return -EAGAIN;
 	}
 
-	k_timer_start(&telemetrum_check_timer, K_SECONDS(CAN_BUS_HEALTH_CHECK_PERIOD_SEC),
-			K_SECONDS(CAN_BUS_HEALTH_CHECK_PERIOD_SEC));
+	k_timer_start(&telemetrum_check_timer, K_SECONDS(CONFIG_CAN_BUS_HEALTH_CHECK_PERIOD_SEC),
+			K_SECONDS(CONFIG_CAN_BUS_HEALTH_CHECK_PERIOD_SEC));
 
-	k_timer_start(&heartbeat_timer, K_SECONDS(HEARTBEAT_PERIOD_S), K_SECONDS(HEARTBEAT_PERIOD_S));
+	k_timer_start(&heartbeat_timer, K_SECONDS(CONFIG_CAN_HEARTBEAT_PERIOD_S),
+			K_SECONDS(CONFIG_CAN_HEARTBEAT_PERIOD_S));
 
 	rx_tid = k_thread_create(&rx_thread_data, rx_thread_stack,
 				 K_THREAD_STACK_SIZEOF(rx_thread_stack),

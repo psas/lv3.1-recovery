@@ -186,12 +186,6 @@ int32_t keeper_get_both_hall_readings_in_mv(uint32_t *value_1, uint32_t *value_2
 
 int32_t keeper_set_adc_value(const enum ers_adc_values idx, const uint32_t value);
 
-/**
- * @brief API to set any one of ADC channel readings converted to millivolts
- */
-
-int32_t keeper_set_adc_value_in_mv(const enum ers_adc_values_in_mv idx, const uint32_t val);  // TODO [ ] Check whether needed
-
 // - DATA GROUP - lock ring
 
 void keeper_set_ring_pos_detection_interval(const uint32_t timeout_ms);
@@ -207,7 +201,7 @@ void keeper_get_lock_event_count(uint32_t *count);        // <- TODO [ ] check w
 void keeper_set_unlock_event_count(const uint32_t count);
 void keeper_get_unlock_event_count(uint32_t *count);      // <- TODO [ ] check whether used.
 
-// - DATA GROUP - (4) motor
+// - DATA GROUP - motor
 
 void keeper_set_DAC_val_for_ring_motor(const uint32_t value);
 void keeper_get_DAC_val_for_ring_motor(uint32_t *value);

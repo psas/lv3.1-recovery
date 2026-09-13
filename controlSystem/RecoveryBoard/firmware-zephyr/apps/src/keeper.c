@@ -289,42 +289,9 @@ int32_t keeper_set_adc_value(const enum ers_adc_values idx, const uint32_t val)
 	return 0;
 }
 
-int32_t keeper_set_adc_value_in_mv(const enum ers_adc_values_in_mv idx, const uint32_t val)
-{
-	int32_t rc = 0;
-
-	switch (idx)
-	{
-        case ADC_READING_BATT_READ_MV:
-		rc = arbiter_calc_battery_voltage();
-		if (rc < 0) {
-			LOG_ERR("Failed to calculate battery voltage, err %d", rc);
-			break;
-		}
-		keeper_set_batt_millivolts(val);
-		break;
-        case ADC_READING_MOTOR_ISENSE_MV:
-		keeper_set_motor_isense_ma(val); // a case body in keeper_set_adc_value_in_mv()
-		break;
-        case ADC_READING_HALL_1_MV:
-		keeper_set_hall_1_mv(val);
-		break;
-        case ADC_READING_HALL_2_MV:
-		keeper_set_hall_2_mv(val);
-		break;
-	default:
-		LOG_ERR("Asked to store value for undefined ADC channel %d", idx);
-		rc = -EINVAL;
-	}
-
-	return rc;
-}
-
 //----------------------------------------------------------------------
 // - SECTION - Hall sensor limits and states
 //----------------------------------------------------------------------
-
-// Routines set, get, store and retrieve Hall sensor limits
 
 int32_t keeper_cmd_set_limit_v_under(const struct shell *shell, size_t argc, char **argv)
 {
