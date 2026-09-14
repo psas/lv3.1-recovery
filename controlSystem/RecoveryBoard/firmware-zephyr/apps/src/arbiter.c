@@ -250,9 +250,9 @@ int32_t arbiter_calc_battery_voltage(void)
 
 	// TODO [ ] Consider making Kconfig symbols for terms in following
 	//          battery voltage formula:
-	battery_voltage = (double)((((double)adc_reading / (double)4096 *3.3) / 0.2326) * 1000.0);
+	battery_voltage = (double)((((double)adc_reading / (double)4096 * 3.3) / 0.2326) * 1000.0);
 	keeper_set_batt_millivolts(battery_voltage);
-	battery_voltage_dv = (double)((((double)adc_reading / (double)4096 *3.3) / 0.2326) * 10.0);
+	battery_voltage_dv = (double)((((double)adc_reading / (double)4096 * 3.3) / 0.2326) * 10.0);
 	keeper_set_batt_decivolts(battery_voltage_dv);
 
 	ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);

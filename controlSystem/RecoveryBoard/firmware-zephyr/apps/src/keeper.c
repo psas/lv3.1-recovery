@@ -58,8 +58,6 @@ static atomic_t not_umb_on = ATOMIC_INIT(0);
 
 static atomic_t batt_read = ATOMIC_INIT(0);
 static atomic_t batt_millivolts = ATOMIC_INIT(0);
-// TODO [ ] Refactor battery millivolt to decivolt conversion to occur
-//   after calls to get battery voltage:
 static atomic_t batt_decivolts = ATOMIC_INIT(0);
 
 /**
@@ -109,7 +107,7 @@ static atomic_t ring_unlock_events = ATOMIC_INIT(0);
 
 // QUESTION - put battery voltage in struct of ERS states?
 static atomic_t batt_ok = ATOMIC_INIT(0);
-static atomic_t shore_power_ok = ATOMIC_INIT(0);
+static atomic_t shore_power = ATOMIC_INIT(0);
 static atomic_t can_bus_ok = ATOMIC_INIT(0);
 static atomic_t rocket_ready = ATOMIC_INIT(0);
 
@@ -122,7 +120,7 @@ struct ers_summary_state {
 	atomic_t ring_state;
 	atomic_t battery_voltage;
 	atomic_t battery_ok;
-	atomic_t shore_power_ok;
+	atomic_t shore_power;
 	atomic_t can_bus_ok;
 	atomic_t ready_flag;
 };
@@ -917,14 +915,14 @@ void keeper_get_ring_state(enum lock_ring_state *value)
 }
 
 // Shore power ok flag
-void keeper_set_shore_power_ok(const uint32_t value)
+void keeper_set_shore_power(const uint32_t value)
 {
-	atomic_set(&shore_power_ok, (atomic_val_t)value);
+	atomic_set(&shore_power, (atomic_val_t)value);
 }
 
-void keeper_get_shore_power_ok(uint32_t* value)
+void keeper_get_shore_power(uint32_t* value)
 {
-	*value = atomic_get(&shore_power_ok);
+	*value = atomic_get(&shore_power);
 }
 
 // CAN bus ok flag
@@ -1030,7 +1028,7 @@ static int32_t initialize_system_state_vars(void)
 	summary_state_fs.ring_state = ATOMIC_INIT(RING_POS_UNKNOWN);
 	summary_state_fs.battery_voltage =  ATOMIC_INIT(0); 
 	summary_state_fs.battery_ok = ATOMIC_INIT(0); 
-	summary_state_fs.shore_power_ok = ATOMIC_INIT(0);
+	summary_state_fs.shore_power = ATOMIC_INIT(0);
 	summary_state_fs.can_bus_ok = ATOMIC_INIT(0);
 	summary_state_fs.ready_flag = ATOMIC_INIT(0);
 

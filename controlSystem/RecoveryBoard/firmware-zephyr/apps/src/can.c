@@ -90,7 +90,7 @@ enum ers_state_var_indeces {
 	IDX_ERS_RING_STATE,
 	IDX_ERS_BATT_READ,
 	IDX_ERS_BATT_OK,
-	IDX_ERS_SHORE_POW_STATUS,
+	IDX_ERS_SHORE_POWER,
 	IDX_ERS_CAN_BUS_OK,
 	IDX_ERS_READY,
 	IDX_RESERVED_01,
@@ -200,7 +200,7 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
 	ers_state_vars_fs[IDX_ERS_RING_STATE] = (uint8_t)(ring_state);
 	ers_state_vars_fs[IDX_ERS_BATT_READ] = (uint8_t)(battery_voltage & 0xFF);
 	ers_state_vars_fs[IDX_ERS_BATT_OK] = batt_ok_flag;
-	ers_state_vars_fs[IDX_ERS_SHORE_POW_STATUS] = ((uint8_t)(not_umb_on) & 0x1);
+	ers_state_vars_fs[IDX_ERS_SHORE_POWER] = ((uint8_t)(not_umb_on) & 0x1);
 	ers_state_vars_fs[IDX_ERS_CAN_BUS_OK] = (uint8_t)(can_bus_ok_flag & 0xFF);
 	ers_state_vars_fs[IDX_ERS_READY] =  (uint8_t)(rocket_ready & 0xff);
 	ers_state_vars_fs[IDX_RESERVED_01] = 0;
