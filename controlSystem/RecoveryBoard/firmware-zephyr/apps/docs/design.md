@@ -50,11 +50,11 @@ _Table 2 - ERS Zephyr module attributes_
 |      DAC      |     -      |     Y     |      -       |      Y       |
 |    GPIO in    |     Y      |     -     |      -       |      Y       |
 |    Keeper     |     -      |     Y     |      -       |      -       |
-| Motor control |     -      |    N#1    |      -       |      -       |
+| Motor control |     -      |     Y     |      -       |      -       |
 |      PWM      |     Y      |    N#1    |      -       |      Y       |
 |   Settings    |     -      |    N#1    |      -       |      Y       |
 |  Shell (CLI)  |    N#2     |     Y     |      -       |      -       |
-|  Status LED   |     -      |    N#1    |      Y       |      -       |
+|  Status LED   |     -      |     Y     |      Y       |      -       |
 
 - An "N#1" mark means the given module likely needs mutex or other resource
   protection mechanism.
