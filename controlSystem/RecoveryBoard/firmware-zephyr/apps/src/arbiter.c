@@ -150,6 +150,12 @@ static int32_t adc_reading_to_hall_state(const enum hall_sensor_instances sensor
 	keeper_get_hall_sensor_limit(sensor_idx, HALL_LIMIT_V_BETWEEN, &limit_between);
 	keeper_get_hall_sensor_limit(sensor_idx, HALL_LIMIT_V_ACTIVE, &limit_active);
 
+	// Note, we treat each limit value as the upper bound, or value in the
+	// range of readings which represent the sensor being in a given state.
+	// For this we test whether the reading is less than the particular
+	// limit value.  This allows us to perform four tests, and categorize
+	// readings each into one of the five possible ring states.
+
 	if (adc_reading < limit_v_under) {
 		*state = HALL_STATE_V_UNDER;
 	} else if (adc_reading < limit_inactive) {

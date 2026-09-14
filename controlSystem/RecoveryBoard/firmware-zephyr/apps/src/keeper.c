@@ -301,6 +301,7 @@ int32_t keeper_cmd_set_limit_v_under(const struct shell *shell, size_t argc, cha
 	uint32_t value = 0;
 	char *str, *endptr;
 	enum hall_sensor_instances sensor_idx;
+
 	int32_t rc = determine_which_sensor(argv[1], &sensor_idx);
 	if (rc != 0) {
 		rc = -EINVAL;
@@ -309,9 +310,18 @@ int32_t keeper_cmd_set_limit_v_under(const struct shell *shell, size_t argc, cha
 
 	str = argv[2];
 	value = strtol(str, &endptr, BASE_10);
+
         if (*endptr != '\0') {
 		shell_fprintf(shell, SHELL_WARNING, "Parsed non-numeric "
 				"characters after number: '%s'\n", endptr);
+		rc = -EINVAL;
+		goto done;
+	}
+
+	if ((value < 0) || (value >= (1 << CONFIG_ERS_DAC_RES_IN_BITS))) {
+		shell_fprintf(shell, SHELL_WARNING, "requested Hall limit %d out of range, "
+				"must fall within 0..%d\n", value,
+			       	(1 << CONFIG_ERS_DAC_RES_IN_BITS) - 1);
 		rc = -EINVAL;
 		goto done;
 	}
@@ -332,16 +342,34 @@ int32_t keeper_cmd_set_limit_inactive(const struct shell *shell, size_t argc, ch
 
 	int32_t rc = determine_which_sensor(argv[1], &sensor_idx);
 	if (rc != 0) {
-		return -EINVAL;
+		rc = -EINVAL;
+		goto done;
 	}
 
 	str = argv[2];
 	value = strtol(str, &endptr, BASE_10);
+
+        if (*endptr != '\0') {
+		shell_fprintf(shell, SHELL_WARNING, "Parsed non-numeric "
+				"characters after number: '%s'\n", endptr);
+		rc = -EINVAL;
+		goto done;
+	}
+
+	if ((value < 0) || (value >= (1 << CONFIG_ERS_DAC_RES_IN_BITS))) {
+		shell_fprintf(shell, SHELL_WARNING, "requested Hall limit %d out of range, "
+				"must fall within 0..%d\n", value,
+			       	(1 << CONFIG_ERS_DAC_RES_IN_BITS) - 1);
+		rc = -EINVAL;
+		goto done;
+	}
+
 	shell_fprintf(shell, SHELL_NORMAL, "setting Hall sensor %d limit 'inactive' to %u\n",
 		      (sensor_idx + 1), value);
 	set_hall_sensor_limit(sensor_idx, HALL_LIMIT_V_INACTIVE, value);
 
-	return 0;
+done:
+	return rc;
 }
 
 int32_t keeper_cmd_set_limit_between(const struct shell *shell, size_t argc, char **argv)
@@ -352,16 +380,34 @@ int32_t keeper_cmd_set_limit_between(const struct shell *shell, size_t argc, cha
 
 	int32_t rc = determine_which_sensor(argv[1], &sensor_idx);
 	if (rc != 0) {
-		return -EINVAL;
+		rc = -EINVAL;
+		goto done;
 	}
 
 	str = argv[2];
 	value = strtol(str, &endptr, BASE_10);
+
+        if (*endptr != '\0') {
+		shell_fprintf(shell, SHELL_WARNING, "Parsed non-numeric "
+				"characters after number: '%s'\n", endptr);
+		rc = -EINVAL;
+		goto done;
+	}
+
+	if ((value < 0) || (value >= (1 << CONFIG_ERS_DAC_RES_IN_BITS))) {
+		shell_fprintf(shell, SHELL_WARNING, "requested Hall limit %d out of range, "
+				"must fall within 0..%d\n", value,
+			       	(1 << CONFIG_ERS_DAC_RES_IN_BITS) - 1);
+		rc = -EINVAL;
+		goto done;
+	}
+
 	shell_fprintf(shell, SHELL_NORMAL, "setting Hall sensor %d limit 'between' to %u\n",
 		      (sensor_idx + 1), value);
 	set_hall_sensor_limit(sensor_idx, HALL_LIMIT_V_BETWEEN, value);
 
-	return 0;
+done:
+	return rc;
 }
 
 int32_t keeper_cmd_set_limit_active(const struct shell *shell, size_t argc, char **argv)
@@ -377,10 +423,28 @@ int32_t keeper_cmd_set_limit_active(const struct shell *shell, size_t argc, char
 
 	str = argv[2];
 	value = strtol(str, &endptr, BASE_10);
+
+        if (*endptr != '\0') {
+		shell_fprintf(shell, SHELL_WARNING, "Parsed non-numeric "
+				"characters after number: '%s'\n", endptr);
+		rc = -EINVAL;
+		goto done;
+	}
+
+	if ((value < 0) || (value >= (1 << CONFIG_ERS_DAC_RES_IN_BITS))) {
+		shell_fprintf(shell, SHELL_WARNING, "requested Hall limit %d out of range, "
+				"must fall within 0..%d\n", value,
+			       	(1 << CONFIG_ERS_DAC_RES_IN_BITS) - 1);
+		rc = -EINVAL;
+		goto done;
+	}
+
 	shell_fprintf(shell, SHELL_NORMAL, "setting Hall sensor %d limit 'active' to %u\n",
 		      (sensor_idx + 1), value);
 	set_hall_sensor_limit(sensor_idx, HALL_LIMIT_V_ACTIVE, value);
-	return 0;
+
+done:
+	return rc;
 }
 
 /**

@@ -53,16 +53,26 @@ int32_t keeper_get_hall_sensor_limit(const enum hall_sensor_instances sensor_idx
 
 /**
  * @brief Routine to restore hall sensor limits to default values.
+ *
+ * @retval 0 on success.
+ * @retval -errno as returned by Zephyr settings module, when there are flash
+ *  memory access errors.
  */
 
 int32_t keeper_restore_hall_sensor_default_limits(void);
 
 /**
- * @brief Following four routines implement custom Zephyr shell commands.  As
- *   arguments these routines expect:
+ * @brief Zephyr shell routines to update Hall sensor limit values.
  *
- * @param ["s1"|"s2"] to indicate which of two Hall sensors the limit applies.
- * @param [0..4095] an ADC count within the 12-bit ADC range of possible values.
+ * @note Parameters are Zephyr shell's standard three parameters, latter two
+ *  akin to the historic, conventional parameters of the C "hello world"
+ *  program.
+ *
+ * @retval 0 on success.
+ * @retval -EINVAL when:
+ *   - sensor id not for Hall sensor 1 or 2
+ *   - when sensor named limit not defined
+ *   - when limit value outside of ADC reading range
  */
 
 int32_t keeper_cmd_set_limit_v_under(const struct shell *shell, size_t argc, char **argv);
@@ -71,18 +81,30 @@ int32_t keeper_cmd_set_limit_between(const struct shell *shell, size_t argc, cha
 int32_t keeper_cmd_set_limit_active(const struct shell *shell, size_t argc, char **argv);
 
 /**
- * @brief
+ * @brief Store (read) Hall sensor limit values to flash memory.
+ *
+ * @note Parameters are Zephyr shell's standard three parameters.
+ *
+ * @retval 0 on success.
+ * @retval -errno as returned by Zephyr settings module, when there are flash
+ *  memory access errors.
  */
 
 int32_t keeper_cmd_store_hall_limits(const struct shell *shell, size_t argc, char **argv);
 
 /**
- * @brief
+ * @brief Retrieve (read) Hall sensor limit values from flash memory.
+ *
+ * @note Parameters are Zephyr shell's standard three parameters.
+ *
+ * @retval 0 on success.
+ * @retval -errno as returned by Zephyr settings module, when there are flash
+ *  memory access errors.
  */
 
 int32_t keeper_cmd_retrieve_hall_limits(const struct shell *shell, size_t argc, char **argv);
 
-// Helper functions to allow for calling Hall cut-off value retrieval from the
+// Helper functions to allow for calling Hall limit value retrieval, from the
 // ERS app as well as from the CLI of the app:
 int32_t keeper_retrieve_hall_1_limits(void);
 int32_t keeper_retrieve_hall_2_limits(void);
@@ -118,13 +140,15 @@ enum ers_adc_values_in_mv {
 // Digital inputs
 
 void keeper_set_iso_drogue(const uint32_t value);      // TODO [ ] Check whether needed
-void keeper_set_iso_main(const uint32_t value);        // TODO [ ] Check whether needed
-void keeper_set_not_umb_on(const uint32_t value);
-void keeper_set_not_motor_faila(const uint32_t value); // TODO [ ] Check whether needed
-
 void keeper_get_iso_drogue(uint32_t* value);           // TODO [ ] Check whether needed
+
+void keeper_set_iso_main(const uint32_t value);        // TODO [ ] Check whether needed
 void keeper_get_iso_main(uint32_t* value);             // TODO [ ] Check whether needed
+
+void keeper_set_not_umb_on(const uint32_t value);
 void keeper_get_not_umb_on(uint32_t* value);
+
+void keeper_set_not_motor_faila(const uint32_t value); // TODO [ ] Check whether needed
 void keeper_get_not_motor_faila(uint32_t* value);      // TODO [ ] Check whether needed
 
 // Analog inputs
@@ -132,29 +156,30 @@ void keeper_get_not_motor_faila(uint32_t* value);      // TODO [ ] Check whether
 void keeper_set_batt_read(const uint32_t value);
 void keeper_get_batt_read(uint32_t* value);
 
-void keeper_set_motor_isense(const uint32_t value);
-void keeper_get_motor_isense(uint32_t* value);
-
-void keeper_set_hall_1(const uint32_t value);
-void keeper_get_hall_1(uint32_t* value);
-
-void keeper_set_hall_2(const uint32_t value);
-void keeper_get_hall_2(uint32_t* value);
-
+// Note, battery voltage reading in millivolts used only for bench top
+// reporting.
 void keeper_set_batt_millivolts(const uint32_t value);
 void keeper_get_batt_millivolts(uint32_t* value);
+
+void keeper_set_motor_isense(const uint32_t value);
+void keeper_get_motor_isense(uint32_t* value);
 
 void keeper_set_motor_isense_ma(const uint32_t value);
 void keeper_get_motor_isense_ma(uint32_t* value);      // TODO [ ] Check whether needed
 
+// Note, Hall sensor readings in units of millivolts are not needed by ERS
+// rocket recovery logic;  they are present for bench top reporting.
+void keeper_set_hall_1(const uint32_t value);
+void keeper_get_hall_1(uint32_t* value);
+
 void keeper_set_hall_1_mv(const uint32_t value);
 void keeper_get_hall_1_mv(uint32_t* value);
 
+void keeper_set_hall_2(const uint32_t value);
+void keeper_get_hall_2(uint32_t* value);
+
 void keeper_set_hall_2_mv(const uint32_t value);
 void keeper_get_hall_2_mv(uint32_t* value);
-
-void keeper_set_batt_decivolts(const uint32_t value);
-void keeper_get_batt_decivolts(uint32_t* value);
 
 /**
  * @brief Write Hall sensor readings, in ADC counts, to keeper data store.
@@ -206,22 +231,29 @@ void keeper_get_unlock_event_count(uint32_t *count);      // <- TODO [ ] check w
 void keeper_set_DAC_val_for_ring_motor(const uint32_t value);
 void keeper_get_DAC_val_for_ring_motor(uint32_t *value);
 
-// - DATA GROUP - (6) ERS summary state data
+// - DATA GROUP - ERS summary state data
 
+// (1)
 void keeper_set_ring_state(const enum lock_ring_state value);
 void keeper_get_ring_state(enum lock_ring_state *value);
 
-// TODO [ ] Add or move battery voltage setter and getter APIs here.
+// (2)
+void keeper_set_batt_decivolts(const uint32_t value);
+void keeper_get_batt_decivolts(uint32_t* value);
 
+// (3)
 void keeper_set_batt_ok(const uint32_t value);
 void keeper_get_batt_ok(uint32_t* value);
 
+// (4) TODO [ ] Rename this pair of APIs to remove _ok
 void keeper_set_shore_power_ok(const uint32_t value);     // <- TODO [ ] check whether used.
 void keeper_get_shore_power_ok(uint32_t* value);          // <- TODO [ ] check whether used.
 
+// (5)
 void keeper_set_can_bus_ok(const uint32_t value);
 void keeper_get_can_bus_ok(uint32_t* value);
 
+// (6)
 void keeper_set_ready_state(const uint32_t value);
 void keeper_get_ready_state(uint32_t* value);
 
