@@ -321,7 +321,7 @@ static int cmd_show_locking_ring_state(const struct shell *shell, size_t argc, c
 	enum lock_ring_state ring_state = RING_STATE_UNKNOWN;
 	int32_t rc = 0;
 
-	keeper_get_ring_status(&ring_state);
+	keeper_get_ring_state(&ring_state);
 
 	switch (ring_state) {
 		case RING_STATE_UNKNOWN:

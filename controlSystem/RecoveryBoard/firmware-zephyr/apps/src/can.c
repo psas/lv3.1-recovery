@@ -174,7 +174,7 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
 
 	// (1)
 	enum lock_ring_state ring_state = RING_STATE_UNKNOWN;
-	keeper_get_ring_status(&ring_state);
+	keeper_get_ring_state(&ring_state);
 
 	// (2)
 	uint32_t battery_voltage = 0;
@@ -230,7 +230,7 @@ int32_t can_helper_unlock_ring(void) {
 	int32_t not_umb_on = 0;
 	keeper_get_not_umb_on(&not_umb_on);
 	enum lock_ring_state ring_state = RING_STATE_UNKNOWN;
-	keeper_get_ring_status(&ring_state);
+	keeper_get_ring_state(&ring_state);
 	int32_t rc = 0;
 
 	// Note, "not umbilical on" means shore power not connected to rocket

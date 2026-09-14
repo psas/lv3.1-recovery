@@ -113,8 +113,13 @@ static atomic_t shore_power_ok = ATOMIC_INIT(0);
 static atomic_t can_bus_ok = ATOMIC_INIT(0);
 static atomic_t rocket_ready = ATOMIC_INIT(0);
 
+// Note, lock ring position is not sent in the CAN heartbeat plus status
+// message.  Therefore declare it as stand alone variable, not a data member
+// of summary state struct:
+static atomic_t ring_position = ATOMIC_INIT(RING_POS_UNKNOWN);
+
 struct ers_summary_state {
-	atomic_t ring_position;
+	atomic_t ring_state;
 	atomic_t battery_voltage;
 	atomic_t battery_ok;
 	atomic_t shore_power_ok;
@@ -756,12 +761,12 @@ void keeper_get_ring_pos_detection_interval(uint32_t *timeout_ms)
 
 void keeper_set_ring_position(const enum lock_ring_position ring_pos)
 {
-	atomic_set(&summary_state_fs.ring_position, (atomic_val_t)ring_pos);
+	atomic_set(&ring_position, (atomic_val_t)ring_pos);
 }
 
 void keeper_get_ring_position(enum lock_ring_position *ring_pos)
 {
-	*ring_pos = atomic_get(&summary_state_fs.ring_position);
+	*ring_pos = atomic_get(&ring_position);
 }
 
 // Parachute section ring lock and unlock events
@@ -836,15 +841,15 @@ void keeper_get_DAC_val_for_ring_motor(uint32_t *value)
 	*value = atomic_get(&dac_setting_ring_motor);
 }
 
-// Lock ring status
-void keeper_set_ring_status(const enum lock_ring_state value)
+// Lock ring state
+void keeper_set_ring_state(const enum lock_ring_state value)
 {
-	atomic_set(&summary_state_fs.ring_position, (atomic_val_t)value);
+	atomic_set(&summary_state_fs.ring_state, (atomic_val_t)value);
 }
 
-void keeper_get_ring_status(enum lock_ring_state *value)
+void keeper_get_ring_state(enum lock_ring_state *value)
 {
-	*value = atomic_get(&summary_state_fs.ring_position);
+	*value = atomic_get(&summary_state_fs.ring_state);
 }
 
 // Shore power ok flag
@@ -958,7 +963,7 @@ static int32_t initialize_system_state_vars(void)
 
 	atomic_set(&ring_pos_interval, (atomic_val_t)CONFIG_ARBITER_LOOP_SLEEP_PER_MS);
 
-	summary_state_fs.ring_position = ATOMIC_INIT(RING_POS_UNKNOWN);
+	summary_state_fs.ring_state = ATOMIC_INIT(RING_POS_UNKNOWN);
 	summary_state_fs.battery_voltage =  ATOMIC_INIT(0); 
 	summary_state_fs.battery_ok = ATOMIC_INIT(0); 
 	summary_state_fs.shore_power_ok = ATOMIC_INIT(0);

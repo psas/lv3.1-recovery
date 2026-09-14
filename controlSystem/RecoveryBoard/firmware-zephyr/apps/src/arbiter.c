@@ -434,6 +434,8 @@ qualify_validity:
 								    // - - - - -     X X X X X
 								    // - - - - -     X X X X X
 
+	keeper_set_ring_position(*ring_position);
+
 	/**
 	 * @note Seems a bit duplicative but ring position from Hall sensor pair
 	 *   readings is more finely defined than ring state as it appears in
@@ -462,7 +464,9 @@ qualify_validity:
 		ring_state = RING_STATE_UNKNOWN;
 	}
 
-	keeper_set_ring_status(ring_state);
+	// Remember, ring state is distinct from ring position.  This routine
+	// determines and stores both in the keeper module.
+	keeper_set_ring_state(ring_state);
 
 	rc = k_mutex_unlock(&arbiter_mtx);
 	if (rc < 0) {
@@ -571,7 +575,7 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 
 		keeper_get_batt_ok(&battery_ok);
 		keeper_get_can_bus_ok(&can_bus_ok);
-		keeper_get_ring_status(&ring_state);
+		keeper_get_ring_state(&ring_state);
 
 		if (battery_ok && can_bus_ok && (ring_state == RING_STATE_LOCKED)) {
 			keeper_set_ready_state(true);

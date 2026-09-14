@@ -52,9 +52,6 @@ enum lock_ring_position {
  *   sent in the given ERS board's CAN heartbeat / status message.
  */
 
-// TODO [ ] Find out from team which state to apply when ring position is not
-//           known.
-
 enum lock_ring_state {
 	RING_STATE_UNKNOWN,
 	RING_STATE_UNLOCKED,

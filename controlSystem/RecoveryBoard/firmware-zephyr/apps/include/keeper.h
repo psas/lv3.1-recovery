@@ -208,8 +208,8 @@ void keeper_get_DAC_val_for_ring_motor(uint32_t *value);
 
 // - DATA GROUP - (6) ERS summary state data
 
-void keeper_set_ring_status(const enum lock_ring_state value);
-void keeper_get_ring_status(enum lock_ring_state *value);
+void keeper_set_ring_state(const enum lock_ring_state value);
+void keeper_get_ring_state(enum lock_ring_state *value);
 
 // TODO [ ] Add or move battery voltage setter and getter APIs here.
 

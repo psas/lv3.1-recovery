@@ -104,14 +104,50 @@ messages and CAN bus health status. The arbiter manifests the code which decides
 when to release the parachute, either drogue chute or main chute depending on
 app configuration at build time.
 
-The arbiter also responds to certain CLI invocations, some directly and some
-indirectly through the firmware's keeper module.
+The arbiter:
 
-The arbiter implements the app's highest level logic, and depends on information
-from all of the sensor facing and bus facing, communications modules.
+- entails the app's highest level logic
+- deterimines lock ring position and state
+- decides when the rocket is ready to release drogue or main parachute
+- responds to certain CLI commands, either directly or indirectly
+- implements a thread, with a typical "forever" loop construct
 
-The arbiter implements a thread with a "forever" loop construct, which provides
-for adjustable, periodic reckoning of system inputs.
+Worth noting, ERS firmware holds a notion of both lock ring position, and ring
+state.  Lock ring position is described by the enum:
+
+```
+enum lock_ring_position {
+        RING_POS_LOCKED,
+        RING_POS_BETWEEN_L_AND_U,
+        RING_POS_UNLOCKED,
+        RING_POS_LOCKED_FULLY_QUALIFIED,
+        RING_POS_BETWEEN_FULLY_QUALIFIED,
+        RING_POS_UNLOCKED_FULLY_QUALIFIED,
+        RING_POS_UNKNOWN
+};
+```
+
+When the lock ring is in position unlocked, in between, or locked, that position
+may be partially qualified or fully qualified.  This distinction of possible
+valid ring positions is not conveyed by the simpler ring state:
+
+```
+enum lock_ring_state {
+        RING_STATE_UNKNOWN,
+        RING_STATE_UNLOCKED,
+        RING_STATE_BETWEEN,
+        RING_STATE_LOCKED,
+        RING_STATE_ERROR
+};
+```
+
+The presence of these very similar parameters presents some risk of causing
+confusion.  A few things can be said about these parameters:
+
+- lock ring position is determined from readings of Hall sensors 1 and 2.
+- lock ring state is determined from lock ring position.
+- "rocket ready" status flag is determined from ring state.
+- CAN heartbeat plus status message conveys ring state, not ring position.
 
 TODO [ ] Review arbiter responsibilities and determine whether a lighter weight
 scheduling of work, e.g. timer and system work queue use would be a better
