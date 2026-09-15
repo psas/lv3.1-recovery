@@ -1,6 +1,5 @@
 # @file
 # @brief Application configuration for ERS ADC (analog to digital) module
-# Copyright (c) 2026 Portland State Aerospace Society
 
 menuconfig ERS_ADC_MODULE
 	bool "ERS ADC module settings"

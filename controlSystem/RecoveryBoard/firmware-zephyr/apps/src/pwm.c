@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2025 Portland State Aerospace Society
- *
- * SPDX-License-Identifier: Apache-2.0
+ * @file
+ * @brief ERS PWM module, to produce audio tones from on board buzzer.
  */
 
+#include "ers-util.h"
 #include "pwm-ers.h"
 
 #include <zephyr/kernel.h>
@@ -14,6 +14,12 @@
 #include <zephyr/shell/shell_uart.h>
 
 LOG_MODULE_REGISTER(pwm, LOG_LEVEL_INF);
+
+//----------------------------------------------------------------------
+// - SECTION - file scoped
+//----------------------------------------------------------------------
+
+struct k_mutex pwm_mtx;
 
 static const struct pwm_dt_spec pwm_buzzer = PWM_DT_SPEC_GET(DT_ALIAS(buzzer));
 
@@ -240,6 +246,7 @@ done:
 int32_t pwm_play_pattern(enum pwm_audio_pattern pattern)
 {
 	int32_t rc = 0;
+	ERS_MUTEX_LOCK(pwm_mtx, CONFIG_PWM_API_TIMEOUT_MS, pwm);
 
 	switch (pattern) {
 	case PWM_APP_SILENT:
@@ -267,6 +274,7 @@ int32_t pwm_play_pattern(enum pwm_audio_pattern pattern)
 		goto done;
 	}
 
+	ERS_MUTEX_UNLOCK(pwm_mtx, pwm);
 done:
 	return rc;
 }
@@ -299,6 +307,8 @@ int32_t pwm_init(void)
 		LOG_ERR("Failed to initialize PWM peripheral, err %d", rc);
 		goto done;
 	}
+
+	k_mutex_init(&pwm_mtx);
 
 	k_tid_t pwm_tid = k_thread_create(&pwm_thread_data,
 					pwm_thread_stack,

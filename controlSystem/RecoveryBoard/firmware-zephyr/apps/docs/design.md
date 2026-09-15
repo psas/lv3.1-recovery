@@ -51,7 +51,7 @@ _Table 2 - ERS Zephyr module attributes_
 |    GPIO in    |     Y      |     -     |      -       |      Y       |
 |    Keeper     |     -      |     Y     |      -       |      -       |
 | Motor control |     -      |     Y     |      -       |      -       |
-|      PWM      |     Y      |    N#1    |      -       |      Y       |
+|      PWM      |     Y      |     Y     |      -       |      Y       |
 |   Settings    |     -      |     Y     |      -       |      Y       |
 |  Shell (CLI)  |    N#2     |     Y     |      -       |      -       |
 |  Status LED   |     -      |     Y     |      Y       |      -       |
