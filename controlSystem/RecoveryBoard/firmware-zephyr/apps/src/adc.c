@@ -222,14 +222,20 @@ int32_t adc_init(void)
                         LOG_ERR("ADC controller device %s not ready",
                                      adc_channels[i].dev->name);
                         rc = -ENODEV;
+			break;
                 }
 
                 rc = adc_channel_setup_dt(&adc_channels[i]);
                 if (rc < 0) {
                         LOG_ERR("Could not setup channel #%d (%d)", i, rc);
                         rc = -EINVAL;
+			break;
                 }
         }
+
+	if (rc < 0) {
+		goto done;
+	}
 
 	k_tid_t adc_tid = k_thread_create(&adc_thread_data, adc_thread_stack,
 					  K_THREAD_STACK_SIZEOF(adc_thread_stack),
@@ -240,12 +246,11 @@ int32_t adc_init(void)
 
 	if (!adc_tid) {
 		LOG_ERR("ERROR spawning ADC thread\n");
+		rc = -EFAULT;
 	} else {
 		LOG_INF("starting ADC thread . . .");
 	}
 
-	LOG_INF("ADC module configured %u channels.", ARRAY_SIZE(adc_channels));
-	LOG_INF("- DEV 0906 - ADC API timeout set to %d ms", CONFIG_ADC_API_TIMEOUT_MS);
-
+done:
 	return rc;
 }

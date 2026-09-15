@@ -8,6 +8,8 @@
 /**
  * @brief ERS arbiter initialization routine.
  *
+ * @retval 0 on success.
+ * @retval -EFAULT on failure to start arbiter thread.
  * @warning This routine must be called to make arbiter module ready for use.
  */
 
@@ -61,8 +63,8 @@ enum lock_ring_state {
 };
 
 /**
- * @brief Assign Hall sensor default cut-off values to app run-time variables.
- * @note These values may likely become inaccurate when the physical, ERS lock
+ * @brief Assign Hall sensor default limit values to app run-time variables.
+ * @note These values may become inaccurate when the physical, ERS lock
  *  ring assembly is handled.  Small changes in the position of the Hall
  *  sensors and an associated permanent magnet with each sensor lead to
  *  notable changes in Hall readings, which correspond to ring states.
@@ -78,10 +80,11 @@ enum lock_ring_state {
 void arbiter_cmd_set_default_limits(const struct shell *shell, size_t argc, char **argv);
 
 /**
- * @brief Show present Hall sensor cut-off values, measured empirically and
+ * @brief Show present Hall sensor limit values, measured empirically and
  *  used to sense lock ring position.
  *
- * @param shell Pointer to Zephyr shell construct instance in the app.
+ * @note The three parameters of this API are standard to Zephyr shell
+ *  commands.
  */
 
 void arbiter_show_hall_state_limits(const struct shell *shell);
@@ -92,7 +95,7 @@ void arbiter_show_hall_state_limits(const struct shell *shell);
  * @note Calcuates battery voltage in both millivolts and tenths of a volt.
  *
  * @retval 0 on success.
- * TODO [ ] Add mutex to arbiter and return -EAGAIN
+ * @retval -EAGAIN when mutex lock request times out.
  */
 
 int32_t arbiter_calc_battery_voltage(void);
@@ -103,8 +106,9 @@ int32_t arbiter_calc_battery_voltage(void);
  * @param pointer to caller variable to hold lock ring position.
  *
  * @retval 0 on success, ring position in variable pointed to by ring_position.
- * TODO [ ] @retval -EAGAIN when mutex lock request times out.
- * @return . . .
+ * @retval -EAGAIN when mutex lock request times out.
+ * @return negative errno from one of ADC read API, reading-to-hall convert
+ *   API, and motor module, on a given error.
  */
 
 int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position);

@@ -71,7 +71,7 @@ done:
 }
 
 /**
- * @brief Routine to report Hall sensor state cutoff values (in ADC counts).
+ * @brief Routine to report Hall sensor state limit values (in ADC counts).
  */
 
 void arbiter_show_hall_state_limits(const struct shell *shell)
@@ -341,41 +341,36 @@ Note Uf, Bf, Lf are fully qualified unlocked, in between and lock ring position
 determinations.
 */
 
-// TODO [ ] Replace commented calls to arb_mesg() with a variable to capture
-//          which ring position test results in a match of present sensor
-//          states.  (Writing a variable much faster than printing a message.)
-
 	// Look for possible "between" sensor values pairs first:
 	if ((hall_1_state == HALL_STATE_V_BETWEEN) || (hall_2_state == HALL_STATE_V_BETWEEN)) {
-		// arb_mesg("H1");                                  //  - - x - -  Vun (Vunder)
-		*ring_position = RING_POS_BETWEEN_L_AND_U;          //  - - x - -  Ina (Inactive)
-		goto qualify_validity;                              //  x x x x x  Bet (Between)
-	}                                                           //  - - x - -  Act (Active)
+		*ring_position = RING_POS_BETWEEN_L_AND_U;          //  - - x - -  Vun (Vunder)
+		goto qualify_validity;                              //  - - x - -  Ina (Inactive)
+	}                                                           //  x x x x x  Bet (Between)
+	                                                            //  - - x - -  Act (Active)
 	                                                            //  - - x - -  Ovr (Vover)
 
 	if ((hall_1_state == hall_2_state) &&
 		(hall_1_state != HALL_STATE_V_BETWEEN))
 	{                                                           //  x - - - -    X - X - -
-	 	// arb_mesg("H2");                                  //  - x - - -    - X X - -
-		*ring_position = RING_POS_UNKNOWN;                  //  - - - - -    X X X X X
-		goto unlock;                                        //  - - - x -    - - X X -
-	}                                                           //  - - - - x    - - X - X
+		*ring_position = RING_POS_UNKNOWN;                  //  - x - - -    - X X - -
+		goto unlock;                                        //  - - - - -    X X X X X
+	}                                                           //  - - - x -    - - X X -
+	                                                            //  - - - - x    - - X - X
 
 	if (((hall_1_state == HALL_STATE_V_UNDER) && (hall_2_state == HALL_STATE_V_OVER)) ||
 	    ((hall_1_state == HALL_STATE_V_OVER) && (hall_2_state == HALL_STATE_V_UNDER)))
-	{
-		*ring_position = RING_POS_UNKNOWN;                  //  - - - - x    X - X - X
-		goto unlock;                                        //  - - - - -    - X X - -
-	}                                                           //  - - - - -    X X X X X
-                                                                    //  - - - - -    - - X X -
+	{                                                           //  - - - - x    X - X - X
+		*ring_position = RING_POS_UNKNOWN;                  //  - - - - -    - X X - -
+		goto unlock;                                        //  - - - - -    X X X X X
+	}                                                           //  - - - - -    - - X X -
                                                                     //  x - - - -    X - X - X
+
 	// Cover row "Ina" locked positions with partial validity:
 	if ((hall_1_state == HALL_STATE_V_INACTIVE) &&              //  - - - - -    X - X - X
 	    ((hall_2_state == HALL_STATE_V_UNDER) ||                //  x - - - x    X X X - X
 	     (hall_2_state == HALL_STATE_V_OVER)))                  //  - - - - -    X X X X X
 	{                                                           //  - - - - -    - - X X -
-		// arb_mesg("H3");                                  //  - - - - -    X - X - X
-		*ring_position = RING_POS_LOCKED;
+		*ring_position = RING_POS_LOCKED;                   //  - - - - -    X - X - X
 		goto unlock;
 	}
 
@@ -384,8 +379,7 @@ determinations.
 	    ((hall_1_state == HALL_STATE_V_UNDER) ||                //  - - - - -    X X X - X
 	     (hall_1_state == HALL_STATE_V_OVER)))                  //  - - - - -    X X X X X
 	{                                                           //  - - - - -    - - X X -
-		// arb_mesg("H4");                                  //  - x - - -    X X X - X
-		*ring_position = RING_POS_UNLOCKED;
+		*ring_position = RING_POS_UNLOCKED;                 //  - x - - -    X X X - X
 		goto unlock;
 	}
 
@@ -394,8 +388,7 @@ determinations.
 	    ((hall_2_state == HALL_STATE_V_UNDER) ||                //  - - - - -    X X X - X
 	     (hall_2_state == HALL_STATE_V_OVER)))                  //  - - - - -    X X X X X
 	{                                                           //  x - - - x    X - X X X
-		// arb_mesg("H5");                                  //  - - - - -    X X X - X
-		*ring_position = RING_POS_UNLOCKED;
+		*ring_position = RING_POS_UNLOCKED;                 //  - - - - -    X X X - X
 		goto unlock;
 	}
 
@@ -404,8 +397,7 @@ determinations.
 	    ((hall_1_state == HALL_STATE_V_UNDER) ||                //  - - - - -    X X X - X
 	     (hall_1_state == HALL_STATE_V_OVER)))                  //  - - - - -    X X X X X
 	{                                                           //  - - - - -    X - X X X
-		// arb_mesg("H6");                                  //  - - - x -    X X X X X
-		*ring_position = RING_POS_LOCKED;
+		*ring_position = RING_POS_LOCKED;                   //  - - - x -    X X X X X
 		goto unlock;
 	}
 
@@ -612,10 +604,13 @@ int32_t arbiter_init(void)
 					CONFIG_ARBITER_THREAD_PRIORITY, 0, K_NO_WAIT);
 	if (!arbiter_tid) {
 		LOG_ERR("ERROR spawning arbiter thread\n");
+		rc = -EFAULT;
+		goto done;
 	}
 
 	shell_ptr_fs = shell_backend_uart_get_ptr();
 	__ASSERT(shell_ptr_fs != NULL, "Failed to get shell backend.");
 
+done:
 	return rc;
 }

@@ -3,6 +3,15 @@
 
 #include <keeper.h>
 
+/**
+ * @brief Initialize the ADC channel reading module.
+ *
+ * @retval 0 on success.
+ * @retval -ENODEV when an ADC channel is reported as not ready.
+ * @retval -EINVAL when there's a failure to set up a ready channel.
+ * @retval -EFAULT when the ADC thread fails to start.
+ */
+
 int32_t adc_init(void);
 
 /**
