@@ -50,7 +50,7 @@ static uint32_t hall_sensor_default_limits[] = {
 
 static atomic_t iso_drogue = ATOMIC_INIT(0);
 static atomic_t iso_main = ATOMIC_INIT(0);
-static atomic_t not_umb_on = ATOMIC_INIT(0);
+// Note not_umb_on is factored into the ERS summar state struct.
 
 /**
  * @defgroup battery
@@ -58,7 +58,8 @@ static atomic_t not_umb_on = ATOMIC_INIT(0);
 
 static atomic_t batt_read = ATOMIC_INIT(0);
 static atomic_t batt_millivolts = ATOMIC_INIT(0);
-static atomic_t batt_decivolts = ATOMIC_INIT(0);
+// Note battery voltage in tenth-of-volt steps is part of ERS summary state
+// struct.
 
 /**
  * @defgroup motor_related
@@ -100,21 +101,17 @@ static atomic_t ring_pos_interval = ATOMIC_INIT(0);
 static atomic_t ring_lock_events = ATOMIC_INIT(0);
 static atomic_t ring_unlock_events = ATOMIC_INIT(0);
 
-// Summary state variables (values usually determined by tests of simpler data):
-
-// TODO [ ] Decide whether to hold ERS drogue and main chute summary state
-//  variables in a struct, or in individual atomic type vars:
-
-// QUESTION - put battery voltage in struct of ERS states?
-static atomic_t batt_ok = ATOMIC_INIT(0);
-static atomic_t shore_power = ATOMIC_INIT(0);
-static atomic_t can_bus_ok = ATOMIC_INIT(0);
-static atomic_t rocket_ready = ATOMIC_INIT(0);
-
 // Note, lock ring position is not sent in the CAN heartbeat plus status
 // message.  Therefore declare it as stand alone variable, not a data member
 // of summary state struct:
 static atomic_t ring_position = ATOMIC_INIT(RING_POS_UNKNOWN);
+
+// Summary state parameters struct
+
+// Note, ERS board signal not_umb_on represents shore_power.  Shore_power
+// is used in the specification of the CAN heartbeat plus status message.
+// Use shore_power as the name for this parameter in this struct, which
+// holds all the data sent in a status CAN message:
 
 struct ers_summary_state {
 	atomic_t ring_state;
@@ -122,7 +119,7 @@ struct ers_summary_state {
 	atomic_t battery_ok;
 	atomic_t shore_power;
 	atomic_t can_bus_ok;
-	atomic_t ready_flag;
+	atomic_t rocket_ready;
 };
 
 static struct ers_summary_state summary_state_fs;
@@ -209,23 +206,23 @@ void keeper_get_batt_millivolts(uint32_t* value)
 // Battery voltage
 void keeper_set_batt_decivolts(const uint32_t value)
 {
-	atomic_set(&batt_decivolts, (atomic_val_t)value);
+	atomic_set(&summary_state_fs.battery_voltage, (atomic_val_t)value);
 }
 
 void keeper_get_batt_decivolts(uint32_t *value)
 {
-	*value = atomic_get(&batt_decivolts);
+	*value = atomic_get(&summary_state_fs.battery_voltage);
 }
 
 // Battery ok flag
-void keeper_set_batt_ok(const uint32_t value)
+void keeper_set_battery_ok(const uint32_t value)
 {
-	atomic_set(&batt_ok, (atomic_val_t)value);
+	atomic_set(&summary_state_fs.battery_ok, (atomic_val_t)value);
 }
 
-void keeper_get_batt_ok(uint32_t* value)
+void keeper_get_battery_ok(uint32_t* value)
 {
-	*value = atomic_get(&batt_ok);
+	*value = atomic_get(&summary_state_fs.battery_ok);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -237,19 +234,14 @@ void keeper_set_iso_drogue(const uint32_t value)
 	atomic_set(&iso_drogue, (atomic_val_t)value);
 }
 
-void keeper_set_iso_main(const uint32_t value)
-{
-	atomic_set(&iso_main, (atomic_val_t)value);
-}
-
-void keeper_set_not_umb_on(const uint32_t value)
-{
-	atomic_set(&not_umb_on, (atomic_val_t)value);
-}
-
 void keeper_get_iso_drogue(uint32_t* value)
 {
 	*value = atomic_get(&iso_drogue);
+}
+
+void keeper_set_iso_main(const uint32_t value)
+{
+	atomic_set(&iso_main, (atomic_val_t)value);
 }
 
 void keeper_get_iso_main(uint32_t* value)
@@ -257,9 +249,14 @@ void keeper_get_iso_main(uint32_t* value)
 	*value = atomic_get(&iso_main);
 }
 
+void keeper_set_not_umb_on(const uint32_t value)
+{
+	atomic_set(&summary_state_fs.shore_power, (atomic_val_t)value);
+}
+
 void keeper_get_not_umb_on(uint32_t* value)
 {
-	*value = atomic_get(&not_umb_on);
+	*value = atomic_get(&summary_state_fs.shore_power);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -884,7 +881,7 @@ void keeper_get_motor_isense_ma(uint32_t* value)
 //  which is not yet implemented.
 void keeper_set_not_motor_faila(const uint32_t value)
 {
-	atomic_set(&not_umb_on, (atomic_val_t)value);
+	atomic_set(&not_motor_faila, (atomic_val_t)value);
 }
 
 void keeper_get_not_motor_faila(uint32_t* value)
@@ -914,37 +911,26 @@ void keeper_get_ring_state(enum lock_ring_state *value)
 	*value = atomic_get(&summary_state_fs.ring_state);
 }
 
-// Shore power ok flag
-void keeper_set_shore_power(const uint32_t value)
-{
-	atomic_set(&shore_power, (atomic_val_t)value);
-}
-
-void keeper_get_shore_power(uint32_t* value)
-{
-	*value = atomic_get(&shore_power);
-}
-
 // CAN bus ok flag
 void keeper_set_can_bus_ok(const uint32_t value)
 {
-	atomic_set(&can_bus_ok, (atomic_val_t)value);
+	atomic_set(&summary_state_fs.can_bus_ok, (atomic_val_t)value);
 }
 
 void keeper_get_can_bus_ok(uint32_t* value)
 {
-	*value = atomic_get(&can_bus_ok);
+	*value = atomic_get(&summary_state_fs.can_bus_ok);
 }
 
 // Rocket ready state flag
 void keeper_set_ready_state(const uint32_t value)
 {
-	atomic_set(&rocket_ready, (atomic_val_t)value);
+	atomic_set(&summary_state_fs.rocket_ready, (atomic_val_t)value);
 }
 
 void keeper_get_ready_state(uint32_t* value)
 {
-	*value = atomic_get(&rocket_ready);
+	*value = atomic_get(&summary_state_fs.rocket_ready);
 }
 
 //----------------------------------------------------------------------
@@ -1026,11 +1012,11 @@ static int32_t initialize_system_state_vars(void)
 	atomic_set(&ring_pos_interval, (atomic_val_t)CONFIG_ARBITER_LOOP_SLEEP_PER_MS);
 
 	summary_state_fs.ring_state = ATOMIC_INIT(RING_POS_UNKNOWN);
-	summary_state_fs.battery_voltage =  ATOMIC_INIT(0); 
+	summary_state_fs.battery_voltage = ATOMIC_INIT(0);
 	summary_state_fs.battery_ok = ATOMIC_INIT(0); 
 	summary_state_fs.shore_power = ATOMIC_INIT(0);
 	summary_state_fs.can_bus_ok = ATOMIC_INIT(0);
-	summary_state_fs.ready_flag = ATOMIC_INIT(0);
+	summary_state_fs.rocket_ready = ATOMIC_INIT(0);
 
 	rc = keeper_restore_hall_sensor_default_limits();
 

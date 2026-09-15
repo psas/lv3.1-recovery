@@ -224,14 +224,14 @@ static void arb_mesg(char *fmt, ...)
  *   update a flag to indicate whether batter voltage ok.
  */
 
-static int32_t determine_batt_ok(void)
+static int32_t determine_battery_ok(void)
 {
 	int32_t batt_voltage_in_tenths_v = 0;
 	keeper_get_batt_decivolts(&batt_voltage_in_tenths_v);
 	if (batt_voltage_in_tenths_v >= BATTERY_VOLTAGE_OK_THRESHOLD_TENTHS_V) {
-		keeper_set_batt_ok(1);
+		keeper_set_battery_ok(1);
 	} else {
-		keeper_set_batt_ok(0);
+		keeper_set_battery_ok(0);
 	}
 
 	return 0;
@@ -574,12 +574,12 @@ void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 			LOG_ERR("Failed to calculate battery voltage, err %d", rc);
 		}
 
-		rc = determine_batt_ok();
+		rc = determine_battery_ok();
 		if (rc < 0) {
 			LOG_ERR("Failed to determine if battery ok, err %d", rc);
 		}
 
-		keeper_get_batt_ok(&battery_ok);
+		keeper_get_battery_ok(&battery_ok);
 		keeper_get_can_bus_ok(&can_bus_ok);
 		keeper_get_ring_state(&ring_state);
 

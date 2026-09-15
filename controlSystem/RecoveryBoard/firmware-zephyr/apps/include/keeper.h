@@ -145,12 +145,12 @@ void keeper_get_iso_drogue(uint32_t* value);           // TODO [ ] Check whether
 void keeper_set_iso_main(const uint32_t value);        // TODO [ ] Check whether needed
 void keeper_get_iso_main(uint32_t* value);             // TODO [ ] Check whether needed
 
-// Note, this signal represents shore power:
-void keeper_set_not_umb_on(const uint32_t value);
-void keeper_get_not_umb_on(uint32_t* value);
-
 void keeper_set_not_motor_faila(const uint32_t value); // TODO [ ] Check whether needed
 void keeper_get_not_motor_faila(uint32_t* value);      // TODO [ ] Check whether needed
+
+// Note, not_umb_on is also a digital signal.  Its set and get APIs are defined
+// among the ERS summary state parameter APIs, those parameters which appear in
+// drogue board and main board CAN status messages.
 
 // Analog inputs
 
@@ -243,12 +243,12 @@ void keeper_set_batt_decivolts(const uint32_t value);
 void keeper_get_batt_decivolts(uint32_t* value);
 
 // (3)
-void keeper_set_batt_ok(const uint32_t value);
-void keeper_get_batt_ok(uint32_t* value);
+void keeper_set_battery_ok(const uint32_t value);
+void keeper_get_battery_ok(uint32_t* value);
 
-// (4) TODO [ ] Replace these two API bodies with those of keeper_get|set_not_umb_on():
-void keeper_set_shore_power(const uint32_t value);        // <- TODO [ ] check whether used.
-void keeper_get_shore_power(uint32_t* value);             // <- TODO [ ] check whether used.
+// (4)
+void keeper_set_not_umb_on(const uint32_t value);
+void keeper_get_not_umb_on(uint32_t* value);
 
 // (5)
 void keeper_set_can_bus_ok(const uint32_t value);
