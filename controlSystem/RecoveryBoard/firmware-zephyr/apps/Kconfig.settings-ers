@@ -1,0 +1,24 @@
+# @file
+# @brief Application configuration for settings module.
+
+menuconfig ERS_SETTINGS_MODULE
+	bool "ERS settings module configuration"
+	default y
+	help
+	  Enable and configure ERS settings module, which supports read and
+	  write access to flash memory for persistent storage.
+
+if ERS_SETTINGS_MODULE
+
+config SETTINGS_API_TIMEOUT_MS
+	int "Settings public API timeout in milliseconds"
+	default 1500
+	help
+	  Set a timeout measured in milliseconds for the ERS settings public
+	  API.
+
+endif # ERS_SETTINGS_MODULE
+
+module = ERS_SETTINGS
+module-str = settings module
+source "subsys/logging/Kconfig.template.log_config"

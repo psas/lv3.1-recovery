@@ -145,7 +145,7 @@ static char undef_string_fs[] = { "unknown_op" };
 
 // Provide a mutex to assure that both Hall sensors are updated without anyone
 // reading their latest values in the middle of this pair of updates:
-struct k_mutex hall_sensors_mtx;
+struct k_mutex keeper_mtx;
 
 // Flag to indiciate that this module is initialized:
 static bool keeper_initialized_fs = false;
@@ -676,33 +676,26 @@ void keeper_set_hall_2_mv(const uint32_t value)
 int32_t keeper_set_both_hall_sensors(const uint32_t value_1, const uint32_t value_2)
 {
 	int32_t rc = 0;
+	ERS_MUTEX_LOCK(keeper_mtx, CONFIG_KEEPER_API_TIMEOUT_MS, keeper);
+
 	if (!keeper_initialized_fs) {
 		LOG_ERR("Data keeper module not initialized!");
-		return -ESRCH;
-	}
-
-	k_mutex_lock(&hall_sensors_mtx, K_FOREVER);
-	if (rc != 0) {
-		LOG_ERR("Failed to lock mutex for \"store hall sensors values\", error %d", rc);
-		return rc;
+		rc = -EFAULT;
+		goto done;
 	}
 
 	keeper_set_hall_1(value_1);
 	keeper_set_hall_2(value_2);
 
-	k_mutex_unlock(&hall_sensors_mtx);
-	if (rc != 0) {
-		LOG_ERR("Failed to lock mutex for \"store hall sensors values\", error %d", rc);
-		return rc;
-	}
-
+	ERS_MUTEX_UNLOCK(keeper_mtx, keeper);
+done:
 	return 0;
 }
 
 int32_t keeper_get_both_hall_readings(uint32_t *value_1, uint32_t *value_2)
 {
 	int32_t rc = 0;
-	ERS_MUTEX_LOCK(hall_sensors_mtx, CONFIG_KEEPER_API_TIMEOUT_MS, keeper);
+	ERS_MUTEX_LOCK(keeper_mtx, CONFIG_KEEPER_API_TIMEOUT_MS, keeper);
 
 	if (!keeper_initialized_fs) {
 		LOG_ERR("Data keeper module not initialized!");
@@ -714,7 +707,7 @@ int32_t keeper_get_both_hall_readings(uint32_t *value_1, uint32_t *value_2)
 	keeper_get_hall_2(value_2);
 
 unlock:
-	ERS_MUTEX_UNLOCK(hall_sensors_mtx, keeper);
+	ERS_MUTEX_UNLOCK(keeper_mtx, keeper);
 done:
 	return 0;
 }
@@ -722,7 +715,7 @@ done:
 int32_t keeper_get_both_hall_readings_in_mv(uint32_t *value_1, uint32_t *value_2)
 {
 	int32_t rc = 0;
-	ERS_MUTEX_LOCK(hall_sensors_mtx, CONFIG_KEEPER_API_TIMEOUT_MS, keeper);
+	ERS_MUTEX_LOCK(keeper_mtx, CONFIG_KEEPER_API_TIMEOUT_MS, keeper);
 
 	if (!keeper_initialized_fs) {
 		LOG_ERR("Data keeper module not initialized!");
@@ -734,7 +727,7 @@ int32_t keeper_get_both_hall_readings_in_mv(uint32_t *value_1, uint32_t *value_2
 	keeper_get_hall_2_mv(value_2);
 
 unlock:
-	ERS_MUTEX_UNLOCK(hall_sensors_mtx, keeper);
+	ERS_MUTEX_UNLOCK(keeper_mtx, keeper);
 done:
 	return 0;
 }
@@ -966,6 +959,9 @@ int32_t keeper_restore_hall_sensor_default_limits(void)
 {
 	uint32_t i = 0;
 	int32_t rc = 0;
+
+	ERS_MUTEX_LOCK(keeper_mtx, CONFIG_KEEPER_API_TIMEOUT_MS, keeper);
+
 	// Sensor limit operation is to write default limits to keeper module:
 	// (In context of keeper, to read is to get, to write is to set.)
 	enum data_operation op = KEEPER_OP_SET;
@@ -1001,6 +997,8 @@ int32_t keeper_restore_hall_sensor_default_limits(void)
 				"sensor limit values.", i);
 	}
 
+	ERS_MUTEX_UNLOCK(keeper_mtx, keeper);
+done:
 	return rc;
 }
 
@@ -1056,7 +1054,7 @@ static int32_t initialize_system_state_vars(void)
 
 int32_t keeper_init(void)
 {
-	k_mutex_init(&hall_sensors_mtx);
+	k_mutex_init(&keeper_mtx);
 
 	shell_ptr_fs = shell_backend_uart_get_ptr();
         __ASSERT(shell_ptr_fs != NULL, "Failed to get shell backend.");

@@ -8,6 +8,7 @@
  *  write and flash read operations.
  */
 
+#include "ers-util.h"
 #include "hall-and-ring.h"
 
 #include <zephyr/kernel.h>
@@ -38,6 +39,8 @@ struct direct_immediate_value {
 	void *dest;
 	uint8_t fetched;
 };
+
+struct k_mutex settings_mtx;
 
 //----------------------------------------------------------------------
 // - SECTION - routines
@@ -109,6 +112,7 @@ static int load_immediate_value(const char *name, void *dest, size_t len)
 int32_t settings_ers_retrieve_value(const char* name, void *val, const uint32_t size)
 {
 	int32_t rc = 0;
+	ERS_MUTEX_LOCK(settings_mtx, CONFIG_SETTINGS_API_TIMEOUT_MS, settings_ers);
 
 	rc = load_immediate_value(name, val, size);
 	if (rc == -ENOENT) {
@@ -116,17 +120,24 @@ int32_t settings_ers_retrieve_value(const char* name, void *val, const uint32_t 
 	} else if (rc < 0) {
 		LOG_ERR("Failed to load immediate value, err %d", rc);
 	}
+
+	ERS_MUTEX_UNLOCK(settings_mtx, settings-ers);
+done:
 	return rc;
 }
 
 int32_t settings_ers_store_value(const char* name, const void *val, const uint32_t size)
 {
 	int32_t rc = 0;
+	ERS_MUTEX_LOCK(settings_mtx, CONFIG_SETTINGS_API_TIMEOUT_MS, settings_ers);
 
 	rc = settings_save_one(name, &val, sizeof(val));
 	if (rc < 0) {
 		LOG_ERR("Fail to store value for '%s', err %d", name, rc);
 	}
+
+	ERS_MUTEX_UNLOCK(settings_mtx, settings-ers);
+done:
 	return rc;
 }
 
@@ -150,6 +161,8 @@ int32_t settings_ers_store_hall_limit(const uint32_t sensor_idx,
 				const uint32_t size)
 {
 	int32_t rc = 0;
+
+	ERS_MUTEX_LOCK(settings_mtx, CONFIG_SETTINGS_API_TIMEOUT_MS, settings_ers);
 
 	if (sensor_idx >= HALL_SENSOR_COUNT) {
 		LOG_ERR("Hall sensor index %d out of range, must be in 0..%d",
@@ -207,6 +220,8 @@ int32_t settings_ers_store_hall_limit(const uint32_t sensor_idx,
 		LOG_ERR("Got undefined sensor and limit combination %d in store API.",
 			combined_idx);
 	}
+
+	ERS_MUTEX_UNLOCK(settings_mtx, settings-ers);
 done:
 	return rc;
 }
@@ -214,6 +229,8 @@ done:
 void settings_ers_init(void)
 {
 	int32_t rc;
+
+	k_mutex_init(&settings_mtx);
 
 	rc = settings_subsys_init();
 	if (rc) {
