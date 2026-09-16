@@ -24,6 +24,13 @@ config ARBITER_MUTEX_TIMEOUT_MS
 	help
 	  Set the arbiter module mutex timeout, measured in milliseconds.
 
+config OK_BATTERY_VOLTAGE_IN_TENTHS_OF_V
+	int "Select minimum ERS healthy battery voltage, in tenth of a volt"
+	default 90
+	help
+	  Select minimum ERS battery voltage to consider a healthy system
+	  voltage, measured in tenths of a volt.
+
 # Workaround for not being able to have commas or minus signs in macro arguments:
 # (This pattern is borrowed from code in Zephyr 3.7.0 soc Kconfig files)
 DT_NODE_ZEPHYR_USER := /zephyr,user

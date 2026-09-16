@@ -19,6 +19,6 @@ config KEEPER_API_TIMEOUT_MS
 
 endif # ERS_KEEPER_MODULE
 
-module = keeper
+module = ERS_KEEPER
 module-str = ERS keeper module
 source "subsys/logging/Kconfig.template.log_config"

@@ -9,7 +9,7 @@ menuconfig ERS_DAC
 
 if ERS_DAC
 
-config DAC_MUTEX_TIMEOUT_MS
+config DAC_API_TIMEOUT_MS
 	int "DAC module default mutex timeout in milliseconds"
 	default 1000
 	help

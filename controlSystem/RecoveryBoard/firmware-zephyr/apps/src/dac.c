@@ -1,16 +1,17 @@
 /*
- * Copyright (c) 2025 Portland State Aerospace Society
- *
+ * @file
+ * @brief ERS Zephyr digital-to-analog conversion module.
  * @note Parts of this code copied from Zephyr 3.7.1 DAC sample app.
  */
 
+#include "ers-util.h"
 #include "keeper.h"
 
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/dac.h>
 #include <zephyr/logging/log.h>
 
-LOG_MODULE_REGISTER(ers_dac, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(ers_dac, CONFIG_ERS_DAC_LOG_LEVEL);
 
 //----------------------------------------------------------------------
 // - SECTION - defines
@@ -59,19 +60,16 @@ int32_t dac_write_output_reg(const uint32_t value)
 {
 // Following two const variables from Zephyr 3.7.1 DAC sample app:
 	const int32_t dac_values = 1U << DAC_RESOLUTION;
+	// TODO [ ] Determine whether hard-coded 4096 values are DAC resolution,
+	//          e.g. 4096 = 2 ^ 12:
 	const int32_t sleep_time = 4096 / dac_values > 0 ? 4096 / dac_values : 1;
 	int32_t rc = 0;
+	ERS_MUTEX_LOCK(dac_mtx, CONFIG_DAC_API_TIMEOUT_MS, dac);
 
 	if (!dac_initialized_fs) {
 		LOG_ERR("DAC device not yet initialized, dac_init() called?");
 		rc = -ENODEV;
 		goto unlock;
-	}
-
-	rc = k_mutex_lock(&dac_mtx, K_MSEC(CONFIG_DAC_MUTEX_TIMEOUT_MS));
-	if (rc < 0) {
-		LOG_ERR("dac_write_output_reg() lock mutex failed, err %d", rc);
-		goto done;
 	}
 
 	if (value > DAC_COUNT_HIGHEST_VAL) {
@@ -91,11 +89,7 @@ int32_t dac_write_output_reg(const uint32_t value)
 	}
 
 unlock:
-	rc = k_mutex_unlock(&dac_mtx);
-	if (rc < 0) {
-		LOG_ERR("Failed to unlock DAC mutex, err %d", rc);
-	}
-
+	ERS_MUTEX_UNLOCK(dac_mtx, dac);
 done:
 	return rc;
 }
@@ -103,6 +97,7 @@ done:
 int32_t dac_present_value(uint32_t *dac_setting)
 {
 	int32_t rc = 0;
+	ERS_MUTEX_LOCK(dac_mtx, CONFIG_DAC_API_TIMEOUT_MS, dac);
 
 	if (!dac_initialized_fs) {
 		LOG_ERR("DAC module not initialized, call to dac_init() missed?");
@@ -110,18 +105,9 @@ int32_t dac_present_value(uint32_t *dac_setting)
 		goto done;
 	}
 
-	rc = k_mutex_lock(&dac_mtx, K_MSEC(CONFIG_DAC_MUTEX_TIMEOUT_MS));
-	if (rc < 0) {
-		LOG_ERR("dac_present_value() lock mutex failed, err %d", rc);
-		goto done;
-	}
-
 	*dac_setting = atomic_get(&dac_value_fs);
 
-	rc = k_mutex_unlock(&dac_mtx);
-	if (rc < 0) {
-		LOG_ERR("dac_present_value() unlock mutex failed, err %d", rc);
-	}
+	ERS_MUTEX_UNLOCK(dac_mtx, dac);
 done:
 	return rc;
 }
@@ -129,17 +115,11 @@ done:
 int32_t dac_range(int32_t *bound_low, int32_t *bound_high)
 {
 	int32_t rc = 0;
+	ERS_MUTEX_LOCK(dac_mtx, CONFIG_DAC_API_TIMEOUT_MS, dac);
 
 	if (!dac_initialized_fs) {
 		LOG_ERR("DAC module not initialized, call to dac_init() missed?");
 		rc = -EINVAL;
-		goto done;
-	}
-
-	rc = k_mutex_lock(&dac_mtx, K_MSEC(CONFIG_DAC_MUTEX_TIMEOUT_MS));
-	if (rc < 0)
-	{
-		LOG_ERR("dac_range() lock mutex failed, err %d", rc);
 		goto done;
 	}
 
@@ -152,6 +132,7 @@ int32_t dac_range(int32_t *bound_low, int32_t *bound_high)
 		return rc;
 	}
 
+	ERS_MUTEX_UNLOCK(dac_mtx, dac);
 done:
 	return rc;
 }
@@ -172,16 +153,10 @@ int32_t dac_init(void)
 		return -EIO;
 	}
 
-	// Simple way for this tiny module to indicate it is initialized:
 	dac_initialized_fs = 1;
 
 	LOG_INF("Ready to produce signal on DAC channel %d.",
 		DAC_CHANNEL_ID);
-
-	LOG_INF("Per device tree DAC has resolution of %d counts", DAC_RESOLUTION);
-	LOG_INF("- DEV 0910 - Zephyr user node is %s", STRINGIFY(ZEPHYR_USER_NODE));
-	LOG_INF("- DEV 0910 - from local Kconfig DAC upper range val is %d",
-			(1 << CONFIG_ERS_DAC_RES_IN_BITS));
 
 	return rc;
 }

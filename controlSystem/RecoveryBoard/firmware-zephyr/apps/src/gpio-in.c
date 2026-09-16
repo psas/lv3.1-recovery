@@ -15,12 +15,6 @@ LOG_MODULE_REGISTER(gpio_in, CONFIG_ERS_GPIO_LOG_LEVEL);
 #include <inttypes.h>
 
 //----------------------------------------------------------------------
-// - SECTION - pound defines
-//----------------------------------------------------------------------
-
-#define ERS_GPIO_THREAD_SLEEP_MS 100
-
-//----------------------------------------------------------------------
 // - SECTION - file scoped
 //----------------------------------------------------------------------
 
@@ -191,10 +185,9 @@ static int32_t gpio_in_configure_not_motor_faila(void)
 
 static void gpio_in_thread_entry(void *arg1, void *arg2, void *arg3)
 {
-        ARG_UNUSED(arg1); ARG_UNUSED(arg2); ARG_UNUSED(arg3);
+	ARG_UNUSED(arg1); ARG_UNUSED(arg2); ARG_UNUSED(arg3);
 
 	uint32_t val[ERS_NUM_GPIO_INPUTS] = {0};
-	int32_t rc = 0;
 
 	while (1)
 	{
@@ -208,10 +201,8 @@ static void gpio_in_thread_entry(void *arg1, void *arg2, void *arg3)
 		val[ERS_SIG_NOT_UMB_ON] = !(val[ERS_SIG_NOT_UMB_ON]);
 		keeper_set_not_umb_on(val[ERS_SIG_NOT_UMB_ON]);
 
+#if CONFIG_DIGITAL_IN_SUMMARY_REPORT
 		// - ERS digital input summary reporting begin -
-		keeper_get_diag_mode(&rc);
-		rc = 0;
-		if (rc > 0)
 		{
 			LOG_INF("drogue, main, umb, motor_fail: %d, %d, %d, %d",
 				val[ERS_SIG_ISO_DROGUE],
@@ -221,8 +212,9 @@ static void gpio_in_thread_entry(void *arg1, void *arg2, void *arg3)
 				);
 		}
 		// - ERS digital input summary reporting end -
+#endif
 
-		k_msleep(ERS_GPIO_THREAD_SLEEP_MS);
+		k_msleep(CONFIG_GPIO_THREAD_SLEEP_MS);
 	}
 }
 
@@ -233,25 +225,25 @@ int32_t gpio_in_init(void)
 	rc = gpio_in_configure_iso_drogue();
 	if (rc) {
 		LOG_ERR("Failed to configure GPIO for iso_drogue signal in, err %d", rc);
-		return rc;
+		goto done;
 	}
 
 	rc = gpio_in_configure_iso_main();
 	if (rc) {
 		LOG_ERR("Failed to configure GPIO for iso_main signal in, err %d", rc);
-		return rc;
+		goto done;
 	}
 
 	rc = gpio_in_configure_not_umb_on();
 	if (rc) {
 		LOG_ERR("Failed to configure GPIO for not_umb_on signal in, err %d", rc);
-		return rc;
+		goto done;
 	}
 
 	rc = gpio_in_configure_not_motor_faila();
 	if (rc) {
 		LOG_ERR("Failed to configure GPIO for not_motor_faila signal in, err %d", rc);
-		return rc;
+		goto done;
 	}
 
         k_tid_t gpio_in_tid = k_thread_create(&gpio_in_thread_data,
@@ -260,8 +252,10 @@ int32_t gpio_in_init(void)
                                  gpio_in_thread_entry, NULL, NULL, NULL,
                                  CONFIG_GPIO_THREAD_PRIORITY, 0, K_NO_WAIT);
         if (!gpio_in_tid) {
-                LOG_ERR("ERROR spawning shell support thread\n");
+                LOG_ERR("ERROR spawning GPIO module thread\n");
+		rc = -EFAULT;
         }
 
+done:
         return rc;
 }

@@ -1,7 +1,6 @@
 /*
- * Copyright (c) 2025 Portland State Aerospace Society
- *
- * SPDX-License-Identifier: Apache-2.0
+ * @file
+ * @brief ERS Zephyr CAN communications module.
  */
 
 /**
@@ -99,7 +98,7 @@ enum ers_state_var_indeces {
 };
 #else
 #warning "ERROR no ERS board firmware variant defined."
-// #warning "Need one of ERS_BOARD_VARIANT_SENDER,"
+#warning "Need one of:"
 #warning "ERS_BOARD_VARIANT_DROGUE_CHUTE or ERS_BOARD_VARIANT_MAIN_CHUTE."
 #endif
 
@@ -110,14 +109,14 @@ static uint8_t ers_small_payload_fs[1] = {0};
 // - SECTION - routines
 //----------------------------------------------------------------------
 
-void clear_flag_can_ok_work_handler(struct k_work *work)
+static void clear_flag_can_ok_work_handler(struct k_work *work)
 {
 	keeper_set_can_bus_ok(0); // in "clear CANBus OK flag" work handler
 }
 
 K_WORK_DEFINE(clear_flag_can_ok_work, clear_flag_can_ok_work_handler);
 
-void telemetrum_check_timer_handler(struct k_timer *dummy)
+static void telemetrum_check_timer_handler(struct k_timer *dummy)
 {
 	k_work_submit(&clear_flag_can_ok_work);
 }
@@ -133,7 +132,7 @@ K_TIMER_DEFINE(telemetrum_check_timer, telemetrum_check_timer_handler, NULL);
  *   from Zephyr 3.7.1, copyright 2018.
  */
 
-void tx_irq_callback(const struct device *dev, int error, void *arg)
+static void tx_irq_callback(const struct device *dev, int error, void *arg)
 {
         char *sender = (char *)arg;
 
@@ -145,7 +144,7 @@ void tx_irq_callback(const struct device *dev, int error, void *arg)
         }
 }
 
-void prep_and_send_ack_unlock_command(void)
+static void prep_and_send_ack_unlock_command(void)
 {
         struct can_frame ers_acknowledge_frame = {
                 .flags = 0,
@@ -164,7 +163,7 @@ void prep_and_send_ack_unlock_command(void)
 		 "ERS acklowledge frame");
 }
 
-void prep_and_send_status_frame_work_handler(struct k_work *work)
+static void prep_and_send_status_frame_work_handler(struct k_work *work)
 {
         struct can_frame ers_status_frame = {
                 .flags = 0,
@@ -215,14 +214,14 @@ void prep_and_send_status_frame_work_handler(struct k_work *work)
 
 K_WORK_DEFINE(prep_and_send_status_frame_work, prep_and_send_status_frame_work_handler);
 
-void heartbeat_timer_handler(struct k_timer *dummy)
+static void heartbeat_timer_handler(struct k_timer *dummy)
 {
 	k_work_submit(&prep_and_send_status_frame_work);
 }
 
 K_TIMER_DEFINE(heartbeat_timer, heartbeat_timer_handler, NULL);
 
-int32_t can_helper_unlock_ring(void) {
+static int32_t can_helper_unlock_ring(void) {
 
 // TODO [ ] Check with Theo about correctness of this specified condition to unlock ring:
 // "If !UMB_ON = 1 (no umbilical voltage) and the the RING_STATUS = 2 (it’s locked)"
@@ -254,17 +253,15 @@ int32_t can_helper_unlock_ring(void) {
 	return rc;
 }
 
-void rx_thread_entry(void *arg1, void *arg2, void *arg3)
+static void rx_thread_entry(void *arg1, void *arg2, void *arg3)
 {
 	ARG_UNUSED(arg1); ARG_UNUSED(arg2); ARG_UNUSED(arg3);
 
 	int32_t rc = 0;
 
 	const struct can_filter filter_sender_heartbeat = {
-		// .flags = CAN_FILTER_IDE,
 		.flags = 0,
 		.id = MSG_ID_TELEMETRUM_SENDER,
-		// .mask = CAN_EXT_ID_MASK
 		.mask = CAN_STD_ID_MASK
 	};
 

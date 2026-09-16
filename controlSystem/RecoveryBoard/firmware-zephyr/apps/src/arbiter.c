@@ -1,7 +1,6 @@
 /*
- * Copyright (c) 2025 Portland State Aerospace Society
- *
- * SPDX-License-Identifier: Apache-2.0
+ * @file
+ * @brief ERS Zephyr arbiter module.
  */
 
 #include "arbiter.h"
@@ -23,15 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// LOG_MODULE_REGISTER(arbiter, CONFIG_ARBITER_LOG_LEVEL);
-LOG_MODULE_REGISTER(arbiter, LOG_LEVEL_INF);
-
-//----------------------------------------------------------------------
-// - SECTION - defines
-//----------------------------------------------------------------------
-
-// Select an ERS battery voltage "ok" threshold of 9.0 VDC, in tenths of a volt:
-#define BATTERY_VOLTAGE_OK_THRESHOLD_TENTHS_V 90
+LOG_MODULE_REGISTER(arbiter, CONFIG_ERS_ARBITER_LOG_LEVEL);
 
 //----------------------------------------------------------------------
 // - SECTION - file scoped
@@ -113,7 +104,6 @@ done:
 
 void arbiter_cmd_set_default_limits(const struct shell *shell, size_t argc, char **argv)
 {
-	LOG_INF("L1");
 	int32_t rc = 0;
 
 	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
@@ -177,10 +167,19 @@ static int32_t adc_reading_to_hall_state(const enum hall_sensor_instances sensor
  * @brief Routine to print arbiter messages to logging backend, with a run time
  *   check of app logging state, as held by ERS Zephyr keeper module.
  *
- * @note 'arb_mesg' is short for "arbiter message".
+ * @note 'arbiter_mesg' is short for "arbiter message".
+ *
+ * @note Messages printed by arbiter_mesg() depend both on Zephyr logging level
+ *  settings, and on a run time state variable.  During development with allows
+ *  for turning certain messages on and off, in this module, using the ERS
+ *  Zephyr app CLI.  This is more convenient than to modify Kconfigs and rebuild
+ *  the firmware, solely to toggle certain diagnostic messages.
+ *
+ * @param fmt Pointer to a C string format specifier.
+ * @param ... zero or more variable references and or constants to print.
  */
 
-static void arb_mesg(char *fmt, ...)
+static void arbiter_mesg(char *fmt, ...)
 {
 	int32_t rc = 0;
 	static char lbuf[DEV_ARB_MESG_SIZE] = {0};
@@ -198,7 +197,7 @@ static void arb_mesg(char *fmt, ...)
 	va_end(ap);
 
 	if (n < 0) {
-		LOG_ERR("Failed to format diag message, vsnpirntf() returns %d", n);
+		LOG_ERR("Failed to format diag message, vsnprintf() returns %d", n);
 		return;
 	}
 
@@ -228,7 +227,7 @@ static int32_t determine_battery_ok(void)
 {
 	int32_t batt_voltage_in_tenths_v = 0;
 	keeper_get_batt_decivolts(&batt_voltage_in_tenths_v);
-	if (batt_voltage_in_tenths_v >= BATTERY_VOLTAGE_OK_THRESHOLD_TENTHS_V) {
+	if (batt_voltage_in_tenths_v >= CONFIG_OK_BATTERY_VOLTAGE_IN_TENTHS_OF_V) {
 		keeper_set_battery_ok(1);
 	} else {
 		keeper_set_battery_ok(0);
@@ -259,8 +258,6 @@ int32_t arbiter_calc_battery_voltage(void)
 done:
 	return rc;
 }
-
-// 2026-09-09 API in progress . . .
 
 int32_t arbiter_calc_max_motor_drive_current(void)
 {
@@ -325,7 +322,7 @@ int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 		goto unlock;
 	}
 
-	arb_mesg("readings, states: %u %u  %d %d", hall_1_reading, hall_2_reading, hall_1_state, hall_2_state);
+	arbiter_mesg("readings, states: %u %u  %d %d", hall_1_reading, hall_2_reading, hall_1_state, hall_2_state);
 
 /*
    Hall2   Vun   Ina   Bet   Act   Ovr 
@@ -403,7 +400,7 @@ determinations.
 
 qualify_validity:
 	if ((hall_1_state == HALL_STATE_V_BETWEEN) && (hall_2_state == HALL_STATE_V_BETWEEN)) {
-		arb_mesg("both hall in between");
+		arbiter_mesg("both hall in between");
 		*ring_position = RING_POS_BETWEEN_FULLY_QUALIFIED;
 	}
 								    // - - - - -     X X X X X
@@ -413,7 +410,7 @@ qualify_validity:
 								    // - - - - -     X X X X X
 
 	if ((hall_1_state == HALL_STATE_V_ACTIVE) && (hall_2_state == HALL_STATE_V_INACTIVE)) {
-		arb_mesg("ring unlocked, fully qualified");
+		arbiter_mesg("ring unlocked, fully qualified");
 		*ring_position = RING_POS_UNLOCKED_FULLY_QUALIFIED;
 	}
 								    // - - - - -     X X X X X
@@ -423,7 +420,7 @@ qualify_validity:
 								    // - - - - -     X X X X X
 
 	if ((hall_1_state == HALL_STATE_V_INACTIVE) && (hall_2_state == HALL_STATE_V_ACTIVE)) {
-		arb_mesg("ring locked, fully qualified");
+		arbiter_mesg("ring locked, fully qualified");
 		*ring_position = RING_POS_LOCKED_FULLY_QUALIFIED;
 	}
 								    // - - - - -     X X X X X
@@ -483,36 +480,36 @@ char *arbiter_ring_pos_to_str(const enum lock_ring_position pos)
 	int32_t rc = 0;
 	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
 
-        switch (pos) {
-        case RING_POS_LOCKED:
+	switch (pos) {
+	case RING_POS_LOCKED:
 		ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
-                return "ring locked";
+		return "ring locked";
 		break;
-        case RING_POS_BETWEEN_L_AND_U:
+	case RING_POS_BETWEEN_L_AND_U:
 		ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
-                return "ring between";
+		return "ring between";
 		break;
-        case RING_POS_UNLOCKED:
+	case RING_POS_UNLOCKED:
 		ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
-                return "ring unlocked";
+		return "ring unlocked";
 		break;
-        case RING_POS_LOCKED_FULLY_QUALIFIED:
+	case RING_POS_LOCKED_FULLY_QUALIFIED:
 		ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
-                return "ring locked (fully qualified)";
+		return "ring locked (fully qualified)";
 		break;
-        case RING_POS_BETWEEN_FULLY_QUALIFIED:
+	case RING_POS_BETWEEN_FULLY_QUALIFIED:
 		ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
-                return "ring between (fully qualified)";
+		return "ring between (fully qualified)";
 		break;
-        case RING_POS_UNLOCKED_FULLY_QUALIFIED:
+	case RING_POS_UNLOCKED_FULLY_QUALIFIED:
 		ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
-                return "ring unlocked (fully qualified)";
+		return "ring unlocked (fully qualified)";
 		break;
 	case RING_POS_UNKNOWN:
-        default:
+	default:
 		ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
-                return "ring position unknown";
-        }
+		return "ring position unknown";
+	}
 
 	ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
 done:
@@ -525,9 +522,7 @@ done:
 
 void arbiter_thread_entry(void *arg1, void *arg2, void *arg3)
 {
-        ARG_UNUSED(arg1);
-        ARG_UNUSED(arg2);
-        ARG_UNUSED(arg3);
+	ARG_UNUSED(arg1); ARG_UNUSED(arg2); ARG_UNUSED(arg3);
 
 	enum lock_ring_position ring_position = RING_POS_UNKNOWN;
 	uint32_t battery_ok = 0;
