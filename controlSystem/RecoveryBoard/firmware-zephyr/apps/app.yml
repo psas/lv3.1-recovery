@@ -1,7 +1,6 @@
 app:
   description: Electromechanical Recovery System (ERS) firmware
-    application
-  name: ERS drogue
+  name: ERS Drogue and Main Chute Code
 common:
   tags: psas-avionics, ers
   integration_platforms:

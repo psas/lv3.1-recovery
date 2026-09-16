@@ -16,7 +16,7 @@
 
 #include <stdlib.h>
 
-LOG_MODULE_REGISTER(keeper, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(keeper, CONFIG_ERS_KEEPER_LOG_LEVEL);
 
 //----------------------------------------------------------------------
 // - SECTION - file scoped
@@ -30,8 +30,7 @@ LOG_MODULE_REGISTER(keeper, LOG_LEVEL_INF);
 
 #define COUNT_OF_RUN_TIME_SENSOR_LIMITS (HALL_SENSOR_COUNT * HALL_SENSOR_LIMIT_COUNT)
 
-// Array of Hall sensor default limits.  These may need to be tuned at run time
-// when lock ring assemblies have been handled.
+// Array of Hall sensor default limits.
 
 static uint32_t hall_sensor_default_limits[] = {
 	HALL_LIMIT_V_UNDER_S1,
@@ -143,11 +142,8 @@ static char op_name_fs[][OP_NAME_LENGTH] = {
 
 static char undef_string_fs[] = { "unknown_op" };
 
-// Provide a mutex to assure that both Hall sensors are updated without anyone
-// reading their latest values in the middle of this pair of updates:
 struct k_mutex keeper_mtx;
 
-// Flag to indiciate that this module is initialized:
 static bool keeper_initialized_fs = false;
 
 //----------------------------------------------------------------------
@@ -170,7 +166,7 @@ static int32_t set_hall_sensor_limit(const enum hall_sensor_instances sensor_idx
 				     const enum hall_sensor_named_limits limit_idx,
 				     const uint32_t val);
 
-// Diagnostics without Zephyr shell echoing:
+// To support diagnostics without Zephyr shell echoing:
 static const struct shell* shell_ptr_fs;
 
 //----------------------------------------------------------------------
@@ -260,23 +256,23 @@ void keeper_get_not_umb_on(uint32_t* value)
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// - DATA GROUP - analog inputs not categorized
+// - DATA GROUP - analog inputs
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 int32_t keeper_set_adc_value(const enum ers_adc_values idx, const uint32_t val)
 {
 	switch (idx)
 	{
-        case ADC_READING_BATT_READ:
+	case ADC_READING_BATT_READ:
 		keeper_set_batt_read(val);
 		break;
-        case ADC_READING_MOTOR_ISENSE:
+	case ADC_READING_MOTOR_ISENSE:
 		keeper_set_motor_isense(val);
 		break;
 	case ADC_READING_HALL_1:
 		keeper_set_hall_1(val);
 		break;
-        case ADC_READING_HALL_2:
+	case ADC_READING_HALL_2:
 		keeper_set_hall_2(val);
 		break;
 	default:
@@ -306,7 +302,7 @@ int32_t keeper_cmd_set_limit_v_under(const struct shell *shell, size_t argc, cha
 	str = argv[2];
 	value = strtol(str, &endptr, BASE_10);
 
-        if (*endptr != '\0') {
+	if (*endptr != '\0') {
 		shell_fprintf(shell, SHELL_WARNING, "Parsed non-numeric "
 				"characters after number: '%s'\n", endptr);
 		rc = -EINVAL;
@@ -344,7 +340,7 @@ int32_t keeper_cmd_set_limit_inactive(const struct shell *shell, size_t argc, ch
 	str = argv[2];
 	value = strtol(str, &endptr, BASE_10);
 
-        if (*endptr != '\0') {
+	if (*endptr != '\0') {
 		shell_fprintf(shell, SHELL_WARNING, "Parsed non-numeric "
 				"characters after number: '%s'\n", endptr);
 		rc = -EINVAL;
@@ -382,7 +378,7 @@ int32_t keeper_cmd_set_limit_between(const struct shell *shell, size_t argc, cha
 	str = argv[2];
 	value = strtol(str, &endptr, BASE_10);
 
-        if (*endptr != '\0') {
+	if (*endptr != '\0') {
 		shell_fprintf(shell, SHELL_WARNING, "Parsed non-numeric "
 				"characters after number: '%s'\n", endptr);
 		rc = -EINVAL;
@@ -419,7 +415,7 @@ int32_t keeper_cmd_set_limit_active(const struct shell *shell, size_t argc, char
 	str = argv[2];
 	value = strtol(str, &endptr, BASE_10);
 
-        if (*endptr != '\0') {
+	if (*endptr != '\0') {
 		shell_fprintf(shell, SHELL_WARNING, "Parsed non-numeric "
 				"characters after number: '%s'\n", endptr);
 		rc = -EINVAL;
@@ -749,10 +745,11 @@ done:
 }
 
 /**
- * @note Hall sensor limits help us to categorize ADC reading sub-ranges
- *   into physical positions of the lock ring drive gear relative to the
- *   airframe.  Here define setter and getter APIs to support run time
- *   adjustments to these readings sub-range limits.
+ * @note Set a Hall sensor limit at run time.
+ *
+ * @param hall_sensor_instances An id of the sensor whose limit to update.
+ * @param hall_sensor_named_limits An id of the limiting value to update.
+ * @param value The latest value to write to the app data store.
  */
 
 static int32_t set_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
@@ -771,13 +768,13 @@ static int32_t set_hall_sensor_limit(const enum hall_sensor_instances sensor_idx
 	case HALL_LIMIT_V_UNDER:
 		atomic_set(&hall_sensor_fs[sensor_idx].v_under, value);
 		break;
-        case HALL_LIMIT_V_INACTIVE:
+	case HALL_LIMIT_V_INACTIVE:
 		atomic_set(&hall_sensor_fs[sensor_idx].inactive, value);
 		break;
-        case HALL_LIMIT_V_BETWEEN:
+	case HALL_LIMIT_V_BETWEEN:
 		atomic_set(&hall_sensor_fs[sensor_idx].between, value);
 		break;
-        case HALL_LIMIT_V_ACTIVE:
+	case HALL_LIMIT_V_ACTIVE:
 		atomic_set(&hall_sensor_fs[sensor_idx].active, value);
 		break;
 	default:
@@ -802,13 +799,13 @@ int32_t keeper_get_hall_sensor_limit(const enum hall_sensor_instances sensor_idx
 	case HALL_LIMIT_V_UNDER:
 		*value = atomic_get(&hall_sensor_fs[sensor_idx].v_under);
 		break;
-        case HALL_LIMIT_V_INACTIVE:
+	case HALL_LIMIT_V_INACTIVE:
 		*value = atomic_get(&hall_sensor_fs[sensor_idx].inactive);
 		break;
-        case HALL_LIMIT_V_BETWEEN:
+	case HALL_LIMIT_V_BETWEEN:
 		*value = atomic_get(&hall_sensor_fs[sensor_idx].between);
 		break;
-        case HALL_LIMIT_V_ACTIVE:
+	case HALL_LIMIT_V_ACTIVE:
 		*value = atomic_get(&hall_sensor_fs[sensor_idx].active);
 		break;
 	default:
@@ -978,15 +975,14 @@ int32_t keeper_restore_hall_sensor_default_limits(void)
 
 	ERS_MUTEX_LOCK(keeper_mtx, CONFIG_KEEPER_API_TIMEOUT_MS, keeper);
 
-	// Sensor limit operation is to write default limits to keeper module:
-	// (In context of keeper, to read is to get, to write is to set.)
+	// Helper variables for error tracking
 	enum data_operation op = KEEPER_OP_SET;
 	int32_t set_errors = 0;
 
 #define ERR_FLAG_BIT_SHIFT (limit_idx + HALL_SENSOR_LIMIT_COUNT * sensor_idx)
 
-        for (uint32_t sensor_idx = 0; sensor_idx < HALL_SENSOR_COUNT; sensor_idx++) {
-                for (uint32_t limit_idx = 0; limit_idx < HALL_SENSOR_LIMIT_COUNT; limit_idx++) {
+	for (uint32_t sensor_idx = 0; sensor_idx < HALL_SENSOR_COUNT; sensor_idx++) {
+		for (uint32_t limit_idx = 0; limit_idx < HALL_SENSOR_LIMIT_COUNT; limit_idx++) {
 			// Compute index to array of default sensor limits:
 			i = limit_idx + HALL_SENSOR_LIMIT_COUNT * sensor_idx;
 
@@ -1073,7 +1069,7 @@ int32_t keeper_init(void)
 	k_mutex_init(&keeper_mtx);
 
 	shell_ptr_fs = shell_backend_uart_get_ptr();
-        __ASSERT(shell_ptr_fs != NULL, "Failed to get shell backend.");
+	__ASSERT(shell_ptr_fs != NULL, "Failed to get shell backend.");
 
 	initialize_system_state_vars();
 	keeper_initialized_fs = true;

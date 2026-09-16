@@ -13,7 +13,7 @@
 #include <zephyr/shell/shell.h>
 #include <zephyr/shell/shell_uart.h>
 
-LOG_MODULE_REGISTER(pwm, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(pwm, CONFIG_ERS_PWM_LOG_LEVEL);
 
 //----------------------------------------------------------------------
 // - SECTION - file scoped
@@ -43,7 +43,6 @@ struct buzzer_note {
 
 struct audio_pattern {
 	struct buzzer_note notes[PWM_NOTES_MAX_COUNT];
-	// struct buzzer_note notes[];
 	uint32_t repetitions; // times to repeat the pattern
 	uint32_t rep_count;
 	uint32_t last_note;
@@ -137,7 +136,7 @@ static int32_t init_pwm_hardware(void)
 	 * Keep its value at least MIN_PERIOD * 4 to make sure
 	 * the sample changes frequency at least once.
 	 */
-	// LOG_INF("Calibrating for channel %d...\n", pwm_buzzer.channel);
+
 	max_period_fs = MAX_PERIOD;
 	while (pwm_set_dt(&pwm_buzzer, max_period_fs, max_period_fs / 2U)) {
 		max_period_fs /= 2U;
@@ -154,28 +153,6 @@ static int32_t init_pwm_hardware(void)
 
 	return rc;
 }
-
-/*
-Using period 15625000
-Using period 7812500   . . . 256
-Using period 15625000  . . . 128
-Using period 31250000   . . . 64
-Using period 62500000   . . . 32
-Using period 125000000  . . . 16
-Using period 250000000   . . . 8
-Using period 500000000   . . . 4
-Using period 1000000000  . . . 2 Hertz
-Using period 500000000
-
-From ChibiOS ERS work, source file beep.c:
-
- 16   // Sweeps through the speaker frequency range once a second from low to high
- 17   // by changing the PWM period. At a PWM timer rate of 100khz the periods
- 18   // correspond to:
- 19   // - 28 -> ~3570Hz
- 20   // - 25 ->  4000Hz
- 21   // - 23 -> ~4350Hz
-*/
 
 /**
  * @brief Routine to play a note on the ERS buzzer.
@@ -279,7 +256,7 @@ done:
 	return rc;
 }
 
-void pwm_thread_entry(void *arg1, void *arg2, void *arg3)
+static void pwm_thread_entry(void *arg1, void *arg2, void *arg3)
 {
 	ARG_UNUSED(arg1);
 	ARG_UNUSED(arg2);

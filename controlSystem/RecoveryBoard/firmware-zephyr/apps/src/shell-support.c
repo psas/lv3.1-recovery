@@ -8,9 +8,16 @@
  *   commands to it.
  *
  * @note The code in this module contains Zephyr shell macros, mostly (or
- *  entirely) to declare custom commands.  These are added to a minimal set of
- *  Zephyr built-in shell commands.  These have been minimized through Kconfig
- *  symbol choices.
+ *  entirely) to declare custom commands.  These commands appear along side a
+ *  minimal set of Zephyr built-in shell commands.
+ *
+ *  Zephyr's built-in commands have been minimized through Kconfig symbol
+ *  choices.  To disable all Zephyr built-ins also disables features like
+ *  command line completion, so a compromise was made.
+ *
+ *  ERS commands, which are cumstom to this application, have descriptions
+ *  which begin with "- ERS -".  Top level command descriptions are shown by
+ *  entering "help" at the ERS/Zephyr command prompt.
  *
  * @note This module also contains some command function bodies, and some
  *  "trampoline" functions, to jump to functions which to do the actual work,
@@ -32,7 +39,7 @@
 
 #include <stdlib.h>
 
-LOG_MODULE_REGISTER(shell_support, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(shell_support, CONFIG_ERS_SHELL_SUPPORT_LOG_LEVEL);
 
 #define SHELL_SUPPORT_THREAD_STACK_SIZE 512
 #define SHELL_SUPPORT_THREAD_PRIORITY 5
@@ -43,13 +50,13 @@ LOG_MODULE_REGISTER(shell_support, LOG_LEVEL_INF);
 
 static int cmd_wrapper_read_adc_in0(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc); ARG_UNUSED(argv);
+	ARG_UNUSED(argc); ARG_UNUSED(argv);
 	return cmd_ers_read_adc_in0(shell);
 }
 
 static int cmd_wrapper_read_adc_in1(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc); ARG_UNUSED(argv);
+	ARG_UNUSED(argc); ARG_UNUSED(argv);
 	return cmd_ers_read_adc_in1(shell);
 }
 
@@ -59,16 +66,14 @@ static int cmd_wrapper_read_adc_in1(const struct shell *shell, size_t argc, char
 
 static int cmd_diag_periodic_on(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(shell); ARG_UNUSED(argc); ARG_UNUSED(argv);
-
+	ARG_UNUSED(shell); ARG_UNUSED(argc); ARG_UNUSED(argv);
 	keeper_set_diag_periodic();
 	return 0;
 }
 
 static int cmd_diag_periodic_off(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(shell); ARG_UNUSED(argc); ARG_UNUSED(argv);
-
+	ARG_UNUSED(shell); ARG_UNUSED(argc); ARG_UNUSED(argv);
 	keeper_clear_diag_periodic();
 	return 0;
 }
@@ -173,17 +178,15 @@ done:
 	return rc;
 }
 
-// static int cmd_status_led_off(const struct shell *shell, size_t argc, char *argv[])
-
 SHELL_STATIC_SUBCMD_SET_CREATE(
-        cmds_status_led,
-        SHELL_CMD_ARG(on, NULL, "enable ERS status LED: led on",
-                cmd_status_led_on, 0, 0),
-        SHELL_CMD_ARG(off, NULL, "disable ERS status LED: led off",
-                cmd_status_led_off, 0, 0),
-        SHELL_CMD_ARG(set, NULL, "set status LED blink pattern: led set pattern <pattern_name>",
-                cmd_status_led_set_pattern, 0, 3),
-        SHELL_SUBCMD_SET_END
+	cmds_status_led,
+	SHELL_CMD_ARG(on, NULL, "enable ERS status LED: led on",
+		cmd_status_led_on, 0, 0),
+	SHELL_CMD_ARG(off, NULL, "disable ERS status LED: led off",
+		cmd_status_led_off, 0, 0),
+	SHELL_CMD_ARG(set, NULL, "set status LED blink pattern: led set pattern <pattern_name>",
+		cmd_status_led_set_pattern, 0, 3),
+	SHELL_SUBCMD_SET_END
 );
 
 SHELL_CMD_REGISTER(led, &cmds_status_led, "- ERS - status LED", NULL);
@@ -194,13 +197,12 @@ SHELL_CMD_REGISTER(led, &cmds_status_led, "- ERS - status LED", NULL);
 
 static int cmd_wrapper_read_adc_all(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc); ARG_UNUSED(argv);
+	ARG_UNUSED(argc); ARG_UNUSED(argv);
 	int32_t rc = 0;
 
-        shell_print(shell, "Calling ADC module to read all ADC channels . . .\n");
+	shell_print(shell, "Calling ADC module to read all ADC channels . . .\n");
 	rc = adc_read_channels(ADC_READING_BATT_READ, ADC_READING_HALL_2);
-	if (rc != 0)
-	{
+	if (rc != 0) {
 		shell_fprintf(shell, SHELL_NORMAL, "ADC read channels returns error status %d\n",
 				 rc);
 		shell_fprintf(shell, SHELL_NORMAL, "Last known good stored readings are:\n");
@@ -239,7 +241,7 @@ SHELL_CMD_REGISTER(ers, &ers_cmds, "- ERS - development commands", NULL);
 
 static int cmd_read_hall_sensors(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc); ARG_UNUSED(argv);
+	ARG_UNUSED(argc); ARG_UNUSED(argv);
 
 	uint32_t hall_1_reading = 0;
 	uint32_t hall_2_reading = 0;
@@ -257,7 +259,7 @@ static int cmd_read_hall_sensors(const struct shell *shell, size_t argc, char *a
 
 	keeper_get_hall_1(&hall_1_reading);
 	keeper_get_hall_2(&hall_2_reading);
-	shell_fprintf(shell, SHELL_NORMAL, "Calling Hall 1 getting and Hall 2 getter:':\n");
+	shell_fprintf(shell, SHELL_NORMAL, "Calling Hall 1 getter and Hall 2 getter:':\n");
 	shell_fprintf(shell, SHELL_NORMAL, "Hall sensor 1 reading: %d\n", hall_1_reading);
 	shell_fprintf(shell, SHELL_NORMAL, "Hall sensor 2 reading: %d\n", hall_2_reading);
 
@@ -317,51 +319,48 @@ SHELL_CMD_REGISTER(hall, &sub_section_hall,
 
 static int cmd_show_locking_ring_state(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc); ARG_UNUSED(argv);
+	ARG_UNUSED(argc); ARG_UNUSED(argv);
 	enum lock_ring_state ring_state = RING_STATE_UNKNOWN;
 	int32_t rc = 0;
 
 	keeper_get_ring_state(&ring_state);
 
 	switch (ring_state) {
-		case RING_STATE_UNKNOWN:
-			shell_fprintf(shell, SHELL_NORMAL, "ring in 'unknown' state\n");
-			break;
-		case RING_STATE_UNLOCKED:
-			shell_fprintf(shell, SHELL_NORMAL, "ring in 'unlocked' state\n");
-			break;
-		case RING_STATE_BETWEEN:
-			shell_fprintf(shell, SHELL_NORMAL, "ring in 'between' state\n");
-			break;
-		case RING_STATE_LOCKED:
-			shell_fprintf(shell, SHELL_NORMAL, "ring in 'locked' state\n");
-			break;
-		case RING_STATE_ERROR:
-			shell_fprintf(shell, SHELL_NORMAL, "ring state detection error\n");
-			break;
-		default:
-			shell_fprintf(shell, SHELL_NORMAL, "show ring state command error\n");
-			rc = -EINVAL;
+	case RING_STATE_UNKNOWN:
+		shell_fprintf(shell, SHELL_NORMAL, "ring in 'unknown' state\n");
+		break;
+	case RING_STATE_UNLOCKED:
+		shell_fprintf(shell, SHELL_NORMAL, "ring in 'unlocked' state\n");
+		break;
+	case RING_STATE_BETWEEN:
+		shell_fprintf(shell, SHELL_NORMAL, "ring in 'between' state\n");
+		break;
+	case RING_STATE_LOCKED:
+		shell_fprintf(shell, SHELL_NORMAL, "ring in 'locked' state\n");
+		break;
+	case RING_STATE_ERROR:
+		shell_fprintf(shell, SHELL_NORMAL, "ring state detection error\n");
+		break;
+	default:
+		shell_fprintf(shell, SHELL_NORMAL, "show ring state command error\n");
+		rc = -EINVAL;
 	}
 	return rc;
 }
 
 static int cmd_show_locking_ring_pos(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc); ARG_UNUSED(argv);
+	ARG_UNUSED(argc); ARG_UNUSED(argv);
 
 	enum lock_ring_position ring_position = RING_POS_UNKNOWN;
 	int32_t rc = arbiter_determine_ring_state(&ring_position);
-	if (rc == 0)
-	{
+	if (rc == 0) {
 		char lbuf[SIZE_SHORT_ERS_MESSAGE] = {0};
 		char *ring_pos_as_str = lbuf;
 		ring_pos_as_str = arbiter_ring_pos_to_str(ring_position);
 		shell_fprintf(shell, SHELL_NORMAL, "Current lock ring position:  %d %s\n",
 				ring_position, ring_pos_as_str);
-	}
-	else
-	{
+	} else {
 		shell_fprintf(shell, SHELL_NORMAL, "Failed lock ring position query, err %d\n",
 				 rc);
 	}
@@ -371,39 +370,45 @@ static int cmd_show_locking_ring_pos(const struct shell *shell, size_t argc, cha
 
 static int cmd_set_pos_detection_interval(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc); ARG_UNUSED(argv);
+	ARG_UNUSED(argc);
+	uint32_t value = 0;
+	char *endptr, *str;
+	int32_t rc = 0;
 
-        uint32_t value = 0;
-        char *endptr, *str;
-        int32_t rc = 0;
+	str = argv[1];
+	value = strtol(str, &endptr, BASE_TEN);
 
-        str = argv[1];
-        value = strtol(str, &endptr, BASE_TEN);
+	if (*endptr != '\0') {
+		shell_fprintf(shell, SHELL_WARNING, "Parsed non-numeric "
+				"characters after number: '%s'\n", endptr);
+		rc = -EINVAL;
+		goto error;
+	}
 
 	shell_fprintf(shell, SHELL_NORMAL, "Storing ring position detection "
 			"interval of %u ms . . .\n", value);
 	keeper_set_ring_pos_detection_interval(value);
+
+error:
 	return rc;
 }
 
 static int cmd_show_pos_detection_interval(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc); ARG_UNUSED(argv);
+	ARG_UNUSED(argc); ARG_UNUSED(argv);
 
-        uint32_t value = 0;
+	uint32_t value = 0;
 	keeper_get_ring_pos_detection_interval(&value);
 	shell_fprintf(shell, SHELL_NORMAL, "ring position detection interval is %u ms\n", value);
 	return 0;
 }
 
-
 static int cmd_lock_ring(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc); ARG_UNUSED(argv);
+	ARG_UNUSED(argc); ARG_UNUSED(argv);
 
 	int32_t rc = mc_lock_ring();
-	if (rc != 0)
-	{
+	if (rc != 0) {
 		shell_fprintf(shell, SHELL_NORMAL, "Failed to lock ring, err %d\n", rc);
 	}
 
@@ -412,11 +417,10 @@ static int cmd_lock_ring(const struct shell *shell, size_t argc, char *argv[])
 
 static int cmd_unlock_ring(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc); ARG_UNUSED(argv);
+	ARG_UNUSED(argc); ARG_UNUSED(argv);
 
 	int32_t rc = mc_unlock_ring();
-	if (rc != 0)
-	{
+	if (rc != 0) {
 		shell_fprintf(shell, SHELL_NORMAL, "Failed to lock ring, err %d\n", rc);
 	}
 
@@ -451,15 +455,15 @@ SHELL_CMD_REGISTER(ring, &sub_section_ring, "- ERS - lock ring commands", NULL);
 
 static int cmd_motor_show_use_count(const struct shell *shell, size_t argc, char *argv[])
 {
-        uint32_t value = 0;
-        int32_t rc = 0;
+	uint32_t value = 0;
+	int32_t rc = 0;
 
 	rc = settings_ers_retrieve_value(KEY_NAME_LOCK_COUNT, &value, sizeof(value));
 	if (rc != 0) {
-                shell_fprintf(shell, SHELL_NORMAL, "Failed to read motor use count from flash,"
+		shell_fprintf(shell, SHELL_NORMAL, "Failed to read motor use count from flash,"
 			       " err %d\n\r", rc);
 	} else {
-                shell_fprintf(shell, SHELL_NORMAL, "Motor has been actuated %u times\n\r", value);
+		shell_fprintf(shell, SHELL_NORMAL, "Motor has been actuated %u times\n\r", value);
 	}
 
 	return 0;
@@ -467,27 +471,34 @@ static int cmd_motor_show_use_count(const struct shell *shell, size_t argc, char
 
 static int cmd_motor_set_use_count(const struct shell *shell, size_t argc, char *argv[])
 {
-        uint32_t value = 0;
-        char *endptr, *str;
-        int32_t rc = 0;
+	ARG_UNUSED(argc);
+	uint32_t value = 0;
+	char *endptr, *str;
+	int32_t rc = 0;
 
 	str = argv[1];
 	value = strtol(str, &endptr, BASE_10);
 
-	// TOOD [ ] Sanity check outcome of `strtol()`.
-        shell_fprintf(shell, SHELL_NORMAL, "setting motor use count to %u\n", value);
+	if (*endptr != '\0') {
+		shell_fprintf(shell, SHELL_WARNING, "Parsed non-numeric "
+				"characters after number: '%s'\n", endptr);
+		rc = -EINVAL;
+		goto error;
+	}
 
-        rc = settings_ers_store_value(KEY_NAME_LOCK_COUNT, (const void *)value, sizeof(value));
-        if (rc != 0) {
-                LOG_ERR("Failed to store motor use (lock|unlock ring) events, err %d", rc);
-        }
+	shell_fprintf(shell, SHELL_NORMAL, "setting motor use count to %u\n", value);
 
-	return 0;
+	rc = settings_ers_store_value(KEY_NAME_LOCK_COUNT, (const void *)value, sizeof(value));
+	if (rc != 0) {
+		LOG_ERR("Failed to store motor use (lock|unlock ring) events, err %d", rc);
+	}
+error:
+	return rc;
 }
 
 static int cmd_motor_show_max_current(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc); ARG_UNUSED(argv);
+	ARG_UNUSED(argc); ARG_UNUSED(argv);
 
 	// Note, body of this routine is copied from cmd_dac_show_dac_setting() . . .
 	uint32_t dac_setting = 0;
@@ -509,14 +520,14 @@ static int cmd_motor_show_max_current(const struct shell *shell, size_t argc, ch
 }
 
 SHELL_STATIC_SUBCMD_SET_CREATE(
-        cmds_motor_use,
-        SHELL_CMD_ARG(show_use_count, NULL, "show motor use count: motor show_use_count",
-                cmd_motor_show_use_count, 1, 0),
-        SHELL_CMD_ARG(set_use_count, NULL, "set motor use count: motor set_use_count",
-                cmd_motor_set_use_count, 2, 0),
-        SHELL_CMD_ARG(max_current, NULL, "show maximum current limit:  motor max_current",
-                cmd_motor_show_max_current, 1, 0),
-        SHELL_SUBCMD_SET_END
+	cmds_motor_use,
+	SHELL_CMD_ARG(show_use_count, NULL, "show motor use count: motor show_use_count",
+		cmd_motor_show_use_count, 1, 0),
+	SHELL_CMD_ARG(set_use_count, NULL, "set motor use count: motor set_use_count",
+		cmd_motor_set_use_count, 2, 0),
+	SHELL_CMD_ARG(max_current, NULL, "show maximum current limit:  motor max_current",
+		cmd_motor_show_max_current, 1, 0),
+	SHELL_SUBCMD_SET_END
 );
 
 /**
@@ -537,15 +548,18 @@ SHELL_CMD_REGISTER(motor, &cmds_motor_use, "- ERS - motor use info", NULL);
 /**
  * @brief Command to show range of DAC output setting values.
  *
- * @note Takes standard Zephyr shell command parameters.
+ * @note Takes standard Zephyr shell command parameters, which are:
+ * @param @p shell Pointer to Zephyr shell instance.
+ * @param argc Count of arguments following command toke.
+ * @param @p argv Array of command arguments.
  *
  * @retval 0 on success update to on-chip DAC config register(s).
- * @return -errno as returned from Zephyr wrappers to DAC driver APIs.
+ * @return negative errno as returned from Zephyr wrappers to DAC driver APIs.
  */
 
 static int cmd_dac_show_range(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc); ARG_UNUSED(argv);
+	ARG_UNUSED(argc); ARG_UNUSED(argv);
 
 	uint32_t bound_low = 0;
 	uint32_t bound_high = 0;
@@ -564,12 +578,12 @@ static int cmd_dac_show_range(const struct shell *shell, size_t argc, char *argv
  * @note Takes standard Zephyr shell command parameters.
  *
  * @retval 0 on success update to on-chip DAC config register(s).
- * @return -errno as returned from Zephyr wrappers to DAC driver APIs.
+ * @return negative errno as returned from Zephyr wrappers to DAC driver APIs.
  */
 
 static int cmd_dac_show_dac_setting(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc); ARG_UNUSED(argv);
+	ARG_UNUSED(argc); ARG_UNUSED(argv);
 
 	uint32_t dac_setting = 0;
 
@@ -580,36 +594,38 @@ static int cmd_dac_show_dac_setting(const struct shell *shell, size_t argc, char
 
 /**
  * @brief Command to write a DAC output value to DAC control register.
- * @param @p shell Pointer to Zephyr shell instance.
- * @param argc Count of arguments following command toke.
- * @param @p argv Array of command arguments.
- * @return 0 on success, negative errno as returned by dac_write_output_reg().
- */
-
-/**
- * @brief Command to write a DAC output value to DAC control register.
  *
  * @note Takes standard Zephyr shell command parameters.
  *
- * @retval 0 on success update to on-chip DAC config register(s).
- * @return -errno as returned from Zephyr wrappers to DAC driver APIs.
+ * @retval 0 on successful update to on-chip DAC config register(s).
+ * @retval -EINVAL when argument not numeric.
+ * @return negative errno as returned by dac_write_output_reg().
  */
 
 static int cmd_dac_write_output_value(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc); ARG_UNUSED(argv);
-
-        uint32_t value = 0;
-        char *endptr, *str;
-        str = argv[1];
-        value = strtol(str, &endptr, BASE_TEN);
+	ARG_UNUSED(argc);
+	uint32_t value = 0;
+	char *endptr, *str;
 	int32_t rc = 0;
+
+	str = argv[1];
+	value = strtol(str, &endptr, BASE_TEN);
+
+	if (*endptr != '\0') {
+		shell_fprintf(shell, SHELL_WARNING, "Parsed non-numeric "
+				"characters after number: '%s'\n", endptr);
+		rc = -EINVAL;
+		goto error;
+	}
 
 	shell_fprintf(shell, SHELL_NORMAL, "to DAC writing value %u . . .\n", value);
 	rc = dac_write_output_reg(value);
 	if (rc != 0) {
 		LOG_ERR("Failed to write value %u directly to DAC, err %d", value, rc);
 	}
+
+error:
 	return rc;
 }
 
@@ -619,22 +635,33 @@ static int cmd_dac_write_output_value(const struct shell *shell, size_t argc, ch
  *
  * @note Takes standard Zephyr shell command parameters.
  *
- * @retval 0 always.
+ * @retval 0 on success.
+ * @retval -EINVAL when argument not numeric.
  */
 
 static int cmd_dac_set_lock_ring_current_limit(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc); ARG_UNUSED(argv);
+	ARG_UNUSED(argc);
+	uint32_t value = 0;
+	char *endptr, *str;
+	int32_t rc = 0;
 
-        uint32_t value = 0;
-        char *endptr, *str;
-        str = argv[1];
-        value = strtol(str, &endptr, BASE_TEN);
+	str = argv[1];
+	value = strtol(str, &endptr, BASE_TEN);
+
+	if (*endptr != '\0') {
+		shell_fprintf(shell, SHELL_WARNING, "Parsed non-numeric "
+				"characters after number: '%s'\n", endptr);
+		rc = -EINVAL;
+		goto error;
+	}
 
 	shell_fprintf(shell, SHELL_NORMAL,
 		 "storing DAC setting %u for ring lock and unlock operations . . .\n", value);
 	keeper_set_DAC_val_for_ring_motor(value);
-	return 0;
+
+error:
+	return rc;
 }
 
 /**
@@ -648,9 +675,9 @@ static int cmd_dac_set_lock_ring_current_limit(const struct shell *shell, size_t
 
 static int cmd_dac_get_lock_ring_current_limit(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc); ARG_UNUSED(argv);
+	ARG_UNUSED(argc); ARG_UNUSED(argv);
 
-        uint32_t value = 0;
+	uint32_t value = 0;
 	keeper_get_DAC_val_for_ring_motor(&value);
 	shell_fprintf(shell, SHELL_NORMAL, "present DAC setting for ring lock and unlock is %u\n",
 			 value);
@@ -658,23 +685,23 @@ static int cmd_dac_get_lock_ring_current_limit(const struct shell *shell, size_t
 }
 
 SHELL_STATIC_SUBCMD_SET_CREATE(
-        cmds_dac,
-        SHELL_CMD_ARG(range, NULL,
-                "show microcontroller DAC range",
-                cmd_dac_show_range, 0, 0),
-        SHELL_CMD_ARG(show_present_value, NULL,
-                "show present DAC setting",
-                cmd_dac_show_dac_setting, 0, 0),
-        SHELL_CMD_ARG(set, NULL,
-                "set DAC output",
-                cmd_dac_write_output_value, 0, 0),
-        SHELL_CMD_ARG(set_lock_unlock_current, NULL,
-                "set DAC value to limit lock ring motor current",
-                cmd_dac_set_lock_ring_current_limit, 0, 0),
-        SHELL_CMD_ARG(show_lock_unlock_current, NULL,
-                "show DAC value to limit lock ring motor current",
-                cmd_dac_get_lock_ring_current_limit, 0, 0),
-        SHELL_SUBCMD_SET_END
+	cmds_dac,
+	SHELL_CMD_ARG(range, NULL,
+		"show microcontroller DAC range",
+		cmd_dac_show_range, 0, 0),
+	SHELL_CMD_ARG(show_present_value, NULL,
+		"show present DAC setting",
+		cmd_dac_show_dac_setting, 0, 0),
+	SHELL_CMD_ARG(set, NULL,
+		"set DAC output",
+		cmd_dac_write_output_value, 0, 0),
+	SHELL_CMD_ARG(set_lock_unlock_current, NULL,
+		"set DAC value to limit lock ring motor current",
+		cmd_dac_set_lock_ring_current_limit, 0, 0),
+	SHELL_CMD_ARG(show_lock_unlock_current, NULL,
+		"show DAC value to limit lock ring motor current",
+		cmd_dac_get_lock_ring_current_limit, 0, 0),
+	SHELL_SUBCMD_SET_END
 );
 
 SHELL_CMD_REGISTER(dac, &cmds_dac, "- ERS - DAC info and set commands", NULL);
@@ -689,7 +716,7 @@ SHELL_CMD_REGISTER(dac, &cmds_dac, "- ERS - DAC info and set commands", NULL);
 
 static int cmd_batt_show_status(const struct shell *shell, size_t argc, char *argv[])
 {
-        ARG_UNUSED(argc); ARG_UNUSED(argv);
+	ARG_UNUSED(argc); ARG_UNUSED(argv);
 
 	int32_t battery_voltage = 0;
 
@@ -708,10 +735,10 @@ static int cmd_batt_show_status(const struct shell *shell, size_t argc, char *ar
 }
 
 SHELL_STATIC_SUBCMD_SET_CREATE(
-        cmds_batt,
-        SHELL_CMD_ARG(info, NULL, "show battery voltage",
+	cmds_batt,
+	SHELL_CMD_ARG(info, NULL, "show battery voltage",
 			cmd_batt_show_status, 0, 0),
-        SHELL_SUBCMD_SET_END
+	SHELL_SUBCMD_SET_END
 );
 
 SHELL_CMD_REGISTER(batt, &cmds_batt, "- ERS - battery status", NULL);

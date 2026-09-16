@@ -1,7 +1,6 @@
 /*
- * SPDX-License-Identifier: Apache-2.0
- *
- * ERS board firmware source file motor-control.c
+ * @file
+ * @brief ERS motor control module.
  */
 
 #include "arbiter.h"
@@ -18,7 +17,7 @@
 #include <stdio.h>
 #include <string.h>
 
-LOG_MODULE_REGISTER(ers_motor_ctrl, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(ers_motor_ctrl, CONFIG_MOTOR_CONTROL_LOG_LEVEL);
 
 //----------------------------------------------------------------------
 // - SECTION - file scoped
@@ -108,19 +107,19 @@ static int32_t mc_configure_deploy2(void)
 
 static int32_t mc_configure_not_motor_ps(void)
 {
-        if (!gpio_is_ready_dt(&not_motor_ps)) {
-                LOG_ERR("Error: not_motor_ps device %s is not ready",
-                       not_motor_ps.port->name);
-                return -EIO;
-        }
+	if (!gpio_is_ready_dt(&not_motor_ps)) {
+		LOG_ERR("Error: not_motor_ps device %s is not ready",
+		       not_motor_ps.port->name);
+		return -EIO;
+	}
 
 	// Configure GPIO as output and initialize output state to high:
-        int32_t rc = gpio_pin_configure_dt(&not_motor_ps, GPIO_OUTPUT_HIGH);
-        if (rc != 0) {
-                printk("Error %d: failed to configure %s pin %d\n",
-                       rc, not_motor_ps.port->name, not_motor_ps.pin);
-                return -EINVAL;
-        }
+	int32_t rc = gpio_pin_configure_dt(&not_motor_ps, GPIO_OUTPUT_HIGH);
+	if (rc != 0) {
+		printk("Error %d: failed to configure %s pin %d\n",
+		       rc, not_motor_ps.port->name, not_motor_ps.pin);
+		return -EINVAL;
+	}
 
 	return rc;
 }
@@ -133,7 +132,7 @@ static int32_t drive_to_lock(void)
 	if ((rc1 == 0) && (rc2 == 0)) {
 		return 0;
 	} else {
-		return -EINVAL;
+		return -EFAULT;
 	}
 }
 
@@ -145,7 +144,7 @@ static int32_t drive_to_unlock(void)
 	if ((rc1 == 0) && (rc2 == 0)) {
 		return 0;
 	} else {
-		return -EINVAL;
+		return -EFAULT;
 	}
 }
 
@@ -180,7 +179,7 @@ static void show_motor_currents(void)
 		} else {
 			LOG_INF("%s", lbuf);
 			memset(lbuf, 0, sizeof(lbuf));
-			k_msleep(100);
+			k_msleep(CONFIG_MC_RING_CHECK_INTERVAL_MS);
 		}
 		i++;
 	}
@@ -233,7 +232,6 @@ static int32_t mc_update_unlock_count(void)
 	return rc;
 }
 
-
 int32_t mc_lock_ring(void)
 {
 // Set DAC output to create ~100m at H-bridge output
@@ -253,23 +251,23 @@ int32_t mc_lock_ring(void)
 
 	LOG_INF("M1 - DEPLOY1 high");
 	// (1) make sure BDS63150 is on, not in power saving mode:
-	rc = mc_write_not_motor_ps(0x0);
+	rc = mc_write_not_motor_ps(0);
 	if (rc != 0) {
-	       	LOG_ERR("Failed to drive BDS63150 power mode pin, err %d", rc);
+		LOG_ERR("Failed to drive BDS63150 power mode pin, err %d", rc);
 		goto enter_power_saving_mode;
        	}
 
 	// (2) set DAC to produce minimal current needed to turn over lock ring motor:
 	rc = dac_write_output_reg(CONFIG_MC_DAC_OUTPUT_FOR_CURRENT_LIMIT);
 	if (rc != 0) {
-	       	LOG_ERR("Failed to set DAC output level, err %d", rc);
+		LOG_ERR("Failed to set DAC output level, err %d", rc);
 		goto set_low_current_limit;
        	}
 
 	// (3) apply logic levels to BDS63150 IN1, IN2 pins for H-bridge output:
 	rc = drive_to_unlock();
 	if (rc != 0) {
-	       	LOG_ERR("Failed to drive BDS63150 DEPLOY 1 and or 2 lines, err %d", rc);
+		LOG_ERR("Failed to drive BDS63150 DEPLOY 1 and or 2 lines, err %d", rc);
 		goto set_low_current_limit;
        	}
 
@@ -302,14 +300,18 @@ set_low_current_limit:
 	// (4) reduce current to motor to way low:
 	LOG_INF("M1 - DAC output low . . .");
 	rc = dac_write_output_reg(5);
-	if (rc != 0) { LOG_ERR("Trouble set DAC out to near zero!"); }
+	if (rc != 0) {
+		LOG_ERR("Trouble set DAC out to near zero!");
+       	}
 
 	rc = mc_update_lock_count();
 
 enter_power_saving_mode:
 	// (5) set BDS63150 to power saving mode:
-	rc = mc_write_not_motor_ps(0x1);
-	if (rc != 0) { LOG_ERR("Trouble motor_ps!"); }
+	rc = mc_write_not_motor_ps(1);
+	if (rc != 0) {
+		LOG_ERR("Trouble motor_ps!");
+       	}
 
 	LOG_INF("motor currents:");
 	show_motor_currents();
@@ -333,7 +335,7 @@ int32_t mc_unlock_ring(void)
 
 	LOG_INF("M1 - DEPLOY1 high");
 	// (1) make sure BDS63150 is on, not in power saving mode:
-	rc = mc_write_not_motor_ps(0x0);
+	rc = mc_write_not_motor_ps(0);
 	if (rc != 0) {
 		LOG_ERR("Trouble setting not_motor_ps low, err %d", rc);
 		goto enter_power_saving_mode;
@@ -376,16 +378,16 @@ set_low_current_limit:
 	LOG_INF("M1 - DAC output low . . .");
 	rc = dac_write_output_reg(5);
 	if (rc != 0) {
-		LOG_ERR("Trouble set DAC out to near zero!");
+		LOG_ERR("Failed to set DAC out to near zero, err %d", rc);
 	}
 
 	rc = mc_update_unlock_count();
 
 enter_power_saving_mode:
 	// (5) set BDS63150 to power saving mode:
-	rc = mc_write_not_motor_ps(0x1);
+	rc = mc_write_not_motor_ps(1);
 	if (rc != 0) {
-		LOG_ERR("Trouble motor_ps!");
+		LOG_ERR("Failed to put BDS63150 into power saving mode, err %d!", rc);
 	}
 
 unlock:
@@ -400,27 +402,27 @@ done:
 
 int32_t ers_init_motor_ctrl(void)
 {
-        uint32_t event_count = 0;
-        int32_t rc = 0;
+	uint32_t event_count = 0;
+	int32_t rc = 0;
 
 	k_mutex_init(&motor_control_mtx);
 
 	// Configure signal lines connected to H-bridge motor driver chip:
 	rc = mc_configure_deploy1();
 	if (rc) {
-		LOG_ERR("Configure deploy1 signal out, err %d", rc);
+		LOG_ERR("Failed to configure deploy1 signal out, err %d", rc);
 		goto done;
 	}
 
 	rc = mc_configure_deploy2();
 	if (rc) {
-		LOG_ERR("Configure deploy2 signal out, err %d", rc);
+		LOG_ERR("Failed to configure deploy2 signal out, err %d", rc);
 		goto done;
 	}
 
 	rc = mc_configure_not_motor_ps();
 	if (rc) {
-		LOG_ERR("Configure not_motor_ps signal out, err %d", rc);
+		LOG_ERR("Failed to configure not_motor_ps signal out, err %d", rc);
 		goto done;
 	}
 

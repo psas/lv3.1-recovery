@@ -1,7 +1,6 @@
 /*
- * Copyright (c) 2025 Portland State Aerospace Society
- *
- * SPDX-License-Identifier: Apache-2.0
+ * @file
+ * @brief ERS Zephyr application level "entry" file, main.c.
  */
 
 #include "adc-ers.h"
@@ -23,12 +22,6 @@
 LOG_MODULE_REGISTER(ers_main, LOG_LEVEL_INF);
 
 //----------------------------------------------------------------------
-// - SECTION - pound defines
-//----------------------------------------------------------------------
-
-#define ERS_MAIN_LOOP_PERIOD_MS 2000
-
-//----------------------------------------------------------------------
 // - SECTION - routines
 //----------------------------------------------------------------------
 
@@ -40,8 +33,9 @@ int main(void)
 	rc = gpio_in_init();
 	LOG_INF("GPIO input pin initialization returns %d", rc);
 
-	// The motor control module calls settings API, and is also important
-	// for safe hardware operation:
+	// Start the settings module;  it is needed by the motor control module
+	// which we want to run early as possible, also for safe hardware
+	// operation:
 	settings_ers_init();
 	LOG_INF("just back from ERS settings module init");
 	k_msleep(300);
@@ -53,7 +47,7 @@ int main(void)
 
 	// The motor module puts the H-brdige in a "motor off" state, so call this
 	// module as early as possible:
-        rc = ers_init_motor_ctrl();
+	rc = ers_init_motor_ctrl();
 	LOG_INF("motor control module init returns %d", rc);
 
 	rc = adc_init();

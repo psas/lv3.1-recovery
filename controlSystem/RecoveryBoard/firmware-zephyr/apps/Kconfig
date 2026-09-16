@@ -71,12 +71,8 @@ config PWM_THREAD_PRIORITY
 	  tones.
 
 # Module Zephyr logging support
-module = ERS_GPIO
-module-str = ERS GPIO module
-source "subsys/logging/Kconfig.template.log_config"
-
-module = ERS_SETTINGS
-module-str = ERS settings module
+module = ERS_SHELL_SUPPORT
+module-str = ERS Zephyr based shell
 source "subsys/logging/Kconfig.template.log_config"
 
 # ERS module Kconfig files

@@ -202,7 +202,6 @@ static void gpio_in_thread_entry(void *arg1, void *arg2, void *arg3)
 		keeper_set_not_umb_on(val[ERS_SIG_NOT_UMB_ON]);
 
 #if CONFIG_DIGITAL_IN_SUMMARY_REPORT
-		// - ERS digital input summary reporting begin -
 		{
 			LOG_INF("drogue, main, umb, motor_fail: %d, %d, %d, %d",
 				val[ERS_SIG_ISO_DROGUE],
@@ -211,7 +210,6 @@ static void gpio_in_thread_entry(void *arg1, void *arg2, void *arg3)
 				val[ERS_SIG_NOT_MOTOR_FAILA]
 				);
 		}
-		// - ERS digital input summary reporting end -
 #endif
 
 		k_msleep(CONFIG_GPIO_THREAD_SLEEP_MS);
