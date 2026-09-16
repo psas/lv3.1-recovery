@@ -12,10 +12,23 @@ enum pwm_audio_pattern {
 };
 
 /**
- * @brief Function to take a caller's requested pattern and start that playing.
+ * @brief Play a defined sequence (pattern) of audio tones.
+ *
+ * retval 0 on success.
+ * retval -EINVAL when sequence not defined.
  */
 
 int32_t pwm_play_pattern(enum pwm_audio_pattern);
+
+/**
+ * @brief Initialize ERS pulse width modulation module, for audio output
+ *  support.
+ *
+ * retval 0 on success.
+ * retval -EFAULT when the PWM thread fails to start.
+ * retval -ENODEV when PWM device reported as not ready.
+ * retval -ENOTSUP when a PWM channel configuration fails.
+ */
 
 int32_t pwm_init(void);
 

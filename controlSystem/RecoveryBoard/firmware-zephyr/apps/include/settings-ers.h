@@ -22,7 +22,7 @@ void settings_ers_init(void);
  * @pararm size Expected count of bytes in value.
  *
  * @retval 0 on success.
- * @return non-zero per Zephyr's settings_load_subtree_direct() API.
+ * @return negative errno per Zephyr's settings_load_subtree_direct() API.
  */
 
 int32_t settings_ers_retrieve_value(const char* name, void *val, const uint32_t size);
@@ -35,7 +35,7 @@ int32_t settings_ers_retrieve_value(const char* name, void *val, const uint32_t 
  * @pararm size Expected count of bytes in value.
  *
  * @retval 0 on success.
- * @return non-zero per Zephyr's settings_save_one() API.
+ * @return negative errno per Zephyr's settings_save_one() API.
  */
 
 int32_t settings_ers_store_value(const char* name, const void *val, const uint32_t size);
@@ -44,26 +44,15 @@ int32_t settings_ers_store_value(const char* name, const void *val, const uint32
  * @brief Setting API to store a Hall sensor limit.
  *
  * @note This API takes an index to the group of Hall sensors in the rocket
- *  recovery system, and an index to the group of sensor reading limits.  These
- *  limits are taken to define the position of the lock ring to which Hall
- *  sensors are coupled.
+ *  recovery system, and an index to the group of sensor reading limits.
  *
- *  Zephyr's settings subsystem API works with string values to refer to a given
- *  value to store or to retrieve.  The ERS Zephyr application implements some
- *  macros to generate Hall limit names in a grudgingly, semi-automated way, but
- *  there are also places where the it's nicer to code a loop to iterate over
- *  sensors and their limits.  The C language doesn't easily support interating
- *  over a group of like data by string based names.  For this reason certain
- *  modules of the ERS app must map numeric indices to string names.  The
- *  details of settings keyname construction are encapsulated in this API.
- *
- * @param sensor_idx Hall sensor ID per enum of system's two Hall sensors.
- * @param limit_idx Hall reading cut-off identifier, a named cut-off or "limit".
- * @param val Value of the reading considered the state wise cut-off point.
+ * @param sensor_idx Hall sensor numeric identifier.
+ * @param limit_idx sensor reading limit numeric identifier.
+ * @param val Value of reading considered to be the state wise cut-off value.
  * @param size Size of the value in bytes.
  *
  * @retval 0 on success.
- * @return non-zero per Zephyr's settings_save_one() API.
+ * @return negative errno per Zephyr's settings_save_one() API.
  */
 
 int32_t settings_ers_store_hall_limit(const uint32_t sensor_idx,

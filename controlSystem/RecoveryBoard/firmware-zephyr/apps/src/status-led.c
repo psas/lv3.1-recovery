@@ -102,6 +102,11 @@ int32_t status_led_set_pattern(enum ers_status_led_pattern pattern)
 		goto unlock;
 	}
 
+	if ((pattern < 0) || (pattern >= STATUS_LED_PATTERN_UNDEFINED)) {
+		rc = -EINVAL;
+		goto done;
+	}
+
 	led_pattern_fs = pattern;
 	start_status_led_timer();
 

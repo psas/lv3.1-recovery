@@ -322,6 +322,8 @@ int32_t pwm_init(void)
 
 	if (!pwm_tid) {
 		LOG_ERR("ERROR spawning PWM thread\n");
+		rc = -EFAULT;
+		goto done;
 	}
 
 // For shell pointer use see:

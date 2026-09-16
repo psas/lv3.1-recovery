@@ -11,7 +11,24 @@ enum ers_status_led_pattern {
 	STATUS_LED_PATTERN_UNDEFINED,
 };
 
+/**
+ * @brief Initialize the status LED module.
+ *
+ * @retval 0 on success.
+ * @retval -EFAULT when module already initialized.
+ * @retval -ENODEV when GPIO line for LED is reported as not ready.
+ * @return negative errno per Zephyr GPIO pin configure API.
+ */
+
 int32_t status_led_init(void);
+
+/**
+ * @brief Set the current status LED pattern.
+ *
+ * @param pattern One of ERS Zephyr defined LED blink patterns.
+ * @retval 0 on success.
+ * @retval -EINVAL when LED blink pattern not defined.
+ */
 
 int32_t status_led_set_pattern(enum ers_status_led_pattern pattern);
 
@@ -24,7 +41,7 @@ int32_t status_led_set_pattern(enum ers_status_led_pattern pattern);
  *
  * @retval 0 on success.
  * @retval -EFAULT on module not initialized.
- * TODO [ ] Add:  @retval -EAGAIN on API mutex timeout.
+ * @retval -EAGAIN on API mutex timeout.
  */
 
 int32_t status_led_on(void);
@@ -38,7 +55,7 @@ int32_t status_led_on(void);
  *
  * @retval 0 on success.
  * @retval -EFAULT on module not initialized.
- * TODO [ ] Add:  @retval -EAGAIN on API mutex timeout.
+ * @retval -EAGAIN on API mutex timeout.
  */
 
 int32_t status_led_off(void);
