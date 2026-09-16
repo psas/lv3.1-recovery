@@ -17,6 +17,23 @@ config ADC_API_TIMEOUT_MS
 	  Set a timeout measured in milliseconds for the ERS Zephry ADC public
 	  API.
 
+config ADC_READ_PERIOD_MS
+	int "Period between ADC channel readings."
+	default 10
+	help
+	  Set the period or interval between ADC channel readings.  In the ERS
+	  system, these readings include the measurements of lock ring Hall
+	  sensors, which indicate the position of the lock ring.  The frequency
+	  of these readings is important to support responsive ring position
+	  detection.  This value may require tuning during code development and
+	  system integration tests.
+
+config ADC_PERIODIC_REPORTING
+	bool "Enable periodic reporting of ADC channel readings."
+	help
+	  Enable periodic reporting of ADC channel readings.  Useful for
+	  certain development time work."
+
 endif # ERS_ADC_MODULE
 
 module = ERS_ADC

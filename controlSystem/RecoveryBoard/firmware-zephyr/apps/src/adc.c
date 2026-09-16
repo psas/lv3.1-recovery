@@ -1,8 +1,8 @@
 /*
+ * @file
+ * @brief ERS Zephyr analog-to-digital data acquiring module.
  * Copyright (c) 2020 Libre Solar Technologies GmbH
- * Copyright (c) 2025 Portland State Aerospace Society
- *
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright (c) 2025, 2026 Portland State Aerospace Society
  */
 
 #include "ers-util.h"
@@ -21,14 +21,6 @@ LOG_MODULE_REGISTER(ers_adc, CONFIG_ERS_ADC_LOG_LEVEL);
 #include <inttypes.h>
 #include <stddef.h>
 #include <stdint.h>
-
-//----------------------------------------------------------------------
-// - SECTION - pound defines
-//----------------------------------------------------------------------
-
-#define ADC_READ_PERIOD_MS 10
-
-#undef DEV_ERS_ADC_PERIODIC_REPORTING
 
 //----------------------------------------------------------------------
 // - SECTION - file scoped
@@ -61,11 +53,8 @@ struct k_mutex adc_mtx;
 int32_t adc_read_channels(const enum ers_adc_values idx_begin,
 			  const enum ers_adc_values idx_end)
 {
-	int32_t rc = k_mutex_lock(&adc_mtx, K_MSEC(CONFIG_ADC_API_TIMEOUT_MS));
-	if (rc != 0) {
-		LOG_ERR("Failed to lock ADC read channels mutex, error %d", rc);
-		goto done;
-	}
+	int32_t rc = 0;
+	ERS_MUTEX_LOCK(adc_mtx, CONFIG_ADC_API_TIMEOUT_MS, adc);
 
 	if ((idx_begin < 0) || (idx_end > ARRAY_SIZE(adc_channels)))
 	{
@@ -84,7 +73,7 @@ int32_t adc_read_channels(const enum ers_adc_values idx_begin,
 
         for (size_t i = idx_begin; i <= idx_end; i++) {
 
-#ifdef DEV_ERS_ADC_PERIODIC_REPORTING
+#ifdef CONFIG_ADC_PERIODIC_REPORTING
                 LOG_INF("- %s, channel %d: ",
                              adc_channels[i].dev->name,
                              adc_channels[i].channel_id);
@@ -94,16 +83,15 @@ int32_t adc_read_channels(const enum ers_adc_values idx_begin,
 
                 rc = adc_read_dt(&adc_channels[i], &sequence);
                 if (rc < 0) {
-                        LOG_ERR("Could not read ADC channel, error (%d)", rc);
+                        LOG_ERR("Failed to read ADC channel, err %d", rc);
                         continue;
                 }
 
-		// Store ADC reading in ERS app "keeper" module:
 		keeper_set_adc_value(i, (uint32_t)buf);
 	}
 
 unlock:
-	ERS_MUTEX_UNLOCK(adc_mtx, ADC module);
+	ERS_MUTEX_UNLOCK(adc_mtx, adc);
 done:
 	return rc;
 }
@@ -111,12 +99,8 @@ done:
 int32_t cmd_ers_read_adc_in0(const struct shell *shell)
 {
 	uint32_t adc_reading;
-
-	int32_t rc = k_mutex_lock(&adc_mtx, K_MSEC(CONFIG_ADC_API_TIMEOUT_MS));
-	if (rc != 0) {
-		LOG_ERR("Failed to lock mutex in read ADC_IN0, err %d", rc);
-		goto done;
-	}
+	int32_t rc = 0;
+	ERS_MUTEX_LOCK(adc_mtx, CONFIG_ADC_API_TIMEOUT_MS, adc);
 
 	rc = adc_read_channels(ADC_READING_HALL_1, ADC_READING_HALL_1);
 	if (rc == 0) {
@@ -126,12 +110,7 @@ int32_t cmd_ers_read_adc_in0(const struct shell *shell)
 		shell_fprintf(shell, SHELL_NORMAL, "failed to read Hall 1 sensor, err %d\n", rc);
 	}
 
-	rc = k_mutex_unlock(&adc_mtx);
-	if (rc != 0) {
-		LOG_ERR("Failed to unlock mutex in read ADC_IN0, err %d", rc);
-		return rc;
-	}
-
+	ERS_MUTEX_UNLOCK(adc_mtx, adc);
 done:
 	return rc;
 }
@@ -139,12 +118,8 @@ done:
 int32_t cmd_ers_read_adc_in1(const struct shell *shell)
 {
 	uint32_t adc_reading;
-
-	int32_t rc = k_mutex_lock(&adc_mtx, K_MSEC(CONFIG_ADC_API_TIMEOUT_MS));
-	if (rc != 0) {
-		LOG_ERR("Failed to lock mutex in read ADC_IN1, err %d", rc);
-		goto done;
-	}
+	int32_t rc = 0;
+	ERS_MUTEX_LOCK(adc_mtx, CONFIG_ADC_API_TIMEOUT_MS, adc);
 
 	rc = adc_read_channels(ADC_READING_HALL_2, ADC_READING_HALL_2);
 	if (rc == 0) {
@@ -160,6 +135,7 @@ int32_t cmd_ers_read_adc_in1(const struct shell *shell)
 		return rc;
 	}
 
+	ERS_MUTEX_UNLOCK(adc_mtx, adc);
 done:
 	return rc;
 }
@@ -170,41 +146,39 @@ done:
 
 void adc_thread_entry(void *arg1, void *arg2, void *arg3)
 {
-        ARG_UNUSED(arg1);
-        ARG_UNUSED(arg2);
-        ARG_UNUSED(arg3);
+	ARG_UNUSED(arg1); ARG_UNUSED(arg2); ARG_UNUSED(arg3);
 
-#ifdef DEV_ERS_ADC_PERIODIC_REPORTING
+#ifdef CONFIG_ADC_PERIODIC_REPORTING
 	static uint32_t count = 0;
 #endif
-        int32_t rc = 0;
+	int32_t rc = 0;
 
-        /* Configure channels individually prior to sampling. */
-        for (size_t i = 0U; i < ARRAY_SIZE(adc_channels); i++)
-        {
-                if (!adc_is_ready_dt(&adc_channels[i])) {
-                        LOG_ERR("ADC controller device %s not ready\n", adc_channels[i].dev->name);
-                        rc = -ENODEV;
+	/* Configure channels individually prior to sampling. */
+	for (size_t i = 0U; i < ARRAY_SIZE(adc_channels); i++)
+	{
+		if (!adc_is_ready_dt(&adc_channels[i])) {
+			LOG_ERR("ADC controller device %s not ready\n", adc_channels[i].dev->name);
+			rc = -ENODEV;
 			goto error;
-                }
+		}
 
-                rc = adc_channel_setup_dt(&adc_channels[i]);
-                if (rc < 0) {
-                        LOG_ERR("Could not setup channel #%d (%d)\n", i, rc);
-                        rc = -EINVAL;
+		rc = adc_channel_setup_dt(&adc_channels[i]);
+		if (rc < 0) {
+			LOG_ERR("Could not setup channel #%d (%d)\n", i, rc);
+			rc = -EINVAL;
 			goto error;
-                }
-        }
+		}
+	}
 
-        while (1) {
-#ifdef DEV_ERS_ADC_PERIODIC_REPORTING
+	while (1) {
+#ifdef CONFIG_ADC_PERIODIC_REPORTING
 		if ((count % 300) == 0) {
                 	LOG_INF("ADC reading[%u]: (thread entry function)\n", count++);
 		}
 #endif
-		rc = adc_read_channels(ADC_READING_HALL_1, ADC_READING_MOTOR_ISENSE); // adc_thread_entry()
-                k_sleep(K_MSEC(ADC_READ_PERIOD_MS));
-        }
+		rc = adc_read_channels(ADC_READING_HALL_1, ADC_READING_MOTOR_ISENSE);
+		k_sleep(K_MSEC(CONFIG_ADC_READ_PERIOD_MS));
+	}
 
 error:
 	return;
@@ -216,22 +190,22 @@ int32_t adc_init(void)
 
 	k_mutex_init(&adc_mtx);
 
-        /* Configure channels individually prior to sampling. */
-        for (size_t i = 0U; i < ARRAY_SIZE(adc_channels); i++) {
-                if (!adc_is_ready_dt(&adc_channels[i])) {
-                        LOG_ERR("ADC controller device %s not ready",
-                                     adc_channels[i].dev->name);
-                        rc = -ENODEV;
+	/* Configure channels individually prior to sampling. */
+	for (size_t i = 0U; i < ARRAY_SIZE(adc_channels); i++) {
+		if (!adc_is_ready_dt(&adc_channels[i])) {
+			LOG_ERR("ADC controller device %s not ready",
+				     adc_channels[i].dev->name);
+			rc = -ENODEV;
 			break;
-                }
+		}
 
-                rc = adc_channel_setup_dt(&adc_channels[i]);
-                if (rc < 0) {
-                        LOG_ERR("Could not setup channel #%d (%d)", i, rc);
-                        rc = -EINVAL;
+		rc = adc_channel_setup_dt(&adc_channels[i]);
+		if (rc < 0) {
+			LOG_ERR("Could not setup channel #%d (%d)", i, rc);
+			rc = -EINVAL;
 			break;
-                }
-        }
+		}
+	}
 
 	if (rc < 0) {
 		goto done;
