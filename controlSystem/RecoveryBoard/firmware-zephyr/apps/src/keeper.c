@@ -547,19 +547,35 @@ int32_t keeper_retrieve_hall_1_limits(void)
 	// Retrieve Hall sensor limits from FLASH:
 	rc = settings_ers_retrieve_value(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_1), &v_under_limit,
 					sizeof(v_under_limit));
+	if (rc < 0) {
+		goto error;
+	}
 	rc = settings_ers_retrieve_value(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_2), &inactive_limit,
 					sizeof(inactive_limit));
+	if (rc < 0) {
+		goto error;
+	}
 	rc = settings_ers_retrieve_value(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_3), &between_limit,
 					sizeof(between_limit));
+	if (rc < 0) {
+		goto error;
+	}
 	rc = settings_ers_retrieve_value(STRINGIFY(SETTING_KEYNAME_S1_HLIMIT_4), &active_limit,
 					sizeof(active_limit));
+	if (rc < 0) {
+		goto error;
+	}
 
 	// Store retrieved Hall sensor limits to SRAM for run time use:
 	set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_UNDER, v_under_limit);
 	set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_INACTIVE, inactive_limit);
 	set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_BETWEEN, between_limit);
 	set_hall_sensor_limit(HALL_SENSOR_1, HALL_LIMIT_V_ACTIVE, active_limit);
+	goto done;
 
+error:
+	LOG_ERR("Failed to retrieve one of the Hall sensor limits, err %d", rc);
+done:
 	return rc;
 }
 

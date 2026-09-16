@@ -115,6 +115,7 @@ enum hall_sensor_limit_defaults {
 	HALL_AND_SENSORS_DEFAULT_LIMIT_VALUES
 };
 #undef HALL_SENSOR_CONSTRUCT
+#undef HALL_SENSOR_INST
 
 /**
  * (C6) Hall sensor named states

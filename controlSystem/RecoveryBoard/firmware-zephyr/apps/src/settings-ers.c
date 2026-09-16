@@ -116,7 +116,7 @@ int32_t settings_ers_retrieve_value(const char* name, void *val, const uint32_t 
 
 	rc = load_immediate_value(name, val, size);
 	if (rc == -ENOENT) {
-		// LOG_ERR("Key '%s' not yet initialized, read status %d", name, rc);
+		LOG_ERR("Key '%s' not yet initialized, read status %d", name, rc);
 	} else if (rc < 0) {
 		LOG_ERR("Failed to load immediate value, err %d", rc);
 	}

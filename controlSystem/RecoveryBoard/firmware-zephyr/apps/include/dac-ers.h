@@ -1,6 +1,12 @@
 #ifndef ERS_DAC_H
 #define ERS_DAC_H
 
+/**
+ * @brief Initialize ERS analog to digital module.
+ * @retval 0 on success.
+ * @retval -ENODEV when device reported as not ready.
+ * @retval -EIO when configuration of DAC channel fails.
+ */
 int32_t dac_init(void);
 
 /**

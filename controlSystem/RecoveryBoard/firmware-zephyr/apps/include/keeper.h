@@ -20,9 +20,9 @@
  *   example readings include digital GPIO pins and readings of on-chip ADC
  *   channels.
  *
- *   Some examples of ERS board state include CAN bus run time health,
- *   identified by the presence of certain message packets from the larger
- *   rocket avionics system.
+ *   Some examples of ERS board state include CAN bus "health" in terms of
+ *   expected recurring messages, and the "rocket ready" state, which the
+ *   firmware must reach in order to unlock the parachute section ring.
  */
 
 // Module init API
@@ -43,8 +43,8 @@ int32_t keeper_init(void);
 /**
  * @brief Routine to return a Hall sensor limit for given sensor.
  *
- * @return 0 status code and limit value when sensor id, limit id in bounds.
- * @return -EINVAL otherwise.
+ * @retval 0 status code and limit value when sensor id, limit id in bounds.
+ * @retval -EINVAL otherwise.
  */
 
 int32_t keeper_get_hall_sensor_limit(const enum hall_sensor_instances sensor_idx,
@@ -55,8 +55,8 @@ int32_t keeper_get_hall_sensor_limit(const enum hall_sensor_instances sensor_idx
  * @brief Routine to restore hall sensor limits to default values.
  *
  * @retval 0 on success.
- * @retval -errno as returned by Zephyr settings module, when there are flash
- *  memory access errors.
+ * @retval negative errno as returned by Zephyr settings module, when there are
+ *  flash memory access errors.
  */
 
 int32_t keeper_restore_hall_sensor_default_limits(void);
@@ -70,9 +70,9 @@ int32_t keeper_restore_hall_sensor_default_limits(void);
  *
  * @retval 0 on success.
  * @retval -EINVAL when:
- *   - sensor id not for Hall sensor 1 or 2
- *   - when sensor named limit not defined
- *   - when limit value outside of ADC reading range
+ *  - sensor id not for Hall sensor 1 or 2
+ *  - when sensor named limit not defined
+ *  - when limit value outside of ADC reading range
  */
 
 int32_t keeper_cmd_set_limit_v_under(const struct shell *shell, size_t argc, char **argv);
@@ -86,8 +86,8 @@ int32_t keeper_cmd_set_limit_active(const struct shell *shell, size_t argc, char
  * @note Parameters are Zephyr shell's standard three parameters.
  *
  * @retval 0 on success.
- * @retval -errno as returned by Zephyr settings module, when there are flash
- *  memory access errors.
+ * @retval negative errno as returned by Zephyr settings module, when there are
+ *  flash memory access errors.
  */
 
 int32_t keeper_cmd_store_hall_limits(const struct shell *shell, size_t argc, char **argv);
@@ -98,14 +98,21 @@ int32_t keeper_cmd_store_hall_limits(const struct shell *shell, size_t argc, cha
  * @note Parameters are Zephyr shell's standard three parameters.
  *
  * @retval 0 on success.
- * @retval -errno as returned by Zephyr settings module, when there are flash
- *  memory access errors.
+ * @retval negative errno as returned by Zephyr settings module, when there are
+ *  flash memory access errors.
  */
 
 int32_t keeper_cmd_retrieve_hall_limits(const struct shell *shell, size_t argc, char **argv);
 
-// Helper functions to allow for calling Hall limit value retrieval, from the
-// ERS app as well as from the CLI of the app:
+/**
+ * @brief Two helper functions to allow for calling Hall limit value retrieval,
+ *  from the ERS app as well as from the CLI of the app:
+ *
+ * @retval 0 on success.
+ * @retval negative errno as returned ultimately by Zephyr settings API to
+ *  read flash.
+ */
+
 int32_t keeper_retrieve_hall_1_limits(void);
 int32_t keeper_retrieve_hall_2_limits(void);
 
@@ -136,6 +143,10 @@ enum ers_adc_values_in_mv {
 };
 
 #define IDX_START_MV_READINGS ADC_CHANNEL_COUNT
+
+// Note:  the following keeper_set_ and keeper_get_ APIs all have one-line
+//  function bodies which call Zephyr atomic write and atomic read functions.
+//  For their simplicity, comment blocks are omitted.
 
 // Digital inputs
 
@@ -184,24 +195,24 @@ void keeper_get_hall_2_mv(uint32_t* value);
 
 /**
  * @brief Write Hall sensor readings, in ADC counts, to keeper data store.
- * @return 0 on success to obtain mutex and to set sensor values
- * @return -FAULT when module not initialized
+ * @retval 0 on success to obtain mutex and to set sensor values
+ * @retval -EFAULT when module not initialized
  */
 
 int32_t keeper_set_both_hall_readings(const uint32_t value_1, const uint32_t value_2); // TODO [ ] Check whether needed
 
 /**
  * @brief Return latest Hall sensor readings, in ADC counts.
- * @return 0 on success to obtain mutex and to get sensor values
- * @return -FAULT when module not initialized
+ * @retval 0 on success to obtain mutex and to get sensor values
+ * @retval -EFAULT when module not initialized
  */
 
 int32_t keeper_get_both_hall_readings(uint32_t *value_1, uint32_t *value_2);
 
 /**
  * @brief Return latest Hall sensor readings, in millivolts.
- * @return 0 on success.
- * @return -FAULT when module not initialized.
+ * @retval 0 on success.
+ * @retval -EFAULT when module not initialized.
  */
 
 int32_t keeper_get_both_hall_readings_in_mv(uint32_t *value_1, uint32_t *value_2);
