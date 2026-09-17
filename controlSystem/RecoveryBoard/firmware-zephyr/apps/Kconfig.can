@@ -1,0 +1,38 @@
+# @file
+# @brief Application configuration for ERS CAN module
+
+menuconfig ERS_CAN_MODULE
+	bool "ERS CAN module app settings"
+	default y
+	help
+	  Enable ERS config symbols for the application CAN module.
+
+if ERS_CAN_MODULE
+
+config LOOPBACK_MODE
+	bool "Loopback LOOPBACK_MODE"
+	default y
+	help
+	  Set the controller to loopback mode.
+	  This allows testing without a second board.
+
+config CAN_HEARTBEAT_PERIOD_S
+	int "Set a period, at the end of which a CAN heartbeat message is sent."
+	default 1
+	help
+	  Set a period, at the end of which a CAN heartbeat message is sent.
+	  This applies to sender, drogue and main parachute board firmwares.
+
+config CAN_BUS_HEALTH_CHECK_PERIOD_SEC
+	int "Set period for CAN health heartbeat messages."
+	default 2
+	help
+	  Set period by which ERS sender CAN heartbeat messages must be
+	  detected for app to consider system CAN communiations in good
+	  standing.
+
+endif # ERS_CAN_MODULE
+
+module = ERS_CAN
+module-str = ERS firmware CAN module
+source "subsys/logging/Kconfig.template.log_config"

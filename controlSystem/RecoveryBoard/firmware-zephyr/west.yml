@@ -1,0 +1,24 @@
+manifest:
+  remotes:
+    - name: zephyrproject-rtos
+      url-base: https://github.com/zephyrproject-rtos
+  projects:
+    - name: zephyr
+      repo-path: zephyr
+      remote: zephyrproject-rtos
+      revision: v3.7.0
+      # Use `import: true` to import everything:
+      # import: true
+      import:
+        # Through name allow list import only Zephyr modules we need:
+        name-allowlist:
+          - cmsis
+          - cmsis_6
+          - hal_st
+          - hal_stm32
+          - hal_nxp
+          - hal_rpi_pico
+          - picolibc
+  self:
+    # This repository should be cloned to 
+    path: psas/lv3.1-recovery

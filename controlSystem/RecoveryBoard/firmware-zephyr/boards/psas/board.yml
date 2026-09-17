@@ -1,0 +1,5 @@
+board:
+  name: ers-v3p1
+  vendor: psas
+  socs:
+    - name: stm32f091xc

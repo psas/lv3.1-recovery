@@ -1,0 +1,31 @@
+# @file
+# @brief ERS Zephyr GPIO module configuration file.
+
+menuconfig ERS_GPIO
+	bool "ERS GPIO module settings"
+	default y
+	help
+	  Enable ERS symbols to configure the digital-to-analog (DAC) module.
+
+if ERS_GPIO
+
+config GPIO_THREAD_SLEEP_MS
+	int "GPIO module thread 'forever loop' sleep period."
+	default 100
+	help
+	  Set the GPIO module thread's main loop interval, a sleep period.
+	  This interval must be set small enough for drogue and main parachute
+	  firmware versions to be responsive to digital input changes from
+	  the avionics system.
+
+config DIGITAL_IN_SUMMARY_REPORT
+	bool "Enable GPIO input summary report."
+	help
+	  Enable GPIO input summary report.  May create a lot of rapid messages
+	  depending on the GPIO thread's main loop sleep period.
+
+endif # ERS_GPIO
+
+module = ERS_GPIO
+module-str = GPIO module
+source "subsys/logging/Kconfig.template.log_config"
