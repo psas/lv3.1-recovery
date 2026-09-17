@@ -1,11 +1,11 @@
 # @file
-# @brief ERS Zephyr arbiter module configuration file.
+# @brief ERS arbiter module config file.
 
 menuconfig ERS_ARBITER
 	bool "ERS arbiter module app settings"
 	default y
 	help
-	  Enable ERS symbols to configure the recovery firmware arbiter module.
+	  Enable ERS symbols to configure the arbiter module.
 
 if ERS_ARBITER
 
@@ -14,18 +14,18 @@ config ARBITER_LOOP_SLEEP_PER_MS
 	default 100
 	help
 	  Select a sleep period in milliseconds for the recovery system arbiter
-	  main loop.  Must be short enough to allow for lock ring position
-	  determination to occur close enough to apogee detection, to release
-	  the parachutes drogue and main, to provide for full and safe recovery.
+	  main loop.  Must be short enough to allow for timely lock ring
+	  position determination.  Successful parachute release for recovery
+	  depends on this timeliness.
 
-config ARBITER_MUTEX_TIMEOUT_MS
+config ARBITER_API_TIMEOUT_MS
 	int "Arbiter default mutex timeout in milliseconds"
 	default 1000
 	help
-	  Set the arbiter module mutex timeout, measured in milliseconds.
+	  Set the arbiter public API timeout, measured in milliseconds.
 
 config OK_BATTERY_VOLTAGE_IN_TENTHS_OF_V
-	int "Select minimum ERS healthy battery voltage, in tenth of a volt"
+	int "Select ERS healthy, minimum battery voltage in tenths of a volt"
 	default 90
 	help
 	  Select minimum ERS battery voltage to consider a healthy system

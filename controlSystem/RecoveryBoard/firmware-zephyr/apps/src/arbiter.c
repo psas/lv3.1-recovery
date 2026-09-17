@@ -43,7 +43,7 @@ static const struct shell *shell_ptr_fs;
 int32_t determine_which_sensor(const char *sensor_name, enum hall_sensor_instances *sensor_idx)
 {
 	int32_t rc = 0;
-	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
+	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_API_TIMEOUT_MS, arbiter);
 
 	if (strncmp("s1", sensor_name, sizeof("s1")) == 0) {
 		*sensor_idx = HALL_SENSOR_1;
@@ -68,7 +68,7 @@ done:
 void arbiter_show_hall_state_limits(const struct shell *shell)
 {
 	int32_t rc = 0;
-	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
+	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_API_TIMEOUT_MS, arbiter);
 
 	uint32_t v_under_limit, inactive_limit, between_limit, active_limit;
 
@@ -106,7 +106,7 @@ void arbiter_cmd_set_default_limits(const struct shell *shell, size_t argc, char
 {
 	int32_t rc = 0;
 
-	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
+	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_API_TIMEOUT_MS, arbiter);
 
 	shell_print(shell, "Setting Hall sensor limit default values . . .");
 	rc = keeper_restore_hall_sensor_default_limits();
@@ -243,7 +243,7 @@ int32_t arbiter_calc_battery_voltage(void)
 	uint32_t battery_voltage_dv = 0;
 	int32_t rc = 0;
 
-	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
+	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_API_TIMEOUT_MS, arbiter);
 
 	keeper_get_batt_read(&adc_reading);
 
@@ -262,7 +262,7 @@ done:
 int32_t arbiter_calc_max_motor_drive_current(void)
 {
 	int32_t rc = 0;
-	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
+	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_API_TIMEOUT_MS, arbiter);
 
 	shell_print(shell_ptr_fs, "- DEV 0910 - STUB FUNCTION");
 
@@ -302,7 +302,7 @@ int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 	enum hall_sensor_state_ids hall_1_state = HALL_STATE_UNKNOWN;
 	enum hall_sensor_state_ids hall_2_state = HALL_STATE_UNKNOWN;
 
-	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
+	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_API_TIMEOUT_MS, arbiter);
 
 	rc = keeper_get_both_hall_readings_in_mv(&hall_1_reading, &hall_2_reading);
 	if (rc != 0) {
@@ -478,7 +478,7 @@ done:
 char *arbiter_ring_pos_to_str(const enum lock_ring_position pos)
 {
 	int32_t rc = 0;
-	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_MUTEX_TIMEOUT_MS, arbiter);
+	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_API_TIMEOUT_MS, arbiter);
 
 	switch (pos) {
 	case RING_POS_LOCKED:

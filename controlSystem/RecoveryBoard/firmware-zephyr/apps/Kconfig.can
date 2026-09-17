@@ -1,12 +1,5 @@
 # @file
 # @brief Application configuration for ERS CAN module
-# Copyright (c) 2025 - 2026 Portland State Aerospace Society
-#
-# Original license and copyright notices:
-#
-#   Private config options for can sample app
-#   Copyright (c) 2018 Alexander Wachter
-#   SPDX-License-Identifier: Apache-2.0
 
 menuconfig ERS_CAN_MODULE
 	bool "ERS CAN module app settings"

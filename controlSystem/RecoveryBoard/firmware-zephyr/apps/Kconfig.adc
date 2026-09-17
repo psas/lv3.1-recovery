@@ -1,5 +1,5 @@
 # @file
-# @brief Application configuration for ERS ADC (analog to digital) module
+# @brief Application configuration for ERS analog-to-digital (ADC) module
 
 menuconfig ERS_ADC_MODULE
 	bool "ERS ADC module settings"

@@ -9,7 +9,7 @@ menuconfig ERS_MOTOR_CONTROL
 
 if ERS_MOTOR_CONTROL
 
-config MC_MUTEX_TIMEOUT_MS
+config MC_API_TIMEOUT_MS
 	int "Motor control module mutex timeout in milliseconds"
 	default 1000
 	help
@@ -38,8 +38,8 @@ config MC_COUNT_RING_CHECKS
 	help
 	  Set the maximum planned count of lock ring position checks to perform,
 	  during a lock ring, and an unlock ring operation.  Note that not all
-	  checks may be performed, in cases where the long ring reaches its
-	  desired new position in fewer checks and ring check time intervals.
+	  checks may be performed, in cases where the lock ring reaches its
+	  desired new position in fewer ring check time intervals.
 
 endif # ERS_MOTOR_CONTROL
 

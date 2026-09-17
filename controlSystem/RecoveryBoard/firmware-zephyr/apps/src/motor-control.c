@@ -241,7 +241,7 @@ int32_t mc_lock_ring(void)
 // turn off motor in those states.
 
 	int32_t rc = 0;
-	ERS_MUTEX_LOCK(motor_control_mtx, CONFIG_MC_MUTEX_TIMEOUT_MS, motor_control);
+	ERS_MUTEX_LOCK(motor_control_mtx, CONFIG_MC_API_TIMEOUT_MS, motor_control);
 
 	if (!motor_control_initialized_fs) {
 		LOG_ERR("Motor control module not initialized!");
@@ -325,7 +325,7 @@ done:
 int32_t mc_unlock_ring(void)
 {
 	int32_t rc = 0;
-	ERS_MUTEX_LOCK(motor_control_mtx, CONFIG_MC_MUTEX_TIMEOUT_MS, motor_control);
+	ERS_MUTEX_LOCK(motor_control_mtx, CONFIG_MC_API_TIMEOUT_MS, motor_control);
 
 	if (!motor_control_initialized_fs) {
 		LOG_ERR("Motor control module not initialized!");

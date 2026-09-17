@@ -1,5 +1,5 @@
 # @file
-# @brief ERS Zephyr digital-to-analog module configuration file.
+# @brief ERS Zephyr digital-to-analog (DAC) module configuration file.
 
 menuconfig ERS_DAC
 	bool "ERS DAC module app settings"

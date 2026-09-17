@@ -95,7 +95,7 @@ static void start_status_led_timer(void)
 int32_t status_led_set_pattern(enum ers_status_led_pattern pattern)
 {
 	int32_t rc = 0;
-	ERS_MUTEX_LOCK(status_led_mtx, CONFIG_STATUS_LED_MUTEX_TIMEOUT_MS, status_led);
+	ERS_MUTEX_LOCK(status_led_mtx, CONFIG_STATUS_LED_API_TIMEOUT_MS, status_led);
 
 	if (!flag_led_initialized) {
 		rc = -EFAULT;
@@ -119,7 +119,7 @@ done:
 int32_t status_led_on(void)
 {
 	int32_t rc = 0;
-	ERS_MUTEX_LOCK(status_led_mtx, CONFIG_STATUS_LED_MUTEX_TIMEOUT_MS, status_led);
+	ERS_MUTEX_LOCK(status_led_mtx, CONFIG_STATUS_LED_API_TIMEOUT_MS, status_led);
 
 	if (!flag_led_initialized) {
 		rc = -EFAULT;
@@ -142,7 +142,7 @@ done:
 int32_t status_led_off(void)
 {
 	int32_t rc = 0;
-	ERS_MUTEX_LOCK(status_led_mtx, CONFIG_STATUS_LED_MUTEX_TIMEOUT_MS, status_led);
+	ERS_MUTEX_LOCK(status_led_mtx, CONFIG_STATUS_LED_API_TIMEOUT_MS, status_led);
 
 	if (!flag_led_initialized) {
 		rc = -EFAULT;
