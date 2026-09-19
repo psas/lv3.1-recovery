@@ -304,7 +304,7 @@ int32_t arbiter_determine_ring_state(enum lock_ring_position *ring_position)
 
 	ERS_MUTEX_LOCK(arbiter_mtx, CONFIG_ARBITER_API_TIMEOUT_MS, arbiter);
 
-	rc = keeper_get_both_hall_readings_in_mv(&hall_1_reading, &hall_2_reading);
+	rc = keeper_get_both_hall_readings(&hall_1_reading, &hall_2_reading);
 	if (rc != 0) {
 		LOG_ERR("determine ring position could not get hall readings, err %d", rc);
 		goto unlock;
@@ -462,12 +462,6 @@ qualify_validity:
 	// Remember, ring state is distinct from ring position.  This routine
 	// determines and stores both in the keeper module.
 	keeper_set_ring_state(ring_state);
-
-	rc = k_mutex_unlock(&arbiter_mtx);
-	if (rc < 0) {
-		LOG_ERR("Failed to unlock %s mutex, err %d", "arbiter", rc);
-		goto done;
-	}
 
 unlock:
 	ERS_MUTEX_UNLOCK(arbiter_mtx, arbiter);
